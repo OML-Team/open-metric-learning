@@ -1,0 +1,51 @@
+default_stages:
+- commit
+repos:
+# general hooks to verify or beautify code
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.3.0
+  hooks:
+  - id: check-added-large-files
+    args: [--maxkb=5000]
+  - id: trailing-whitespace
+  - id: check-docstring-first
+  - id: check-json
+  - id: check-merge-conflict
+  - id: check-xml
+  - id: check-yaml
+  - id: detect-private-key
+  - id: mixed-line-ending
+  - id: pretty-format-json
+    args: [--autofix]
+  - id: requirements-txt-fixer
+
+
+# autoformat code with black formatter
+- repo: https://github.com/psf/black
+  rev: 22.3.0
+  hooks:
+  - id: black
+    args: [-l 120]
+
+
+# beautify and sort imports
+- repo: https://github.com/pycqa/isort
+  rev: 5.6.4
+  hooks:
+  - id: isort
+    args: ["--profile", "black"]
+
+
+# check code style
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 3.8.4
+  hooks:
+  - id: flake8
+
+
+# static type checking
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v0.910
+  hooks:
+  - id: mypy
+    additional_dependencies: [types-requests==2.25.9]
