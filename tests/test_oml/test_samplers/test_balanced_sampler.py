@@ -1,11 +1,11 @@
+import pytest
+
 from collections import Counter
 from operator import itemgetter
 from random import randint, shuffle
 from typing import List, Tuple
 
-import pytest
-
-from oml.samplers.balanced import BalanceBatchSampler
+from oml.samplers.balanced import BalanceBatchSampler, CategoryBalanceBatchSampler, Sampler
 
 TLabelsPK = List[Tuple[List[int], int, int]]
 
@@ -66,22 +66,25 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
     return input_cases
 
 
-def check_balance_batch_sampler_epoch(labels: List[int], p: int, k: int) -> None:
+def check_balance_batch_sampler_epoch(sampler: Sampler, labels: List[int], p: int, k: int) -> None:
     """
     Args:
+        sampler: Sampler to test
         labels: List of labels labels
         p: Number of labels in a batch
         k: Number of instances for each label in a batch
 
     """
 
-    sampler = BalanceBatchSampler(labels, p, k)
     sampled_ids = list(sampler)
 
     sampled_labels = []
+    collected_labels = set()
     # emulating of 1 epoch
     for i, batch_ids in enumerate(sampled_ids):
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
+        assert all(label not in collected_labels for label in batch_labels)
+        collected_labels.update(batch_labels)
 
         labels_counter = Counter(batch_labels)
         num_batch_labels = len(labels_counter)
@@ -114,11 +117,27 @@ def check_balance_batch_sampler_epoch(labels: List[int], p: int, k: int) -> None
     )
 
 
-def test_balance_batch_sampler(input_for_balance_batch_sampler) -> None:  # type: ignore
+def test_balance_batch_sampler(input_for_balance_batch_sampler):
     """
     Args:
         input_for_balance_batch_sampler: List of (labels, p, k)
 
     """
     for labels, p, k in input_for_balance_batch_sampler:
-        check_balance_batch_sampler_epoch(labels=labels, p=p, k=k)
+        sampler = BalanceBatchSampler(labels=labels, p=p, k=k)
+        check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, p=p, k=k)
+
+
+def test_dummy_category_balance_batch_sampler(input_for_balance_batch_sampler):
+    """Check that CategoryBalanceBatchSampler behaves the same with BalanceBatchSampler in case
+    of the only category.
+
+    Args:
+        input_for_balance_batch_sampler: List of (labels, p, k)
+    """
+    for labels, p, k in input_for_balance_batch_sampler:
+        label2category = {label: 0 for label in set(labels)}
+        sampler = CategoryBalanceBatchSampler(
+            labels=labels, label2category=label2category, c=1, p=p, k=k
+        )
+        check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, p=p, k=k)
