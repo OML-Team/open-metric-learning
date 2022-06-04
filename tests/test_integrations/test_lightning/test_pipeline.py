@@ -157,6 +157,7 @@ def test_lightning(samples_in_getitem: int, is_error_expected: bool, num_dataloa
     callbacks = [create_callback(loader_idx=k, samples_in_getitem=samples_in_getitem) for k in range(num_dataloaders)]
 
     trainer = pl.Trainer(
+        default_root_dir="/tmp",
         max_epochs=2,
         enable_progress_bar=False,
         num_nodes=1,
