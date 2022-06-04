@@ -1,0 +1,53 @@
+postfix: "deepfashion"
+
+seed: 42
+gpus: []
+
+dataset_root: ../data
+logs_root: logs
+
+im_size: 32
+im_pad_ratio_train: 0.0
+im_pad_ratio_val: 0.0
+num_workers: 0
+
+augs_key: all
+
+criterion:
+  name: TripletLossWithMiner
+  args:
+    margin: null
+    reduction: mean
+    miner:
+      name: AllTripletsMiner
+      args: {}
+
+optimizer:
+  name: adam
+  args:
+    lr: 0.00001
+
+model:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: False
+    use_multi_scale: False
+    weights: random
+    strict_load: True
+
+bs_n_cls: 2
+bs_n_samples: 2
+bs_val: 2
+
+max_epochs: 2
+valid_period: 1
+
+neptune_project: null
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}

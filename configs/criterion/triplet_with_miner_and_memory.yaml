@@ -1,0 +1,9 @@
+name: TripletLossWithMiner
+args:
+  margin: null
+  reduction: mean
+  miner:
+    name: TripletMinerWithMemory
+    args:
+      bank_size_in_batches: 20
+      tri_expand_k: 3

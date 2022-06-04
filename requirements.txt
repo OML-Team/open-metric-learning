@@ -1,0 +1,8 @@
+albumentations
+grad-cam
+hydra-core
+omegaconf
+pytest
+python-dotenv
+pytorch-lightning
+torch

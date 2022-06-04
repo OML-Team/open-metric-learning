@@ -1,0 +1,4 @@
+name: TripletLossPlain
+args:
+  margin: null
+  reduction: mean
