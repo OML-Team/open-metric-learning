@@ -1,13 +1,9 @@
 # Open Metric Learning
 
 <details>
-<summary>test</summary>
+<summary>Naming agreements</summary>
 <p>
-body
-</p>
-</details>
 
-## Naming agreements
 ### Samples, Labels, Categories
 
 As an example let's consider DeepFashion dataset.
@@ -21,6 +17,12 @@ Note, we avoid using the term `classes` to avoid misunderstanding.
 ### Miner, Sampler
 * `Sampler` - uses to form batches and passes to `DataLoader`
 * `Miner` - uses to form pairs or triplets, usually after batch was formed by `Sampler`
+
+</p>
+</details>
+
+
+
 
 
 ### Retrieval DataFrame Format
