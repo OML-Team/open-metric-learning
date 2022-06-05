@@ -39,7 +39,7 @@ def main(cfg: TCfg) -> None:
         pad_ratio_train=cfg["im_pad_ratio_train"],
         pad_ratio_val=cfg["im_pad_ratio_val"],
         train_transform=train_augs,
-        dataframe_name=cfg["dataframe_name"]
+        dataframe_name=cfg["dataframe_name"],
     )
 
     augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"

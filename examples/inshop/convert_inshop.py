@@ -19,13 +19,17 @@ def parse_file_row(row: pd.Series) -> List[str]:
     return list(filter(lambda x: x != "", row.replace("\n", "").split(" ")))
 
 
-def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float, only_for_valid: bool) -> pd.DataFrame:
+def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float, fix_train: bool, fix_val: bool) -> pd.DataFrame:
     df["ar"] = (df["y_2"] - df["y_1"]) / (df["x_2"] - df["x_1"])
 
-    if only_for_valid:
+    if fix_train and fix_val:
+        mask_bad = df["ar"] > ratio_th
+    elif fix_train and (not fix_val):
+        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "train")
+    elif (not fix_train) and fix_val:
         mask_bad = (df["ar"] > ratio_th) & (df["split"] == "validation")
     else:
-        mask_bad = df["ar"] > ratio_th
+        return df
 
     print(f"We will fix {mask_bad.sum()} bboxes")
 
@@ -121,9 +125,9 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     df["is_query"][df["split"] == "train"] = None
     df["is_gallery"][df["split"] == "train"] = None
 
-    if args.fix_squeezed_bboxes:
-        # todo: param
-        df = expand_squeezed_bboxes(df, ratio_th=args.bboxes_aspect_ratio_to_fix, only_for_valid=True)
+    df = expand_squeezed_bboxes(
+        df=df, ratio_th=args.bboxes_aspect_ratio_to_fix, fix_train=args.fix_train_bboxes, fix_val=args.fix_val_bboxes
+    )
 
     df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
 
@@ -134,13 +138,9 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("--dataset_root", type=Path)
-    parser.add_argument("--fix_squeezed_bboxes", action="store_true")
-    parser.add_argument(
-        "--bboxes_aspect_ratio_to_fix",
-        type=float,
-        default=2.5,
-        help="will be used only when fix_squeezed_bboxes is True",
-    )
+    parser.add_argument("--fix_train_bboxes", action="store_true")
+    parser.add_argument("--fix_val_bboxes", action="store_true")
+    parser.add_argument("--bboxes_aspect_ratio_to_fix", type=float, default=2.5)
     return parser
 
 
@@ -148,8 +148,15 @@ def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
     df = build_deepfashion_df(args)
-    # todo: apply only to valid
-    df.to_csv(args.dataset_root / "df_fixed.csv", index=None)
+
+    save_name = "df"
+    if args.fix_train_bboxes:
+        save_name += "_fixed_train"
+    if args.fix_val_bboxes:
+        save_name += "_fixed_val"
+
+    df.to_csv(args.dataset_root / f"{save_name}.csv", index=None)
+
     print("DeepFashion Inshop dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")
 
