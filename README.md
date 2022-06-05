@@ -1,5 +1,13 @@
 # Open Metric Learning
 
+<details>
+<summary>test
+<p>
+
+body
+
+</p>
+</details>
 
 ## Naming agreements
 ### Samples, Labels, Categories
