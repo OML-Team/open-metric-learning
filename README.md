@@ -1,7 +1,7 @@
 # Open Metric Learning
 
 <details>
-<summary>Naming agreements</summary>
+<summary>##Naming agreements</summary>
 <p>
 
 ### Samples, Labels, Categories
