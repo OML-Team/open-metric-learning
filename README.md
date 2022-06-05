@@ -1,11 +1,9 @@
 # Open Metric Learning
 
 <details>
-<summary>test
+<summary>test</summary>
 <p>
-
 body
-
 </p>
 </details>
 
