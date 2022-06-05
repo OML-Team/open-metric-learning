@@ -17,7 +17,7 @@ def num_workers() -> int:
     launched from docker or WSL on these host platforms.
     """
     os_platform = platform()
-    platforms_with_spawn = ['microsoft', 'mac', 'osx']
+    platforms_with_spawn = ["microsoft", "mac", "osx"]
     if "linux" in os_platform and any(x not in os_platform for x in platforms_with_spawn):
         return 2
     else:
