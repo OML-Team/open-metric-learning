@@ -5,11 +5,12 @@ gpus:
   - 0
   - 1
 
+dataframe_name: df_fixed.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 352  # todo
+im_size: 304
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20

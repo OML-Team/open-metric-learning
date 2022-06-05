@@ -16,13 +16,13 @@ from oml.utils.images.images_resize import pad_resize
 
 class BaseDataset(Dataset):
     def __init__(
-        self,
-        df: pd.DataFrame,
-        im_size: int,
-        pad_ratio: float,
-        dataset_root: Optional[Path] = None,
-        transform: Optional[albu.Compose] = None,
-        f_imread: TImReader = imread_cv2,
+            self,
+            df: pd.DataFrame,
+            im_size: int,
+            pad_ratio: float,
+            dataset_root: Optional[Path] = None,
+            transform: Optional[albu.Compose] = None,
+            f_imread: TImReader = imread_cv2,
     ):
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
@@ -89,13 +89,13 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     def __init__(
-        self,
-        df: pd.DataFrame,
-        im_size: int,
-        pad_ratio: float,
-        dataset_root: Optional[Path] = None,
-        transform: Optional[albu.Compose] = None,
-        f_imread: TImReader = imread_cv2,
+            self,
+            df: pd.DataFrame,
+            im_size: int,
+            pad_ratio: float,
+            dataset_root: Optional[Path] = None,
+            transform: Optional[albu.Compose] = None,
+            f_imread: TImReader = imread_cv2,
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
@@ -115,9 +115,14 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 
 def get_retrieval_datasets(
-    dataset_root: Path, im_size: int, pad_ratio_train: float, pad_ratio_val: float, train_transform: Any
+        dataset_root: Path,
+        im_size: int,
+        pad_ratio_train: float,
+        pad_ratio_val: float,
+        train_transform: Any,
+        dataframe_name: str = "df.csv"
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
-    df = pd.read_csv(dataset_root / "df.csv", index_col=False)
+    df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
     # train

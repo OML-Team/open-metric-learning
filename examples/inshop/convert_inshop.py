@@ -19,10 +19,13 @@ def parse_file_row(row: pd.Series) -> List[str]:
     return list(filter(lambda x: x != "", row.replace("\n", "").split(" ")))
 
 
-def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float) -> pd.DataFrame:
+def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float, only_for_valid: bool) -> pd.DataFrame:
     df["ar"] = (df["y_2"] - df["y_1"]) / (df["x_2"] - df["x_1"])
 
-    mask_bad = df["ar"] > ratio_th
+    if only_for_valid:
+        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "validation")
+    else:
+        mask_bad = df["ar"] > ratio_th
 
     print(f"We will fix {mask_bad.sum()} bboxes")
 
@@ -119,7 +122,8 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     df["is_gallery"][df["split"] == "train"] = None
 
     if args.fix_squeezed_bboxes:
-        df = expand_squeezed_bboxes(df, ratio_th=args.bboxes_aspect_ratio_to_fix)
+        # todo: param
+        df = expand_squeezed_bboxes(df, ratio_th=args.bboxes_aspect_ratio_to_fix, only_for_valid=True)
 
     df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
 
@@ -144,7 +148,8 @@ def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
     df = build_deepfashion_df(args)
-    df.to_csv(args.dataset_root / "df.csv", index=None)
+    # todo: apply only to valid
+    df.to_csv(args.dataset_root / "df_fixed.csv", index=None)
     print("DeepFashion Inshop dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")
 
