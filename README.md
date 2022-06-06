@@ -1,3 +1,4 @@
+<div align="center">
 <a href="https://www.newyorker.de/" target="_blank"><img src="https://i.ibb.co/gSXvM2D/OML.png" width="500"/></a>
 <a href="https://www.newyorker.de/" target="_blank"><img src="https://i.ibb.co/tY9vnqH/photo-2022-06-06-17-23-17.jpg" width="500"/></a>
 
