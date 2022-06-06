@@ -18,6 +18,7 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
   4. Calculating retrieval metrics like CMC@k, Recall@k or MeanAveragePrecision.
 
+## FAQ
 
 <details>
 <summary>What is Metric Learning?</summary>
@@ -34,6 +35,34 @@ Here are a few examples of such tasks from the computer vision sphere:
 * Landmark Recognition
 * Searching engines for online shops
  and many others.
+</p>
+</details>
+
+
+<details>
+<summary>Glossary</summary>
+<p>
+
+**Samples, Labels, Categories**
+
+We use the word `embedding` as a synonym for `features vector` or `descriptor`.
+
+As an example let's consider DeepFashion dataset.
+It includes thousands of fashion item ids (we name them `labels`) and several photos for each item id
+ (we name the individual photo as `sample`).
+All of the fashion item ids have their groups like "skirts", "jackets", "shorts" and so on
+(we name them `categories`).
+
+Note, we avoid using the term `class` to avoid misunderstanding.
+
+**Query/gallery**
+
+We use the term `query` meaning `search query`. The set of entities to search is named `gallery` (also known
+ as `reference` or `index`).
+
+**Miner, Sampler**
+* `Sampler` - is used to form batches and it should be passed to `DataLoader`
+* `Miner` - is used to form pairs or triplets after the batch was formed by `Sampler`
 </p>
 </details>
 
@@ -80,34 +109,6 @@ That's it!
 
 Probably we already have a suitable pre-trained model for your domain
 in our models' zoo. In this case, you don't even need to train.
-</p>
-</details>
-
-
-
-<details>
-<summary>Glossary</summary>
-<p>
-**Samples, Labels, Categories**
-
-We use the word `embedding` as a synonym for `features vector` or `descriptor`.
-
-As an example let's consider DeepFashion dataset.
-It includes thousands of fashion item ids (we name them `labels`) and several photos for each item id
- (we name the individual photo as `sample`).
-All of the fashion item ids have their groups like "skirts", "jackets", "shorts" and so on
-(we name them `categories`).
-
-Note, we avoid using the term `class` to avoid misunderstanding.
-
-**Query/gallery**
-
-We use the term `query` meaning `search query`. The set of entities to search is named `gallery` (also known
- as `reference` or `index`).
-
-**Miner, Sampler**
-* `Sampler` - is used to form batches and it should be passed to `DataLoader`
-* `Miner` - is used to form pairs or triplets after the batch was formed by `Sampler`
 </p>
 </details>
 
