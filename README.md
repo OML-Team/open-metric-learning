@@ -23,6 +23,7 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
 <details>
 <summary>What is Metric Learning?</summary>
 <p>
+
 Metric Learning problem (also known as "extreme classification" problem) means a situation in which we
 have thousands of ids of some entities, but only a few samples for every entity.
 Often we assume that during the test stage (or production) we will deal with unseen entities
@@ -44,17 +45,12 @@ Here are a few examples of such tasks from the computer vision sphere:
 <p>
 
 * `embedding` - model's output (also known as `features vector` or `descriptor`).
-
-
 * `query` - a sample which is used as a request in the retrieval procedure.
 * `gallery set` - the set of entities to search items similar to `query` (also known
  as `reference` or `index`).
-
-
 * `Sampler` - an argument for `DataLoader` which is used to form batches
 * `Miner` - the object to form pairs or triplets after the batch was formed by `Sampler`. It's not necessary to form
 the combinations of samples only inside the current batch, thus, the memory bank may be a part of `Miner`.
-
 
 `Samples` + `Labels` + `Categories`
 
@@ -70,6 +66,7 @@ All of the fashion item ids have their groups like "skirts", "jackets", "shorts"
 <details>
 <summary>What about Self-Supervised Learning?</summary>
 <p>
+
 Recent research in SSL definitely obtained great results. The problem is that these approaches
 required an enormous amount of computing to train the model. But in our framework, we consider the most common case
 when the average user has no more than a few GPUs.
@@ -87,6 +84,7 @@ TripletLoss.
 <details>
 <summary>Do I need to know other frameworks to use OML?</summary>
 <p>
+
 No, you don't. OML is a framework-agnostic. Despite we use PyTorch Lightning as a loop
 runner for the experiments, we also keep the possibility to run everything on pure PyTorch.
 Thus, only the tiny part of OML is Lightning-specific and we keep this logic separately from
@@ -102,6 +100,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 <details>
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
+
 Yes. To run the experiment you only need to write a converter
  to our format (it means preparing the
 table with 5 predefined columns). Then you adjust the config file and run the experiment.
