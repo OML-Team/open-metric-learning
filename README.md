@@ -43,26 +43,26 @@ Here are a few examples of such tasks from the computer vision sphere:
 <summary>Glossary</summary>
 <p>
 
-**Samples, Labels, Categories**
+* `embedding` - model's output (also known as `features vector` or `descriptor`).
 
-We use the word `embedding` as a synonym for `features vector` or `descriptor`.
+
+* `query` - a sample which is used as a request in the retrieval procedure.
+* `gallery set` - the set of entities to search items similar to `query` (also known
+ as `reference` or `index`).
+
+
+* `Sampler` - an argument for `DataLoader` which is used to form batches
+* `Miner` - the object to form pairs or triplets after the batch was formed by `Sampler`. It's not necessary to form
+the combinations of samples only inside the current batch, thus, the memory bank may be a part of `Miner`.
+
+
+`Samples` + `Labels` + `Categories`
 
 As an example let's consider DeepFashion dataset.
 It includes thousands of fashion item ids (we name them `labels`) and several photos for each item id
  (we name the individual photo as `sample`).
 All of the fashion item ids have their groups like "skirts", "jackets", "shorts" and so on
-(we name them `categories`).
-
-Note, we avoid using the term `class` to avoid misunderstanding.
-
-**Query/gallery**
-
-We use the term `query` meaning `search query`. The set of entities to search is named `gallery` (also known
- as `reference` or `index`).
-
-**Miner, Sampler**
-* `Sampler` - is used to form batches and it should be passed to `DataLoader`
-* `Miner` - is used to form pairs or triplets after the batch was formed by `Sampler`
+(we name them `categories`). Note, we avoid using the term `class` to avoid misunderstanding.
 </p>
 </details>
 
