@@ -1,3 +1,14 @@
+### Retrieval DataFrame Format
+Expecting columns: `label`, `path`, `split`, `is_query`, `is_gallery` and
+optional `x_1`, `x_2`, `y_1`, `y_2`.
+
+* `split` must be on of 2 values: `train` or `validation`
+* `is_query` and `is_gallery` have to be `None` where `split == train` and `True`
+or `False` where `split == validation`. Note, that both values may be equal `True` in
+the same time.
+* `x_1`, `x_2`, `y_1`, `y_2` are in the following format `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
+
+
 ### CARS 196
 [Dataset page.](https://ai.stanford.edu/~jkrause/cars/car_dataset.html)
 ```
