@@ -9,7 +9,8 @@ from torch.utils.data import DataLoader
 
 from oml.interfaces.datasets import IDatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch import AllTripletsMiner, HardClusterMiner, HardTripletsMiner
+from oml.miners.among_batches import TripletMinerWithMemory
+from oml.registry.miners import get_miner
 from oml.samplers.balanced import BalanceBatchSampler, SequentialBalanceSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
@@ -32,11 +33,19 @@ class DummyDataset(IDatasetWithLabels):
 
 
 @pytest.mark.parametrize("sampler_constructor", [BalanceBatchSampler, SequentialBalanceSampler])
-@pytest.mark.parametrize("miner", [HardTripletsMiner(norm_required=True), AllTripletsMiner(), HardClusterMiner()])
+@pytest.mark.parametrize(
+    "miner_name,miner_params",
+    [
+        ("HardTripletsMiner", {"norm_required": True}),
+        ("AllTripletsMiner", dict()),
+        ("HardClusterMiner", dict()),
+        ("TripletMinerWithMemory", {"bank_size_in_batches": 5, "tri_expand_k": 3}),
+    ],
+)
 @pytest.mark.parametrize("margin", [None, 0.5])
 @pytest.mark.parametrize("p,k", [(2, 2), (5, 6)])
-def test_train_with_mining(sampler_constructor, miner, margin, p, k) -> None:  # type: ignore
-    n_labels_total = p * 3 + 2  # just some random figures
+def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin, p, k) -> None:  # type: ignore
+    n_labels_total = p * 6  # just some random figures
 
     dataset = DummyDataset(n_labels=n_labels_total, n_samples_min=k)
 
@@ -51,14 +60,21 @@ def test_train_with_mining(sampler_constructor, miner, margin, p, k) -> None:  #
     else:
         raise ValueError(f"Unexpected sampler: {sampler_constructor}.")
 
+    miner = get_miner(name=miner_name, kwargs=miner_params)
     criterion = TripletLossWithMiner(margin=margin, miner=miner)
 
-    for batch in loader:
+    for i, batch in enumerate(loader):
+        assert len(batch["labels"]) == p * k
+
         embeddings = model(batch["input_tensors"])
         loss = criterion(embeddings, batch["labels"])
 
-        if margin is None:
-            # soft triplet loss
-            assert loss.isclose(torch.log1p(torch.exp(torch.tensor(-math.sqrt(2)))), atol=1e-6)
+        if isinstance(miner, TripletMinerWithMemory) and (i < miner.bank_size_in_batches):
+            # we cannot guarantee any values of loss due to impact of memory bank initialisation
+            continue
         else:
-            assert loss.isclose(torch.tensor(0.0))
+            if margin is None:
+                # soft triplet loss
+                assert loss.isclose(torch.log1p(torch.exp(torch.tensor(-math.sqrt(2)))), atol=1e-6)
+            else:
+                assert loss.isclose(torch.tensor(0.0))

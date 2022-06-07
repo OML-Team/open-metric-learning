@@ -56,7 +56,7 @@ class TripletMinerWithMemory(ITripletsMiner):
         if self.bank_features is None:
             assert len(features) == len(labels)
 
-            self.bs = len(features)
+            self.bs = features.shape[0]
             self.feat_dim = features.shape[-1]
             self.bank_size = self.bank_size_in_batches * self.bs
 
@@ -76,7 +76,7 @@ class TripletMinerWithMemory(ITripletsMiner):
         labels = tensor(labels).long()
         self.__allocate_if_needed(features=features, labels=labels)
 
-        assert len(features) == len(labels) == self.bs
+        assert len(features) == len(labels) == self.bs, (len(features), len(labels), self.bs)
 
         # todo: optimize performance?
         lbl2idx_bank = {lb: arange(self.bank_size)[self.bank_labels == lb] for lb in unique(self.bank_labels)}

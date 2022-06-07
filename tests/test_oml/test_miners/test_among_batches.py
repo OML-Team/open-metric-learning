@@ -52,7 +52,7 @@ def test_mining_with_memory(n_cls: int, cls_sz: int, p: int, k: int, bank_sz: in
 
             # during the 1st epoch we have no chance to filter out some of the irrelevant triplets
             # because memory bank is empty
-            if i_epoch == 0:
+            if (i_epoch == 0) or (bank_k == 1):
                 assert n_out_tri == n_desired_tri, (n_out_tri, n_desired_tri)
             # but later some of the collisions are possible, but their amount should not be high
             else:

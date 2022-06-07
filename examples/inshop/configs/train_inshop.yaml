@@ -10,7 +10,7 @@ dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 304
+im_size: 224
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
@@ -30,7 +30,7 @@ criterion:
       name: TripletMinerWithMemory
       args:
         bank_size_in_batches: 20
-        tri_expand_k: 10
+        tri_expand_k: 3
 
 
 optimizer:
@@ -38,8 +38,8 @@ optimizer:
     lr: 1e-5
 
 # in terms of 1 gpu
-bs_n_cls: 2
-bs_n_samples: 8
+bs_n_cls: 8
+bs_n_samples: 4
 bs_val: 96
 
 max_epochs: 1000
@@ -56,9 +56,6 @@ tags:
   - retrieval
   - deepfashion
   - pod1
-  - as_best
-  - fixed_bboxes
-  - crop_resize_augs
 
 hydra:
   run:
