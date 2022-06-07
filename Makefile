@@ -7,7 +7,7 @@ run_mock_scripts:
 
 .PHONY: run_tests
 run_tests:
-	pytest tests
+	pytest tests --disable-warnings -v
 
 .PHONY: run_precommit
 run_precommit:

@@ -81,13 +81,15 @@ class DummyRetrievalModule(DummyCommonModule):
         return loss
 
 
-def create_triplet_dataloader(num_samples: int, im_size: int) -> DataLoader:
+def create_triplet_dataloader(num_samples: int, im_size: int, num_workers: int) -> DataLoader:
     dataset = DummyTripletDataset(num_triplets=num_samples, im_size=im_size)
-    dataloader = DataLoader(dataset=dataset, batch_size=num_samples // 2, num_workers=2, collate_fn=tri_collate)
+    dataloader = DataLoader(
+        dataset=dataset, batch_size=num_samples // 2, num_workers=num_workers, collate_fn=tri_collate
+    )
     return dataloader
 
 
-def create_retrieval_dataloader(num_samples: int, im_size: int, p: int, k: int) -> DataLoader:
+def create_retrieval_dataloader(num_samples: int, im_size: int, p: int, k: int, num_workers: int) -> DataLoader:
     assert num_samples % (p * k) == 0
 
     labels = [idx // k for idx in range(num_samples)]
@@ -98,7 +100,7 @@ def create_retrieval_dataloader(num_samples: int, im_size: int, p: int, k: int) 
     train_retrieval_loader = DataLoader(
         dataset=dataset,
         sampler=sampler_retrieval,
-        num_workers=2,
+        num_workers=num_workers,
         batch_size=sampler_retrieval.batch_size,
     )
     return train_retrieval_loader
@@ -135,7 +137,9 @@ def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> Metri
     ],
 )
 @pytest.mark.parametrize("num_dataloaders", [1, 2])
-def test_lightning(samples_in_getitem: int, is_error_expected: bool, num_dataloaders: int, pipeline: str) -> None:
+def test_lightning(
+    samples_in_getitem: int, is_error_expected: bool, num_dataloaders: int, pipeline: str, num_workers: int
+) -> None:
     num_samples = 12
     im_size = 6
     p = 2
@@ -152,8 +156,14 @@ def test_lightning(samples_in_getitem: int, is_error_expected: bool, num_dataloa
     else:
         raise ValueError
 
-    train_dataloaders = [create_dataloader(num_samples=num_samples, im_size=im_size) for _ in range(num_dataloaders)]
-    val_dataloaders = [create_dataloader(num_samples=num_samples, im_size=im_size) for _ in range(num_dataloaders)]
+    train_dataloaders = [
+        create_dataloader(num_samples=num_samples, im_size=im_size, num_workers=num_workers)
+        for _ in range(num_dataloaders)
+    ]
+    val_dataloaders = [
+        create_dataloader(num_samples=num_samples, im_size=im_size, num_workers=num_workers)
+        for _ in range(num_dataloaders)
+    ]
     callbacks = [create_callback(loader_idx=k, samples_in_getitem=samples_in_getitem) for k in range(num_dataloaders)]
 
     trainer = pl.Trainer(
