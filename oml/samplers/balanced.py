@@ -1,11 +1,11 @@
 import math
-import numpy as np
 import random
-
 from collections import Counter, defaultdict
 from copy import deepcopy
+from typing import Dict, Iterator, List, Set, Union
+
+import numpy as np
 from torch.utils.data.sampler import Sampler
-from typing import Dict, Iterator, List, Union
 
 
 class BalanceBatchSampler(Sampler):
@@ -166,13 +166,14 @@ class CategoryBalanceBatchSampler(Sampler):
     to a batch and missing ones will be sampled from used labels without repetition.
     - If P % p == 1 then one of the classes should be dropped
     """
+
     def __init__(
-            self,
-            labels: Union[List[int], np.ndarray],
-            label2category: Dict[int, int],
-            c: int,
-            p: int,
-            k: int,
+        self,
+        labels: Union[List[int], np.ndarray],
+        label2category: Dict[int, int],
+        c: int,
+        p: int,
+        k: int,
     ):
         """Sampler initialisation."""
         super().__init__(self)
@@ -180,8 +181,7 @@ class CategoryBalanceBatchSampler(Sampler):
         unique_categories = set(label2category.values())
         category2labels = {
             category: {label for label, cat in label2category.items() if category == cat}
-            for
-            category in unique_categories
+            for category in unique_categories
         }
 
         for param in [c, p, k]:
@@ -213,21 +213,17 @@ class CategoryBalanceBatchSampler(Sampler):
         self._unique_categories = unique_categories
 
         self._label2index = {
-            label: np.arange(len(self._labels))[self._labels == label].tolist() for label in
-            self._unique_labels
+            label: np.arange(len(self._labels))[self._labels == label].tolist() for label in self._unique_labels
         }
         self._category2labels = {
             category: {label for label, cat in self._label2category.items() if category == cat}
-            for
-            category in self._unique_categories
+            for category in self._unique_categories
         }
         # each category will be taken c_i = math.ceil(len(cat_labels) / p) times
         # it means that total number of categories be taken is total = sum({c_i})
         # and batch number is math.ceil(total / c)
         self._total_categories_samples = sum(math.ceil(len(labels) / self._p) for labels in category2labels.values())
-        self._batch_number = math.ceil(
-            self._total_categories_samples / self._c
-        )
+        self._batch_number = math.ceil(self._total_categories_samples / self._c)
 
     @property
     def batch_size(self) -> int:
@@ -260,7 +256,7 @@ class CategoryBalanceBatchSampler(Sampler):
             Indexes for sampling dataset elements during an epoch
         """
         category2labels = deepcopy(self._category2labels)
-        used_labels = defaultdict(set)
+        used_labels: Dict[int, Set[int]] = defaultdict(set)
         epoch_indices = []
         for _ in range(self.batches_in_epoch):
             categories_available = list(category2labels.keys())
@@ -321,5 +317,4 @@ class SequentialCategoryBalanceSampler(CategoryBalanceBatchSampler):
     def __len__(self) -> int:
         full_batches_number = self._total_categories_samples // self._c
         small_batch_categories_number = self._total_categories_samples % self._c
-        return full_batches_number * self.batch_size + \
-               small_batch_categories_number * self._p * self._k
+        return full_batches_number * self.batch_size + small_batch_categories_number * self._p * self._k

@@ -1,11 +1,16 @@
-import pytest
-
 from collections import Counter
 from operator import itemgetter
 from random import randint, shuffle
-from typing import List, Tuple, Dict
+from typing import Dict, List, Set, Tuple
 
-from oml.samplers.balanced import BalanceBatchSampler, CategoryBalanceBatchSampler, Sampler, SequentialCategoryBalanceSampler
+import pytest
+
+from oml.samplers.balanced import (
+    BalanceBatchSampler,
+    CategoryBalanceBatchSampler,
+    Sampler,
+    SequentialCategoryBalanceSampler,
+)
 
 TLabelsPK = List[Tuple[List[int], int, int]]
 TLabalesMappingCPK = List[Tuple[List[int], Dict[int, int], int, int, int]]
@@ -36,7 +41,7 @@ def generate_valid_labels(num: int) -> TLabelsPK:
     return labels_pk
 
 
-def generate_valid_categories_labels(num: int):
+def generate_valid_categories_labels(num: int) -> TLabalesMappingCPK:
     """This function generates some valid inputs for category sampler.
 
     Parameters:
@@ -58,7 +63,7 @@ def generate_valid_categories_labels(num: int):
         cat = 0
         while idx < unique_labels_number:
             new_idx = idx + randint(0, 5) + p
-            label2category.update({label: cat for label in unique_labels[idx: new_idx]})
+            label2category.update({label: cat for label in unique_labels[idx:new_idx]})
             idx = new_idx
         c = randint(1, len(set(label2category.values())))
         labels = []
@@ -113,7 +118,7 @@ def input_for_category_balance_batch_sampler() -> TLabalesMappingCPK:
     return input_cases
 
 
-def check_balance_batch_sampler_epoch(sampler: Sampler, labels: List[int], p: int, k: int) -> None:
+def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List[int], p: int, k: int) -> None:
     """
     Args:
         sampler: Sampler to test
@@ -125,7 +130,7 @@ def check_balance_batch_sampler_epoch(sampler: Sampler, labels: List[int], p: in
     sampled_ids = list(sampler)
 
     sampled_labels = []
-    collected_labels = set()
+    collected_labels: Set[int] = set()
     # emulating of 1 epoch
     for i, batch_ids in enumerate(sampled_ids):
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
@@ -164,12 +169,8 @@ def check_balance_batch_sampler_epoch(sampler: Sampler, labels: List[int], p: in
 
 
 def check_category_balance_batch_sampler_epoch(
-        sampler: Sampler, labels: List[int],
-        label2category: Dict[int, int],
-        c: int,
-        p: int,
-        k: int
-):
+    sampler: Sampler, labels: List[int], label2category: Dict[int, int], c: int, p: int, k: int
+) -> None:
     """
     Args:
         sampler: Sampler to test
@@ -182,7 +183,7 @@ def check_category_balance_batch_sampler_epoch(
     """
     sampled_ids = list(sampler)
 
-    collected_labels = set()
+    collected_labels: Set[int] = set()
     # emulating of 1 epoch
     for i, batch_ids in enumerate(sampled_ids):
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
@@ -211,7 +212,7 @@ def check_category_balance_batch_sampler_epoch(
     assert 0 <= num_labels_in_data - num_labels_in_sampler <= 1
 
 
-def test_balance_batch_sampler(input_for_balance_batch_sampler):
+def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> None:
     """
     Args:
         input_for_balance_batch_sampler: List of (labels, p, k)
@@ -222,7 +223,7 @@ def test_balance_batch_sampler(input_for_balance_batch_sampler):
         check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, p=p, k=k)
 
 
-def test_category_balance_batch_sampler(input_for_category_balance_batch_sampler):
+def test_category_balance_batch_sampler(input_for_category_balance_batch_sampler: TLabalesMappingCPK) -> None:
     """Check that CategoryBalanceBatchSampler behaves the same with BalanceBatchSampler in case
     of the only category.
 
@@ -230,22 +231,20 @@ def test_category_balance_batch_sampler(input_for_category_balance_batch_sampler
         input_for_category_balance_batch_sampler: List of (labels, label2category, c, p, k)
     """
     for labels, label2category, c, p, k in input_for_category_balance_batch_sampler:
-        sampler = CategoryBalanceBatchSampler(
-            labels=labels, label2category=label2category, c=c, p=p, k=k
-        )
+        sampler = CategoryBalanceBatchSampler(labels=labels, label2category=label2category, c=c, p=p, k=k)
         check_category_balance_batch_sampler_epoch(
             sampler=sampler, labels=labels, label2category=label2category, c=c, p=p, k=k
         )
 
 
-def test_sequential_category_balanced_batch_sampler(input_for_category_balance_batch_sampler):
+def test_sequential_category_balanced_batch_sampler(
+    input_for_category_balance_batch_sampler: TLabalesMappingCPK,
+) -> None:
     """
     Check if SequentialCategoryBalanceSampler __len__ method returns the real len of
     __iter__ output.
     """
     for labels, label2category, c, p, k in input_for_category_balance_batch_sampler:
-        seq_sampler = SequentialCategoryBalanceSampler(
-            labels=labels, label2category=label2category, c=c, p=p, k=k
-        )
+        seq_sampler = SequentialCategoryBalanceSampler(labels=labels, label2category=label2category, c=c, p=p, k=k)
         indices = list(seq_sampler)
         assert len(indices) == len(seq_sampler)
