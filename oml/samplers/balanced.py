@@ -2,7 +2,7 @@ import math
 import numpy as np
 import random
 
-from collections import Counter
+from collections import Counter, defaultdict
 from copy import deepcopy
 from torch.utils.data.sampler import Sampler
 from typing import Dict, Iterator, List, Union
@@ -175,22 +175,29 @@ class CategoryBalanceBatchSampler(Sampler):
         super().__init__(self)
         unique_labels = set(labels)
         unique_categories = set(label2category.values())
+        category2labels = {
+            category: {label for label, cat in label2category.items() if category == cat}
+            for
+            category in unique_categories
+        }
 
         for param in [c, p, k]:
             if not isinstance(param, int):
-                raise TypeError(f"{param.__name__} should be int, {type(param)} given")
+                raise TypeError(f"{param.__name__} must be int, {type(param)} given")
         if not 1 <= c <= len(unique_categories):
-            raise ValueError(f"c should be 1 <= c <= {len(unique_categories)}, {c} given")
+            raise ValueError(f"c must be 1 <= c <= {len(unique_categories)}, {c} given")
         if not 1 < p <= len(unique_labels):
-            raise ValueError(f"p should be 1 < p <= {len(unique_labels)}, {p} given")
+            raise ValueError(f"p must be 1 < p <= {len(unique_labels)}, {p} given")
         if k <= 1:
-            raise ValueError(f"k should be not less than 1, {k} given")
+            raise ValueError(f"k must be not less than 1, {k} given")
         if any(label not in label2category.keys() for label in unique_labels):
-            raise ValueError("All the labels should have category")
+            raise ValueError("All the labels must have category")
         if any(label not in unique_labels for label in label2category.keys()):
-            raise ValueError("All the labels from label2category mapping should be in the labels")
+            raise ValueError("All the labels from label2category mapping must be in the labels")
         if any(n <= 1 for n in Counter(labels).values()):
-            raise ValueError("Each class should contain at least 2 instances to fit")
+            raise ValueError("Each class must contain at least 2 instances to fit")
+        if any(len(list(labs)) < p for labs in category2labels.values()):
+            raise ValueError(f"All the categories must have at least {p} unique labels")
 
         self._labels = np.array(labels)
         self._label2category = label2category
@@ -211,12 +218,12 @@ class CategoryBalanceBatchSampler(Sampler):
             for
             category in self._unique_categories
         }
-        num_labels = len(self._unique_labels)
-        if num_labels % self._p == 1:
-            self._num_epoch_labels = num_labels - 1
-        else:
-            self._num_epoch_labels = num_labels
-        self._batch_number = math.ceil(self._num_epoch_labels / self._p)
+        # each category will be taken c_i = math.ceil(len(cat_labels) / p) times
+        # it means that total number of categories be taken is total = sum({c_i})
+        # and batch number is math.ceil(total / c)
+        self._batch_number = math.ceil(
+            sum(math.ceil(len(labels) / self._p) for labels in category2labels.values()) / self._c
+        )
 
     @property
     def batch_size(self) -> int:
@@ -249,8 +256,9 @@ class CategoryBalanceBatchSampler(Sampler):
             Indexes for sampling dataset elements during an epoch
         """
         category2labels = deepcopy(self._category2labels)
+        used_labels = defaultdict(set)
         epoch_indices = []
-        while sum([len(list(labels)) for labels in category2labels.values()]) > 1:
+        for _ in range(self.batches_in_epoch):
             categories_available = list(category2labels.keys())
             categories = random.sample(
                 categories_available,
@@ -259,10 +267,16 @@ class CategoryBalanceBatchSampler(Sampler):
             batch_indices = []
             for category in categories:
                 labels_available = list(category2labels[category])
-                labels = random.sample(
-                    labels_available,
-                    k=min(self._p, len(labels_available)),
-                )
+                labels_available_number = len(labels_available)
+                if self._p <= labels_available_number:
+                    labels = random.sample(
+                        labels_available,
+                        k=self._p,
+                    )
+                else:
+                    labels = labels_available + random.sample(
+                        list(used_labels[category]), k=self._p - labels_available_number
+                    )
                 for label in labels:
                     indices = self._label2index[label]
                     samples_number = len(indices)
@@ -279,6 +293,7 @@ class CategoryBalanceBatchSampler(Sampler):
                         )
                     batch_indices.extend(samples_indices)
                 category2labels[category] -= set(labels)
+                used_labels[category].update(labels)
                 if not category2labels[category]:
                     category2labels.pop(category)
             epoch_indices.append(batch_indices)
