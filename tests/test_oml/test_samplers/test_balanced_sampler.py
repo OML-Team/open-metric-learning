@@ -5,7 +5,7 @@ from operator import itemgetter
 from random import randint, shuffle
 from typing import List, Tuple, Dict
 
-from oml.samplers.balanced import BalanceBatchSampler, CategoryBalanceBatchSampler, Sampler
+from oml.samplers.balanced import BalanceBatchSampler, CategoryBalanceBatchSampler, Sampler, SequentialCategoryBalanceSampler
 
 TLabelsPK = List[Tuple[List[int], int, int]]
 TLabalesMappingCPK = List[Tuple[List[int], Dict[int, int], int, int, int]]
@@ -108,7 +108,7 @@ def input_for_category_balance_batch_sampler() -> TLabalesMappingCPK:
         Test data for sampler in the following order: (labels, label2category, c, p, k)
     """
     # (julia-shenshina) It was checked once with N = 100_000 before doing the PR
-    num_random_cases = 100_000
+    num_random_cases = 100
     input_cases = generate_valid_categories_labels(num_random_cases)
     return input_cases
 
@@ -227,7 +227,7 @@ def test_category_balance_batch_sampler(input_for_category_balance_batch_sampler
     of the only category.
 
     Args:
-        input_for_category_balance_batch_sampler: List of (labels, p, k)
+        input_for_category_balance_batch_sampler: List of (labels, label2category, c, p, k)
     """
     for labels, label2category, c, p, k in input_for_category_balance_batch_sampler:
         sampler = CategoryBalanceBatchSampler(
@@ -236,3 +236,16 @@ def test_category_balance_batch_sampler(input_for_category_balance_batch_sampler
         check_category_balance_batch_sampler_epoch(
             sampler=sampler, labels=labels, label2category=label2category, c=c, p=p, k=k
         )
+
+
+def test_sequential_category_balanced_batch_sampler(input_for_category_balance_batch_sampler):
+    """
+    Check if SequentialCategoryBalanceSampler __len__ method returns the real len of
+    __iter__ output.
+    """
+    for labels, label2category, c, p, k in input_for_category_balance_batch_sampler:
+        seq_sampler = SequentialCategoryBalanceSampler(
+            labels=labels, label2category=label2category, c=c, p=p, k=k
+        )
+        indices = list(seq_sampler)
+        assert len(indices) == len(seq_sampler)

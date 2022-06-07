@@ -158,9 +158,12 @@ class CategoryBalanceBatchSampler(Sampler):
     - select c categories from C* for the 2nd batch
     - select p labels for each category from P* for the 2nd batch
     - select k samples for each label for the 2nd batch
+    ...
 
     Behavior in corner cases:
     - If a class does not contain k instances, a choice will be made with repetition.
+    - If chosen category does not contain p unused labels, all the unused labels will be added
+    to a batch and missing ones will be sampled from used labels without repetition.
     - If P % p == 1 then one of the classes should be dropped
     """
     def __init__(
@@ -221,8 +224,9 @@ class CategoryBalanceBatchSampler(Sampler):
         # each category will be taken c_i = math.ceil(len(cat_labels) / p) times
         # it means that total number of categories be taken is total = sum({c_i})
         # and batch number is math.ceil(total / c)
+        self._total_categories_samples = sum(math.ceil(len(labels) / self._p) for labels in category2labels.values())
         self._batch_number = math.ceil(
-            sum(math.ceil(len(labels) / self._p) for labels in category2labels.values()) / self._c
+            self._total_categories_samples / self._c
         )
 
     @property
@@ -298,3 +302,24 @@ class CategoryBalanceBatchSampler(Sampler):
                     category2labels.pop(category)
             epoch_indices.append(batch_indices)
         return iter(epoch_indices)
+
+
+class SequentialCategoryBalanceSampler(CategoryBalanceBatchSampler):
+    """
+    Almost the same as
+    >>> CategoryBalanceBatchSampler
+    but indexes will be returned in a flattened way
+
+    """
+
+    def __iter__(self) -> Iterator[int]:  # type: ignore
+        ids_flatten = []
+        for ids in super().__iter__():
+            ids_flatten.extend(ids)
+        return iter(ids_flatten)
+
+    def __len__(self) -> int:
+        full_batches_number = self._total_categories_samples // self._c
+        small_batch_categories_number = self._total_categories_samples % self._c
+        return full_batches_number * self.batch_size + \
+               small_batch_categories_number * self._p * self._k
