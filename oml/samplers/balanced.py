@@ -222,7 +222,8 @@ class CategoryBalanceBatchSampler(Sampler):
         # each category will be taken c_i = math.ceil(len(cat_labels) / p) times
         # it means that total number of categories be taken is total = sum({c_i})
         # and batch number is math.ceil(total / c)
-        self._total_categories_samples = sum(math.ceil(len(labels) / self._p) for labels in category2labels.values())
+        taken = {category: math.ceil(len(labs) / self._p) for category, labs in category2labels.items()}
+        self._total_categories_samples = sum(taken)
         self._batch_number = math.ceil(self._total_categories_samples / self._c)
 
     @property
@@ -258,7 +259,7 @@ class CategoryBalanceBatchSampler(Sampler):
         category2labels = deepcopy(self._category2labels)
         used_labels: Dict[int, Set[int]] = defaultdict(set)
         epoch_indices = []
-        for _ in range(self.batches_in_epoch):
+        while len(category2labels):
             categories_available = list(category2labels.keys())
             categories = random.sample(
                 categories_available,
