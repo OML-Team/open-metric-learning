@@ -1,5 +1,6 @@
+from typing import Any, List
+
 import numpy as np
-from typing import List, Any
 
 
 def smart_sample(array: List[Any], n_samples: int) -> List[Any]:
@@ -15,11 +16,14 @@ def smart_sample(array: List[Any], n_samples: int) -> List[Any]:
     """
     array_size = len(array)
     if array_size < n_samples:
-        samples_indices = array + np.random.choice(
-            array,
-            size=n_samples - array_size,
-            replace=True,
-        ).tolist()
+        samples_indices = (
+            array
+            + np.random.choice(
+                array,
+                size=n_samples - array_size,
+                replace=True,
+            ).tolist()
+        )
     else:
         samples_indices = np.random.choice(
             array,
