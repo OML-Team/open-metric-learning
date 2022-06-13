@@ -1,8 +1,9 @@
 import numpy as np
+
 from oml.samplers.utils import smart_sample
 
 
-def test_sample_enough_items():
+def test_sample_enough_items() -> None:
     """Check smart_sample in case of n_sample < len(array)."""
     for _ in range(10):
         size = np.random.randint(10, 150)
@@ -14,7 +15,7 @@ def test_sample_enough_items():
         assert set(samples) <= set(array)
 
 
-def test_sample_not_enough_items():
+def test_sample_not_enough_items() -> None:
     """Check smart_sample in case of n_sample > len(array)."""
     for _ in range(10):
         size = np.random.randint(2, 25)
