@@ -67,7 +67,7 @@ def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = T
                 if len(labels_subset) < p:
                     cat -= 1
             else:
-                new_idx = idx + randint(2, p)
+                new_idx = idx + randint(2, p - 1)
                 labels_subset = unique_labels[idx:new_idx]
                 # process last segment of labels
                 if len(labels_subset) == 1:
@@ -197,7 +197,7 @@ def check_category_balance_batch_sampler_epoch(
     """
     Args:
         sampler: Sampler to test
-        labels: List of labels labels
+        labels: List of labels
         label2category: label to category mapping
         c: Number of categories in a batch
         p: Number of labels in a batch

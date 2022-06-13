@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Union
 import numpy as np
 from torch.utils.data.sampler import Sampler
 
-from oml.samplers.utils import smart_sample
+from oml.utils.misc import smart_sample
 
 
 class BalanceBatchSampler(Sampler):
@@ -108,7 +108,9 @@ class BalanceBatchSampler(Sampler):
         for _ in range(self.batches_in_epoch):
             ids_batch = []
 
-            labels_for_batch = set(np.random.choice(labels_rest, size=min(self._p, len(labels_rest)), replace=False))
+            labels_for_batch = set(
+                np.random.choice(list(labels_rest), size=min(self._p, len(labels_rest)), replace=False)
+            )
             labels_rest -= labels_for_batch
 
             for cls in labels_for_batch:
