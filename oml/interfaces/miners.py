@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import Counter
-from typing import List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from torch import Tensor
 
@@ -27,7 +27,7 @@ class ITripletsMiner(ABC):
     """An abstraction of inbatch triplet miner."""
 
     @abstractmethod
-    def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
+    def sample(self, features: Tensor, labels: TLabels) -> Tuple[Tensor, Tensor, Tensor, Dict[str, Any]]:
         """
         This method includes the logic of sampling/selecting triplets.
 
@@ -85,7 +85,7 @@ class InBatchTripletsMiner(ITripletsMiner):
         """
         raise NotImplementedError
 
-    def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
+    def sample(self, features: Tensor, labels: TLabels) -> Tuple[Tensor, Tensor, Tensor, Dict[str, Any]]:
         """
         Args:
             features: Features with the shape of [batch_size, feature_size]
@@ -102,4 +102,4 @@ class InBatchTripletsMiner(ITripletsMiner):
 
         ids_anchor, ids_pos, ids_neg = self._sample(features, labels=labels)
 
-        return features[ids_anchor], features[ids_pos], features[ids_neg]
+        return features[ids_anchor], features[ids_pos], features[ids_neg], {}

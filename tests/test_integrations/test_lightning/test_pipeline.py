@@ -77,7 +77,7 @@ class DummyRetrievalModule(DummyCommonModule):
     def training_step(self, batch_multidataloader: List[TItem], batch_idx: int) -> torch.Tensor:
         embeddings = torch.cat([self.model(batch["input_tensors"]) for batch in batch_multidataloader])
         labels = torch.cat([batch["labels"] for batch in batch_multidataloader])
-        loss = self.criterion(embeddings, labels)
+        loss, _ = self.criterion(embeddings, labels)
         return loss
 
 

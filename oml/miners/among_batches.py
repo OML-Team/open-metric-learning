@@ -7,6 +7,7 @@ from torch import (
     arange,
     cartesian_prod,
     cat,
+    cdist,
     clip,
     combinations,
     flip,
@@ -39,11 +40,21 @@ def get_pos_pairs(lbl2idx: Dict[Tensor, Tensor], n: int = None) -> Tensor:
 
 
 class TripletMinerWithMemory(ITripletsMiner):
-    def __init__(self, bank_size_in_batches: int, tri_expand_k: int):
+    def __init__(self, bank_size_in_batches: int, tri_expand_k: int, need_logs: bool = False):
+        """
+
+        Args:
+            bank_size_in_batches: The size of the bank calculated in batches
+            tri_expand_k: The parameter which defines how many triplets we sample from the bank.
+                 Specifically, we return tri_expand_k * number of triplets in the original batch
+                 In particular, if tri_expand_k == 1 we sample no triplets from the bank
+            need_logs: Set True if you want to return intermediate calculations
+        """
         assert tri_expand_k >= 1
 
         self.bank_size_in_batches = bank_size_in_batches
         self.tri_expand_k = tri_expand_k
+        self.need_logs = need_logs
 
         self.bank_features: Optional[Tensor] = None
         self.bank_labels: Optional[Tensor] = None
@@ -72,7 +83,9 @@ class TripletMinerWithMemory(ITripletsMiner):
         self.bank_labels[self.ptr : self.ptr + self.bs] = labels.clone()
         self.ptr = (self.ptr + self.bs) % self.bank_size
 
-    def sample(self, features: Tensor, labels: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+    def sample(  # type: ignore
+        self, features: Tensor, labels: Tensor  # type: ignore
+    ) -> Tuple[Tensor, Tensor, Tensor, Dict[str, float], Tensor]:  # type: ignore
         labels = tensor(labels).long()
         self.__allocate_if_needed(features=features, labels=labels)
 
@@ -122,9 +135,27 @@ class TripletMinerWithMemory(ITripletsMiner):
 
         self.update_bank(features=features, labels=labels)
 
+        is_original_tri = zeros(len(features_anch), dtype=bool).cpu()
+        is_original_tri[-len(ii_anch_1) :] = True
+
         # print(len(ii_anch_1), len(ii_anch_2), len(ii_anch_3))
 
-        return features_anch, features_pos, features_neg
+        if self.need_logs:
+
+            def avg_d(feat1: Tensor, feat2: Tensor) -> float:
+                return float(cdist(feat1, feat2).mean().item())
+
+            logs = {
+                "pos_dist_orig": avg_d(features_anch[is_original_tri], features_pos[is_original_tri]),
+                "neg_dist_orig": avg_d(features_anch[is_original_tri], features_neg[is_original_tri]),
+                "pos_dist_bank": avg_d(features_anch[~is_original_tri], features_pos[~is_original_tri]),
+                "neg_dist_bank": avg_d(features_anch[~is_original_tri], features_neg[~is_original_tri]),
+            }
+
+        else:
+            logs = {}
+
+        return features_anch, features_pos, features_neg, logs, is_original_tri
 
     @staticmethod
     def take_tri_by_mask(ii_a: Tensor, ii_p: Tensor, ii_n: Tensor, mask: Tensor) -> Tuple[Tensor, Tensor, Tensor]:

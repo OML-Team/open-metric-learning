@@ -20,10 +20,23 @@ class BaseDataset(Dataset):
         df: pd.DataFrame,
         im_size: int,
         pad_ratio: float,
-        dataset_root: Optional[Path] = None,
+        images_root: Optional[Path] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
     ):
+        """
+
+        Args:
+            df: Table with the following columns:
+                  obligatory: "label" - id of the item,
+                              "path" - to the image, absolute or relative from "images_root"
+                  optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
+            im_size: Images will be resized to (image_size, image_size)
+            pad_ratio: Padding ratio
+            images_root: Path to the images dir, set None if you provided the absolute paths
+            transform: Augmentations for the images, set None to skip it
+            f_imread: Function to read the image
+        """
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
 
@@ -33,8 +46,8 @@ class BaseDataset(Dataset):
             df["y_1"] = None
             df["y_2"] = None
 
-        if dataset_root is not None:
-            df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
+        if images_root is not None:
+            df["path"] = df["path"].apply(lambda x: str(images_root / x))
 
         self.df = df
         self.im_size = im_size
@@ -83,24 +96,49 @@ class BaseDataset(Dataset):
 
 
 class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
+    """
+    The main purpose of this class is to be used as a dataset during
+    the training stage.
+
+    It has to know how to return its labels, which is required information
+    to perform the training with the combinations-based losses.
+    Particularly, these labels will be passed to Sampler to form the batches and
+    batches will be passed to Miner to form the combinations.
+    """
+
     def get_labels(self) -> np.ndarray:
         return np.array(self.df["label"].tolist())
 
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
+    """
+    The main purpose of this class is to be used as a dataset during
+    the validation stage. It has to provide information
+    about its query/gallery split.
+
+    Note, that some of the datasets used as benchmarks in MetricLearning
+    provide such information (for example, DeepFashion InShop), but some of them
+    don't (for example, CARS196 or CUB200).
+    The validation idea for the latter is to calculate the embeddings for the whole validation set,
+    then for every item find top-k nearest neighbors and calculate the desired retrieval metric.
+    In other words, for the desired query item, the gallery is the rest of the validation dataset.
+    If you want to perform this kind of validation process, then simply return
+    is_query == True and is_gallery == True for every item in the dataset.
+    """
+
     def __init__(
         self,
         df: pd.DataFrame,
         im_size: int,
         pad_ratio: float,
-        dataset_root: Optional[Path] = None,
+        images_root: Optional[Path] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
             im_size=im_size,
-            dataset_root=dataset_root,
+            images_root=images_root,
             transform=transform,
             pad_ratio=pad_ratio,
             f_imread=f_imread,
@@ -128,13 +166,13 @@ def get_retrieval_datasets(
     # train
     df_train = df[df["split"] == "train"].reset_index(drop=True)
     train_dataset = DatasetWithLabels(
-        df=df_train, dataset_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_train, transform=train_transform
+        df=df_train, images_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_train, transform=train_transform
     )
 
     # val (query + gallery)
     df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
     valid_dataset = DatasetQueryGallery(
-        df=df_query_gallery, dataset_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_val
+        df=df_query_gallery, images_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_val
     )
 
     return train_dataset, valid_dataset

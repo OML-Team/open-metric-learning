@@ -61,13 +61,13 @@ def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin
         raise ValueError(f"Unexpected sampler: {sampler_constructor}.")
 
     miner = get_miner(name=miner_name, kwargs=miner_params)
-    criterion = TripletLossWithMiner(margin=margin, miner=miner)
+    criterion = TripletLossWithMiner(margin=margin, miner=miner, need_logs=False)
 
     for i, batch in enumerate(loader):
         assert len(batch["labels"]) == p * k
 
         embeddings = model(batch["input_tensors"])
-        loss = criterion(embeddings, batch["labels"])
+        loss, _ = criterion(embeddings, batch["labels"])
 
         if isinstance(miner, TripletMinerWithMemory) and (i < miner.bank_size_in_batches):
             # we cannot guarantee any values of loss due to impact of memory bank initialisation

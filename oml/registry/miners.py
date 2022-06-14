@@ -2,7 +2,9 @@ from typing import Any, Dict
 
 from oml.interfaces.miners import ITripletsMiner
 from oml.miners.among_batches import TripletMinerWithMemory
-from oml.miners.inbatch import AllTripletsMiner, HardClusterMiner, HardTripletsMiner
+from oml.miners.inbactch_hard_cluster import HardClusterMiner
+from oml.miners.inbatch_all import AllTripletsMiner
+from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 MINERS_REGISTRY = {

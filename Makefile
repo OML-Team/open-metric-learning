@@ -4,6 +4,7 @@ JUPYTER_CMD=export TEST_RUN=1; jupyter nbconvert --to html --output-dir /tmp
 .PHONY: run_mock_scripts
 run_mock_scripts:
 	export PYTHONWARNINGS=ignore; cd tests/test_examples; rm -rf logs; python train_mock.py; rm -rf logs;
+	export PYTHONWARNINGS=ignore; cd tests/test_examples; rm -rf logs; python val_mock.py; rm -rf logs;
 
 .PHONY: run_tests
 run_tests:

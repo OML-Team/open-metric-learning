@@ -16,6 +16,7 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
+from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.registry.transforms import get_augs_with_default
 from oml.utils.misc import (
     dictconfig_to_dict,
@@ -59,8 +60,9 @@ def main(cfg: TCfg) -> None:
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
     criterion = get_criterion_by_cfg(cfg["criterion"])
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
+    scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
 
     metrics_calc = EmbeddingMetrics(top_k=(1, 5, 10), need_cmc=True, need_precision=True, need_map=True)
     metrics_clb = MetricValCallback(metric=metrics_calc)
@@ -105,6 +107,6 @@ def main(cfg: TCfg) -> None:
         logger=logger,
     )
 
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer)
+    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)

@@ -29,7 +29,7 @@ def test_mining_with_memory(n_cls: int, cls_sz: int, p: int, k: int, bank_sz: in
     labels = get_labels(n_cls=n_cls, sz=cls_sz)
     sampler = BalanceBatchSampler(labels=labels.tolist(), p=p, k=k)
 
-    miner = TripletMinerWithMemory(bank_size_in_batches=bank_sz, tri_expand_k=bank_k)
+    miner = TripletMinerWithMemory(bank_size_in_batches=bank_sz, tri_expand_k=bank_k, need_logs=True)
 
     # we use shifted one-hot encoding here as a hack to avoid collapses with the features
     # from one-hot initialised memory bank in miner
@@ -44,8 +44,9 @@ def test_mining_with_memory(n_cls: int, cls_sz: int, p: int, k: int, bank_sz: in
             labels_batch = labels[ii_batch]
             features_batch = model(labels_batch)
 
-            anch, pos, neg = miner.sample(labels=labels_batch, features=features_batch)
+            anch, pos, neg, logs, is_original_tri = miner.sample(labels=labels_batch, features=features_batch)
             assert len(anch) == len(pos) == len(neg)
+            assert n_possible_triplets(p, k) == int(is_original_tri.sum())
 
             n_out_tri = len(anch)
             n_desired_tri = bank_k * n_possible_triplets(p, k)

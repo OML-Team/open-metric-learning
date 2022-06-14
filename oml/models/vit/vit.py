@@ -58,7 +58,7 @@ class ViTExtractor(IExtractor):
             x = self.model(x)
 
         if self.normalise_features:
-            xn = torch.linalg.norm(x, p=2, dim=1).detach()
+            xn = torch.linalg.norm(x, 2, dim=1).detach()
             x = x.div(xn.unsqueeze(1))
 
         return x

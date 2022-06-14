@@ -1,5 +1,5 @@
 # flake8: noqa
-from oml.miners.inbatch import AllTripletsMiner
+from oml.miners.inbatch_all import AllTripletsMiner
 from tests.test_oml.test_miners.shared_checkers import (
     check_all_triplets_number,
     check_triplets_consistency,

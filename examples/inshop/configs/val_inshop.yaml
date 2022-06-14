@@ -1,0 +1,27 @@
+dataset_root: /nydl/data/DeepFashion_InShop/
+dataframe_name: df_fixed_val.csv
+
+logs_root: logs
+
+im_size: 304
+bs_val: 96
+num_workers: 20
+
+
+model:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: False
+    use_multi_scale: False
+    weights: /nydl/logs/cur/ml/deepfashion/2022-05-18_12-09-14_deepfashion/checkpoints/best.ckpt
+    strict_load: True
+
+
+gpus:
+  - 0
+  - 1
+
+hydra:
+  searchpath:
+    - file://../../configs

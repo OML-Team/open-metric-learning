@@ -59,9 +59,8 @@ def get_all_augs_weak() -> albu.Compose:
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials_weak(), p=0.3),
             albu.OneOf(get_blurs_weak(), p=0.25),
-            albu.OneOf(
-                [albu.OneOf(get_colors_level_weak(), p=0.25), albu.OneOf(get_noise_channels_weak(), p=0.75)], p=0.5
-            ),
+            albu.OneOf(get_colors_level_weak(), p=0.4),
+            albu.OneOf(get_noise_channels_weak(), p=0.1),
             albu.OneOf(get_noises_weak(), p=0.15),
         ]
     )
