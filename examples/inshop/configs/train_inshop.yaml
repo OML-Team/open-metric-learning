@@ -1,4 +1,4 @@
-postfix: deepfashion
+postfix: metric_learning
 
 seed: 42
 gpus:
@@ -18,10 +18,10 @@ num_workers: 20
 # in terms of 1 gpu
 bs_n_cls: 2
 bs_n_samples: 8
-bs_n_categories: 1
-bs_val: 160
+bs_n_categories: -1
+bs_val: 80
 
-max_epochs: 100
+max_epochs: 80
 valid_period: 1
 
 augs_key: all
@@ -32,18 +32,18 @@ defaults:
 model:
   name: vit
   args:
-    normalise_features: True
+    normalise_features: False
     use_multi_scale: False
     weights: pretrained_dino
     arch: vits8
-    strict_load: False
+    strict_load: True
     out_dim: null
 
 criterion:
   name: TripletLossWithMiner
   args:
     need_logs: True
-    margin: 0.1
+    margin: null
     reduction: mean
     miner:
       name: TripletMinerWithMemory
@@ -66,7 +66,11 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
+pod: podx
+
 tags:
+  - ${postfix}
+  - ${pod}
   - deepfashion
 
 hydra:

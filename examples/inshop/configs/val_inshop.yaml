@@ -1,5 +1,5 @@
 dataset_root: /nydl/data/DeepFashion_InShop/
-dataframe_name: df.csv
+dataframe_name: df_fixed_val.csv
 
 logs_root: logs
 
