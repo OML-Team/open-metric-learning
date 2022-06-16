@@ -1,10 +1,10 @@
 dataset_root: /nydl/data/DeepFashion_InShop/
-dataframe_name: df_fixed_val.csv
+dataframe_name: df.csv
 
 logs_root: logs
 
-im_size: 304
-bs_val: 96
+im_size: 224
+bs_val: 512
 num_workers: 20
 
 
@@ -14,7 +14,7 @@ model:
     arch: vits8
     normalise_features: False
     use_multi_scale: False
-    weights: /nydl/logs/cur/ml/deepfashion/2022-05-18_12-09-14_deepfashion/checkpoints/best.ckpt
+    weights: pretrained_dino
     strict_load: True
 
 

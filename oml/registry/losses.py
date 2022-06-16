@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 
 from torch import nn
 
+from oml.losses.arcface import ArcFace
 from oml.losses.triplet import TripletLoss, TripletLossPlain, TripletLossWithMiner
 from oml.registry.miners import get_miner_by_cfg
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -10,6 +11,8 @@ LOSSES_REGISTRY = {
     "TripletLoss": TripletLoss,
     "TripletLossPlain": TripletLossPlain,
     "TripletLossWithMiner": TripletLossWithMiner,
+    "ArcFace": ArcFace,
+    "CrossEntropyLoss": nn.CrossEntropyLoss,  # todo: it does not return logs
 }
 
 

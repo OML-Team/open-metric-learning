@@ -68,6 +68,7 @@ class TripletLoss(Module):
 
         if self.need_logs:
             if is_original_tri is not None:
+                # todo: it makes no sense with margin=null
                 is_bank_tri = ~is_original_tri
                 orig_active = (loss.clone().detach()[is_original_tri] > 0).float().sum() / is_original_tri.sum()
                 bank_active = (loss.clone().detach()[is_bank_tri] > 0).float().sum() / is_bank_tri.sum()

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -19,7 +19,13 @@ class ViTExtractor(IExtractor):
     constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
 
     def __init__(
-        self, weights: Union[Path, str], arch: str, normalise_features: bool, use_multi_scale: bool, strict_load: bool
+        self,
+        weights: Union[Path, str],
+        arch: str,
+        normalise_features: bool,
+        use_multi_scale: bool,
+        strict_load: bool,
+        out_dim: Optional[int] = None,
     ):
         """
         Args:
@@ -36,24 +42,49 @@ class ViTExtractor(IExtractor):
         self.normalise_features = normalise_features
         self.mscale = use_multi_scale
         self.arch = arch
+        self.out_dim = out_dim
 
         factory_fun = self.constructors[self.arch]
 
-        if weights == "pretrained_dino":
-            self.model = factory_fun(pretrained=True)
-        elif weights == "random":
-            self.model = factory_fun(pretrained=False)
+        self.model = factory_fun(pretrained=False)
+
+        if weights == "random":
+            state_dict = factory_fun(pretrained=False).state_dict()
+        elif weights == "pretrained_dino":
+            state_dict = factory_fun(pretrained=True).state_dict()
         else:
-            self.model = factory_fun(pretrained=False)
             ckpt = torch.load(weights, map_location="cpu")
             state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
-            ckpt = remove_prefix_from_state_dict(state_dict, "norm.bias")
+            state_dict = remove_prefix_from_state_dict(state_dict, "norm.bias")
 
-            self.model.load_state_dict(ckpt, strict=strict_load)
+        if out_dim is not None:
+            in_features = self.model.blocks[-1].mlp.fc2.out_features
+            self.model.head = nn.Linear(in_features, out_dim)
+
+        self.model.load_state_dict(state_dict, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.model(x)
+
+        # Note! We apply head by ourself because authors excluded applying
+        # head from the original code of ViT. Thus, we have 2 options:
+        # apply it by ourself or change the original code of forward
+        # If out_dim is None then we use default head which is Identity
+        x = self.model.head(x)
+
+        if self.normalise_features:
+            xn = torch.linalg.norm(x, 2, dim=1).detach()
+            x = x.div(xn.unsqueeze(1))
+
+        return x
+
+    @torch.no_grad()
+    def extract(self, x: torch.Tensor) -> torch.Tensor:
+        # Note! During the inference/test time we completely
+        # ignore "classification" head of the model
+
         if self.mscale:
-            x = self.multi_scale(x)
+            x = multi_scale(model=self.model, samples=x)
         else:
             x = self.model(x)
 
@@ -63,15 +94,9 @@ class ViTExtractor(IExtractor):
 
         return x
 
-    def extract(self, x: torch.Tensor) -> torch.Tensor:
-        return self.forward(x)
-
     @property
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)
-
-    def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
-        return multi_scale(samples=samples, model=self.model)
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         return vis_vit(vit=self, image=image)

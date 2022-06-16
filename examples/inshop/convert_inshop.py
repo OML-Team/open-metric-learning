@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import pandas as pd
 from pandarallel import pandarallel
+from sklearn import preprocessing
 
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images_resize import inverse_karesize_bboxes
@@ -83,9 +84,10 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     pandarallel.initialize(nb_workers=os.cpu_count())
 
     df_part = txt_to_df(list_eval_partition)
+
     df_part["path"] = df_part["image_name"].apply(lambda x: args.dataset_root / x.replace("img/", "img_highres/"))
 
-    df_part["cls"] = df_part["path"].apply(lambda x: x.parent.parent.name)
+    df_part["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
     df_bbox = txt_to_df(list_bbox_inshop)
 
@@ -129,7 +131,11 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
         df=df, ratio_th=args.bboxes_aspect_ratio_to_fix, fix_train=args.fix_train_bboxes, fix_val=args.fix_val_bboxes
     )
 
-    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
+    le = preprocessing.LabelEncoder()
+    labels_int = le.fit_transform(df["category"])
+    df["category_int"] = labels_int
+
+    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category_int"]]
 
     check_retrieval_dataframe_format(df, dataset_root=args.dataset_root)
     return df.reset_index(drop=True)

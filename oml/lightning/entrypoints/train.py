@@ -46,9 +46,25 @@ def main(cfg: TCfg) -> None:
     augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
     albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
 
-    sampler = samplers.SequentialBalanceSampler(
-        labels=train_dataset.get_labels(), p=cfg["bs_n_cls"], k=cfg["bs_n_samples"]
-    )
+    # todo reorganise this part somehow (registry?)
+    if cfg["bs_n_categories"] == -1:
+        sampler = samplers.SequentialBalanceSampler(
+            labels=train_dataset.get_labels(), p=cfg["bs_n_cls"], k=cfg["bs_n_samples"]
+        )
+    else:
+        df = train_dataset.df
+        if "category_int" not in df.columns:  # todo: move it to converter
+            df["category_int"] = 1
+        label2category = dict(zip(df["label"], df["category_int"]))
+        sampler = samplers.SequentialCategoryBalanceSampler(
+            labels=train_dataset.get_labels(),
+            resample_labels=True,
+            weight_categories=True,
+            p=cfg["bs_n_cls"],
+            k=cfg["bs_n_samples"],
+            c=cfg["bs_n_categories"],
+            label2category=label2category,
+        )
 
     loader_train = DataLoader(
         dataset=train_dataset,
@@ -57,6 +73,7 @@ def main(cfg: TCfg) -> None:
         batch_size=sampler.batch_size,
         drop_last=True,
     )
+
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])

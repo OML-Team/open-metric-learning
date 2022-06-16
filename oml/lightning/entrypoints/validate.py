@@ -13,7 +13,7 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
 
 
-def main(cfg: TCfg) -> Tuple[MetricValCallback, Dict[str, Any]]:
+def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         im_size=cfg["im_size"],
@@ -37,6 +37,6 @@ def main(cfg: TCfg) -> Tuple[MetricValCallback, Dict[str, Any]]:
         callbacks=[clb_metric],
     )
 
-    ret_dict = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
+    logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
 
-    return clb_metric, ret_dict
+    return trainer, logs
