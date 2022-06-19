@@ -36,7 +36,7 @@ def build_sop(dataset_root: Path) -> pd.DataFrame:
 
     df = pd.concat((train_data, test_data))
 
-    df["category"] = df['path'].apply(lambda x: x.split("/")[0])
+    df["category"] = df["path"].apply(lambda x: x.split("/")[0])
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df

@@ -47,8 +47,8 @@ def check_retrieval_dataframe_format(df: Union[Path, str, pd.DataFrame], dataset
 
     # check superclass format
     if {"category", "category_int"}.intersection(set(list(df.columns))):
-        assert len(df["category"].unique()) == len(df["category_int"].unique()), \
-            "Amount of unique categories and categories id are not equal"
+        assert len(df["category"].unique()) == len(
+            df["category_int"].unique()
+        ), "Amount of unique categories and categories id are not equal"
 
         assert df["category_int"].dtypes == int, "Category_int have to be int dtype"
-
