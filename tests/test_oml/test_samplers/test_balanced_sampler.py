@@ -1,14 +1,15 @@
+import math
 from collections import Counter
 from operator import itemgetter
 from random import randint, shuffle
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Union
 
 import pytest
 
 from oml.samplers.balanced import (
     BalanceBatchSampler,
     CategoryBalanceBatchSampler,
-    Sampler,
+    DistinctCategoryBalanceBatchSampler,
 )
 
 TLabelsPK = List[Tuple[List[int], int, int]]
@@ -192,7 +193,14 @@ def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List
 
 
 def check_category_balance_batch_sampler_epoch(
-    sampler: Sampler, labels: List[int], label2category: Dict[int, int], c: int, p: int, k: int, resample_labels: bool
+    sampler: Union[CategoryBalanceBatchSampler, DistinctCategoryBalanceBatchSampler],
+    labels: List[int],
+    label2category: Dict[int, int],
+    c: int,
+    p: int,
+    k: int,
+    resample_labels: bool,
+    epoch_size: int,
 ) -> None:
     """
     Args:
@@ -203,7 +211,7 @@ def check_category_balance_batch_sampler_epoch(
         p: Number of labels in a batch
         k: Number of instances for each label in a batch
         resample_labels: resample strategy
-
+        epoch_size: expected number of batches in epoch
     """
     sampled_ids = list(sampler)
 
@@ -239,6 +247,7 @@ def check_category_balance_batch_sampler_epoch(
 
     # epoch-level invariants
     assert len(collected_categories) <= len(set(label2category.values()))
+    assert len(sampler) == epoch_size
 
 
 def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> None:
@@ -265,8 +274,7 @@ def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> No
 def test_category_balance_batch_sampler(
     request: pytest.FixtureRequest, fixture_name: str, resample_labels: bool
 ) -> None:
-    """Check that CategoryBalanceBatchSampler behaves the same with BalanceBatchSampler in case
-    of the only category.
+    """Check CategoryBalanceBatchSampler's behavior.
 
     Args:
         request: a request object to access to fixtures
@@ -286,18 +294,56 @@ def test_category_balance_batch_sampler(
             p=p,
             k=k,
             resample_labels=resample_labels,
+            epoch_size=math.ceil(len(set(labels)) / p),
         )
 
 
-def test_category_batch_sampler_resample_raises() -> None:
-    """Check the behavior of CategoryBalanceBatchSampler in case of lack of labels in a category."""
+@pytest.mark.parametrize(
+    "fixture_name,epoch_size",
+    (
+        # valid input: enough categories and labels for sampling without repetition
+        ("input_for_category_balance_batch_sampler", 100),
+    ),
+)
+def test_new_category_balance_batch_sampler(request: pytest.FixtureRequest, fixture_name: str, epoch_size: int) -> None:
+    """Check DistinctCategoryBalanceBatchSampler's behavior.
+
+    Args:
+        request: a request object to access to fixtures
+        fixture_name: name of fixture to use
+        epoch_size: number of batches in epoch
+    """
+    fixture = request.getfixturevalue(fixture_name)
+    for labels, label2category, c, p, k in fixture:
+        sampler = DistinctCategoryBalanceBatchSampler(
+            labels=labels, label2category=label2category, c=c, p=p, k=k, epoch_size=epoch_size
+        )
+        check_category_balance_batch_sampler_epoch(
+            sampler=sampler,
+            labels=labels,
+            label2category=label2category,
+            c=c,
+            p=p,
+            k=k,
+            resample_labels=True,
+            epoch_size=epoch_size,
+        )
+
+
+@pytest.mark.parametrize(
+    "sampler_class,sampler_kwargs",
+    (
+        (CategoryBalanceBatchSampler, {"resample_labels": False}),
+        (DistinctCategoryBalanceBatchSampler, {"epoch_size": 20}),
+    ),
+)
+def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwargs: Dict[str, Any]) -> None:
+    """Check the behavior of samplers in case of lack of labels in a category."""
     label2category = {0: 0, 1: 0, 2: 0, 3: 0, 4: 1, 5: 1}
     labels = [0] * 5 + [1] * 4 + [2] * 6 + [3] * 5 + [4] * 5 + [5] * 6
     c, p, k = 2, 3, 2
     with pytest.raises(ValueError, match="All the categories must have at least 3 unique labels"):
-        _ = CategoryBalanceBatchSampler(
-            labels=labels, label2category=label2category, c=c, p=p, k=k, resample_labels=False
-        )
+        _ = sampler_class(labels=labels, label2category=label2category, c=c, p=p, k=k, **sampler_kwargs)
 
 
 def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_sampler: TLabalesMappingCPK) -> None:
@@ -312,5 +358,12 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
             labels=labels, label2category=label2category, c=c, p=p, k=k, resample_labels=True
         )
         check_category_balance_batch_sampler_epoch(
-            sampler=sampler, labels=labels, label2category=label2category, c=c, p=p, k=k, resample_labels=False
+            sampler=sampler,
+            labels=labels,
+            label2category=label2category,
+            c=c,
+            p=p,
+            k=k,
+            resample_labels=False,
+            epoch_size=math.ceil(len(set(labels)) / p),
         )
