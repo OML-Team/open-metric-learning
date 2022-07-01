@@ -96,6 +96,8 @@ we provide ready to use entry points with configs based API.
 
 The possibility of using pure PyTorch and modular structure of the code leaves a room for utilizing
 OML with your favourite framework after the implementation of the necessary wrappers.
+
+Please, see "Minimal examples" section for more details.
 </p>
 </details>
 
@@ -113,6 +115,64 @@ Probably we already have a suitable pre-trained model for your domain
 in our models' zoo. In this case, you don't even need to train.
 </p>
 </details>
+
+## Minimal examples
+Training step using pure PyTorch:
+```
+model = VitExtractor("pretrained_dino")
+optimizer = SGD(model.paremeters())
+train_dataset = DatasetWithLabels()
+criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
+train_loader = DataLoader(train_dataset, batch_sampler=sampler)
+
+for batch in train_loader:
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    optmizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+```
+
+Validation step using pure PyTorch:
+```
+model = VitExtractor("pretrained_dino")
+val_dataset = DatasetQueryGallery()
+val_loader = DataLoader(val_dataset)
+caclulator = EmbeddingMetrics()
+caclulator.setup()
+
+for batch in val_loader:
+    batch["embeddings"] = model(batch["input_tensors"])
+    calc.update_data(data_dict=batch)
+
+metrics = calc.compute_metrics()
+
+```
+
+Training and validation steps using PyTorch Lightning:
+```
+model = ResnetExtractor("pretrained_moco")
+
+# train
+optimizer = SGD(model.paremeters())
+train_dataset = DatasetWithLabels()
+criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
+train_loader = DataLoader(train_dataset, batch_sampler=sampler)
+
+# val
+val_dataset = DatasetQueryGallery()
+val_loader = DataLoader(val_dataset)
+metric_callback = MetricValCallback(EmbeddingMetrics())
+
+# lightning
+pl_model = RetrievalModule(model, criterion, optimizer)
+trainer = pl.Trainer(callbacks=[metric_callback])
+trainer.fit(pl_model, train_loader, val_loader)
+
+```
 
 
 ## Acknowledgments
