@@ -118,7 +118,7 @@ in our models' zoo. In this case, you don't even need to train.
 
 ## Minimal examples
 <details>
-<summary>Training step using pure PyTorch:</summary>
+<summary>Training step using pure PyTorch</summary>
 <p>
 
 ```
@@ -135,13 +135,12 @@ for batch in train_loader:
     optmizer.zero_grad()
     loss.backward()
     optimizer.step()
-
 ```
 </p>
 </details>
 
 <details>
-<summary>Validation step using pure PyTorch:</summary>
+<summary>Validation step using pure PyTorch</summary>
 <p>
 
 ```
@@ -156,13 +155,12 @@ for batch in val_loader:
     calc.update_data(data_dict=batch)
 
 metrics = calc.compute_metrics()
-
 ```
 </p>
 </details>
 
 <details>
-<summary>Training and validation steps using PyTorch Lightning:</summary>
+<summary>Training and validation steps using PyTorch Lightning</summary>
 <p>
 
 ```
@@ -184,7 +182,6 @@ metric_callback = MetricValCallback(EmbeddingMetrics())
 pl_model = RetrievalModule(model, criterion, optimizer)
 trainer = pl.Trainer(callbacks=[metric_callback])
 trainer.fit(pl_model, train_loader, val_loader)
-
 ```
 </p>
 </details>
