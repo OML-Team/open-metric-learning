@@ -11,7 +11,7 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
  (like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
  The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
  Thus, during the training we:
-   1. Use Sampler to form batches (for example, balanced in terms of labels or categories)
+   1. Use DataLoader + Sampler to form batches (for example, balanced in terms of labels or categories)
    2. [Only for losses based on combinations] Use Miner to form effective pairs or triplets, including
    those which utilize a memory bank.
    3. Compute loss.
