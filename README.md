@@ -117,7 +117,10 @@ in our models' zoo. In this case, you don't even need to train.
 </details>
 
 ## Minimal examples
-Training step using pure PyTorch:
+<details>
+<summary>Training step using pure PyTorch:</summary>
+<p>
+
 ```
 model = VitExtractor("pretrained_dino")
 optimizer = SGD(model.paremeters())
@@ -134,6 +137,8 @@ for batch in train_loader:
     optimizer.step()
 
 ```
+</p>
+</details>
 
 Validation step using pure PyTorch:
 ```
