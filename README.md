@@ -140,7 +140,10 @@ for batch in train_loader:
 </p>
 </details>
 
-Validation step using pure PyTorch:
+<details>
+<summary>Validation step using pure PyTorch:</summary>
+<p>
+
 ```
 model = VitExtractor("pretrained_dino")
 val_dataset = DatasetQueryGallery()
@@ -155,8 +158,13 @@ for batch in val_loader:
 metrics = calc.compute_metrics()
 
 ```
+</p>
+</details>
 
-Training and validation steps using PyTorch Lightning:
+<details>
+<summary>Training and validation steps using PyTorch Lightning:</summary>
+<p>
+
 ```
 model = ResnetExtractor("pretrained_moco")
 
@@ -178,7 +186,8 @@ trainer = pl.Trainer(callbacks=[metric_callback])
 trainer.fit(pl_model, train_loader, val_loader)
 
 ```
-
+</p>
+</details>
 
 ## Acknowledgments
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
