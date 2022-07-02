@@ -419,6 +419,7 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
         for _ in range(self.batches_in_epoch):
             if len(category2labels) < self._c:
                 category2labels = deepcopy(self._category2labels)
+                used_labels = defaultdict(set)
             categories_available = list(category2labels.keys())
             categories = np.random.choice(
                 categories_available, size=min(self._c, len(categories_available)), replace=False

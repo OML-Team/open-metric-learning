@@ -305,7 +305,9 @@ def test_category_balance_batch_sampler(
         ("input_for_category_balance_batch_sampler", 100),
     ),
 )
-def test_new_category_balance_batch_sampler(request: pytest.FixtureRequest, fixture_name: str, epoch_size: int) -> None:
+def test_distinct_category_balance_batch_sampler(
+    request: pytest.FixtureRequest, fixture_name: str, epoch_size: int
+) -> None:
     """Check DistinctCategoryBalanceBatchSampler's behavior.
 
     Args:
