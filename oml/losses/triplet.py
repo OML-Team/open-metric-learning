@@ -22,7 +22,7 @@ class TripletLoss(Module):
                     solve the often problem when TripletMarginLoss converges to it's
                     margin value (dimension collapse).
 
-            reduction: "mean" or "sum"
+            reduction: "mean", "sum" or "none"
             need_logs: set True if you want to return dict with intermediate calculations
 
         """
