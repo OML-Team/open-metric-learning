@@ -121,7 +121,7 @@ in our models' zoo. In this case, you don't even need to train.
 <summary>Training step using pure PyTorch</summary>
 <p>
 
-```
+```python
 model = VitExtractor("pretrained_dino")
 optimizer = SGD(model.paremeters())
 train_dataset = DatasetWithLabels()
@@ -143,16 +143,18 @@ for batch in train_loader:
 <summary>Validation step using pure PyTorch</summary>
 <p>
 
-```
+```python
 model = VitExtractor("pretrained_dino")
+model.eval()
 val_dataset = DatasetQueryGallery()
 val_loader = DataLoader(val_dataset)
 caclulator = EmbeddingMetrics()
 caclulator.setup()
 
-for batch in val_loader:
-    batch["embeddings"] = model(batch["input_tensors"])
-    calc.update_data(data_dict=batch)
+with torch.no_grad():
+    for batch in val_loader:
+        batch["embeddings"] = model(batch["input_tensors"])
+        calc.update_data(data_dict=batch)
 
 metrics = calc.compute_metrics()
 ```
@@ -163,7 +165,7 @@ metrics = calc.compute_metrics()
 <summary>Training and validation steps using PyTorch Lightning</summary>
 <p>
 
-```
+```python
 model = ResnetExtractor("pretrained_moco")
 
 # train
