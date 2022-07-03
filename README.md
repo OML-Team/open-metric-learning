@@ -118,11 +118,13 @@ in our models' zoo. In this case, you don't even need to train.
 
 ## Minimal examples
 <details>
-<summary>Training step using pure PyTorch</summary>
+<summary>Using pure PyTorch</summary>
 <p>
 
+Training
 ```python
 model = VitExtractor("pretrained_dino")
+model.train()
 optimizer = SGD(model.paremeters())
 train_dataset = DatasetWithLabels()
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
@@ -136,13 +138,8 @@ for batch in train_loader:
     loss.backward()
     optimizer.step()
 ```
-</p>
-</details>
 
-<details>
-<summary>Validation step using pure PyTorch</summary>
-<p>
-
+Validation
 ```python
 model = VitExtractor("pretrained_dino")
 model.eval()
@@ -162,7 +159,7 @@ metrics = calc.compute_metrics()
 </details>
 
 <details>
-<summary>Training and validation steps using PyTorch Lightning</summary>
+<summary>Using PyTorch Lightning</summary>
 <p>
 
 ```python
