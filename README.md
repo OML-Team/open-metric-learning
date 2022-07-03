@@ -177,7 +177,7 @@ val_dataset = DatasetQueryGallery()
 val_loader = DataLoader(val_dataset)
 metric_callback = MetricValCallback(EmbeddingMetrics())
 
-# lightning
+# run
 pl_model = RetrievalModule(model, criterion, optimizer)
 trainer = pl.Trainer(callbacks=[metric_callback])
 trainer.fit(pl_model, train_loader, val_loader)
