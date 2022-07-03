@@ -31,4 +31,9 @@ jobs:
     - name: Pre-commit tests
       run: |
         make run_precommit
-
+    - name: Run tests
+      run: |
+        make run_tests
+    - name: Run mock scripts
+      run: |
+        make run_mock_scripts
