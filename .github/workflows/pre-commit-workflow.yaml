@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get get update && apt-get install cmake
-        python -m pip install --upgrade pre-commit==2.15.0
+        python -m pip install --upgrade pre-commit==2.15.0 pytest==6.2.5
     - name: Pre-commit tests
       run: |
         make run_precommit
