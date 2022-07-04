@@ -11,7 +11,7 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
  (like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
  The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
  Thus, during the training we:
-   1. Use Sampler to form batches (for example, balanced in terms of labels or categories)
+   1. Use DataLoader + Sampler to form batches (for example, balanced in terms of labels or categories)
    2. [Only for losses based on combinations] Use Miner to form effective pairs or triplets, including
    those which utilize a memory bank.
    3. Compute loss.
@@ -96,6 +96,8 @@ we provide ready to use entry points with configs based API.
 
 The possibility of using pure PyTorch and modular structure of the code leaves a room for utilizing
 OML with your favourite framework after the implementation of the necessary wrappers.
+
+Please, see "Minimal examples" section for more details.
 </p>
 </details>
 
@@ -114,6 +116,74 @@ in our models' zoo. In this case, you don't even need to train.
 </p>
 </details>
 
+## Minimal examples
+<details>
+<summary>Using pure PyTorch</summary>
+<p>
+
+Training
+```python
+model = VitExtractor("pretrained_dino")
+model.train()
+optimizer = SGD(model.paremeters())
+train_dataset = DatasetWithLabels()
+criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
+train_loader = DataLoader(train_dataset, batch_sampler=sampler)
+
+for batch in train_loader:
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    optmizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+```
+
+Validation
+```python
+model = VitExtractor("pretrained_dino")
+model.eval()
+val_dataset = DatasetQueryGallery()
+val_loader = DataLoader(val_dataset)
+caclulator = EmbeddingMetrics()
+caclulator.setup()
+
+with torch.no_grad():
+    for batch in val_loader:
+        batch["embeddings"] = model(batch["input_tensors"])
+        calc.update_data(data_dict=batch)
+
+metrics = calc.compute_metrics()
+```
+</p>
+</details>
+
+<details>
+<summary>Using PyTorch Lightning</summary>
+<p>
+
+```python
+model = ResnetExtractor("pretrained_moco")
+
+# train
+optimizer = SGD(model.paremeters())
+train_dataset = DatasetWithLabels()
+criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
+train_loader = DataLoader(train_dataset, batch_sampler=sampler)
+
+# val
+val_dataset = DatasetQueryGallery()
+val_loader = DataLoader(val_dataset)
+metric_callback = MetricValCallback(EmbeddingMetrics())
+
+# run
+pl_model = RetrievalModule(model, criterion, optimizer)
+trainer = pl.Trainer(callbacks=[metric_callback])
+trainer.fit(pl_model, train_loader, val_loader)
+```
+</p>
+</details>
 
 ## Acknowledgments
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>

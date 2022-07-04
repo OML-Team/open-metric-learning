@@ -18,7 +18,7 @@ class TripletLoss(Module):
                     solve the often problem when TripletMarginLoss converges to it's
                     margin value (dimension collapse).
 
-            reduction: "mean" or "sum"
+            reduction: "mean", "sum" or "none"
 
         """
         assert reduction in ("mean", "sum")
