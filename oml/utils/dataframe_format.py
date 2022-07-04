@@ -45,10 +45,10 @@ def check_retrieval_dataframe_format(df: Union[Path, str, pd.DataFrame], dataset
         for coord in BBOXES_FIELDS:
             assert all((df[coord] >= 0).to_list()), coord
 
-    # check superclass format
-    if {"category", "category_int"}.intersection(set(list(df.columns))):
+    # check categories format
+    if ("category" in df.columns) and ("category_name" in df.columns):
         assert len(df["category"].unique()) == len(
-            df["category_int"].unique()
-        ), "Amount of unique categories and categories id are not equal"
+            df["category_name"].unique()
+        ), "Amount of unique categories and their names are not equal"
 
-        assert df["category_int"].dtypes == int, "Category_int have to be int dtype"
+        assert df["category"].dtypes == int, "Category have to be int dtype"

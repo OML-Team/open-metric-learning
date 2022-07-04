@@ -1,6 +1,6 @@
 ### Retrieval DataFrame Format
 Expecting columns: `label`, `path`, `split`, `is_query`, `is_gallery` and
-optional `x_1`, `x_2`, `y_1`, `y_2`.
+optional `category`, `category_name`, `x_1`, `x_2`, `y_1`, `y_2`.
 
 * `split` must be on of 2 values: `train` or `validation`
 * `is_query` and `is_gallery` have to be `None` where `split == train` and `True`
