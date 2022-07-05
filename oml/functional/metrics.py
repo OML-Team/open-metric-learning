@@ -7,7 +7,7 @@ import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
 
-TMetricsDict = Dict[str, Dict[int, float]]
+TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
 
 
 def calc_retrieval_metrics(
@@ -18,6 +18,7 @@ def calc_retrieval_metrics(
     need_cmc: bool = True,
     need_precision: bool = True,
     need_map: bool = True,
+    reduce_mean: bool = True,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -31,11 +32,13 @@ def calc_retrieval_metrics(
         need_cmc: If CMC metric is needed
         need_map: If MeanAveragePrecision metric is needed
         need_precision: If Precision metric  is needed
+        reduce_mean: if False return metrics for each query without reduction
 
     Returns:
         Dictionary with metrics.
     """
-    if not any([need_cmc, need_cmc, need_precision]):
+
+    if not any([need_map, need_cmc, need_precision]):
         raise ValueError("You must specify at leas 1 metric to calculate it")
 
     if not ((len(top_k) >= 1) and all([isinstance(x, int) and (x > 0) for x in top_k])):
@@ -63,8 +66,7 @@ def calc_retrieval_metrics(
             )
 
     if mask_to_ignore is not None:
-        distances[mask_to_ignore] = float("inf")
-        mask_gt[mask_to_ignore] = False
+        distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     top_k_clipped = tuple(min(k, gallery_sz) for k in top_k)
 
@@ -78,23 +80,36 @@ def calc_retrieval_metrics(
     for k, k_show in zip(top_k_clipped, top_k):
 
         if need_cmc:
-            cmc = torch.any(gt_tops[:, :k], dim=1).float().mean()
+            cmc = torch.any(gt_tops[:, :k], dim=1).float()
+            if reduce_mean:
+                cmc = cmc.mean()
             metrics["cmc"][k_show] = cmc
 
         if need_precision:
             n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k).unsqueeze(0))
-            precision = (torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix).mean()
+            precision = torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix
+            if reduce_mean:
+                precision = precision.mean()
             metrics["precision"][k_show] = precision
 
         if need_map:
             n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k).unsqueeze(0))
             correct_preds = torch.cumsum(gt_tops[:, :k], dim=1)
             positions = torch.arange(1, k + 1).unsqueeze(0)
-            ap = torch.sum((correct_preds / positions) * gt_tops[:, :k], dim=1) / n_gt_matrix
-            mean_ap = torch.mean(ap)
+            mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k], dim=1) / n_gt_matrix
+            if reduce_mean:
+                mean_ap = mean_ap.mean()
             metrics["map"][k_show] = mean_ap
 
     return metrics
+
+
+def apply_mask_to_ignore(
+    distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    distances[mask_to_ignore] = float("inf")
+    mask_gt[mask_to_ignore] = False
+    return distances, mask_gt
 
 
 def calc_gt_mask(
@@ -114,6 +129,25 @@ def calc_gt_mask(
     gt_mask = query_labels[..., None] == gallery_labels[None, ...]
 
     return gt_mask
+
+
+def calc_mask_to_ignore(
+    is_query: Union[np.ndarray, torch.Tensor], is_gallery: Union[np.ndarray, torch.Tensor]
+) -> torch.Tensor:
+    assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [is_query, is_gallery])
+    assert type(is_query) == type(is_gallery)
+    assert is_query.ndim == is_gallery.ndim == 1
+    assert len(is_query) == len(is_gallery)
+
+    if isinstance(is_query, np.ndarray):
+        is_query = torch.from_numpy(is_query)
+        is_gallery = torch.from_numpy(is_gallery)
+
+    ids_query = torch.nonzero(is_query).squeeze()
+    ids_gallery = torch.nonzero(is_gallery).squeeze()
+    mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+
+    return mask_to_ignore
 
 
 def calc_distance_matrix(
