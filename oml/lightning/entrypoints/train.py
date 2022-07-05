@@ -56,10 +56,9 @@ def main(cfg: TCfg) -> None:
         if "category_int" not in df.columns:  # todo: move it to converter
             df["category_int"] = 1
         label2category = dict(zip(df["label"], df["category_int"]))
-        sampler = samplers.SequentialCategoryBalanceSampler(
+        sampler = samplers.SequentialDistinctCategoryBalanceSampler(
             labels=train_dataset.get_labels(),
-            resample_labels=True,
-            weight_categories=True,
+            epoch_size=2272,
             p=cfg["bs_n_cls"],
             k=cfg["bs_n_samples"],
             c=cfg["bs_n_categories"],

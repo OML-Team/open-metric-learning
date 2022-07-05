@@ -133,25 +133,7 @@ class ResnetExtractor(IExtractor):
         return x
 
     def extract(self, x: torch.Tensor) -> torch.Tensor:
-        # todo: we probably want to change the behaviour of last fc during the inference
-        x = self.model.conv1(x)
-        x = self.model.bn1(x)
-        x = self.model.relu(x)
-        x = self.model.maxpool(x)
-
-        x = self.model.layer1(x)
-        x = self.model.layer2(x)
-        x = self.model.layer3(x)
-        x = self.model.layer4(x)
-
-        x = self.model.avgpool(x)
-        x = torch.flatten(x, 1)
-
-        if self.normalise_features:
-            xn = torch.linalg.norm(x, 2, dim=1).detach()
-            x = x.div(xn.unsqueeze(1))
-
-        return x
+        return self.forward(x)
 
     def calc_last_conv_channels(self) -> int:
         last_block = self.model.layer4[-1]
