@@ -83,7 +83,7 @@ def get_all_augs() -> albu.Compose:
     augs = albu.Compose(
         [
             # albu.RandomCrop(height=304, width=304, always_apply=True),  # todo
-            albu.RandomResizedCrop(height=304, width=304, scale=(0.5, 1), always_apply=True),
+            # albu.RandomResizedCrop(height=304, width=304, scale=(0.5, 1), always_apply=True),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
