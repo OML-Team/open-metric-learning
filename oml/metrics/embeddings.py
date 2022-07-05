@@ -1,14 +1,13 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
-from torch import nonzero
-
 from oml.const import T_Str2Int_or_Int2Str
 from oml.functional.metrics import (
     TMetricsDict,
     calc_distance_matrix,
     calc_gt_mask,
     calc_retrieval_metrics,
+    calc_mask_to_ignore,
 )
 from oml.interfaces.metrics import IBasicMetric
 from oml.metrics.accumulation import Accumulator
@@ -95,9 +94,7 @@ class EmbeddingMetrics(IBasicMetric):
 
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        ids_query = nonzero(is_query).squeeze()
-        ids_gallery = nonzero(is_gallery).squeeze()
-        self.mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
