@@ -21,7 +21,7 @@ class TripletLoss(Module):
             reduction: "mean", "sum" or "none"
 
         """
-        assert reduction in ("mean", "sum")
+        assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super(TripletLoss, self).__init__()
@@ -50,6 +50,8 @@ class TripletLoss(Module):
             loss = loss.mean()
         elif self.reduction == "sum":
             loss = loss.sum()
+        elif self.reduction == "none":
+            return loss
         else:
             raise ValueError()
 
@@ -93,7 +95,7 @@ class TripletLossPlain(Module):
             >>> TripletLoss
 
         """
-        assert reduction in ("mean", "sum")
+        assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super(TripletLossPlain, self).__init__()
@@ -141,7 +143,7 @@ class TripletLossWithMiner(Module):
 
             miner: Miner to form triplets inside the batch
         """
-        assert reduction in ("mean", "sum")
+        assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super().__init__()
