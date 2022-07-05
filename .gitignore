@@ -2,6 +2,7 @@
 *.DS_Store*
 *.idea/*
 .env
+tests/test_examples/outputs/
 tests/test_examples/logs/
 tests/test_examples/outputs/
 lightning_logs/
