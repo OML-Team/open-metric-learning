@@ -22,7 +22,7 @@ def build_sop(dataset_root: Path) -> pd.DataFrame:
     train_data = pd.read_csv(ebay_train, sep=" ")
     test_data = pd.read_csv(ebay_test, sep=" ")
 
-    col_map = {"class_id": "label"}
+    col_map = {"class_id": "label", "super_class_id": "category"}
     train_data = train_data.rename(columns=col_map)
     test_data = test_data.rename(columns=col_map)
 
@@ -35,7 +35,8 @@ def build_sop(dataset_root: Path) -> pd.DataFrame:
     test_data["is_gallery"] = True
 
     df = pd.concat((train_data, test_data))
-    df = df[["label", "path", "split", "is_query", "is_gallery"]]
+
+    df["category_name"] = df["path"].apply(lambda x: x.split("/")[0])
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df

@@ -23,5 +23,4 @@ check_converters:
 	export PYTHONWARNINGS=ignore; python examples/cub/convert_cub.py        --dataset_root  /nydl/data/CUB_200_2011
 	export PYTHONWARNINGS=ignore; python examples/sop/convert_sop.py        --dataset_root  /nydl/data/Stanford_Online_Products
 	export PYTHONWARNINGS=ignore; python examples/cars/convert_cars.py      --dataset_root  /nydl/data/CARS196
-	export PYTHONWARNINGS=ignore; python examples/whales/convert_whales.py  --dataset_root  /nydl/data/whales
 	export PYTHONWARNINGS=ignore; python examples/inshop/convert_inshop.py  --dataset_root  /nydl/data/DeepFashion_InShop
