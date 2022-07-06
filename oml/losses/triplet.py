@@ -224,8 +224,8 @@ class TripletLossWithMiner(Module):
                         "bank_active_tri": active[is_bank_tri].sum() / is_bank_tri.sum(),
                         "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri]),
                         "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri]),
-                        "pos_dist_bank": cdist_mean(anchor[~is_orig_tri], positive[~is_orig_tri]),
-                        "neg_dist_bank": cdist_mean(anchor[~is_orig_tri], negative[~is_orig_tri]),
+                        "pos_dist_bank": cdist_mean(anchor[is_bank_tri], positive[is_bank_tri]),
+                        "neg_dist_bank": cdist_mean(anchor[is_bank_tri], negative[is_bank_tri]),
                     }
                 )
 
