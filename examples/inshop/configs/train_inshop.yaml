@@ -16,11 +16,14 @@ im_pad_ratio_val: 0.0
 num_workers: 20
 
 # in terms of 1 gpu
-bs_n_cls: 2
-bs_n_samples: 8
-bs_n_categories: 1
-bs_val: 96
 
+sampler:
+  name: SequentialBalanceSampler
+  args:
+    p: 2
+    k: 8
+
+bs_val: 96
 max_epochs: 1
 valid_period: 1
 
@@ -49,7 +52,6 @@ criterion:
       args:
         bank_size_in_batches: 20
         tri_expand_k: 5
-        need_logs: True
 
 optimizer:
   args:

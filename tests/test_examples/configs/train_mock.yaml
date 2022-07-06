@@ -46,8 +46,12 @@ scheduler:
       - 2
       - 3
 
-bs_n_cls: 2
-bs_n_samples: 2
+sampler:
+  name: SequentialBalanceSampler
+  args:
+    p: 2
+    k: 8
+
 bs_val: 2
 
 max_epochs: 2

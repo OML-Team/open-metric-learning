@@ -71,8 +71,8 @@ class TripletLoss(Module):
         if self.need_logs:
             self.last_logs = {
                 "active_tri": float((loss.clone().detach() > 0).float().mean()),
-                "pos_dist": float(positive_dist.clone().deatch().mean().item()),
-                "neg_dist": float(negative_dist.clone().deatch().mean().item()),
+                "pos_dist": float(positive_dist.clone().detach().mean().item()),
+                "neg_dist": float(negative_dist.clone().detach().mean().item()),
             }
 
         if self.reduction == "mean":

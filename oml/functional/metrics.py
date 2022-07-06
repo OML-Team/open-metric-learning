@@ -35,7 +35,7 @@ def calc_retrieval_metrics(
     Returns:
         Dictionary with metrics.
     """
-    if not any([need_cmc, need_cmc, need_precision]):
+    if not any([need_cmc, need_precision, need_map]):
         raise ValueError("You must specify at leas 1 metric to calculate it")
 
     if not ((len(top_k) >= 1) and all([isinstance(x, int) and (x > 0) for x in top_k])):

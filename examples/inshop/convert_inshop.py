@@ -1,13 +1,11 @@
-import os
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-import cv2
+import imagesize
 import numpy as np
 import pandas as pd
-from pandarallel import pandarallel
 from sklearn import preprocessing
 
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
@@ -81,13 +79,11 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     for file in [list_eval_partition, list_bbox_inshop]:
         assert file.is_file(), f"File {file} does not exist."
 
-    pandarallel.initialize(nb_workers=os.cpu_count())
-
     df_part = txt_to_df(list_eval_partition)
 
     df_part["path"] = df_part["image_name"].apply(lambda x: args.dataset_root / x.replace("img/", "img_highres/"))
 
-    df_part["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
+    df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
     df_bbox = txt_to_df(list_bbox_inshop)
 
@@ -96,7 +92,7 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 
     df["label"] = df["item_id"].apply(lambda x: int(x[3:]))
 
-    df["hw"] = df["path"].parallel_apply(lambda x: cv2.imread(str(x)).shape[:2])
+    df["hw"] = df["path"].apply(lambda x: imagesize.get(str(x))[::-1])
     df["h"] = df["hw"].apply(lambda x: x[0])
     df["w"] = df["hw"].apply(lambda x: x[1])
     del df["hw"]
@@ -132,10 +128,11 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     )
 
     le = preprocessing.LabelEncoder()
-    labels_int = le.fit_transform(df["category"])
-    df["category_int"] = labels_int
+    df["category"] = le.fit_transform(df["category_name"])
 
-    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category_int"]]
+    df = df[
+        ["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category", "category_name"]
+    ]
 
     check_retrieval_dataframe_format(df, dataset_root=args.dataset_root)
     return df.reset_index(drop=True)

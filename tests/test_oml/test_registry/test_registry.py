@@ -12,6 +12,7 @@ from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.miners import get_miner_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
+from oml.registry.samplers import get_sampler
 from oml.registry.schedulers import get_scheduler
 from oml.utils.misc import TCfg
 
@@ -60,4 +61,29 @@ def test_registry_from_files(folder_name: str, factory_fun: Callable[[TCfg], Any
 def test_registry_schedulers(name: str, params: Dict[str, Any]) -> None:
     optimizer = SGD(list(nn.Linear(10, 20).parameters()), lr=1e-3)
     get_scheduler(name=name, optimizer=optimizer, kwargs=params)
+    assert True
+
+
+@pytest.mark.parametrize(
+    "name,params",
+    [
+        ("SequentialBalanceSampler", {"p": 2, "k": 2}),
+        (
+            "SequentialCategoryBalanceSampler",
+            {"p": 2, "k": 2, "c": 1, "resample_labels": False, "weight_categories": True},
+        ),
+        ("SequentialDistinctCategoryBalanceSampler", {"p": 2, "k": 2, "c": 1, "epoch_size": 10}),
+    ],
+)
+def test_registry_samplers(name: str, params: Dict[str, Any]) -> None:
+    labels = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3]
+    label2category = {0: 0, 1: 0, 2: 1, 3: 1}
+
+    params["label2category"] = label2category
+    params["labels"] = labels
+
+    sampler = get_sampler(name=name, **params)
+    for _ in sampler:
+        pass
+
     assert True

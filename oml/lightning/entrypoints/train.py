@@ -1,4 +1,5 @@
 import os
+import warnings
 from pathlib import Path
 
 import albumentations as albu
@@ -7,7 +8,6 @@ from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
-import oml.samplers.balanced as samplers
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
@@ -16,6 +16,7 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
+from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.registry.transforms import get_augs_with_default
 from oml.utils.misc import (
@@ -28,6 +29,8 @@ from oml.utils.misc import (
 
 def main(cfg: TCfg) -> None:
     print(cfg)
+
+    cfg = dictconfig_to_dict(cfg)
 
     set_global_seed(cfg["seed"])
 
@@ -42,28 +45,28 @@ def main(cfg: TCfg) -> None:
         train_transform=train_augs,
         dataframe_name=cfg["dataframe_name"],
     )
+    df = train_dataset.df
 
     augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
     albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
 
-    # todo reorganise this part somehow (registry?)
-    if cfg["bs_n_categories"] == -1:
-        sampler = samplers.SequentialBalanceSampler(
-            labels=train_dataset.get_labels(), p=cfg["bs_n_cls"], k=cfg["bs_n_samples"]
-        )
-    else:
-        df = train_dataset.df
-        if "category_int" not in df.columns:  # todo: move it to converter
-            df["category_int"] = 1
-        label2category = dict(zip(df["label"], df["category_int"]))
-        sampler = samplers.SequentialDistinctCategoryBalanceSampler(
-            labels=train_dataset.get_labels(),
-            epoch_size=2272,
-            p=cfg["bs_n_cls"],
-            k=cfg["bs_n_samples"],
-            c=cfg["bs_n_categories"],
-            label2category=label2category,
-        )
+    if "category" not in df.columns:
+        df["category"] = 0
+        if cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
+            warnings.warn(
+                "NOTE! You are trying to use Sampler which works with the information related"
+                "to categories, but there is no <category> column in your DataFrame."
+                "We will add this column filled with the trivial value."
+            )
+
+    # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
+    runtime_args = {"labels": train_dataset.get_labels(), "label2category": dict(zip(df["label"], df["category"]))}
+    sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
+
+    extractor = get_extractor_by_cfg(cfg["model"])
+    criterion = get_criterion_by_cfg(cfg["criterion"])
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
+    scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
 
     loader_train = DataLoader(
         dataset=train_dataset,
@@ -75,12 +78,7 @@ def main(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    extractor = get_extractor_by_cfg(cfg["model"])
-    criterion = get_criterion_by_cfg(cfg["criterion"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
-    scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
-
-    metrics_calc = EmbeddingMetrics(top_k=(1, 5, 10), need_cmc=True, need_precision=True, need_map=True)
+    metrics_calc = EmbeddingMetrics(top_k=(1, 5), need_cmc=True, need_precision=True, need_map=True)
     metrics_clb = MetricValCallback(metric=metrics_calc)
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
