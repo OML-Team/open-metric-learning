@@ -7,6 +7,7 @@ from torch.nn import Module
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.among_batches import TripletMinerWithMemory
 from oml.miners.inbatch_all import AllTripletsMiner
+from oml.utils.misc_torch import cdist_mean
 
 TLogs = Dict[str, float]
 TLossOutput = Union[Tensor, Tuple[Tensor, TLogs]]
@@ -23,7 +24,10 @@ class TripletLoss(Module):
                     margin value (dimension collapse).
 
             reduction: "mean", "sum" or "none"
-            need_logs: set True if you want to return dict with intermediate calculations
+
+            need_logs: Set True if you want to calculate logs.
+                The result will be saved in
+                >>> self.logs
 
         """
         assert reduction in ("mean", "sum", "none")
@@ -34,9 +38,13 @@ class TripletLoss(Module):
         self.margin = margin
         self.reduction = reduction
         self.need_logs = need_logs
+        self.last_logs: Dict[str, float] = {}
 
     def forward(
-        self, anchor: Tensor, positive: Tensor, negative: Tensor, is_original_tri: Optional[Tensor] = None
+        self,
+        anchor: Tensor,
+        positive: Tensor,
+        negative: Tensor,
     ) -> TLossOutput:
         """
 
@@ -44,10 +52,9 @@ class TripletLoss(Module):
             anchor: Anchor features with the shape of (bs, features)
             positive: Positive features with the shape of (bs, features)
             negative: Negative features with the shape of (bs, features)
-            is_original_tri: Optional indicator with the shape of (bs,) which defines if triplet comes
-                from the original batch or from the memory bank.
 
         Returns:
+            loss value
 
         """
         assert anchor.shape == positive.shape == negative.shape
@@ -67,17 +74,11 @@ class TripletLoss(Module):
             loss = torch.relu(self.margin + positive_dist - negative_dist)
 
         if self.need_logs:
-            if is_original_tri is not None:
-                # todo: it makes no sense with margin=null
-                is_bank_tri = ~is_original_tri
-                orig_active = (loss.clone().detach()[is_original_tri] > 0).float().sum() / is_original_tri.sum()
-                bank_active = (loss.clone().detach()[is_bank_tri] > 0).float().sum() / is_bank_tri.sum()
-                logs = {"original_active_tri": float(orig_active), "bank_active_tri": float(bank_active)}
-            else:
-                active = (loss.clone().detach() > 0).float().mean()
-                logs = {"active_tri": float(active)}
-        else:
-            logs = {}
+            self.last_logs = {
+                "active_tri": float((loss.clone().detach() > 0).float().mean()),
+                "pos_dist": float(positive_dist.clone().deatch().mean().item()),
+                "neg_dist": float(negative_dist.clone().deatch().mean().item()),
+            }
 
         if self.reduction == "mean":
             loss = loss.mean()
@@ -88,10 +89,7 @@ class TripletLoss(Module):
         else:
             raise ValueError()
 
-        if self.need_logs:
-            return loss, logs
-        else:
-            return loss
+        return loss
 
 
 def get_tri_ids_in_plain(n: int) -> Tuple[List[int], List[int], List[int]]:
@@ -130,12 +128,17 @@ class TripletLossPlain(Module):
             reduction: Check args of
             >>> TripletLoss
 
+            need_logs: Set True if you want to calculate logs.
+               The result will be saved in
+               >>> self.last_logs
+
         """
         assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super(TripletLossPlain, self).__init__()
         self.criterion = TripletLoss(margin=margin, reduction=reduction, need_logs=need_logs)
+        self.last_logs = self.criterion.last_logs
 
     def forward(self, features: torch.Tensor) -> TLossOutput:
         """
@@ -178,18 +181,25 @@ class TripletLossWithMiner(Module):
             margin: Check args of
             >>> TripletLoss
 
+            miner: Miner to form triplets inside the batch
+
             reduction: Check args of
             >>> TripletLoss
 
-            miner: Miner to form triplets inside the batch
+            need_logs: Set True if you want to calculate logs.
+               The result will be saved in
+               >>> self.last_logs
         """
         assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super().__init__()
-        self._miner = miner
-        # todo: think about handling logs later
-        self.tri_loss = TripletLoss(margin=margin, reduction=reduction, need_logs=True)
+        self.tri_loss = TripletLoss(margin=margin, reduction="none", need_logs=need_logs)
+        self.miner = miner
+        self.reduction = reduction
+        self.need_logs = need_logs
+
+        self.last_logs: Dict[str, float] = {}
 
     def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tuple[Tensor, TLogs]:
         """
@@ -205,16 +215,36 @@ class TripletLossWithMiner(Module):
 
         # if miner can produce triplets using samples outside of the batch,
         # it has to return the corresponding indicator names <is_original_tri>
-        if isinstance(self._miner, TripletMinerWithMemory):
-            anchor, positive, negative, logs_miner, is_original_tri = self._miner.sample(
-                features=features, labels=labels_list
-            )
+        if isinstance(self.miner, TripletMinerWithMemory):
+            anchor, positive, negative, is_orig_tri = self.miner.sample(features=features, labels=labels_list)
         else:
-            anchor, positive, negative, logs_miner = self._miner.sample(features=features, labels=labels_list)
-            is_original_tri = None
+            anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
+            is_orig_tri = None
 
-        loss, logs_loss = self.tri_loss(
-            anchor=anchor, positive=positive, negative=negative, is_original_tri=is_original_tri
-        )
+        loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
+        self.last_logs.update(self.tri_loss.last_logs)
 
-        return loss, {**logs_miner, **logs_loss}
+        if self.need_logs and isinstance(self.miner, TripletMinerWithMemory):
+            # todo: it makes no sense with margin=null
+            is_bank_tri = ~is_orig_tri
+            self.last_logs.update(
+                {
+                    "original_active_tri": (loss.clone().detach()[is_orig_tri] > 0).float().sum() / is_orig_tri.sum(),
+                    "bank_active_tri": (loss.clone().detach()[is_bank_tri] > 0).float().sum() / is_bank_tri.sum(),
+                    "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri]),
+                    "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri]),
+                    "pos_dist_bank": cdist_mean(anchor[~is_orig_tri], positive[~is_orig_tri]),
+                    "neg_dist_bank": cdist_mean(anchor[~is_orig_tri], negative[~is_orig_tri]),
+                }
+            )
+
+        if self.reduction == "mean":
+            loss = loss.mean()
+        elif self.reduction == "sum":
+            loss = loss.sum()
+        elif self.reduction == "none":
+            return loss
+        else:
+            raise ValueError()
+
+        return loss

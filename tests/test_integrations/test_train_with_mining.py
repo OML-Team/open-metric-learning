@@ -67,7 +67,7 @@ def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin
         assert len(batch["labels"]) == p * k
 
         embeddings = model(batch["input_tensors"])
-        loss, _ = criterion(embeddings, batch["labels"])
+        loss = criterion(embeddings, batch["labels"])
 
         if isinstance(miner, TripletMinerWithMemory) and (i < miner.bank_size_in_batches):
             # we cannot guarantee any values of loss due to impact of memory bank initialisation

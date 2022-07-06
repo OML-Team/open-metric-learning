@@ -43,10 +43,11 @@ class RetrievalModule(pl.LightningModule):
         embeddings = self.model(batch[self.key_input])
         bs = len(embeddings)
 
-        loss, loss_logs = self.criterion(embeddings, batch[self.key_target])
-
-        self.log_dict(loss_logs, prog_bar=False, batch_size=bs, on_step=False, on_epoch=True)
+        loss = self.criterion(embeddings, batch[self.key_target])
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+
+        if hasattr(self.criterion, "last_logs"):
+            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=False, on_epoch=True)
 
         if self.scheduler is not None:
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)

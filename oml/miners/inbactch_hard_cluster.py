@@ -1,11 +1,11 @@
 from collections import Counter
-from typing import Dict, List, Tuple
+from typing import List
 
 import numpy as np
 import torch
 from torch import Tensor
 
-from oml.interfaces.miners import ITripletsMiner, TLabels, labels2list
+from oml.interfaces.miners import ITripletsMiner, TLabels, TTriplets, labels2list
 from oml.utils.misc import find_value_ids
 
 
@@ -125,7 +125,7 @@ class HardClusterMiner(ITripletsMiner):
         matrix[indices] = value
         return matrix
 
-    def sample(self, features: Tensor, labels: TLabels) -> Tuple[Tensor, Tensor, Tensor, Dict[str, float]]:
+    def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
         """
         This method samples the hardest triplets in the batch.
 
@@ -166,4 +166,4 @@ class HardClusterMiner(ITripletsMiner):
         neg_indices = d_inter.min(1).indices
         positives = torch.stack([features[idx][pos_idx] for idx, pos_idx in enumerate(pos_indices)])
 
-        return mean_vectors, positives, mean_vectors[neg_indices], {}
+        return mean_vectors, positives, mean_vectors[neg_indices]

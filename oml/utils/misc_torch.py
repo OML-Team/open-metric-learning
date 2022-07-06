@@ -3,10 +3,15 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
+from torch import Tensor, cdist
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
 TOnlineValues = Union[TSingleValues, TSequenceValues]
+
+
+def cdist_mean(x1: Tensor, x2: Tensor, p: int = 2) -> float:
+    return float(cdist(x1, x2, p=p).mean().item())
 
 
 def _check_is_sequence(val: Any) -> bool:

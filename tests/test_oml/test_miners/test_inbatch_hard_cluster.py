@@ -147,7 +147,7 @@ def test_cluster_sample_shapes(embed_dim: int, labels: TLabels, expected_shape: 
     miner = HardClusterMiner()
     batch_size = len(labels)
     features = torch.rand(size=(batch_size, embed_dim))
-    anchor, positive, negative, _ = miner.sample(features, labels)
+    anchor, positive, negative = miner.sample(features, labels)
     anchor_shape, pos_shape, neg_shape = expected_shape
 
     assert anchor.shape == anchor_shape
@@ -176,11 +176,8 @@ def test_triplet_cluster_edge_case() -> None:
     hard_triplet_miner = HardTripletsMiner()
     hard_cluster_miner = HardClusterMiner()
 
-    an, po, ne, _ = hard_triplet_miner.sample(features, labels)
-    triplets = an, po, ne
-
-    an_cl, po_cl, ne_cl, _ = hard_cluster_miner.sample(features, labels)
-    cluster_triplets = an_cl, po_cl, ne_cl
+    triplets = hard_triplet_miner.sample(features, labels)
+    cluster_triplets = hard_cluster_miner.sample(features, labels)
 
     # Concatenates tensors from triplets to use torch.unique for comparison
     triplets = torch.cat(triplets, dim=1)
