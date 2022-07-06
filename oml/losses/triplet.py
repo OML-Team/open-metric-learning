@@ -40,12 +40,7 @@ class TripletLoss(Module):
         self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
 
-    def forward(
-        self,
-        anchor: Tensor,
-        positive: Tensor,
-        negative: Tensor,
-    ) -> TLossOutput:
+    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> TLossOutput:
         """
 
         Args:
@@ -217,26 +212,28 @@ class TripletLossWithMiner(Module):
         # it has to return the corresponding indicator names <is_original_tri>
         if isinstance(self.miner, TripletMinerWithMemory):
             anchor, positive, negative, is_orig_tri = self.miner.sample(features=features, labels=labels_list)
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
+
+            if self.need_logs:
+                # todo: it makes no sense with margin=null
+                is_bank_tri = ~is_orig_tri
+                active = (loss.clone().detach() > 0).float()
+                self.last_logs.update(
+                    {
+                        "orig_active_tri": active[is_orig_tri].sum() / is_orig_tri.sum(),
+                        "bank_active_tri": active[is_bank_tri].sum() / is_bank_tri.sum(),
+                        "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri]),
+                        "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri]),
+                        "pos_dist_bank": cdist_mean(anchor[~is_orig_tri], positive[~is_orig_tri]),
+                        "neg_dist_bank": cdist_mean(anchor[~is_orig_tri], negative[~is_orig_tri]),
+                    }
+                )
+
         else:
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
-            is_orig_tri = None
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
-        loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
         self.last_logs.update(self.tri_loss.last_logs)
-
-        if self.need_logs and isinstance(self.miner, TripletMinerWithMemory):
-            # todo: it makes no sense with margin=null
-            is_bank_tri = ~is_orig_tri
-            self.last_logs.update(
-                {
-                    "original_active_tri": (loss.clone().detach()[is_orig_tri] > 0).float().sum() / is_orig_tri.sum(),
-                    "bank_active_tri": (loss.clone().detach()[is_bank_tri] > 0).float().sum() / is_bank_tri.sum(),
-                    "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri]),
-                    "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri]),
-                    "pos_dist_bank": cdist_mean(anchor[~is_orig_tri], positive[~is_orig_tri]),
-                    "neg_dist_bank": cdist_mean(anchor[~is_orig_tri], negative[~is_orig_tri]),
-                }
-            )
 
         if self.reduction == "mean":
             loss = loss.mean()
