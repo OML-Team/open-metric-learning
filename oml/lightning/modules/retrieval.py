@@ -55,7 +55,7 @@ class RetrievalModule(pl.LightningModule):
         return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
-        embeddings = self.model.extract(batch[self.key_input])
+        embeddings = self.model(batch[self.key_input])
         return {**batch, **{self.key_embeddings: embeddings}}
 
     def configure_optimizers(self) -> Any:
