@@ -8,7 +8,8 @@ from oml.functional.metrics import (
     calc_gt_mask,
     calc_mask_to_ignore,
 )
-from oml.utils.synthetic import generate_distance_matrix, generate_retrieval_case
+
+from .synthetic import generate_distance_matrix, generate_retrieval_case
 
 TCase = Tuple[List[List[int]], torch.Tensor, torch.Tensor, torch.Tensor]
 

@@ -10,7 +10,8 @@ from oml.functional.metrics import (
     calc_mask_to_ignore,
     calc_retrieval_metrics,
 )
-from oml.utils.synthetic import generate_distance_matrix, generate_retrieval_case
+
+from .synthetic import generate_distance_matrix, generate_retrieval_case
 
 TPositions = List[List[int]]
 
@@ -78,7 +79,7 @@ def test_on_exact_case() -> None:
     metrics_expected["precision"][10] = metrics_expected["precision"][5]
     metrics_expected["map"][10] = metrics_expected["map"][5]
 
-    compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce_mean=False)
+    compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce=False)
 
 
 @pytest.mark.parametrize("max_num_labels", list(range(5, 10)))
@@ -107,7 +108,7 @@ def test_on_synthetic_cases(
         metrics_expected["precision"] = {k: naive_precision(positions, k) for k in top_k}
         metrics_expected["map"] = {k: naive_map(positions, k) for k in top_k}
 
-        compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce_mean=True)
+        compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce=True)
 
 
 def compare_metrics(
@@ -117,7 +118,7 @@ def compare_metrics(
     is_gallery: torch.Tensor,
     metrics_expected: TMetricsDict,
     top_k: Tuple[int, ...],
-    reduce_mean: bool,
+    reduce: bool,
 ) -> None:
     distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery)
     mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
@@ -131,7 +132,7 @@ def compare_metrics(
         need_precision="precision" in metrics_expected,
         need_cmc="cmc" in metrics_expected,
         top_k=top_k,
-        reduce_mean=reduce_mean,
+        reduce=reduce,
     )
 
     for metric_name in metrics_expected.keys():

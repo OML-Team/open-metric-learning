@@ -18,11 +18,10 @@ def calc_retrieval_metrics(
     need_cmc: bool = True,
     need_precision: bool = True,
     need_map: bool = True,
-    reduce_mean: bool = True,
+    reduce: bool = True,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
-
     Args:
         distances: Distance matrix shape of (query_size, gallery_size)
         mask_gt: mask_gt[i,j] indicates if for i-th query j-th gallery is the correct prediction
@@ -32,8 +31,7 @@ def calc_retrieval_metrics(
         need_cmc: If CMC metric is needed
         need_map: If MeanAveragePrecision metric is needed
         need_precision: If Precision metric  is needed
-        reduce_mean: if False return metrics for each query without reduction
-
+        reduce: if False return metrics for each query without averaging
     Returns:
         Dictionary with metrics.
     """
@@ -81,14 +79,14 @@ def calc_retrieval_metrics(
 
         if need_cmc:
             cmc = torch.any(gt_tops[:, :k], dim=1).float()
-            if reduce_mean:
+            if reduce:
                 cmc = cmc.mean()
             metrics["cmc"][k_show] = cmc
 
         if need_precision:
             n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k).unsqueeze(0))
             precision = torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix
-            if reduce_mean:
+            if reduce:
                 precision = precision.mean()
             metrics["precision"][k_show] = precision
 
@@ -97,7 +95,7 @@ def calc_retrieval_metrics(
             correct_preds = torch.cumsum(gt_tops[:, :k], dim=1)
             positions = torch.arange(1, k + 1).unsqueeze(0)
             mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k], dim=1) / n_gt_matrix
-            if reduce_mean:
+            if reduce:
                 mean_ap = mean_ap.mean()
             metrics["map"][k_show] = mean_ap
 
@@ -116,17 +114,20 @@ def calc_gt_mask(
     labels: Union[np.ndarray, torch.Tensor],
     is_query: Union[np.ndarray, torch.Tensor],
     is_gallery: Union[np.ndarray, torch.Tensor],
-) -> Union[np.ndarray, torch.Tensor]:
+) -> torch.Tensor:
     assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [labels, is_query, is_gallery])
-    assert type(labels) == type(is_query) == type(is_gallery)
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
+
+    labels, is_query, is_gallery = map(_to_tensor, [labels, is_query, is_gallery])
 
     query_mask = is_query == 1
     gallery_mask = is_gallery == 1
     query_labels = labels[query_mask]
     gallery_labels = labels[gallery_mask]
     gt_mask = query_labels[..., None] == gallery_labels[None, ...]
+
+    # TODO: add check for case if some of queries have no gallery
 
     return gt_mask
 
@@ -135,13 +136,10 @@ def calc_mask_to_ignore(
     is_query: Union[np.ndarray, torch.Tensor], is_gallery: Union[np.ndarray, torch.Tensor]
 ) -> torch.Tensor:
     assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [is_query, is_gallery])
-    assert type(is_query) == type(is_gallery)
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
-    if isinstance(is_query, np.ndarray):
-        is_query = torch.from_numpy(is_query)
-        is_gallery = torch.from_numpy(is_gallery)
+    is_query, is_gallery = map(_to_tensor, [is_query, is_gallery])
 
     ids_query = torch.nonzero(is_query).squeeze()
     ids_gallery = torch.nonzero(is_gallery).squeeze()
@@ -156,9 +154,10 @@ def calc_distance_matrix(
     is_gallery: Union[np.ndarray, torch.Tensor],
 ) -> torch.Tensor:
     assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [embeddings, is_query, is_gallery])
-    assert type(embeddings) == type(is_query) == type(is_gallery)
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)
+
+    embeddings, is_query, is_gallery = map(_to_tensor, [embeddings, is_query, is_gallery])
 
     query_mask = is_query == 1
     gallery_mask = is_gallery == 1
@@ -186,3 +185,12 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc.mean()
     else:
         return acc
+
+
+def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
+    if isinstance(array, torch.Tensor):
+        return array
+    elif isinstance(array, np.ndarray):
+        return torch.from_numpy(array)
+    else:
+        raise TypeError("Wrong type")

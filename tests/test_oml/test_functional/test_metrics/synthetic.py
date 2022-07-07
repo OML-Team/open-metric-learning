@@ -2,7 +2,6 @@ import random
 from itertools import chain
 from typing import List, Tuple, Union
 
-import numpy as np
 import torch
 
 from oml.functional.metrics import calc_mask_to_ignore
@@ -46,9 +45,6 @@ def generate_retrieval_case(
         True, False, True, False,
         False, True, True]
     """
-
-    def _sample_elements_from_range(len_range: int, num_elems: int) -> List[int]:
-        return sorted(np.random.choice(np.arange(len_range), size=num_elems, replace=False))
 
     assert max_labels >= 2
     assert max_samples_per_label >= 2
@@ -94,17 +90,16 @@ def generate_retrieval_case(
         is_query.append(is_query_for_label)
         is_gallery.append(is_gallery_for_label)
 
-    num_galleries_total = sum(list(chain(*is_gallery)))
+    num_galleries_total = sum(chain(*is_gallery))
+
+    def _gen_correct_positions(_is_gallery_for_label: List[bool], q_is_g: bool) -> List[int]:
+        return sorted(random.sample(range(num_galleries_total - q_is_g), k=sum(_is_gallery_for_label) - q_is_g))
 
     desired_correct_positions = []
     for is_query_for_label, is_gallery_for_label in zip(is_query, is_gallery):
         for q, g in zip(is_query_for_label, is_gallery_for_label):
             if q:
-                desired_correct_positions.append(
-                    _sample_elements_from_range(
-                        num_galleries_total - 1 * (q == g), sum(is_gallery_for_label) - 1 * (q == g)
-                    )
-                )
+                desired_correct_positions.append(_gen_correct_positions(is_gallery_for_label, q == g))
 
     labels = torch.tensor(labels)
     is_query = torch.tensor(list(chain(*is_query)))
