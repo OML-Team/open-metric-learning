@@ -23,8 +23,9 @@ sampler:
     p: 2
     k: 8
 
+
 bs_val: 96
-max_epochs: 1
+max_epochs: 1000
 valid_period: 1
 
 augs_key: all

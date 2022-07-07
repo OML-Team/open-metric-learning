@@ -47,10 +47,10 @@ class RetrievalModule(pl.LightningModule):
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
-            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=False, on_epoch=True)
+            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
         if self.scheduler is not None:
-            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
         return loss
 
