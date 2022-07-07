@@ -30,9 +30,6 @@ valid_period: 1
 
 augs_key: all
 
-defaults:
-  - optimizer: adam
-
 model:
   name: vit
   args:
@@ -55,6 +52,7 @@ criterion:
         tri_expand_k: 5
 
 optimizer:
+  name: adam
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
