@@ -45,7 +45,7 @@ model:
 criterion:
   name: TripletLossWithMiner
   args:
-    need_logs: True
+    need_logs: False
     margin: 0.1
     reduction: mean
     miner:

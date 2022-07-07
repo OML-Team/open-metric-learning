@@ -11,7 +11,7 @@ TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
 def cdist_mean(x1: Tensor, x2: Tensor, p: int = 2) -> float:
-    return float(cdist(x1, x2, p=p).mean().item())
+    return cdist(x1, x2, p=p).mean().item()
 
 
 def _check_is_sequence(val: Any) -> bool:

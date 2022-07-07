@@ -12,7 +12,7 @@ model:
   args:
     arch: vits8
     normalise_features: False
-    use_multi_scale: False
+    use_multi_scale: True
     weights: pretrained_dino
     strict_load: True
 

@@ -5,8 +5,8 @@ from torch import Tensor
 from torch.nn import Module
 
 from oml.interfaces.miners import ITripletsMiner, labels2list
-from oml.miners.among_batches import TripletMinerWithMemory
-from oml.miners.inbatch_all import AllTripletsMiner
+from oml.miners.cross_batch import TripletMinerWithMemory
+from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.utils.misc_torch import cdist_mean
 
 TLogs = Dict[str, float]

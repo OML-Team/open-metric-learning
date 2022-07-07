@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 
 from oml.interfaces.datasets import IDatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.among_batches import TripletMinerWithMemory
+from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.registry.miners import get_miner
 from oml.samplers.balanced import BalanceBatchSampler, SequentialBalanceSampler
 from tests.test_integrations.utils import IdealOneHotModel

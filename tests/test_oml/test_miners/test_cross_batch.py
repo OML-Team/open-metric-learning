@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import Tensor, tensor
 
-from oml.miners.among_batches import TripletMinerWithMemory
+from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.samplers.balanced import BalanceBatchSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
