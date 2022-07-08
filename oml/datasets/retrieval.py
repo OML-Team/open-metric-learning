@@ -23,6 +23,7 @@ class BaseDataset(Dataset):
         dataset_root: Optional[Path] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
+        cache_size: int = 100_000,
     ):
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
@@ -41,9 +42,10 @@ class BaseDataset(Dataset):
         self.pad_ratio = pad_ratio
         self.transform = transform or get_default_transforms_albu()
         self.f_imread = f_imread
+        self.read_image_cached = lru_cache(maxsize=cache_size)(self.read_image)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        crop = self.read_image(idx)
+        crop = self.read_image_cached(idx)
         image_tensor = self.transform(image=crop)["image"]
         label = self.df.iloc[idx]["label"]
 
@@ -67,7 +69,6 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.df)
 
-    @lru_cache(maxsize=100_000)
     def read_image(self, idx: int) -> np.ndarray:
         img = self.f_imread(self.df.iloc[idx]["path"])
 
@@ -96,6 +97,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         dataset_root: Optional[Path] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
+        cache_size: int = 100_000,
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
@@ -104,6 +106,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
             transform=transform,
             pad_ratio=pad_ratio,
             f_imread=f_imread,
+            cache_size=cache_size,
         )
         assert all(x in df.columns for x in ("is_query", "is_gallery"))
 
@@ -115,7 +118,12 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 
 def get_retrieval_datasets(
-    dataset_root: Path, im_size: int, pad_ratio_train: float, pad_ratio_val: float, train_transform: Any
+    dataset_root: Path,
+    im_size: int,
+    pad_ratio_train: float,
+    pad_ratio_val: float,
+    train_transform: Any,
+    cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / "df.csv", index_col=False)
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
@@ -123,13 +131,18 @@ def get_retrieval_datasets(
     # train
     df_train = df[df["split"] == "train"].reset_index(drop=True)
     train_dataset = DatasetWithLabels(
-        df=df_train, dataset_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_train, transform=train_transform
+        df=df_train,
+        dataset_root=dataset_root,
+        im_size=im_size,
+        pad_ratio=pad_ratio_train,
+        transform=train_transform,
+        cache_size=cache_size,
     )
 
     # val (query + gallery)
     df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
     valid_dataset = DatasetQueryGallery(
-        df=df_query_gallery, dataset_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_val
+        df=df_query_gallery, dataset_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_val, cache_size=cache_size
     )
 
     return train_dataset, valid_dataset

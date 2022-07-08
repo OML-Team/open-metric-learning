@@ -13,6 +13,7 @@ im_size: 224  # todo
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
+cache_size: 100000
 
 augs_key: all
 
