@@ -9,7 +9,7 @@ dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 352  # todo
+im_size: 224  # todo
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
@@ -19,21 +19,30 @@ augs_key: all
 
 defaults:
   - model: vit
-  - optimizer: adam
+
+model:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: True
+    use_multi_scale: False
+    weights: pretrained_dino
+    strict_load: True
 
 criterion:
   name: TripletLossWithMiner
   args:
-    margin: null
+    margin: 0.1
     reduction: mean
     miner:
       name: TripletMinerWithMemory
       args:
         bank_size_in_batches: 20
-        tri_expand_k: 10
+        tri_expand_k: 5
 
 
 optimizer:
+  name: adam
   args:
     lr: 1e-5
 
@@ -53,12 +62,7 @@ neptune_project: NEWYORKER/similarity-api
 hydra_dir: ${logs_root}/${logs_folder}/
 
 tags:
-  - retrieval
-  - deepfashion
-  - pod1
-  - as_best
-  - fixed_bboxes
-  - crop_resize_augs
+  - best_1st_epoch
 
 hydra:
   run:
