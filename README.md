@@ -3,6 +3,8 @@
 
 <div align="left">
 
+**NOTE! The project is under constraction. We will publish the 1st release soon.**
+
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
 
