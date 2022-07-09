@@ -215,7 +215,6 @@ class TripletLossWithMiner(Module):
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
             if self.need_logs:
-                # todo: it makes no sense with margin=null
                 is_bank_tri = ~is_orig_tri
                 active = (loss.clone().detach() > 0).float()
                 self.last_logs.update(

@@ -127,7 +127,6 @@ class ResnetExtractor(IExtractor):
         x = self.model(x)
 
         if self.normalise_features:
-            # todo: normalisation
             xn = torch.linalg.norm(x, 2, dim=1).detach()
             x = x.div(xn.unsqueeze(1))
 

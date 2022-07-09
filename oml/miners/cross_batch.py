@@ -88,7 +88,7 @@ class TripletMinerWithMemory(ITripletsMiner):
 
         assert len(features) == len(labels) == self.bs, (len(features), len(labels), self.bs)
 
-        # todo: optimize performance?
+        # todo: optimize performance
         lbl2idx_bank = {lb: arange(self.bank_size)[self.bank_labels == lb] for lb in unique(self.bank_labels)}
         lbl2idx_batch = {lb: arange(self.bs)[labels == lb] for lb in unique(labels)}
 

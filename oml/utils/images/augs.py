@@ -80,7 +80,6 @@ def get_all_augs() -> albu.Compose:
     probabilities will be normalized to one 1, so in
     this case transforms probabilities works as weights.
     """
-    # todo: crop augs
     augs = albu.Compose(
         [
             albu.HorizontalFlip(p=0.5),

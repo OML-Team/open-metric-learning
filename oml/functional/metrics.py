@@ -126,8 +126,6 @@ def calc_gt_mask(
     gallery_labels = labels[gallery_mask]
     gt_mask = query_labels[..., None] == gallery_labels[None, ...]
 
-    # TODO: add check for case if some of queries have no gallery
-
     return gt_mask
 
 

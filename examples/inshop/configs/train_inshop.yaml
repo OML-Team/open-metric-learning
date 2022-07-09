@@ -15,14 +15,12 @@ im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
 
-# in terms of 1 gpu
 
 sampler:
   name: SequentialBalanceSampler
   args:
     p: 2
     k: 8
-
 
 bs_val: 96
 max_epochs: 1000
@@ -42,7 +40,7 @@ model:
 criterion:
   name: TripletLossWithMiner
   args:
-    need_logs: False
+    need_logs: True
     margin: 0.1
     reduction: mean
     miner:
