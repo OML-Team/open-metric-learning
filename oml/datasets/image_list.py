@@ -20,6 +20,7 @@ class ImageListDataset(Dataset):
         pad_ratio: float,
         transforms: Union[AlbuCompose, TorchvisionCompose],
         f_imread: TImReader = imread_cv2,
+        cache_size: int = 100_000,
     ):
         """
 
@@ -37,10 +38,11 @@ class ImageListDataset(Dataset):
         self.pad_ratio = pad_ratio
         self.transform = transforms
         self.f_imread = f_imread
+        self.load_png_image_cached = lru_cache(cache_size)(self.load_png_image)
 
     def __getitem__(self, item: int) -> Tuple[torch.Tensor, str]:
         path = self.im_paths[item]
-        image = self.load_png_image(im_path=path)
+        image = self.load_png_image_cached(im_path=path)
 
         if isinstance(self.transform, AlbuCompose):
             image = self.transform(image=image)["image"]
@@ -52,7 +54,6 @@ class ImageListDataset(Dataset):
     def __len__(self) -> int:
         return len(self.im_paths)
 
-    @lru_cache(maxsize=100_000)
     def load_png_image(self, im_path: Path) -> np.ndarray:
         image = self.f_imread(str(im_path))
         image = pad_resize(im=image, size=self.image_size, pad_ratio=self.pad_ratio)

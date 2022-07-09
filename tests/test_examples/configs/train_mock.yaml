@@ -11,6 +11,7 @@ im_size: 32
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 0
+cache_size: 100
 
 augs_key: all
 

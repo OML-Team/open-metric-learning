@@ -28,11 +28,10 @@ from oml.utils.misc import (
 
 
 def main(cfg: TCfg) -> None:
-    print(cfg)
-
-    cfg = dictconfig_to_dict(cfg)
-
     set_global_seed(cfg["seed"])
+
+    print(cfg)
+    cfg = dictconfig_to_dict(cfg)
 
     cwd = Path.cwd()
 
@@ -44,6 +43,7 @@ def main(cfg: TCfg) -> None:
         pad_ratio_val=cfg["im_pad_ratio_val"],
         train_transform=train_augs,
         dataframe_name=cfg["dataframe_name"],
+        cache_size=cfg["cache_size"],
     )
     df = train_dataset.df
 

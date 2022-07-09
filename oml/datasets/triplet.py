@@ -28,6 +28,7 @@ class TriDataset(Dataset):
         pad_ratio: float,
         expand_ratio: float,
         f_imread: TImReader = imread_cv2,
+        cache_size: int = 50_000,
     ):
         """
 
@@ -56,6 +57,8 @@ class TriDataset(Dataset):
         self.expand_ratio = expand_ratio
         self.f_imread = f_imread
 
+        self.cached_get_image = lru_cache(cache_size)(self.get_image)
+
         logging.info(f"Dataset contains {len(self.triplets)} triplets.")
 
     def __len__(self) -> int:
@@ -72,14 +75,13 @@ class TriDataset(Dataset):
 
         assert len(triplet) == 3
 
-        images = tuple(map(lambda x: self.get_image(self.im_root / Path(x).name), triplet))
+        images = tuple(map(lambda x: self.cached_get_image(self.im_root / Path(x).name), triplet))
 
         tensors = tuple(map(lambda x: self.transforms(image=x)["image"], images))
 
         tri_ids = (f"{idx}_a", f"{idx}_p", f"{idx}_n")
         return {"input_tensors": tensors, "tri_ids": tri_ids, "images": images}
 
-    @lru_cache(maxsize=50_000)
     def get_image(self, path: Path) -> np.ndarray:
         img = self.f_imread(str(path))
         img = pad_resize(im=img, size=self.image_size, pad_ratio=self.pad_ratio)
