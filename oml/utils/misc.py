@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterable, List, Union
 import dotenv
 import numpy as np
 import torch
+from numpy.random import choice
 from omegaconf import DictConfig, OmegaConf
 
 from oml.const import DOTENV_PATH
@@ -95,18 +96,10 @@ def smart_sample(array: List[Any], n_samples: int) -> List[Any]:
     """
     array_size = len(array)
     if array_size < n_samples:
-        samples_indices = (
-            array
-            + np.random.choice(
-                array,
-                size=n_samples - array_size,
-                replace=True,
-            ).tolist()
+        sampled = (
+            choice(array, size=array_size, replace=False).tolist()
+            + choice(array, size=n_samples - array_size, replace=True).tolist()
         )
     else:
-        samples_indices = np.random.choice(
-            array,
-            size=n_samples,
-            replace=False,
-        ).tolist()
-    return samples_indices
+        sampled = choice(array, size=n_samples, replace=False).tolist()
+    return sampled
