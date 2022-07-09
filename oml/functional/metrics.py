@@ -35,7 +35,6 @@ def calc_retrieval_metrics(
     Returns:
         Dictionary with metrics.
     """
-
     if not any([need_map, need_cmc, need_precision]):
         raise ValueError("You must specify at leas 1 metric to calculate it")
 
@@ -126,8 +125,6 @@ def calc_gt_mask(
     query_labels = labels[query_mask]
     gallery_labels = labels[gallery_mask]
     gt_mask = query_labels[..., None] == gallery_labels[None, ...]
-
-    # TODO: add check for case if some of queries have no gallery
 
     return gt_mask
 

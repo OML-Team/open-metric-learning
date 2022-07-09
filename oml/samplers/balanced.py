@@ -1,7 +1,7 @@
 import math
 from collections import Counter, defaultdict
 from copy import deepcopy
-from typing import Dict, Iterator, List, Set, Union
+from typing import Any, Dict, Iterator, List, Set, Union
 
 import numpy as np
 from torch.utils.data.sampler import Sampler
@@ -50,7 +50,7 @@ class BalanceBatchSampler(Sampler):
 
     """
 
-    def __init__(self, labels: Union[List[int], np.ndarray], p: int, k: int):
+    def __init__(self, labels: Union[List[int], np.ndarray], p: int, k: int, **kwargs: Dict[str, Any]):
         """Sampler initialisation."""
         super().__init__(self)
         unq_labels = set(labels)

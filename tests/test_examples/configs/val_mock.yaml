@@ -1,0 +1,23 @@
+dataset_root: ../data
+dataframe_name: df.csv
+
+logs_root: logs
+
+im_size: 224
+bs_val: 2
+num_workers: 0
+
+model:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: False
+    use_multi_scale: True
+    weights: pretrained_dino
+    strict_load: True
+
+gpus: null
+
+hydra:
+  run:
+    dir: ${logs_root}

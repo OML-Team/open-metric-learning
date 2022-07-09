@@ -1,0 +1,7 @@
+name: SequentialCategoryBalanceSampler
+args:
+  p: 2
+  k: 2
+  c: 1
+  resample_labels: False
+  weight_categories: True

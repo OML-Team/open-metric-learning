@@ -1,37 +1,47 @@
-postfix: deepfashion
+postfix: metric_learning
 
 seed: 42
 gpus:
   - 0
   - 1
 
+dataframe_name: df_fixed_val.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 224  # todo
+im_size: 224
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
 cache_size: 100000
 
-augs_key: all
 
-defaults:
-  - model: vit
+sampler:
+  name: SequentialBalanceSampler
+  args:
+    p: 2
+    k: 8
+
+bs_val: 96
+max_epochs: 1
+valid_period: 1
+
+augs_key: all
 
 model:
   name: vit
   args:
-    arch: vits8
     normalise_features: True
     use_multi_scale: False
     weights: pretrained_dino
+    arch: vits8
     strict_load: True
 
 criterion:
   name: TripletLossWithMiner
   args:
+    need_logs: True
     margin: 0.1
     reduction: mean
     miner:
@@ -40,19 +50,13 @@ criterion:
         bank_size_in_batches: 20
         tri_expand_k: 5
 
-
 optimizer:
   name: adam
   args:
-    lr: 1e-5
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-# in terms of 1 gpu
-bs_n_cls: 2
-bs_n_samples: 8
-bs_val: 96
+scheduler: null
 
-max_epochs: 1000
-valid_period: 1
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
 # .env file or via `export NEPTUNE_API_TOKEN=...`
@@ -61,8 +65,12 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
+pod: pod1
+
 tags:
-  - best_1st_epoch
+  - ${postfix}
+  - ${pod}
+  - deepfashion
 
 hydra:
   run:

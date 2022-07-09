@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import Tensor, tensor
 
-from oml.miners.among_batches import TripletMinerWithMemory
+from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.samplers.balanced import BalanceBatchSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
@@ -44,15 +44,16 @@ def test_mining_with_memory(n_cls: int, cls_sz: int, p: int, k: int, bank_sz: in
             labels_batch = labels[ii_batch]
             features_batch = model(labels_batch)
 
-            anch, pos, neg = miner.sample(labels=labels_batch, features=features_batch)
+            anch, pos, neg, is_original_tri = miner.sample(labels=labels_batch, features=features_batch)
             assert len(anch) == len(pos) == len(neg)
+            assert n_possible_triplets(p, k) == int(is_original_tri.sum())
 
             n_out_tri = len(anch)
             n_desired_tri = bank_k * n_possible_triplets(p, k)
 
             # during the 1st epoch we have no chance to filter out some of the irrelevant triplets
             # because memory bank is empty
-            if i_epoch == 0:
+            if (i_epoch == 0) or (bank_k == 1):
                 assert n_out_tri == n_desired_tri, (n_out_tri, n_desired_tri)
             # but later some of the collisions are possible, but their amount should not be high
             else:

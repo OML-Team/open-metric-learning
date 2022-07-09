@@ -129,7 +129,7 @@ Training
 model = VitExtractor("pretrained_dino")
 model.train()
 optimizer = SGD(model.paremeters())
-train_dataset = DatasetWithLabels()
+train_dataset = DatasetWithLabels(...)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
 train_loader = DataLoader(train_dataset, batch_sampler=sampler)
@@ -146,7 +146,7 @@ Validation
 ```python
 model = VitExtractor("pretrained_dino")
 model.eval()
-val_dataset = DatasetQueryGallery()
+val_dataset = DatasetQueryGallery(...)
 val_loader = DataLoader(val_dataset)
 caclulator = EmbeddingMetrics()
 caclulator.setup()
@@ -170,13 +170,13 @@ model = ResnetExtractor("pretrained_moco")
 
 # train
 optimizer = SGD(model.paremeters())
-train_dataset = DatasetWithLabels()
+train_dataset = DatasetWithLabels(...)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
 train_loader = DataLoader(train_dataset, batch_sampler=sampler)
 
 # val
-val_dataset = DatasetQueryGallery()
+val_dataset = DatasetQueryGallery(...)
 val_loader = DataLoader(val_dataset)
 metric_callback = MetricValCallback(EmbeddingMetrics())
 
