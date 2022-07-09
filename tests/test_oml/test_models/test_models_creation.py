@@ -19,7 +19,7 @@ def test_vit_creation(weights: Union[str, Path], arch: str, normalise_features: 
         "strict_load": True,
     }
 
-    extractor = get_extractor("vit", kwargs)
+    extractor = get_extractor("vit", **kwargs)  # type: ignore
     extractor.eval()
 
     extractor.extract(torch.randn(1, 3, 360, 360))
@@ -40,7 +40,7 @@ def test_resnet_creation(hid_dim: Optional[int], out_dim: Optional[int], remove_
         "strict_load": strict_load,
     }
 
-    extractor = get_extractor("resnet", kwargs)
+    extractor = get_extractor("resnet", **kwargs)  # type: ignore
     extractor.eval()
 
     extractor.extract(torch.randn(1, 3, 360, 360))

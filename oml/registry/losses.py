@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from torch import nn
 
@@ -13,21 +13,15 @@ LOSSES_REGISTRY = {
 }
 
 
-def get_criterion(name: str, kwargs: Dict[str, Any], miner_cfg: Optional[Dict[str, Any]] = None) -> nn.Module:
-    if miner_cfg is None:
-        return LOSSES_REGISTRY[name](**kwargs)
-    else:
-        miner = get_miner_by_cfg(miner_cfg)
+def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
+    if "miner" in kwargs:
+        miner = get_miner_by_cfg(kwargs["miner"].copy())
+        del kwargs["miner"]
         return LOSSES_REGISTRY[name](miner=miner, **kwargs)
+    else:
+        return LOSSES_REGISTRY[name](**kwargs)
 
 
 def get_criterion_by_cfg(cfg: TCfg) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
-
-    if "miner" in cfg["args"].keys():
-        miner_cfg = cfg["args"]["miner"].copy()
-        del cfg["args"]["miner"]
-    else:
-        miner_cfg = None
-
-    return get_criterion(name=cfg["name"], kwargs=cfg["args"], miner_cfg=miner_cfg)
+    return get_criterion(name=cfg["name"], **cfg["args"])
