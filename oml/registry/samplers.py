@@ -2,9 +2,9 @@ from typing import Any, Dict
 
 from torch.utils.data.sampler import Sampler
 
-from oml.samplers.balanced import (
-    SequentialBalanceSampler,
-    SequentialCategoryBalanceSampler,
+from oml.samplers.balance import SequentialBalanceSampler
+from oml.samplers.category_balance import SequentialCategoryBalanceSampler
+from oml.samplers.distinct_category_balance import (
     SequentialDistinctCategoryBalanceSampler,
 )
 from oml.utils.misc import TCfg, dictconfig_to_dict
