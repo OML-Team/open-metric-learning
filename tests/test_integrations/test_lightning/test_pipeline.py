@@ -13,7 +13,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossPlain, TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.metrics.triplets import AccuracyOnTriplets
-from oml.samplers.balanced import SequentialBalanceSampler
+from oml.samplers.balance import SequentialBalanceSampler
 
 
 class DummyTripletDataset(Dataset):

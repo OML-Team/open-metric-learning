@@ -4,7 +4,7 @@ from typing import Any, Dict
 import numpy as np
 from torch.utils.data import Dataset
 
-from oml.samplers.balanced import BalanceBatchSampler  # noqa
+from oml.samplers.balance import BalanceBatchSampler  # noqa
 
 
 class IDatasetWithLabels(Dataset, ABC):

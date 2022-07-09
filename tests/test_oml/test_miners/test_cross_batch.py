@@ -5,7 +5,7 @@ import torch
 from torch import Tensor, tensor
 
 from oml.miners.cross_batch import TripletMinerWithMemory
-from oml.samplers.balanced import BalanceBatchSampler
+from oml.samplers.balance import BalanceBatchSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
 
