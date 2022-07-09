@@ -5,13 +5,13 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import _LRScheduler
 
-from oml.models.vit.vit import ViTExtractor
+from oml.interfaces.models import IExtractor
 
 
 class RetrievalModule(pl.LightningModule):
     def __init__(
         self,
-        model: ViTExtractor,
+        model: IExtractor,
         criterion: nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: Optional[_LRScheduler] = None,

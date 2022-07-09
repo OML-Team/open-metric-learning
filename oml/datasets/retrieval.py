@@ -158,7 +158,7 @@ def get_retrieval_datasets(
     pad_ratio_train: float,
     pad_ratio_val: float,
     train_transform: Any,
-    dataframe_name: str = "df.csv",
+    dataframe_name: str,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)

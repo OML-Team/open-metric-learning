@@ -221,10 +221,10 @@ class TripletLossWithMiner(Module):
                     {
                         "orig_active_tri": active[is_orig_tri].sum() / is_orig_tri.sum(),
                         "bank_active_tri": active[is_bank_tri].sum() / is_bank_tri.sum(),
-                        "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri]),
-                        "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri]),
-                        "pos_dist_bank": cdist_mean(anchor[is_bank_tri], positive[is_bank_tri]),
-                        "neg_dist_bank": cdist_mean(anchor[is_bank_tri], negative[is_bank_tri]),
+                        "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri], detach=True),
+                        "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri], detach=True),
+                        "pos_dist_bank": cdist_mean(anchor[is_bank_tri], positive[is_bank_tri], detach=True),
+                        "neg_dist_bank": cdist_mean(anchor[is_bank_tri], negative[is_bank_tri], detach=True),
                     }
                 )
 
@@ -239,7 +239,7 @@ class TripletLossWithMiner(Module):
         elif self.reduction == "sum":
             loss = loss.sum()
         elif self.reduction == "none":
-            return loss
+            pass
         else:
             raise ValueError()
 

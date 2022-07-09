@@ -1,6 +1,6 @@
 name: SequentialDistinctCategoryBalanceSampler
 args:
   p: 2
-  k: 8
+  k: 2
   c: 1
-  epoch_size: 2273
+  epoch_size: 10

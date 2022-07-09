@@ -10,7 +10,11 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
-def cdist_mean(x1: Tensor, x2: Tensor, p: int = 2) -> float:
+def cdist_mean(x1: Tensor, x2: Tensor, p: int = 2, detach: bool = False) -> float:
+    if detach:
+        x1 = x1.clone().detach()
+        x2 = x2.clone().detach()
+
     return cdist(x1, x2, p=p).mean().item()
 
 
