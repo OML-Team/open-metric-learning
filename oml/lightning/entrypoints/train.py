@@ -28,10 +28,10 @@ from oml.utils.misc import (
 
 
 def main(cfg: TCfg) -> None:
-    set_global_seed(cfg["seed"])
-
     print(cfg)
     cfg = dictconfig_to_dict(cfg)
+
+    set_global_seed(cfg["seed"], cfg.get("num_workers", 0))
 
     cwd = Path.cwd()
 
