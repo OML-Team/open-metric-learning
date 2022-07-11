@@ -12,9 +12,9 @@ def test_triplet_loss_vs_torch_version(reduction: str, margin: float) -> None:
     criterion_our = TripletLoss(reduction=reduction, margin=margin, need_logs=True)
 
     for _ in range(10):
-        anchor = torch.randn(32, 1024)
-        positive = torch.randn(32, 1024)
-        negative = torch.randn(32, 1024)
+        anchor = torch.rand(32, 1024)
+        positive = torch.rand(32, 1024)
+        negative = torch.rand(32, 1024)
 
         x_torch = criterion_torch(anchor, positive, negative)
         x_our = criterion_our(anchor, positive, negative)
