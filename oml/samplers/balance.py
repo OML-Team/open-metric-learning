@@ -114,7 +114,7 @@ class BalanceBatchSampler(Sampler):
 
             for cls in labels_for_batch:
                 cls_ids = self.lbl2idx[cls]
-                selected_inds = smart_sample(array=cls_ids, n_samples=self._k)
+                selected_inds = smart_sample(cls_ids, self._k)
                 ids_batch.extend(selected_inds)
 
             inds_epoch.append(ids_batch)

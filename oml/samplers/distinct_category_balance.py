@@ -147,7 +147,7 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
                     )
                 for label in labels:
                     indices = self._label2index[label]
-                    samples_indices = smart_sample(array=indices, n_samples=self._k)
+                    samples_indices = smart_sample(array=indices, k=self._k)
                     batch_indices.extend(samples_indices)
                 category2labels[category] -= set(labels)
                 used_labels[category].update(labels)
