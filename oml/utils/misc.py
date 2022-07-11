@@ -1,3 +1,4 @@
+import os
 import random
 from typing import Any, Dict, Iterable, List, Union
 
@@ -25,7 +26,7 @@ def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     return inds
 
 
-def set_global_seed(seed: int) -> None:
+def set_global_seed(seed: int, num_workers: int = 0) -> None:
     random.seed(seed)
     np.random.seed(seed)
 
@@ -33,6 +34,11 @@ def set_global_seed(seed: int) -> None:
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+
+    os.environ["PL_GLOBAL_SEED"] = str(seed)
+    os.environ["PL_SEED_WORKERS"] = str(num_workers)
 
     try:
         import torch_xla.core.xla_model as xm

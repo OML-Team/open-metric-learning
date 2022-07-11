@@ -60,7 +60,7 @@ def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin
     else:
         raise ValueError(f"Unexpected sampler: {sampler_constructor}.")
 
-    miner = get_miner(name=miner_name, kwargs=miner_params)
+    miner = get_miner(miner_name, **miner_params)
     criterion = TripletLossWithMiner(margin=margin, miner=miner, need_logs=False)
 
     for i, batch in enumerate(loader):
