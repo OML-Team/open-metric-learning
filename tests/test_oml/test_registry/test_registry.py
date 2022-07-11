@@ -35,12 +35,12 @@ def get_sampler_kwargs_runtime() -> Any:
     return {"label2category": {0: 0, 1: 0, 2: 1, 3: 1}, "labels": [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3]}
 
 
-def get_opt() -> Optimizer:
-    return get_optimizer_by_cfg({"name": "sgd", "args": {"lr": 0.001, "params": list(nn.Linear(3, 6).parameters())}})
-
-
 def get_params() -> Any:
     return list(nn.Linear(3, 6).parameters())
+
+
+def get_opt() -> Optimizer:
+    return get_optimizer_by_cfg({"name": "sgd", "args": {"lr": 0.001, "params": get_params()}})
 
 
 @pytest.mark.parametrize(
