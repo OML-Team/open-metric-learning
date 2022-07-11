@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
-from oml.const import TCfg
+from oml.const import PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
@@ -99,9 +99,16 @@ def main(cfg: TCfg) -> None:
             tags=list(cfg["tags"]) + [cfg["postfix"]] + [cwd.name],
             log_model_checkpoints=False,
         )
+        # log hyper params and augs config
         dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
         logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
         logger.run["augs_cfg"].upload(augs_file)
+        # log source code
+        source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
+            map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
+        )
+        logger.run["code"].upload_files(source_files)
+
     else:
         logger = True
 

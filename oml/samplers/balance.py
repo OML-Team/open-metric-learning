@@ -95,6 +95,32 @@ class BalanceBatchSampler(Sampler):
     def __len__(self) -> int:
         return self.batches_in_epoch
 
+    # def __iter__(self) -> Iterator[List[int]]:
+    #     """
+    #     Returns:
+    #         Indexes for sampling dataset elements during an epoch
+    #     """
+    #     inds_epoch = []
+    #
+    #     labels_rest = self._unq_labels.copy()
+    #
+    #     for _ in range(self.batches_in_epoch):
+    #         ids_batch = []
+    #
+    #         labels_for_batch = set(
+    #             np.random.choice(list(labels_rest), size=min(self._p, len(labels_rest)), replace=False)
+    #         )
+    #         labels_rest -= labels_for_batch
+    #
+    #         for cls in labels_for_batch:
+    #             cls_ids = self.lbl2idx[cls]
+    #             selected_inds = smart_sample(array=cls_ids, n_samples=self._k)
+    #             ids_batch.extend(selected_inds)
+    #
+    #         inds_epoch.append(ids_batch)
+    #
+    #     return iter(inds_epoch)  # type: ignore
+
     def __iter__(self) -> Iterator[List[int]]:
         """
         Returns:
@@ -114,7 +140,17 @@ class BalanceBatchSampler(Sampler):
 
             for cls in labels_for_batch:
                 cls_ids = self.lbl2idx[cls]
-                selected_inds = smart_sample(array=cls_ids, n_samples=self._k)
+
+                # we've checked in __init__ that this value must be > 1
+                # n_samples = len(cls_ids)
+                # if n_samples < self._k:
+                #     selected_inds = random.sample(cls_ids, k=n_samples) + \
+                #         random.choices(cls_ids, k=self._k - n_samples)
+                # else:
+                #     selected_inds = random.sample(cls_ids, k=self._k)
+
+                selected_inds = smart_sample(cls_ids, self._k)
+
                 ids_batch.extend(selected_inds)
 
             inds_epoch.append(ids_batch)
