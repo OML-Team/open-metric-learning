@@ -16,14 +16,14 @@ MODELS_REGISTRY = {
 }
 
 
-def get_extractor(model_name: str, kwargs: Dict[str, Any]) -> IExtractor:
+def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:
     extractor = MODELS_REGISTRY[model_name](**kwargs)  # type: ignore
     return extractor
 
 
 def get_extractor_by_cfg(cfg: TCfg) -> IExtractor:
     cfg = dictconfig_to_dict(cfg)
-    extractor = get_extractor(model_name=cfg["name"], kwargs=cfg["args"])
+    extractor = get_extractor(model_name=cfg["name"], **cfg["args"])
     return extractor
 
 

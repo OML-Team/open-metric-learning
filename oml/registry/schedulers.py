@@ -1,6 +1,5 @@
 from typing import Any, Dict
 
-from torch.optim import Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     CyclicLR,
@@ -14,7 +13,7 @@ from torch.optim.lr_scheduler import (
     _LRScheduler,
 )
 
-from oml.utils.misc import TCfg
+from oml.utils.misc import TCfg, dictconfig_to_dict
 
 SCHEDULERS_REGISTRY = {
     "LambdaLR": LambdaLR,
@@ -29,9 +28,11 @@ SCHEDULERS_REGISTRY = {
 }
 
 
-def get_scheduler(name: str, optimizer: Optimizer, kwargs: Dict[str, Any]) -> _LRScheduler:
-    return SCHEDULERS_REGISTRY[name](optimizer=optimizer, **kwargs)
+def get_scheduler(name: str, **kwargs: Dict[str, Any]) -> _LRScheduler:
+    return SCHEDULERS_REGISTRY[name](**kwargs)
 
 
-def get_scheduler_by_cfg(cfg: TCfg, optimizer: Optimizer) -> _LRScheduler:
-    return get_scheduler(name=cfg["name"], optimizer=optimizer, kwargs=cfg["args"])
+def get_scheduler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> _LRScheduler:
+    cfg = dictconfig_to_dict(cfg)
+    cfg["args"].update(kwargs_runtime)
+    return get_scheduler(name=cfg["name"], **cfg["args"])
