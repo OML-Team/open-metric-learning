@@ -139,10 +139,10 @@ class CategoryBalanceBatchSampler(Sampler):
             batch_indices = []
             for category in categories:
                 labels_available = list(self._category2labels[category])
-                labels = smart_sample(array=labels_available, n_samples=self._p)
+                labels = smart_sample(array=labels_available, k=self._p)
                 for label in labels:
                     indices = self._label2index[label]
-                    samples_indices = smart_sample(array=indices, n_samples=self._k)
+                    samples_indices = smart_sample(array=indices, k=self._k)
                     batch_indices.extend(samples_indices)
             epoch_indices.append(batch_indices)
         return iter(epoch_indices)

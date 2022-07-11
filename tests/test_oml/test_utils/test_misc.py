@@ -9,7 +9,7 @@ def test_sample_enough_items() -> None:
         size = np.random.randint(10, 150)
         array = list(range(size))
         n_samples = np.random.randint(1, 9)
-        samples = smart_sample(array=array, n_samples=n_samples)
+        samples = smart_sample(array=array, k=n_samples)
         assert len(set(samples)) == n_samples
         assert len(samples) == n_samples
         assert set(samples) <= set(array)
@@ -21,7 +21,7 @@ def test_sample_not_enough_items() -> None:
         size = np.random.randint(2, 25)
         array = list(range(size))
         n_samples = np.random.randint(size + 1, 50)
-        samples = smart_sample(array=array, n_samples=n_samples)
+        samples = smart_sample(array=array, k=n_samples)
         assert len(set(samples)) == size
         assert len(samples) == n_samples
         assert set(samples) == set(array)

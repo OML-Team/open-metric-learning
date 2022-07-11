@@ -31,7 +31,7 @@ def main(cfg: TCfg) -> None:
     print(cfg)
     cfg = dictconfig_to_dict(cfg)
 
-    set_global_seed(cfg["seed"], cfg.get("num_workers", 0))
+    set_global_seed(cfg["seed"], cfg["num_workers"])
 
     cwd = Path.cwd()
 
