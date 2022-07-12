@@ -1,4 +1,4 @@
-**NOTE! The project is under constraction. We will publish the 1st release soon.**
+**NOTE! The project is under construction. We will publish the 1st release soon.**
 
 
 <div align="center">
