@@ -1,15 +1,20 @@
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from torch import Tensor
 from torch.nn import Module
 
 from oml.interfaces.miners import ITripletsMiner, labels2list
-from oml.miners.inbatch import AllTripletsMiner
+from oml.miners.cross_batch import TripletMinerWithMemory
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.utils.misc_torch import cdist_mean
+
+TLogs = Dict[str, float]
+TLossOutput = Union[Tensor, Tuple[Tensor, TLogs]]
 
 
 class TripletLoss(Module):
-    def __init__(self, margin: Optional[float], reduction: str = "mean"):
+    def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
 
         Args:
@@ -20,16 +25,33 @@ class TripletLoss(Module):
 
             reduction: "mean", "sum" or "none"
 
+            need_logs: Set True if you want to calculate logs.
+                The result will be saved in
+                >>> self.logs
+
         """
-        assert reduction in ("mean", "sum")
+        assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super(TripletLoss, self).__init__()
 
         self.margin = margin
         self.reduction = reduction
+        self.need_logs = need_logs
+        self.last_logs: Dict[str, float] = {}
 
-    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> Tensor:
+    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> TLossOutput:
+        """
+
+        Args:
+            anchor: Anchor features with the shape of (bs, features)
+            positive: Positive features with the shape of (bs, features)
+            negative: Negative features with the shape of (bs, features)
+
+        Returns:
+            loss value
+
+        """
         assert anchor.shape == positive.shape == negative.shape
 
         if len(anchor.shape) == 2:
@@ -46,10 +68,19 @@ class TripletLoss(Module):
         else:
             loss = torch.relu(self.margin + positive_dist - negative_dist)
 
+        if self.need_logs:
+            self.last_logs = {
+                "active_tri": float((loss.clone().detach() > 0).float().mean()),
+                "pos_dist": float(positive_dist.clone().detach().mean().item()),
+                "neg_dist": float(negative_dist.clone().detach().mean().item()),
+            }
+
         if self.reduction == "mean":
             loss = loss.mean()
         elif self.reduction == "sum":
             loss = loss.sum()
+        elif self.reduction == "none":
+            return loss
         else:
             raise ValueError()
 
@@ -80,7 +111,7 @@ def get_tri_ids_in_plain(n: int) -> Tuple[List[int], List[int], List[int]]:
 
 
 class TripletLossPlain(Module):
-    def __init__(self, margin: Optional[float], reduction: str = "mean"):
+    def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
         The same as TripletLoss, but works with anchor, positive and negative
         features stacked together.
@@ -92,14 +123,19 @@ class TripletLossPlain(Module):
             reduction: Check args of
             >>> TripletLoss
 
+            need_logs: Set True if you want to calculate logs.
+               The result will be saved in
+               >>> self.last_logs
+
         """
-        assert reduction in ("mean", "sum")
+        assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super(TripletLossPlain, self).__init__()
-        self.criterion = TripletLoss(margin=margin, reduction=reduction)
+        self.criterion = TripletLoss(margin=margin, reduction=reduction, need_logs=need_logs)
+        self.last_logs = self.criterion.last_logs
 
-    def forward(self, features: torch.Tensor) -> torch.Tensor:
+    def forward(self, features: torch.Tensor) -> TLossOutput:
         """
 
         Args:
@@ -118,9 +154,7 @@ class TripletLossPlain(Module):
 
         anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n)
 
-        loss = self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
-
-        return loss
+        return self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
 
 
 class TripletLossWithMiner(Module):
@@ -130,25 +164,39 @@ class TripletLossWithMiner(Module):
 
     """
 
-    def __init__(self, margin: Optional[float], miner: ITripletsMiner = AllTripletsMiner(), reduction: str = "mean"):
+    def __init__(
+        self,
+        margin: Optional[float],
+        miner: ITripletsMiner = AllTripletsMiner(),
+        reduction: str = "mean",
+        need_logs: bool = False,
+    ):
         """
         Args:
             margin: Check args of
             >>> TripletLoss
 
+            miner: Miner to form triplets inside the batch
+
             reduction: Check args of
             >>> TripletLoss
 
-            miner: Miner to form triplets inside the batch
+            need_logs: Set True if you want to calculate logs.
+               The result will be saved in
+               >>> self.last_logs
         """
-        assert reduction in ("mean", "sum")
+        assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
 
         super().__init__()
-        self._miner = miner
-        self._criterion = TripletLoss(margin=margin, reduction=reduction)
+        self.tri_loss = TripletLoss(margin=margin, reduction="none", need_logs=need_logs)
+        self.miner = miner
+        self.reduction = reduction
+        self.need_logs = need_logs
 
-    def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
+        self.last_logs: Dict[str, float] = {}
+
+    def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tuple[Tensor, TLogs]:
         """
         Args:
             features: Features with shape [batch_size, features_dim]
@@ -160,16 +208,39 @@ class TripletLossWithMiner(Module):
         """
         labels_list = labels2list(labels)
 
-        (
-            features_anchor,
-            features_positive,
-            features_negative,
-        ) = self._miner.sample(features=features, labels=labels_list)
+        # if miner can produce triplets using samples outside of the batch,
+        # it has to return the corresponding indicator names <is_original_tri>
+        if isinstance(self.miner, TripletMinerWithMemory):
+            anchor, positive, negative, is_orig_tri = self.miner.sample(features=features, labels=labels_list)
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
-        loss = self._criterion(
-            anchor=features_anchor,
-            positive=features_positive,
-            negative=features_negative,
-        )
+            if self.need_logs:
+                is_bank_tri = ~is_orig_tri
+                active = (loss.clone().detach() > 0).float()
+                self.last_logs.update(
+                    {
+                        "orig_active_tri": active[is_orig_tri].sum() / is_orig_tri.sum(),
+                        "bank_active_tri": active[is_bank_tri].sum() / is_bank_tri.sum(),
+                        "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri], detach=True),
+                        "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri], detach=True),
+                        "pos_dist_bank": cdist_mean(anchor[is_bank_tri], positive[is_bank_tri], detach=True),
+                        "neg_dist_bank": cdist_mean(anchor[is_bank_tri], negative[is_bank_tri], detach=True),
+                    }
+                )
+
+        else:
+            anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
+
+        self.last_logs.update(self.tri_loss.last_logs)
+
+        if self.reduction == "mean":
+            loss = loss.mean()
+        elif self.reduction == "sum":
+            loss = loss.sum()
+        elif self.reduction == "none":
+            pass
+        else:
+            raise ValueError()
 
         return loss

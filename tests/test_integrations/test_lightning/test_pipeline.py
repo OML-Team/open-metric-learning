@@ -13,7 +13,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossPlain, TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.metrics.triplets import AccuracyOnTriplets
-from oml.samplers.balanced import SequentialBalanceSampler
+from oml.samplers.balance import SequentialBalanceSampler
 
 
 class DummyTripletDataset(Dataset):
@@ -72,7 +72,7 @@ class DummyTripletModule(DummyCommonModule):
 class DummyRetrievalModule(DummyCommonModule):
     def __init__(self, im_size: int):
         super().__init__(im_size=im_size)
-        self.criterion = TripletLossWithMiner(margin=None)
+        self.criterion = TripletLossWithMiner(margin=None, need_logs=True)
 
     def training_step(self, batch_multidataloader: List[TItem], batch_idx: int) -> torch.Tensor:
         embeddings = torch.cat([self.model(batch["input_tensors"]) for batch in batch_multidataloader])

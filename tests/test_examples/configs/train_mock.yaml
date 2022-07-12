@@ -4,12 +4,14 @@ seed: 42
 gpus: []
 
 dataset_root: ../data
+dataframe_name: df.csv
 logs_root: logs
 
 im_size: 32
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 0
+cache_size: 100
 
 augs_key: all
 
@@ -18,14 +20,15 @@ criterion:
   args:
     margin: null
     reduction: mean
+    need_logs: True
     miner:
       name: AllTripletsMiner
       args: {}
 
 optimizer:
-  name: adam
+  name: sgd
   args:
-    lr: 0.00001
+    lr: 1e-5
 
 model:
   name: vit
@@ -36,8 +39,20 @@ model:
     weights: random
     strict_load: True
 
-bs_n_cls: 2
-bs_n_samples: 2
+scheduler:
+  name: MultiStepLR
+  args:
+    milestones:
+      - 1
+      - 2
+      - 3
+
+sampler:
+  name: SequentialBalanceSampler
+  args:
+    p: 2
+    k: 8
+
 bs_val: 2
 
 max_epochs: 2

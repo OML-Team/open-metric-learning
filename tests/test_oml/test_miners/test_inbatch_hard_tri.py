@@ -6,7 +6,7 @@ import torch
 from scipy.spatial.distance import squareform
 from torch import Tensor, tensor
 
-from oml.miners.inbatch import HardTripletsMiner
+from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.utils.misc import find_value_ids
 from tests.test_oml.test_miners.conftest import generate_valid_labels
 from tests.test_oml.test_miners.shared_checkers import check_triplets_consistency

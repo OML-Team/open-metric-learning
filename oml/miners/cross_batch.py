@@ -40,6 +40,14 @@ def get_pos_pairs(lbl2idx: Dict[Tensor, Tensor], n: int = None) -> Tensor:
 
 class TripletMinerWithMemory(ITripletsMiner):
     def __init__(self, bank_size_in_batches: int, tri_expand_k: int):
+        """
+
+        Args:
+            bank_size_in_batches: The size of the bank calculated in batches
+            tri_expand_k: The parameter which defines how many triplets we sample from the bank.
+                 Specifically, we return tri_expand_k * number of triplets in the original batch
+                 In particular, if tri_expand_k == 1 we sample no triplets from the bank
+        """
         assert tri_expand_k >= 1
 
         self.bank_size_in_batches = bank_size_in_batches
@@ -56,7 +64,7 @@ class TripletMinerWithMemory(ITripletsMiner):
         if self.bank_features is None:
             assert len(features) == len(labels)
 
-            self.bs = len(features)
+            self.bs = features.shape[0]
             self.feat_dim = features.shape[-1]
             self.bank_size = self.bank_size_in_batches * self.bs
 
@@ -72,13 +80,15 @@ class TripletMinerWithMemory(ITripletsMiner):
         self.bank_labels[self.ptr : self.ptr + self.bs] = labels.clone()
         self.ptr = (self.ptr + self.bs) % self.bank_size
 
-    def sample(self, features: Tensor, labels: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+    def sample(  # type: ignore
+        self, features: Tensor, labels: Tensor  # type: ignore
+    ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:  # type: ignore
         labels = tensor(labels).long()
         self.__allocate_if_needed(features=features, labels=labels)
 
-        assert len(features) == len(labels) == self.bs
+        assert len(features) == len(labels) == self.bs, (len(features), len(labels), self.bs)
 
-        # todo: optimize performance?
+        # todo: optimize performance
         lbl2idx_bank = {lb: arange(self.bank_size)[self.bank_labels == lb] for lb in unique(self.bank_labels)}
         lbl2idx_batch = {lb: arange(self.bs)[labels == lb] for lb in unique(labels)}
 
@@ -122,9 +132,12 @@ class TripletMinerWithMemory(ITripletsMiner):
 
         self.update_bank(features=features, labels=labels)
 
+        is_original_tri = zeros(len(features_anch), dtype=bool).cpu()
+        is_original_tri[-len(ii_anch_1) :] = True
+
         # print(len(ii_anch_1), len(ii_anch_2), len(ii_anch_3))
 
-        return features_anch, features_pos, features_neg
+        return features_anch, features_pos, features_neg, is_original_tri
 
     @staticmethod
     def take_tri_by_mask(ii_a: Tensor, ii_p: Tensor, ii_n: Tensor, mask: Tensor) -> Tuple[Tensor, Tensor, Tensor]:

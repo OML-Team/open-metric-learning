@@ -1,0 +1,4 @@
+name: SequentialBalanceSampler
+args:
+  p: 2
+  k: 2

@@ -6,7 +6,6 @@ import torch
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
-from torch.nn import functional
 from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet152
 
 from oml.interfaces.models import IExtractor
@@ -128,7 +127,8 @@ class ResnetExtractor(IExtractor):
         x = self.model(x)
 
         if self.normalise_features:
-            x = functional.normalize(x)
+            xn = torch.linalg.norm(x, 2, dim=1).detach()
+            x = x.div(xn.unsqueeze(1))
 
         return x
 

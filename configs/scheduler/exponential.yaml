@@ -1,0 +1,3 @@
+name: ExponentialLR
+args:
+  gamma: 0.5

@@ -1,5 +1,4 @@
 from pathlib import Path
-from pprint import pprint
 from typing import Optional, Union
 
 import pytest
@@ -19,10 +18,11 @@ def test_vit_creation(weights: Union[str, Path], arch: str, normalise_features: 
         "use_multi_scale": use_multi_scale,
         "strict_load": True,
     }
-    pprint(kwargs)
-    ri = get_extractor("vit", kwargs)
 
-    ri.extract(torch.randn(1, 3, 360, 360))
+    extractor = get_extractor("vit", **kwargs)  # type: ignore
+    extractor.eval()
+
+    extractor.extract(torch.randn(1, 3, 360, 360))
 
     assert True
 
@@ -40,10 +40,9 @@ def test_resnet_creation(hid_dim: Optional[int], out_dim: Optional[int], remove_
         "strict_load": strict_load,
     }
 
-    pprint(kwargs)
-    re = get_extractor("resnet", kwargs)
-    re.eval()
+    extractor = get_extractor("resnet", **kwargs)  # type: ignore
+    extractor.eval()
 
-    re.extract(torch.randn(1, 3, 360, 360))
+    extractor.extract(torch.randn(1, 3, 360, 360))
 
     assert True

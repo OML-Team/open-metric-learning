@@ -1,10 +1,10 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.train import main
+from oml.lightning.entrypoints.validate import main
 
 
-@hydra.main(config_path="configs", config_name="train.yaml")
+@hydra.main(config_path="configs", config_name="val_mock.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     main(cfg)
 

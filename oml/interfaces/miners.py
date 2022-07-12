@@ -4,7 +4,7 @@ from typing import List, Tuple, Union
 
 from torch import Tensor
 
-from oml.samplers.balanced import BalanceBatchSampler  # noqa
+from oml.samplers.balance import BalanceBatchSampler  # noqa
 
 TTriplets = Tuple[Tensor, Tensor, Tensor]
 TTripletsIds = Tuple[List[int], List[int], List[int]]

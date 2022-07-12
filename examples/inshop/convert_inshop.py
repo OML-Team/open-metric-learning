@@ -1,13 +1,12 @@
-import os
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-import cv2
+import imagesize
 import numpy as np
 import pandas as pd
-from pandarallel import pandarallel
+from sklearn import preprocessing
 
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images_resize import inverse_karesize_bboxes
@@ -19,10 +18,17 @@ def parse_file_row(row: pd.Series) -> List[str]:
     return list(filter(lambda x: x != "", row.replace("\n", "").split(" ")))
 
 
-def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float) -> pd.DataFrame:
+def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float, fix_train: bool, fix_val: bool) -> pd.DataFrame:
     df["ar"] = (df["y_2"] - df["y_1"]) / (df["x_2"] - df["x_1"])
 
-    mask_bad = df["ar"] > ratio_th
+    if fix_train and fix_val:
+        mask_bad = df["ar"] > ratio_th
+    elif fix_train and (not fix_val):
+        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "train")
+    elif (not fix_train) and fix_val:
+        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "validation")
+    else:
+        return df
 
     print(f"We will fix {mask_bad.sum()} bboxes")
 
@@ -73,12 +79,11 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     for file in [list_eval_partition, list_bbox_inshop]:
         assert file.is_file(), f"File {file} does not exist."
 
-    pandarallel.initialize(nb_workers=os.cpu_count())
-
     df_part = txt_to_df(list_eval_partition)
+
     df_part["path"] = df_part["image_name"].apply(lambda x: args.dataset_root / x.replace("img/", "img_highres/"))
 
-    df_part["cls"] = df_part["path"].apply(lambda x: x.parent.parent.name)
+    df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
     df_bbox = txt_to_df(list_bbox_inshop)
 
@@ -87,7 +92,7 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 
     df["label"] = df["item_id"].apply(lambda x: int(x[3:]))
 
-    df["hw"] = df["path"].parallel_apply(lambda x: cv2.imread(str(x)).shape[:2])
+    df["hw"] = df["path"].apply(lambda x: imagesize.get(str(x))[::-1])
     df["h"] = df["hw"].apply(lambda x: x[0])
     df["w"] = df["hw"].apply(lambda x: x[1])
     del df["hw"]
@@ -118,10 +123,16 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     df["is_query"][df["split"] == "train"] = None
     df["is_gallery"][df["split"] == "train"] = None
 
-    if args.fix_squeezed_bboxes:
-        df = expand_squeezed_bboxes(df, ratio_th=args.bboxes_aspect_ratio_to_fix)
+    df = expand_squeezed_bboxes(
+        df=df, ratio_th=args.bboxes_aspect_ratio_to_fix, fix_train=args.fix_train_bboxes, fix_val=args.fix_val_bboxes
+    )
 
-    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
+    le = preprocessing.LabelEncoder()
+    df["category"] = le.fit_transform(df["category_name"])
+
+    df = df[
+        ["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category", "category_name"]
+    ]
 
     check_retrieval_dataframe_format(df, dataset_root=args.dataset_root)
     return df.reset_index(drop=True)
@@ -130,13 +141,9 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("--dataset_root", type=Path)
-    parser.add_argument("--fix_squeezed_bboxes", action="store_true")
-    parser.add_argument(
-        "--bboxes_aspect_ratio_to_fix",
-        type=float,
-        default=2.5,
-        help="will be used only when fix_squeezed_bboxes is True",
-    )
+    parser.add_argument("--fix_train_bboxes", action="store_true")
+    parser.add_argument("--fix_val_bboxes", action="store_true")
+    parser.add_argument("--bboxes_aspect_ratio_to_fix", type=float, default=2.5)
     return parser
 
 
@@ -144,7 +151,15 @@ def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
     df = build_deepfashion_df(args)
-    df.to_csv(args.dataset_root / "df.csv", index=None)
+
+    save_name = "df"
+    if args.fix_train_bboxes:
+        save_name += "_fixed_train"
+    if args.fix_val_bboxes:
+        save_name += "_fixed_val"
+
+    df.to_csv(args.dataset_root / f"{save_name}.csv", index=None)
+
     print("DeepFashion Inshop dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")
 
