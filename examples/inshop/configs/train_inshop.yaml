@@ -16,12 +16,6 @@ im_pad_ratio_val: 0.0
 num_workers: 20
 cache_size: 100000
 
-#sampler:
-#  name: SequentialBalanceSampler
-#  args:
-#    p: 2
-#    k: 8
-
 sampler:
   name: SequentialDistinctCategoryBalanceSampler
   args:
@@ -29,7 +23,6 @@ sampler:
     k: 6
     c: 2
     epoch_size: 1992
-
 
 bs_val: 96
 max_epochs: 10000

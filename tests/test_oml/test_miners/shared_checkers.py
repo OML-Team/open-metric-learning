@@ -29,6 +29,18 @@ def check_triplets_consistency(
     assert num_sampled_tri == len(unq_tri)
 
 
+def calc_n_triplets(labels: List[int]) -> int:
+    labels_counts = Counter(labels).values()
+
+    n_all_tri = 0
+    for count in labels_counts:
+        n_pos = 2 * binom(count, 2)
+        n_neg = len(labels) - count
+        n_all_tri += n_pos * n_neg
+
+    return n_all_tri
+
+
 def check_all_triplets_number(labels: List[int], num_selected_tri: int, max_tri: int) -> None:
     """
     Checks that the selection strategy for all triplets
@@ -40,12 +52,5 @@ def check_all_triplets_number(labels: List[int], num_selected_tri: int, max_tri:
         max_tri: Limit on the number of selected triplets
 
     """
-    labels_counts = Counter(labels).values()
-
-    n_all_tri = 0
-    for count in labels_counts:
-        n_pos = 2 * binom(count, 2)
-        n_neg = len(labels) - count
-        n_all_tri += n_pos * n_neg
-
+    n_all_tri = calc_n_triplets(labels=labels)
     assert num_selected_tri == n_all_tri or num_selected_tri == max_tri

@@ -72,7 +72,7 @@ class TripletMinerWithMemory(ITripletsMiner):
             # and use one-hot encoding for their features
             self.bank_labels = -1 * arange(1, self.bs + 1).repeat(self.bank_size_in_batches).long()
             self.bank_features = zeros([self.bank_size, self.feat_dim], dtype=features.dtype).to(features.device)
-            self.bank_features[arange(self.bank_size), clip(abs(self.bank_labels), max=self.feat_dim)] = 1
+            self.bank_features[arange(self.bank_size), clip(abs(self.bank_labels), max=self.feat_dim - 1)] = 1
 
     @no_grad()
     def update_bank(self, features: Tensor, labels: Tensor) -> None:

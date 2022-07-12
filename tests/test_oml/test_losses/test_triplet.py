@@ -5,7 +5,7 @@ from torch.nn import TripletMarginLoss
 from oml.losses.triplet import TripletLoss
 
 
-@pytest.mark.parametrize("reduction", ["sum", "mean", "none"])
+@pytest.mark.parametrize("reduction", ["sum", "mean"])
 @pytest.mark.parametrize("margin", [0.2, 0.5, 1.5])
 def test_triplet_loss_vs_torch_version(reduction: str, margin: float) -> None:
     criterion_torch = TripletMarginLoss(reduction=reduction, margin=margin)

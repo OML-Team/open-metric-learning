@@ -6,6 +6,7 @@ import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
+from oml.utils.misc_torch import elementwise_dist
 
 TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
 
@@ -170,11 +171,10 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
     assert embeddings.ndim == 2
     assert embeddings.shape[0] % 3 == 0
 
-    embeddings = embeddings.unsqueeze(1)
-
     anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n=len(embeddings))
-    pos_dists = torch.cdist(x1=embeddings[anchor_ii], x2=embeddings[positive_ii]).squeeze()
-    neg_dists = torch.cdist(x1=embeddings[anchor_ii], x2=embeddings[negative_ii]).squeeze()
+
+    pos_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[positive_ii]).squeeze()
+    neg_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[negative_ii]).squeeze()
 
     acc = (pos_dists < neg_dists).float()
 

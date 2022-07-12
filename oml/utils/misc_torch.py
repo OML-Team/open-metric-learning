@@ -10,12 +10,25 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
-def cdist_mean(x1: Tensor, x2: Tensor, p: int = 2, detach: bool = False) -> float:
-    if detach:
-        x1 = x1.clone().detach()
-        x2 = x2.clone().detach()
+def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
+    """
+    Args:
+        x1: tensor with the shape of [N, D]
+        x2: tensor with the shape of [N, D]
+        p: degree
 
-    return cdist(x1, x2, p=p).mean().item()
+    Returns: elementwise distances with the shape of [N]
+
+    """
+    assert len(x1.shape) == len(x2.shape) == 2
+
+    if len(x1.shape) == 2:
+        x1 = x1.unsqueeze(1)
+        x2 = x2.unsqueeze(1)
+
+    dist = cdist(x1=x1, x2=x2, p=p).squeeze()
+
+    return dist
 
 
 def _check_is_sequence(val: Any) -> bool:
