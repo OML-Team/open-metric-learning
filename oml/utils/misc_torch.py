@@ -22,6 +22,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     """
     assert len(x1.shape) == len(x2.shape) == 2
 
+    # we need an extra dim here to avoid pairwise behaviour of torch.cdist
     if len(x1.shape) == 2:
         x1 = x1.unsqueeze(1)
         x2 = x2.unsqueeze(1)
