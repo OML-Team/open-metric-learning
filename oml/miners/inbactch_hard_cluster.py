@@ -7,6 +7,7 @@ from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMiner, TLabels, TTriplets, labels2list
 from oml.utils.misc import find_value_ids
+from oml.utils.misc_torch import pairwise_dist
 
 
 class HardClusterMiner(ITripletsMiner):
@@ -104,7 +105,7 @@ class HardClusterMiner(ITripletsMiner):
             Tensor of shape (p, p) -- matrix of distances between mean vectors
 
         """
-        distance = torch.cdist(x1=mean_vectors, x2=mean_vectors, p=2)
+        distance = pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
         return distance
 
     @staticmethod

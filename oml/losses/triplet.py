@@ -7,7 +7,7 @@ from torch.nn import Module
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.utils.misc_torch import cdist_mean
+from oml.utils.misc_torch import elementwise_dist
 
 TLogs = Dict[str, float]
 TLossOutput = Union[Tensor, Tuple[Tensor, TLogs]]
@@ -54,13 +54,8 @@ class TripletLoss(Module):
         """
         assert anchor.shape == positive.shape == negative.shape
 
-        if len(anchor.shape) == 2:
-            anchor = anchor.unsqueeze(1)
-            positive = positive.unsqueeze(1)
-            negative = negative.unsqueeze(1)
-
-        positive_dist = torch.cdist(x1=anchor, x2=positive, p=2).squeeze()
-        negative_dist = torch.cdist(x1=anchor, x2=negative, p=2).squeeze()
+        positive_dist = elementwise_dist(x1=anchor, x2=positive, p=2)
+        negative_dist = elementwise_dist(x1=anchor, x2=negative, p=2)
 
         if self.margin is None:
             # here is the soft version of TripletLoss without margin
@@ -215,16 +210,20 @@ class TripletLossWithMiner(Module):
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
             if self.need_logs:
+
+                def avg_d(x1: Tensor, x2: Tensor) -> Tensor:
+                    return elementwise_dist(x1.clone().detach(), x2.clone().detach(), 2).mean()
+
                 is_bank_tri = ~is_orig_tri
                 active = (loss.clone().detach() > 0).float()
                 self.last_logs.update(
                     {
                         "orig_active_tri": active[is_orig_tri].sum() / is_orig_tri.sum(),
                         "bank_active_tri": active[is_bank_tri].sum() / is_bank_tri.sum(),
-                        "pos_dist_orig": cdist_mean(anchor[is_orig_tri], positive[is_orig_tri], detach=True),
-                        "neg_dist_orig": cdist_mean(anchor[is_orig_tri], negative[is_orig_tri], detach=True),
-                        "pos_dist_bank": cdist_mean(anchor[is_bank_tri], positive[is_bank_tri], detach=True),
-                        "neg_dist_bank": cdist_mean(anchor[is_bank_tri], negative[is_bank_tri], detach=True),
+                        "pos_dist_orig": avg_d(anchor[is_orig_tri], positive[is_orig_tri]),
+                        "neg_dist_orig": avg_d(anchor[is_orig_tri], negative[is_orig_tri]),
+                        "pos_dist_bank": avg_d(anchor[is_bank_tri], positive[is_bank_tri]),
+                        "neg_dist_bank": avg_d(anchor[is_bank_tri], negative[is_bank_tri]),
                     }
                 )
 
