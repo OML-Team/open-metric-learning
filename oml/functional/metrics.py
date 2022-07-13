@@ -73,7 +73,7 @@ def calc_retrieval_metrics(
     precision_top_k_clipped = clip(precision_top_k, gallery_sz)
     map_top_k_clipped = clip(map_top_k, gallery_sz)
 
-    max_k = max([max(cmc_top_k), max(precision_top_k), max(map_top_k)])
+    max_k = max([*cmc_top_k, *precision_top_k, *map_top_k])
     max_k = min(max_k, gallery_sz)
 
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
