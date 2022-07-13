@@ -118,9 +118,6 @@ def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> Metri
         labels_key="labels",
         is_query_key="is_query",
         is_gallery_key="is_gallery",
-        need_map=True,
-        need_cmc=True,
-        need_precision=True,
     )
     metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
     return metric_callback

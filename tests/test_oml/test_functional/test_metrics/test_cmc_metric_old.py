@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 
 from oml.functional.metrics import calc_retrieval_metrics
+from oml.utils.misc_torch import pairwise_dist
 
 
 def cmc_score_count(distances: Tensor, mask_gt: Tensor, topk: int, mask_to_ignore: Optional[Tensor] = None) -> float:
@@ -14,10 +15,9 @@ def cmc_score_count(distances: Tensor, mask_gt: Tensor, topk: int, mask_to_ignor
         distances=distances,
         mask_gt=mask_gt,
         mask_to_ignore=mask_to_ignore,
-        top_k=(topk,),
-        need_cmc=True,
-        need_precision=False,
-        need_map=False,
+        cmc_top_k=(topk,),
+        map_top_k=tuple(),
+        precision_top_k=tuple(),
     )
     return metrics["cmc"][topk]
 
@@ -29,7 +29,7 @@ def cmc_score(
     topk: int,
     mask_to_ignore: Optional[Tensor] = None,
 ) -> float:
-    distances = torch.cdist(query_embeddings, gallery_embeddings)
+    distances = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
     val = cmc_score_count(distances=distances, mask_gt=mask_gt, topk=topk, mask_to_ignore=mask_to_ignore)
     return val
 

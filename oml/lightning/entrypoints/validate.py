@@ -11,9 +11,13 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
+from oml.utils.misc import dictconfig_to_dict
 
 
 def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
+    cfg = dictconfig_to_dict(cfg)
+    print(cfg)
+
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         im_size=cfg["im_size"],
@@ -27,7 +31,8 @@ def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     extractor = get_extractor_by_cfg(cfg["model"])
     pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
 
-    clb_metric = MetricValCallback(metric=EmbeddingMetrics(extra_keys=("paths", "x1", "x2", "y1", "y2")))
+    metrics_calc = EmbeddingMetrics(extra_keys=("paths", "x1", "x2", "y1", "y2"), **cfg.get("metric_args", {}))
+    clb_metric = MetricValCallback(metric=metrics_calc)
 
     trainer = pl.Trainer(
         gpus=cfg["gpus"],
