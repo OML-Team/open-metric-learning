@@ -104,6 +104,8 @@ def worst_case() -> Any:
 def run_retrieval_metrics(case) -> None:  # type: ignore
     (batch1, batch2), (gt_metrics, k) = case
 
+    top_k = (k,)
+
     num_samples = len(batch1["labels"]) + len(batch2["labels"])
     calc = EmbeddingMetrics(
         embeddings_key="embeddings",
@@ -111,10 +113,9 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         is_query_key="is_query",
         is_gallery_key="is_gallery",
         categories_key="categories",
-        need_cmc=True,
-        need_precision=False,
-        need_map=False,
-        top_k=(k,),
+        cmc_top_k=top_k,
+        precision_top_k=top_k,
+        map_top_k=top_k,
     )
 
     calc.setup(num_samples=num_samples)
@@ -137,16 +138,17 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
     (batch21, batch22), (gt_metrics2, k2) = case2
     assert k1 == k2
 
+    top_k = (k1,)
+
     calc = EmbeddingMetrics(
         embeddings_key="embeddings",
         labels_key="labels",
         is_query_key="is_query",
         is_gallery_key="is_gallery",
         categories_key="categories",
-        need_cmc=True,
-        need_precision=False,
-        need_map=False,
-        top_k=(k1,),
+        cmc_top_k=top_k,
+        precision_top_k=top_k,
+        map_top_k=top_k,
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore

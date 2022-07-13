@@ -6,6 +6,7 @@ import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
+from oml.utils.misc import clip
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
 TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
@@ -15,10 +16,9 @@ def calc_retrieval_metrics(
     distances: torch.Tensor,
     mask_gt: torch.Tensor,
     mask_to_ignore: Optional[torch.Tensor] = None,
-    top_k: Tuple[int, ...] = (1,),
-    need_cmc: bool = True,
-    need_precision: bool = True,
-    need_map: bool = True,
+    cmc_top_k: Tuple[int, ...] = (5,),
+    precision_top_k: Tuple[int, ...] = (5,),
+    map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
 ) -> TMetricsDict:
     """
@@ -28,19 +28,21 @@ def calc_retrieval_metrics(
         mask_gt: mask_gt[i,j] indicates if for i-th query j-th gallery is the correct prediction
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
-        top_k: Number of top examples for cumulative score counting
-        need_cmc: If CMC metric is needed
-        need_map: If MeanAveragePrecision metric is needed
-        need_precision: If Precision metric  is needed
+        cmc_top_k: k values to calculate cmc@k
+        precision_top_k: k values to calculate precision@k
+        map_top_k: k values to calculate map@k
         reduce: if False return metrics for each query without averaging
     Returns:
         Dictionary with metrics.
     """
-    if not any([need_map, need_cmc, need_precision]):
-        raise ValueError("You must specify at leas 1 metric to calculate it")
+    top_k_args = [cmc_top_k, precision_top_k, map_top_k]
 
-    if not ((len(top_k) >= 1) and all([isinstance(x, int) and (x > 0) for x in top_k])):
-        raise ValueError(f"Something is wrong with top_k: {top_k}")
+    if not any(top_k_args):
+        raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
+
+    for top_k_arg in top_k_args:
+        if top_k_arg:
+            assert all([isinstance(x, int) and (x > 0) for x in top_k_arg])
 
     if distances.shape != mask_gt.shape:
         raise ValueError(
@@ -56,48 +58,50 @@ def calc_retrieval_metrics(
 
     query_sz, gallery_sz = distances.shape
 
-    for k in top_k:
-        if k > gallery_sz:
-            warnings.warn(
-                f"Your desired k={k} more than gallery_size={gallery_sz}."
-                f"We'll calculate metrics with k limited by the gallery size."
-            )
+    for top_k_arg in top_k_args:
+        for k in top_k_arg:
+            if k > gallery_sz:
+                warnings.warn(
+                    f"Your desired k={k} more than gallery_size={gallery_sz}."
+                    f"We'll calculate metrics with k limited by the gallery size."
+                )
 
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
-    top_k_clipped = tuple(min(k, gallery_sz) for k in top_k)
+    cmc_top_k = clip(cmc_top_k, gallery_sz)
+    precision_top_k = clip(precision_top_k, gallery_sz)
+    map_top_k = clip(map_top_k, gallery_sz)
 
-    max_k = max(top_k_clipped)
+    max_k = max([max(cmc_top_k), max(precision_top_k), max(map_top_k)])
+
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
     ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
     gt_tops = mask_gt[ii_arange, ii_top_k]
 
     metrics: TMetricsDict = defaultdict(dict)
 
-    for k, k_show in zip(top_k_clipped, top_k):
+    for k_cmc in cmc_top_k:
+        cmc = torch.any(gt_tops[:, :k_cmc], dim=1).float()
+        if reduce:
+            cmc = cmc.mean()
+        metrics["cmc"][k_cmc] = cmc
 
-        if need_cmc:
-            cmc = torch.any(gt_tops[:, :k], dim=1).float()
-            if reduce:
-                cmc = cmc.mean()
-            metrics["cmc"][k_show] = cmc
+    for k_precision in precision_top_k:
+        n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_precision).unsqueeze(0))
+        precision = torch.sum(gt_tops[:, :k_precision].float(), dim=1) / n_gt_matrix
+        if reduce:
+            precision = precision.mean()
+        metrics["precision"][k_precision] = precision
 
-        if need_precision:
-            n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k).unsqueeze(0))
-            precision = torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix
-            if reduce:
-                precision = precision.mean()
-            metrics["precision"][k_show] = precision
-
-        if need_map:
-            n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k).unsqueeze(0))
-            correct_preds = torch.cumsum(gt_tops[:, :k], dim=1)
-            positions = torch.arange(1, k + 1).unsqueeze(0)
-            mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k], dim=1) / n_gt_matrix
-            if reduce:
-                mean_ap = mean_ap.mean()
-            metrics["map"][k_show] = mean_ap
+    for k_map in map_top_k:
+        n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_map).unsqueeze(0))
+        correct_preds = torch.cumsum(gt_tops[:, :k_map], dim=1)
+        positions = torch.arange(1, k_map + 1).unsqueeze(0)
+        mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
+        if reduce:
+            mean_ap = mean_ap.mean()
+        metrics["map"][k_map] = mean_ap
 
     return metrics
 

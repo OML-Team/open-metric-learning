@@ -28,6 +28,10 @@ bs_val: 96
 max_epochs: 10000
 valid_period: 1
 
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+
 augs_key: all
 
 model:

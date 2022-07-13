@@ -78,7 +78,7 @@ def main(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(top_k=(1, 5), need_cmc=True, need_precision=True, need_map=True)
+    metrics_calc = EmbeddingMetrics(**cfg.get("metric_args", {}))
     metrics_clb = MetricValCallback(metric=metrics_calc)
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
