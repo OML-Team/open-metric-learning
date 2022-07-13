@@ -52,15 +52,16 @@ class TripletLoss(Module):
             loss value
 
         """
+
+        def cosine_cdist(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+            a /= a.norm(dim=1).unsqueeze(-1)
+            b /= b.norm(dim=1).unsqueeze(-1)
+            return 1 - a @ b.transpose(0, 1)
+
         assert anchor.shape == positive.shape == negative.shape
 
-        if len(anchor.shape) == 2:
-            anchor = anchor.unsqueeze(1)
-            positive = positive.unsqueeze(1)
-            negative = negative.unsqueeze(1)
-
-        positive_dist = torch.cdist(x1=anchor, x2=positive, p=2).squeeze()
-        negative_dist = torch.cdist(x1=anchor, x2=negative, p=2).squeeze()
+        positive_dist = torch.acos(cosine_cdist(anchor, positive))
+        negative_dist = torch.acos(cosine_cdist(anchor, negative))
 
         if self.margin is None:
             # here is the soft version of TripletLoss without margin
