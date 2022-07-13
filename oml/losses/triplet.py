@@ -61,7 +61,7 @@ class TripletLoss(Module):
             # here is the soft version of TripletLoss without margin
             loss = torch.log1p(torch.exp(positive_dist - negative_dist))
         else:
-            loss = torch.relu(2.718282**self.margin + torch.exp(positive_dist) - torch.exp(negative_dist))
+            loss = torch.relu(self.margin + positive_dist - negative_dist)
 
         if self.need_logs:
             self.last_logs = {
