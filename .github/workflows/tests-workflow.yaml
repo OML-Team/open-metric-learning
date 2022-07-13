@@ -22,15 +22,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Build OML
       run: |
-        docker run hello-world
-#    - name: Set up Python 3.9.10
-#      uses: actions/setup-python@v3
-#      with:
-#        python-version: "3.9.10"
-#    - name: Install dependencies
-#      run: |
-#        apt-get get update && apt-get install cmake
-#        python -m pip install --upgrade pre-commit==2.15.0
-#    - name: Pre-commit tests
-#      run: |
-#        make run_precommit
+        make docker_build RUNTIME=cpu
+    - name: Tests OML
+      run: |
+        make docker_tests RUNTIME=cpu

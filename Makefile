@@ -25,3 +25,16 @@ check_converters:
 	export PYTHONWARNINGS=ignore; python examples/sop/convert_sop.py        --dataset_root  /nydl/data/Stanford_Online_Products
 	export PYTHONWARNINGS=ignore; python examples/cars/convert_cars.py      --dataset_root  /nydl/data/CARS196
 	export PYTHONWARNINGS=ignore; python examples/inshop/convert_inshop.py  --dataset_root  /nydl/data/DeepFashion_InShop
+
+
+RUNTIME ?= cpu
+IMAGE_NAME = oml:$(RUNTIME)
+
+.PHONY: docker_build
+docker_build:
+	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME) -f ci_cd/Dockerfile .
+
+
+.PHONY: docker_tests
+docker_tests:
+	docker run -t $(IMAGE_NAME) bash -c "make run_mock_scripts; make run_tests"
