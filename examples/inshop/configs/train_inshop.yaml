@@ -17,19 +17,17 @@ num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: SequentialDistinctCategoryBalanceSampler
+  name: SequentialBalanceSampler
   args:
-    p: 4
-    k: 6
-    c: 2
-    epoch_size: 1992
+    p: 2
+    k: 8
 
 bs_val: 96
 max_epochs: 10000
 valid_period: 1
 
 metric_args:
-  cmc_top_k: [1, 5]
+  cmc_top_k: [1]
   map_top_k: [5]
 
 augs_key: all
@@ -53,10 +51,10 @@ criterion:
       name: TripletMinerWithMemory
       args:
         bank_size_in_batches: 20
-        tri_expand_k: 2
+        tri_expand_k: 5
 
 optimizer:
-  name: adam
+  name: adamw
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
