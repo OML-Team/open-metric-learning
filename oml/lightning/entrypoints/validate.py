@@ -15,9 +15,8 @@ from oml.utils.misc import dictconfig_to_dict
 
 
 def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
-    print(cfg)
-
     cfg = dictconfig_to_dict(cfg)
+    print(cfg)
 
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),

@@ -58,6 +58,7 @@ bs_val: 2
 metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
+  precision_top_k: [1, 5]
 
 max_epochs: 2
 valid_period: 1

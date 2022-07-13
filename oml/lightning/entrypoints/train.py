@@ -28,8 +28,8 @@ from oml.utils.misc import (
 
 
 def main(cfg: TCfg) -> None:
-    print(cfg)
     cfg = dictconfig_to_dict(cfg)
+    print(cfg)
 
     set_global_seed(cfg["seed"], cfg["num_workers"])
 
