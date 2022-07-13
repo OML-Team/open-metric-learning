@@ -1,0 +1,28 @@
+name: OML tests
+
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+
+
+jobs:
+  pre_commit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Build OML
+      run: |
+        make docker_build RUNTIME=cpu
+    - name: Tests OML
+      run: |
+        make docker_tests RUNTIME=cpu
