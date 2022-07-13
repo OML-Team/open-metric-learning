@@ -1,9 +1,0 @@
-albumentations
-grad-cam
-hydra-core
-imagesize==1.4.1
-omegaconf
-pytest
-python-dotenv
-pytorch-lightning
-torch
