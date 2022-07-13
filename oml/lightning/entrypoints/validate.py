@@ -12,7 +12,7 @@ from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
 from oml.utils.misc import dictconfig_to_dict
-
+# TODO
 
 def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     cfg = dictconfig_to_dict(cfg)
