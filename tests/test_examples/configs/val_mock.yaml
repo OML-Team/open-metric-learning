@@ -4,8 +4,14 @@ dataframe_name: df.csv
 logs_root: logs
 
 im_size: 224
-bs_val: 2
 num_workers: 0
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [1, 5]
 
 model:
   name: vit

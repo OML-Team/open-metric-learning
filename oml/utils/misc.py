@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Any, Dict, Iterable, List, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union
 
 import dotenv
 import numpy as np
@@ -108,3 +108,7 @@ def smart_sample(array: List[Any], k: int) -> List[Any]:
     else:
         sampled = np.random.choice(array, size=k, replace=False).tolist()
     return sampled
+
+
+def clip(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
+    return tuple(min(x, max_el) for x in arr)

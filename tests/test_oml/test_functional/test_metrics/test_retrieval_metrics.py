@@ -128,10 +128,9 @@ def compare_metrics(
         distances=distances,
         mask_gt=mask_gt,
         mask_to_ignore=mask_to_ignore,
-        need_map="map" in metrics_expected,
-        need_precision="precision" in metrics_expected,
-        need_cmc="cmc" in metrics_expected,
-        top_k=top_k,
+        map_top_k=top_k,
+        precision_top_k=top_k,
+        cmc_top_k=top_k,
         reduce=reduce,
     )
 

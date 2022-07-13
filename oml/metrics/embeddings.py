@@ -31,10 +31,9 @@ class EmbeddingMetrics(IBasicMetric):
         is_query_key: str = "is_query",
         is_gallery_key: str = "is_gallery",
         extra_keys: Tuple[str, ...] = (),
-        top_k: Tuple[int, ...] = (1,),
-        need_cmc: bool = True,
-        need_precision: bool = False,
-        need_map: bool = False,
+        cmc_top_k: Tuple[int, ...] = (5,),
+        precision_top_k: Tuple[int, ...] = (5,),
+        map_top_k: Tuple[int, ...] = (5,),
         categories_key: Optional[str] = None,
         categories_names_mapping: Optional[T_Str2Int_or_Int2Str] = None,
         postprocessor: Optional[IPostprocessor] = None,
@@ -49,10 +48,10 @@ class EmbeddingMetrics(IBasicMetric):
         self.is_query_key = is_query_key
         self.is_gallery_key = is_gallery_key
         self.extra_keys = extra_keys
-        self.top_k = top_k
-        self.need_cmc = need_cmc
-        self.need_precision = need_precision
-        self.need_map = need_map
+        self.cmc_top_k = cmc_top_k
+        self.precision_top_k = precision_top_k
+        self.map_top_k = map_top_k
+
         self.categories_key = categories_key
         self.categories_names_mapping = categories_names_mapping
         self.postprocessor = postprocessor
@@ -110,10 +109,9 @@ class EmbeddingMetrics(IBasicMetric):
         self._calc_matrices()
 
         args = {
-            "top_k": self.top_k,
-            "need_cmc": self.need_cmc,
-            "need_map": self.need_map,
-            "need_precision": self.need_precision,
+            "cmc_top_k": self.cmc_top_k,
+            "precision_top_k": self.precision_top_k,
+            "map_top_k": self.map_top_k,
         }
 
         metrics: TMetricsDict_ByLabels = dict()
