@@ -21,6 +21,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
 
     """
     assert len(x1.shape) == len(x2.shape) == 2
+    assert x1.shape == x2.shape
 
     # we need an extra dim here to avoid pairwise behaviour of torch.cdist
     if len(x1.shape) == 2:
@@ -30,6 +31,22 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     dist = cdist(x1=x1, x2=x2, p=p).squeeze()
 
     return dist
+
+
+def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
+    """
+    Args:
+        x1: tensor with the shape of [N, D]
+        x2: tensor with the shape of [M, D]
+        p: degree
+
+    Returns: pairwise distances with the shape of [N, M]
+
+    """
+    assert len(x1.shape) == len(x2.shape) == 2
+    assert x1.shape[-1] == x2.shape[-1]
+
+    return cdist(x1=x1, x2=x2, p=p)
 
 
 def _check_is_sequence(val: Any) -> bool:

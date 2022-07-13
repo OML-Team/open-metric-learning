@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
-from oml.utils.misc_torch import elementwise_dist
+from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
 TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
 
@@ -162,7 +162,7 @@ def calc_distance_matrix(
     query_embeddings = embeddings[query_mask]
     gallery_embeddings = embeddings[gallery_mask]
 
-    distance_matrix = torch.cdist(query_embeddings, gallery_embeddings)
+    distance_matrix = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
 
     return distance_matrix
 

@@ -1,12 +1,12 @@
 from typing import List
 
 import numpy as np
-import torch
 from torch import Tensor
 from torch.nn import functional as F
 
 from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
 from oml.utils.misc import find_value_ids
+from oml.utils.misc_torch import pairwise_dist
 
 
 class HardTripletsMiner(InBatchTripletsMiner):
@@ -43,7 +43,7 @@ class HardTripletsMiner(InBatchTripletsMiner):
         if self._norm_required:
             features = F.normalize(features.detach(), p=2, dim=1)
 
-        dist_mat = torch.cdist(x1=features, x2=features, p=2)
+        dist_mat = pairwise_dist(x1=features, x2=features, p=2)
 
         ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(distmat=dist_mat, labels=labels)
 

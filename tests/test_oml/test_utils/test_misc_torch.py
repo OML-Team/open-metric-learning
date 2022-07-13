@@ -4,7 +4,7 @@ import torch
 from oml.utils.misc_torch import elementwise_dist
 
 
-def test_cdist_mean() -> None:
+def test_elementwise_dist() -> None:
     x1 = torch.randn(size=(3, 4))
     x2 = torch.randn(size=(3, 4))
 
