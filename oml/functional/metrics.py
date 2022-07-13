@@ -69,11 +69,12 @@ def calc_retrieval_metrics(
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
-    cmc_top_k = clip(cmc_top_k, gallery_sz)
-    precision_top_k = clip(precision_top_k, gallery_sz)
-    map_top_k = clip(map_top_k, gallery_sz)
+    cmc_top_k_clipped = clip(cmc_top_k, gallery_sz)
+    precision_top_k_clipped = clip(precision_top_k, gallery_sz)
+    map_top_k_clipped = clip(map_top_k, gallery_sz)
 
     max_k = max([max(cmc_top_k), max(precision_top_k), max(map_top_k)])
+    max_k = min(max_k, gallery_sz)
 
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
     ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
@@ -81,27 +82,27 @@ def calc_retrieval_metrics(
 
     metrics: TMetricsDict = defaultdict(dict)
 
-    for k_cmc in cmc_top_k:
+    for k_cmc, k_cmc_show in zip(cmc_top_k_clipped, cmc_top_k):
         cmc = torch.any(gt_tops[:, :k_cmc], dim=1).float()
         if reduce:
             cmc = cmc.mean()
-        metrics["cmc"][k_cmc] = cmc
+        metrics["cmc"][k_cmc_show] = cmc
 
-    for k_precision in precision_top_k:
+    for k_precision, k_precision_show in zip(precision_top_k_clipped, precision_top_k):
         n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_precision).unsqueeze(0))
         precision = torch.sum(gt_tops[:, :k_precision].float(), dim=1) / n_gt_matrix
         if reduce:
             precision = precision.mean()
-        metrics["precision"][k_precision] = precision
+        metrics["precision"][k_precision_show] = precision
 
-    for k_map in map_top_k:
+    for k_map, k_map_show in zip(map_top_k_clipped, map_top_k):
         n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_map).unsqueeze(0))
         correct_preds = torch.cumsum(gt_tops[:, :k_map], dim=1)
         positions = torch.arange(1, k_map + 1).unsqueeze(0)
         mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
         if reduce:
             mean_ap = mean_ap.mean()
-        metrics["map"][k_map] = mean_ap
+        metrics["map"][k_map_show] = mean_ap
 
     return metrics
 

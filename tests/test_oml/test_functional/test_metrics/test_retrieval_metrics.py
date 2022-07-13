@@ -128,9 +128,9 @@ def compare_metrics(
         distances=distances,
         mask_gt=mask_gt,
         mask_to_ignore=mask_to_ignore,
-        map_top_k=top_k if "map" in metrics_expected else tuple(),
-        precision_top_k=top_k if "precision" in metrics_expected else tuple(),
-        cmc_top_k=top_k if "cmc" in metrics_expected else tuple(),
+        map_top_k=top_k,
+        precision_top_k=top_k,
+        cmc_top_k=top_k,
         reduce=reduce,
     )
 
