@@ -32,7 +32,7 @@ IMAGE_NAME = oml:$(RUNTIME)
 
 .PHONY: docker_build
 docker_build:
-	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME) -f ci_cd/Dockerfile .
+	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME) -f ci/Dockerfile .
 
 
 .PHONY: docker_tests

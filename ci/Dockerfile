@@ -39,7 +39,7 @@ RUN pip install Cython==0.29.28
 RUN pip install torch==1.8.0+${TORCH_POSTFIX} torchvision==0.9.0+${TORCH_POSTFIX} \
     -f https://download.pytorch.org/whl/torch_stable.html
 
-COPY ci_cd/requirements.txt requirements.txt
+COPY ci/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /oml
 WORKDIR /oml/
