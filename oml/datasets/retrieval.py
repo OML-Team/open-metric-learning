@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.augs import get_default_transforms_albu
+from oml.transforms.images.albumentations.shared import get_default_transforms_albu
 from oml.utils.images.images import TImReader, imread_cv2
 from oml.utils.images.images_resize import pad_resize
 
@@ -58,9 +58,13 @@ class BaseDataset(Dataset):
         self.read_image_cached = lru_cache(maxsize=cache_size)(self.read_image)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        crop = self.read_image_cached(idx)
-        image_tensor = self.transform(image=crop)["image"]
         label = self.df.iloc[idx]["label"]
+        crop = self.read_image_cached(idx)
+
+        if isinstance(self.transform, albu.Compose):
+            image_tensor = self.transform(image=crop)["image"]
+        else:
+            image_tensor = self.transform(crop)
 
         row = self.df.iloc[idx]
 

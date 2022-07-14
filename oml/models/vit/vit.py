@@ -12,7 +12,7 @@ from oml.models.vit.hubconf import dino_vitb8  # type: ignore
 from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
-from oml.utils.images.augs import get_default_transforms_albu
+from oml.transforms.images.albumentations.shared import get_default_transforms_albu
 
 
 class ViTExtractor(IExtractor):
