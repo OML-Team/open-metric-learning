@@ -8,8 +8,8 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
+from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.transforms.images.albumentations.shared import get_default_transforms_albu
 from oml.utils.images.images import TImReader, imread_cv2
 from oml.utils.images.images_resize import pad_resize
 
@@ -53,7 +53,7 @@ class BaseDataset(Dataset):
         self.df = df
         self.im_size = im_size
         self.pad_ratio = pad_ratio
-        self.transform = transform or get_default_transforms_albu()
+        self.transform = transform or get_normalisation_albu()
         self.f_imread = f_imread
         self.read_image_cached = lru_cache(maxsize=cache_size)(self.read_image)
 

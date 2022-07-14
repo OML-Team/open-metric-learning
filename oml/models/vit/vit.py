@@ -12,7 +12,7 @@ from oml.models.vit.hubconf import dino_vitb8  # type: ignore
 from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
-from oml.transforms.images.albumentations.shared import get_default_transforms_albu
+from oml.transforms.images.albumentations.shared import get_normalisation_albu
 
 
 class ViTExtractor(IExtractor):
@@ -93,7 +93,7 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray) -> np.ndarray:
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]
 
-    img_tensor = get_default_transforms_albu()(image=image)["image"]
+    img_tensor = get_normalisation_albu()(image=image)["image"]
 
     w = img_tensor.shape[1] - img_tensor.shape[1] % patch_size
     h = img_tensor.shape[2] - img_tensor.shape[2] % patch_size

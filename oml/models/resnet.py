@@ -11,7 +11,7 @@ from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet15
 from oml.interfaces.models import IExtractor
 from oml.models.pooling import GEM
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.transforms.images.albumentations.shared import get_default_transforms_albu
+from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.io import download_checkpoint
 
 
@@ -156,7 +156,7 @@ class ResnetExtractor(IExtractor):
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         model_device = str(list(self.model.parameters())[0].device)
-        image_tensor = get_default_transforms_albu()(image=image)["image"].to(model_device)
+        image_tensor = get_normalisation_albu()(image=image)["image"].to(model_device)
         cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=not (model_device == "cpu"))
         gray_image = cam(image_tensor.unsqueeze(0), "gradcam", None)
         img_with_grads = show_cam_on_image(image / 255, gray_image)

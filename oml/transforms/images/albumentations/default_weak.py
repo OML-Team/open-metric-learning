@@ -53,7 +53,7 @@ def get_noise_channels_weak() -> TAugsList:
     return channels_noise_augs
 
 
-def get_all_augs_weak() -> albu.Compose:
+def get_default_weak_albu() -> albu.Compose:
     augs = albu.Compose(
         [
             albu.HorizontalFlip(p=0.5),

@@ -63,7 +63,7 @@ def get_noise_channels() -> TAugsList:
     return channels_noise_augs
 
 
-def get_all_augs() -> albu.Compose:
+def get_default_albu() -> albu.Compose:
     """
     Note, that OneOf consider probs of augmentations
     in the list as their weights (from docs):
