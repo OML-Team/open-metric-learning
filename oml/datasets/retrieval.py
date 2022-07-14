@@ -69,7 +69,7 @@ class BaseDataset(Dataset):
             image_tensor = self.transform(image=crop)["image"]
 
         elif isinstance(self.transform, torchvision.transforms.Compose):
-            if isinstance(crop, np.ndarray):  # depends on the reader with may have numpy or pil here
+            if isinstance(crop, np.ndarray):  # depends on the reader we may have numpy or pil here
                 crop = Image.fromarray(crop)
             image_tensor = self.transform(crop)
 
