@@ -5,14 +5,16 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import _LRScheduler
 
-from oml.interfaces.models import IExtractor
+from oml.interfaces.models import IExtractor, IHead
 
 
 class RetrievalModule(pl.LightningModule):
     def __init__(
         self,
         model: IExtractor,
+        head: Optional[IHead],
         criterion: nn.Module,
+        clf_criterion: nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
@@ -20,11 +22,14 @@ class RetrievalModule(pl.LightningModule):
         key_input: str = "input_tensors",
         key_targets: str = "labels",
         key_embeddings: str = "embeddings",
+        key_classification: str = "class_predictions",
     ):
         super(RetrievalModule, self).__init__()
 
         self.model = model
+        self.head = head
         self.criterion = criterion
+        self.clf_criterion = clf_criterion
         self.optimizer = optimizer
 
         self.scheduler = scheduler
@@ -52,7 +57,17 @@ class RetrievalModule(pl.LightningModule):
         if self.scheduler is not None:
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
-        return loss
+        if self.head:
+            pred = self.head(embeddings)
+            loss_clf = self.clf_criterion(pred, batch[self.key_target])
+            self.log("loss_clf", loss_clf.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+
+            if hasattr(self.clf_criterion, "last_logs"):
+                self.log_dict(self.clf_criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
+
+            return loss + loss_clf
+        else:
+            return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
         embeddings = self.model(batch[self.key_input])

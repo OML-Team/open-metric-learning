@@ -3,7 +3,8 @@ from typing import Any, Dict
 
 from omegaconf import OmegaConf
 
-from oml.interfaces.models import IExtractor
+from oml.interfaces.models import IExtractor, IHead
+from oml.models.heads import SimpleLinearHead
 from oml.models.resnet import ResnetExtractor
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -14,6 +15,14 @@ MODELS_REGISTRY = {
     "resnet": ResnetExtractor,
     "vit": ViTExtractor,
 }
+
+HEADS_REGISTRY = {
+    "simple_linear": SimpleLinearHead,
+}
+
+
+def get_head(head_name: str, **kwargs: Dict[str, Any]) -> IHead:
+    return HEADS_REGISTRY[head_name](**kwargs)  # type: ignore
 
 
 def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:
