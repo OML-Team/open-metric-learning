@@ -28,9 +28,9 @@ def calc_retrieval_metrics(
         mask_gt: mask_gt[i,j] indicates if for i-th query j-th gallery is the correct prediction
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
-        cmc_top_k: k values to calculate cmc@k
-        precision_top_k: k values to calculate precision@k
-        map_top_k: k values to calculate map@k
+        cmc_top_k: n_instances values to calculate cmc@n_instances
+        precision_top_k: n_instances values to calculate precision@n_instances
+        map_top_k: n_instances values to calculate map@n_instances
         reduce: if False return metrics for each query without averaging
     Returns:
         Dictionary with metrics.
@@ -62,8 +62,8 @@ def calc_retrieval_metrics(
         for k in top_k_arg:
             if k > gallery_sz:
                 warnings.warn(
-                    f"Your desired k={k} more than gallery_size={gallery_sz}."
-                    f"We'll calculate metrics with k limited by the gallery size."
+                    f"Your desired n_instances={k} more than gallery_size={gallery_sz}."
+                    f"We'll calculate metrics with n_instances limited by the gallery size."
                 )
 
     if mask_to_ignore is not None:

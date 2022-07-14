@@ -11,17 +11,17 @@ from oml.utils.misc import smart_sample
 class CategoryBalanceBatchSampler(Sampler):
     """Let C is a set of categories in dataset, P is a set of labels in dataset:
     - select c categories for the 1st batch from C
-    - select p labels for each of chosen categories for the 1st batch
-    - select k samples for each label for the 1st batch
+    - select n_labels labels for each of chosen categories for the 1st batch
+    - select n_instances samples for each label for the 1st batch
     - select c categories from C for the 2nd batch
-    - select p labels for each category for the 2nd batch
-    - select k samples for each label for the 2nd batch
+    - select n_labels labels for each category for the 2nd batch
+    - select n_instances samples for each label for the 2nd batch
     ...
 
     Behavior in corner cases:
-    - If a label does not contain k instances, a choice will be made with repetition.
-    - If P % p == 1 then one of the labels should be dropped
-    - If a category does not contain p labels, a choice will be made with repetition or an error will be raised
+    - If a label does not contain n_instances instances, a choice will be made with repetition.
+    - If P % n_labels == 1 then one of the labels should be dropped
+    - If a category does not contain n_labels labels, a choice will be made with repetition or an error will be raised
     depend on few_labels_number_policy
     """
 
@@ -61,9 +61,9 @@ class CategoryBalanceBatchSampler(Sampler):
         if not 1 <= c <= len(unique_categories):
             raise ValueError(f"c must be 1 <= c <= {len(unique_categories)}, {c} given")
         if not 1 < p <= len(unique_labels):
-            raise ValueError(f"p must be 1 < p <= {len(unique_labels)}, {p} given")
+            raise ValueError(f"n_labels must be 1 < n_labels <= {len(unique_labels)}, {p} given")
         if k <= 1:
-            raise ValueError(f"k must be not less than 1, {k} given")
+            raise ValueError(f"n_instances must be not less than 1, {k} given")
         if any(label not in label2category.keys() for label in unique_labels):
             raise ValueError("All the labels must have category")
         if any(label not in unique_labels for label in label2category.keys()):

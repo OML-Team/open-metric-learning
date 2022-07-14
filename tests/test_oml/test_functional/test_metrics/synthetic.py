@@ -80,7 +80,7 @@ def generate_retrieval_case(
             else:
                 # We have at least 2 queries in this section
                 # To calculate metric for each query it's necessary to have minimum 1 gallery with another idx.
-                # With k=2 one gallery can be from same or another idx, but second is guaranteed with another idx
+                # With n_instances=2 one gallery can be from same or another idx, but second is guaranteed with another idx
                 # E.g. is_query = [True, True, True] and is_gallery = [True, False, True]
                 guaranted_galleries = random.sample(range(num_samples_for_label), k=2)
 

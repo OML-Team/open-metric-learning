@@ -78,10 +78,10 @@ def test_cluster_count_intra_label_distances(features: torch.Tensor, expected: t
     Test _count_intra_label_distances method of HardClusterMiner.
 
     Args:
-        features: Tensor of shape (p, k, embed_dim), where p is a number of
-        labels in the batch, k is a number of samples for each label,
+        features: Tensor of shape (n_labels, n_instances, embed_dim), where n_labels is a number of
+        labels in the batch, n_instances is a number of samples for each label,
         embed_dim is an embedding size -- features grouped by labels
-        expected: Tensor of shape (p, k) -- expected distances from mean
+        expected: Tensor of shape (n_labels, n_instances) -- expected distances from mean
         vectors of labels to corresponding features
     """
     miner = HardClusterMiner()
@@ -115,9 +115,9 @@ def test_cluster_count_inter_label_distances(mean_vectors, expected) -> None:  #
     Test _count_inter_label_distances method of HardClusterMiner.
 
     Args:
-        mean_vectors: Tensor of shape (p, embed_dim) -- mean vectors of
+        mean_vectors: Tensor of shape (n_labels, embed_dim) -- mean vectors of
         labels in the batch
-        expected: Tensor of shape (p, p) -- expected distances from mean
+        expected: Tensor of shape (n_labels, n_labels) -- expected distances from mean
         vectors of labels
 
     """

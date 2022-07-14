@@ -21,13 +21,13 @@ def get_labels(n_cls: int, sz: int) -> Tensor:
     return tensor(labels)
 
 
-@pytest.mark.parametrize("n_cls,cls_sz,p,k", [[100, 8, 2, 8], [50, 10, 10, 4]])
+@pytest.mark.parametrize("n_cls,cls_sz,n_labels,n_instances", [[100, 8, 2, 8], [50, 10, 10, 4]])
 @pytest.mark.parametrize("bank_sz,bank_k", [[5, 3], [20, 5], [5, 1]])
 def test_mining_with_memory(n_cls: int, cls_sz: int, p: int, k: int, bank_sz: int, bank_k: int) -> None:
     feat_dim = 2 * n_cls
 
     labels = get_labels(n_cls=n_cls, sz=cls_sz)
-    sampler = BalanceBatchSampler(labels=labels.tolist(), p=p, k=k)
+    sampler = BalanceBatchSampler(labels=labels.tolist(), n_labels=p, n_instances=k)
 
     miner = TripletMinerWithMemory(bank_size_in_batches=bank_sz, tri_expand_k=bank_k)
 

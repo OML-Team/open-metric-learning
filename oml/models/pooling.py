@@ -9,7 +9,7 @@ class GEM(nn.Module):
         Generalised Mean Pooling (GEM)
 
         Args:
-            p: if p == 1 it's average pooling, if p == inf it's max-pooling
+            p: if n_labels == 1 it's average pooling, if n_labels == inf it's max-pooling
             eps: eps for numerical stability
         """
         super(GEM, self).__init__()

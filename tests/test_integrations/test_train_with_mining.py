@@ -43,7 +43,7 @@ class DummyDataset(IDatasetWithLabels):
     ],
 )
 @pytest.mark.parametrize("margin", [None, 0.5])
-@pytest.mark.parametrize("p,k", [(2, 2), (5, 6)])
+@pytest.mark.parametrize("n_labels,n_instances", [(2, 2), (5, 6)])
 def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin, p, k) -> None:  # type: ignore
     n_labels_total = p * 6  # just some random figures
 

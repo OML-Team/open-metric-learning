@@ -18,14 +18,14 @@ class HardClusterMiner(ITripletsMiner):
     anchor's label, the hardest negative sample is the closest mean vector
     of another labels.
 
-    The batch must contain k samples for p labels in it (k > 1, p > 1).
+    The batch must contain n_instances samples for n_labels labels in it (n_instances > 1, n_labels > 1).
 
     """
 
     def _check_input_labels(self, labels: List[int]) -> None:
         """
-        Check if the labels list is valid: contains k occurrences
-        for each of p labels.
+        Check if the labels list is valid: contains n_instances occurrences
+        for each of n_labels labels.
 
         Args:
             labels: Labels in the batch
@@ -75,18 +75,18 @@ class HardClusterMiner(ITripletsMiner):
         samples embeddings.
 
         Args:
-            embeddings: Tensor of shape (p, k, embed_dim) where p is a number
-                of labels in the batch, k is a number of samples for each label
-            mean_vectors: Tensor of shape (p, embed_dim) -- mean vectors
+            embeddings: Tensor of shape (n_labels, n_instances, embed_dim) where n_labels is a number
+                of labels in the batch, n_instances is a number of samples for each label
+            mean_vectors: Tensor of shape (n_labels, embed_dim) -- mean vectors
                 of each label in the batch
 
         Returns:
-            Tensor of shape (p, k) -- matrix of distances from mean vectors to
+            Tensor of shape (n_labels, n_instances) -- matrix of distances from mean vectors to
                 related samples in the batch
 
         """
         p, k, embed_dim = embeddings.shape
-        # Create (p, k, embed_dim) tensor of mean vectors for each label
+        # Create (n_labels, n_instances, embed_dim) tensor of mean vectors for each label
         mean_vectors = mean_vectors.unsqueeze(1).repeat((1, k, 1))
         # Count euclidean distance between embeddings and mean vectors
         distances = torch.pow(embeddings - mean_vectors, 2).sum(2)
@@ -98,11 +98,11 @@ class HardClusterMiner(ITripletsMiner):
         Count matrix of distances from mean vectors of labels to each other
 
         Args:
-            mean_vectors: Tensor of shape (p, embed_dim) -- mean vectors
+            mean_vectors: Tensor of shape (n_labels, embed_dim) -- mean vectors
                 of labels
 
         Returns:
-            Tensor of shape (p, p) -- matrix of distances between mean vectors
+            Tensor of shape (n_labels, n_labels) -- matrix of distances between mean vectors
 
         """
         distance = pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
@@ -114,7 +114,7 @@ class HardClusterMiner(ITripletsMiner):
         Set diagonal elements with the value.
 
         Args:
-            matrix: Tensor of shape (p, p)
+            matrix: Tensor of shape (n_labels, n_labels)
             value: Value that diagonal should be filled with
 
         Returns:
@@ -132,11 +132,11 @@ class HardClusterMiner(ITripletsMiner):
 
         Args:
             features: Tensor of shape (batch_size; embed_dim) that contains
-                k samples for each of p labels
+                n_instances samples for each of n_labels labels
             labels: Labels of the batch, list or tensor of size (batch_size)
 
         Returns:
-            p triplets of (mean_vector, positive, negative_mean_vector)
+            n_labels triplets of (mean_vector, positive, negative_mean_vector)
 
         """
         # Convert labels to list
@@ -148,7 +148,7 @@ class HardClusterMiner(ITripletsMiner):
         p = labels_mask.shape[0]
 
         embed_dim = features.shape[-1]
-        # Reshape embeddings to groups of (p, k, embed_dim) ones,
+        # Reshape embeddings to groups of (n_labels, n_instances, embed_dim) ones,
         # each i-th group contains embeddings of i-th label.
         features = features.repeat((p, 1, 1))
         features = features[labels_mask].view((p, -1, embed_dim))

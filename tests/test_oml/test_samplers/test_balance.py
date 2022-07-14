@@ -13,13 +13,13 @@ TLabelsPK = List[Tuple[List[int], int, int]]
 def generate_valid_labels(num: int) -> TLabelsPK:
     """
     This function generates some valid inputs for samplers.
-    It generates k instances for p labels.
+    It generates n_instances instances for n_labels labels.
 
     Args:
         num: Number of generated samples
 
     Returns:
-        Samples in the following order: (labels, p, k)
+        Samples in the following order: (labels, n_labels, n_instances)
 
     """
     labels_pk = []
@@ -39,7 +39,7 @@ def generate_valid_labels(num: int) -> TLabelsPK:
 def input_for_balance_batch_sampler() -> TLabelsPK:
     """
     Returns:
-        Test data for sampler in the following order: (labels, p, k)
+        Test data for sampler in the following order: (labels, n_labels, n_instances)
 
     """
     input_cases = [
@@ -48,10 +48,10 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
         # repetation sampling is needed for label #3
         ([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2], 2, 3),
         # check last batch behaviour:
-        # last batch includes less than p labels (2 < 3)
+        # last batch includes less than n_labels labels (2 < 3)
         ([0, 1, 2, 3, 4, 0, 1, 2, 3, 4], 3, 2),
         # we need to drop 1 label during the epoch because
-        # number of labels in data % p = 1
+        # number of labels in data % n_labels = 1
         ([0, 1, 2, 3, 0, 1, 2, 3], 3, 2),
         # several random cases
         ([0, 1, 2, 2, 1, 0, 1, 0, 2, 0, 1, 2], 3, 5),
@@ -119,9 +119,9 @@ def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List
 def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> None:
     """
     Args:
-        input_for_balance_batch_sampler: List of (labels, p, k)
+        input_for_balance_batch_sampler: List of (labels, n_labels, n_instances)
 
     """
     for labels, p, k in input_for_balance_batch_sampler:
-        sampler = BalanceBatchSampler(labels=labels, p=p, k=k)
+        sampler = BalanceBatchSampler(labels=labels, n_labels=p, n_instances=k)
         check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, p=p, k=k)

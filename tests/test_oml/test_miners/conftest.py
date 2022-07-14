@@ -11,13 +11,13 @@ TLabelsPK = List[Tuple[List[int], int, int]]
 def generate_valid_labels(num: int) -> TLabelsPK:
     """
     This function generates some valid inputs for miners.
-    It generates k instances for p labels.
+    It generates n_instances instances for n_labels labels.
 
     Args:
         num: Number of generated samples
 
     Returns:
-        Samples in the following order: (labels, p, k)
+        Samples in the following order: (labels, n_labels, n_instances)
 
     """
     labels_pk = []

@@ -25,7 +25,7 @@ dependencies = ["torch", "torchvision"]
 def dino_vits16(pretrained=True, **kwargs):
     """
     ViT-Small/16x16 pre-trained with DINO.
-    Achieves 74.5% top-1 accuracy on ImageNet with k-NN classification.
+    Achieves 74.5% top-1 accuracy on ImageNet with n_instances-NN classification.
     """
     model = vits.__dict__["vit_small"](patch_size=16, num_classes=0, **kwargs)
     if pretrained:
@@ -40,7 +40,7 @@ def dino_vits16(pretrained=True, **kwargs):
 def dino_vits8(pretrained=True, **kwargs):
     """
     ViT-Small/8x8 pre-trained with DINO.
-    Achieves 78.3% top-1 accuracy on ImageNet with k-NN classification.
+    Achieves 78.3% top-1 accuracy on ImageNet with n_instances-NN classification.
     """
     model = vits.__dict__["vit_small"](patch_size=8, num_classes=0, **kwargs)
     if pretrained:
@@ -55,7 +55,7 @@ def dino_vits8(pretrained=True, **kwargs):
 def dino_vitb16(pretrained=True, **kwargs):
     """
     ViT-Base/16x16 pre-trained with DINO.
-    Achieves 76.1% top-1 accuracy on ImageNet with k-NN classification.
+    Achieves 76.1% top-1 accuracy on ImageNet with n_instances-NN classification.
     """
     model = vits.__dict__["vit_base"](patch_size=16, num_classes=0, **kwargs)
     if pretrained:
@@ -70,7 +70,7 @@ def dino_vitb16(pretrained=True, **kwargs):
 def dino_vitb8(pretrained=True, **kwargs):
     """
     ViT-Base/8x8 pre-trained with DINO.
-    Achieves 77.4% top-1 accuracy on ImageNet with k-NN classification.
+    Achieves 77.4% top-1 accuracy on ImageNet with n_instances-NN classification.
     """
     model = vits.__dict__["vit_base"](patch_size=8, num_classes=0, **kwargs)
     if pretrained:

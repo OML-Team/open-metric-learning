@@ -121,7 +121,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     provide such information (for example, DeepFashion InShop), but some of them
     don't (for example, CARS196 or CUB200).
     The validation idea for the latter is to calculate the embeddings for the whole validation set,
-    then for every item find top-k nearest neighbors and calculate the desired retrieval metric.
+    then for every item find top-n_instances nearest neighbors and calculate the desired retrieval metric.
     In other words, for the desired query item, the gallery is the rest of the validation dataset.
     If you want to perform this kind of validation process, then simply return
     is_query == True and is_gallery == True for every item in the dataset.

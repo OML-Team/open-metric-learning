@@ -20,7 +20,7 @@ def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = T
         number of samples to generate
 
     Returns:
-        Samples in the following order: (labels, label2category, c, p, k)
+        Samples in the following order: (labels, label2category, c, n_labels, n_instances)
     """
     labels_cpk = []
 
@@ -61,7 +61,7 @@ def input_for_category_balance_batch_sampler_few_labels() -> TLabalesMappingCPK:
     """Generate a list of valid inputs for category balanced batch sampler with few labels for some categories.
 
     Returns:
-        Test data for sampler in the following order: (labels, label2category, c, p, k)
+        Test data for sampler in the following order: (labels, label2category, c, n_labels, n_instances)
     """
     # (julia-shenshina) It was checked once with N = 100_000 before doing the PR
     num_random_cases = 100
@@ -74,7 +74,7 @@ def input_for_category_balance_batch_sampler() -> TLabalesMappingCPK:
     """Generate a list of valid inputs for category balanced batch sampler.
 
     Returns:
-        Test data for sampler in the following order: (labels, label2category, c, p, k)
+        Test data for sampler in the following order: (labels, label2category, c, n_labels, n_instances)
     """
     # (julia-shenshina) It was checked once with N = 100_000 before doing the PR
     num_random_cases = 100
@@ -113,7 +113,7 @@ def check_category_balance_batch_sampler_epoch(
         batch_categories = set(label2category[label] for label in batch_labels)
         # check that we sampled c categories at all the batches
         assert len(batch_categories) == c
-        # check that new sampled at most p labels at all the batches
+        # check that new sampled at most n_labels labels at all the batches
         if resample_labels:
             assert len(set(batch_labels)) <= p * c
         else:
@@ -198,7 +198,7 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
     of valid input data with enough labels for all the categories for resample_labels "resample" and "raise".
 
     Args:
-        input_for_category_balance_batch_sampler: Tuple of labels, label2category, c, p, k
+        input_for_category_balance_batch_sampler: Tuple of labels, label2category, c, n_labels, n_instances
     """
     for labels, label2category, c, p, k in input_for_category_balance_batch_sampler:
         sampler = CategoryBalanceBatchSampler(
