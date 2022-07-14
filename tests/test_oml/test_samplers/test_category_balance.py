@@ -153,9 +153,14 @@ def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwar
     labels = [0] * 5 + [1] * 4 + [2] * 6 + [3] * 5 + [4] * 5 + [5] * 6
     n_categories, n_labels, n_instances = 2, 3, 2
     with pytest.raises(ValueError, match="All the categories must have at least 3 unique labels"):
-        _ = sampler_class(labels=labels, label2category=label2category,
-                          n_categories=n_categories, n_labels=n_labels, n_instances=n_instances,
-                          **sampler_kwargs)
+        _ = sampler_class(
+            labels=labels,
+            label2category=label2category,
+            n_categories=n_categories,
+            n_labels=n_labels,
+            n_instances=n_instances,
+            **sampler_kwargs
+        )
 
 
 @pytest.mark.parametrize(
@@ -181,8 +186,12 @@ def test_category_balance_batch_sampler(
     fixture = request.getfixturevalue(fixture_name)
     for labels, label2category, n_categories, n_labels, n_instances in fixture:
         sampler = CategoryBalanceBatchSampler(
-            labels=labels, label2category=label2category, resample_labels=resample_labels,
-            n_categories=n_categories, n_labels=n_labels, n_instances=n_instances
+            labels=labels,
+            label2category=label2category,
+            resample_labels=resample_labels,
+            n_categories=n_categories,
+            n_labels=n_labels,
+            n_instances=n_instances,
         )
         check_category_balance_batch_sampler_epoch(
             sampler=sampler,
@@ -205,8 +214,12 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
     """
     for labels, label2category, n_categories, n_labels, n_instances in input_for_category_balance_batch_sampler:
         sampler = CategoryBalanceBatchSampler(
-            labels=labels, label2category=label2category, resample_labels=True,
-            n_categories=n_categories, n_labels=n_labels, n_instances=n_instances
+            labels=labels,
+            label2category=label2category,
+            resample_labels=True,
+            n_categories=n_categories,
+            n_labels=n_labels,
+            n_instances=n_instances,
         )
         check_category_balance_batch_sampler_epoch(
             sampler=sampler,
@@ -240,8 +253,12 @@ def test_distinct_category_balance_batch_sampler(
     fixture = request.getfixturevalue(fixture_name)
     for labels, label2category, n_categories, n_labels, n_instances in fixture:
         sampler = DistinctCategoryBalanceBatchSampler(
-            labels=labels, label2category=label2category, epoch_size=epoch_size,
-            n_categories=n_categories, n_labels=n_labels, n_instances=n_instances
+            labels=labels,
+            label2category=label2category,
+            epoch_size=epoch_size,
+            n_categories=n_categories,
+            n_labels=n_labels,
+            n_instances=n_instances,
         )
         check_category_balance_batch_sampler_epoch(
             sampler=sampler,

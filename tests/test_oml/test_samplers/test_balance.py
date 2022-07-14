@@ -66,7 +66,9 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
     return input_cases
 
 
-def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List[int], n_labels: int, n_instances: int) -> None:
+def check_balance_batch_sampler_epoch(
+    sampler: BalanceBatchSampler, labels: List[int], n_labels: int, n_instances: int
+) -> None:
     """
     Args:
         sampler: Sampler to test

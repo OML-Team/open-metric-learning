@@ -89,7 +89,9 @@ def create_triplet_dataloader(num_samples: int, im_size: int, num_workers: int) 
     return dataloader
 
 
-def create_retrieval_dataloader(num_samples: int, im_size: int, n_labels: int, n_instances: int, num_workers: int) -> DataLoader:
+def create_retrieval_dataloader(
+    num_samples: int, im_size: int, n_labels: int, n_instances: int, num_workers: int
+) -> DataLoader:
     assert num_samples % (n_labels * n_instances) == 0
 
     labels = [idx // n_instances for idx in range(num_samples)]

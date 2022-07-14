@@ -60,7 +60,7 @@ the combinations of samples only inside the current batch, thus, the memory bank
 * `Samples`/`Labels`/`Instances` - as an example let's consider DeepFashion dataset. It includes thousands of
  fashion item ids (we name them `labels`) and several photos for each item id
  (we name the individual photo as `instance` or `sample`). All of the fashion item ids have their groups like
-  "skirts", "jackets", "shorts" and so on (we name them `categories`). 
+  "skirts", "jackets", "shorts" and so on (we name them `categories`).
   Note, we avoid using the term `class` to avoid misunderstanding.
 </p>
 </details>
