@@ -20,6 +20,14 @@ repos:
   - id: requirements-txt-fixer
 
 
+  # autodele unused imports
+- repo: https://github.com/hadialqattan/pycln
+  rev: v1.1.0
+  hooks:
+    - id: pycln
+      args: [ --all ]
+
+
 # autoformat code with black formatter
 - repo: https://github.com/psf/black
   rev: 22.3.0
