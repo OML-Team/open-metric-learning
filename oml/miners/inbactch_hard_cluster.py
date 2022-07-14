@@ -24,8 +24,7 @@ class HardClusterMiner(ITripletsMiner):
 
     def _check_input_labels(self, labels: List[int]) -> None:
         """
-        Check if the labels list is valid: contains k occurrences
-        for each of p labels.
+        Check if the labels list is valid: contains n_instances for every n_label.
 
         Args:
             labels: Labels in the batch
@@ -97,11 +96,11 @@ class HardClusterMiner(ITripletsMiner):
         Count matrix of distances from mean vectors of labels to each other
 
         Args:
-            mean_vectors: Tensor of shape (p, embed_dim) -- mean vectors
+            mean_vectors: Tensor of shape (n_labels, embed_dim) -- mean vectors
                 of labels
 
         Returns:
-            Tensor of shape (p, p) -- matrix of distances between mean vectors
+            Tensor of shape (n_labels, n_labels) -- matrix of distances between mean vectors
 
         """
         distance = pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
@@ -113,15 +112,15 @@ class HardClusterMiner(ITripletsMiner):
         Set diagonal elements with the value.
 
         Args:
-            matrix: Tensor of shape (p, p)
+            matrix: Tensor of shape (n_labels, n_labels)
             value: Value that diagonal should be filled with
 
         Returns:
             Modified matrix with inf on diagonal
 
         """
-        p, _ = matrix.shape
-        indices = torch.diag(torch.ones(p)).type(torch.bool)
+        n_labels, _ = matrix.shape
+        indices = torch.diag(torch.ones(n_labels)).type(torch.bool)
         matrix[indices] = value
         return matrix
 
