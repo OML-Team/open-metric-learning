@@ -13,33 +13,33 @@ TLabelsPK = List[Tuple[List[int], int, int]]
 def generate_valid_labels(num: int) -> TLabelsPK:
     """
     This function generates some valid inputs for samplers.
-    It generates k instances for p labels.
+    It generates n_instances for n_labels.
 
     Args:
         num: Number of generated samples
 
     Returns:
-        Samples in the following order: (labels, p, k)
+        Samples in the following order: (labels, n_labels, n_instances)
 
     """
-    labels_pk = []
+    labels_generated = []
 
     for _ in range(num):
-        p, k = randint(2, 12), randint(2, 12)
-        labels_list = [[label] * randint(2, 12) for label in range(p)]
+        n_labels, n_instances = randint(2, 12), randint(2, 12)
+        labels_list = [[label] * randint(2, 12) for label in range(n_labels)]
         labels = [el for sublist in labels_list for el in sublist]
 
         shuffle(labels)
-        labels_pk.append((labels, p, k))
+        labels_generated.append((labels, n_labels, n_instances))
 
-    return labels_pk
+    return labels_generated
 
 
 @pytest.fixture()
 def input_for_balance_batch_sampler() -> TLabelsPK:
     """
     Returns:
-        Test data for sampler in the following order: (labels, p, k)
+        Test data for sampler in the following order: (labels, n_labels, n_instances)
 
     """
     input_cases = [
@@ -48,10 +48,10 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
         # repetation sampling is needed for label #3
         ([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2], 2, 3),
         # check last batch behaviour:
-        # last batch includes less than p labels (2 < 3)
+        # last batch includes less than n_labels (2 < 3)
         ([0, 1, 2, 3, 4, 0, 1, 2, 3, 4], 3, 2),
         # we need to drop 1 label during the epoch because
-        # number of labels in data % p = 1
+        # number of labels in data % n_labels = 1
         ([0, 1, 2, 3, 0, 1, 2, 3], 3, 2),
         # several random cases
         ([0, 1, 2, 2, 1, 0, 1, 0, 2, 0, 1, 2], 3, 5),
@@ -66,13 +66,15 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
     return input_cases
 
 
-def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List[int], p: int, k: int) -> None:
+def check_balance_batch_sampler_epoch(
+    sampler: BalanceBatchSampler, labels: List[int], n_labels: int, n_instances: int
+) -> None:
     """
     Args:
         sampler: Sampler to test
         labels: List of labels labels
-        p: Number of labels in a batch
-        k: Number of instances for each label in a batch
+        n_labels: Number of labels in a batch
+        n_instances: Number of instances for each label in a batch
 
     """
     sampled_ids = list(sampler)
@@ -96,13 +98,13 @@ def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List
 
         is_last_batch = i == sampler.batches_in_epoch - 1
         if is_last_batch:
-            assert 1 < num_batch_labels <= p
-            assert all(1 < el <= k for el in num_batch_samples)
-            assert 2 * 2 <= cur_batch_size <= p * k
+            assert 1 < num_batch_labels <= n_labels
+            assert all(1 < el <= n_instances for el in num_batch_samples)
+            assert 2 * 2 <= cur_batch_size <= n_labels * n_instances
         else:
-            assert num_batch_labels == p, (num_batch_labels, p)
-            assert all(el == k for el in num_batch_samples)
-            assert cur_batch_size == p * k
+            assert num_batch_labels == n_labels, (num_batch_labels, n_labels)
+            assert all(el == n_instances for el in num_batch_samples)
+            assert cur_batch_size == n_labels * n_instances
 
     # epoch-level invariants
     num_labels_in_data = len(set(labels))
@@ -110,18 +112,18 @@ def check_balance_batch_sampler_epoch(sampler: BalanceBatchSampler, labels: List
     assert (num_labels_in_data == num_labels_in_sampler) or (num_labels_in_data == num_labels_in_sampler + 1)
 
     n_instances_sampled = sum(map(len, sampled_ids))  # type: ignore
-    assert (num_labels_in_data - 1) * k <= n_instances_sampled <= num_labels_in_data * k, (
+    assert (num_labels_in_data - 1) * n_instances <= n_instances_sampled <= num_labels_in_data * n_instances, (
         n_instances_sampled,
-        num_labels_in_data * k,
+        num_labels_in_data * n_instances,
     )
 
 
 def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> None:
     """
     Args:
-        input_for_balance_batch_sampler: List of (labels, p, k)
+        input_for_balance_batch_sampler: List of (labels, n_labels, n_instances)
 
     """
-    for labels, p, k in input_for_balance_batch_sampler:
-        sampler = BalanceBatchSampler(labels=labels, p=p, k=k)
-        check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, p=p, k=k)
+    for labels, n_labels, n_instances in input_for_balance_batch_sampler:
+        sampler = BalanceBatchSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
+        check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, n_labels=n_labels, n_instances=n_instances)

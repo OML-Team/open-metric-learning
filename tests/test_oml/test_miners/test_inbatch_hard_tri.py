@@ -20,8 +20,8 @@ def distmats_and_labels() -> List[Tuple[Tensor, List[int]]]:
     """
     num_batches = 100
 
-    labels_pk = generate_valid_labels(num=num_batches)
-    labels_list, _, _ = zip(*labels_pk)
+    labels_li = generate_valid_labels(num=num_batches)
+    labels_list, _, _ = zip(*labels_li)
 
     distmats = []
     for labels in labels_list:

@@ -19,9 +19,9 @@ cache_size: 100000
 sampler:
   name: SequentialDistinctCategoryBalanceSampler
   args:
-    p: 4
-    k: 6
-    c: 2
+    n_labels: 4
+    n_instances: 6
+    n_categories: 2
     epoch_size: 1992
 
 bs_val: 96
