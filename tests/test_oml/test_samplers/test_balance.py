@@ -123,5 +123,5 @@ def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> No
 
     """
     for labels, p, k in input_for_balance_batch_sampler:
-        sampler = BalanceBatchSampler(labels=labels, p=p, k=k)
+        sampler = BalanceBatchSampler(labels=labels, n_labels=p, n_instances=k)
         check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, p=p, k=k)
