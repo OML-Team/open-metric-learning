@@ -32,7 +32,7 @@ metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
 
-augs_key: default_all
+augs_key: default_albu
 
 model:
   name: vit

@@ -11,6 +11,7 @@ from oml.transforms.images.torchvision.default import get_default_torch
 from oml.transforms.images.torchvision.shared import get_normalisation_torch
 
 TAugs = Union[albu.Compose, t.Compose]
+
 AUGS_REGISTRY = {
     "default_albu": get_default_albu(),
     "default_weak_albu": get_default_weak_albu(),
