@@ -89,14 +89,14 @@ def create_triplet_dataloader(num_samples: int, im_size: int, num_workers: int) 
     return dataloader
 
 
-def create_retrieval_dataloader(num_samples: int, im_size: int, p: int, k: int, num_workers: int) -> DataLoader:
-    assert num_samples % (p * k) == 0
+def create_retrieval_dataloader(num_samples: int, im_size: int, n_labels: int, n_instances: int, num_workers: int) -> DataLoader:
+    assert num_samples % (n_labels * n_instances) == 0
 
-    labels = [idx // k for idx in range(num_samples)]
+    labels = [idx // n_instances for idx in range(num_samples)]
 
     dataset = DummyRetrievalDataset(labels=labels, im_size=im_size)
 
-    sampler_retrieval = SequentialBalanceSampler(labels=labels, p=p, k=k)
+    sampler_retrieval = SequentialBalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
     train_retrieval_loader = DataLoader(
         dataset=dataset,
         sampler=sampler_retrieval,
@@ -139,15 +139,15 @@ def test_lightning(
 ) -> None:
     num_samples = 12
     im_size = 6
-    p = 2
-    k = 3
+    n_labels = 2
+    n_instances = 3
 
     if pipeline == "triplet":
         create_dataloader = create_triplet_dataloader
         lightning_module = DummyTripletModule(im_size=im_size)
         create_callback = create_triplet_callback
     elif pipeline == "retrieval":
-        create_dataloader = partial(create_retrieval_dataloader, p=p, k=k)
+        create_dataloader = partial(create_retrieval_dataloader, n_labels=n_labels, n_instances=n_instances)
         lightning_module = DummyRetrievalModule(im_size=im_size)
         create_callback = create_retrieval_callback
     else:

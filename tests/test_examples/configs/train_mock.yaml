@@ -50,8 +50,8 @@ scheduler:
 sampler:
   name: SequentialBalanceSampler
   args:
-    p: 2
-    k: 8
+    n_labels: 2
+    n_instances: 8
 
 bs_val: 2
 

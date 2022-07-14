@@ -43,19 +43,19 @@ class DummyDataset(IDatasetWithLabels):
     ],
 )
 @pytest.mark.parametrize("margin", [None, 0.5])
-@pytest.mark.parametrize("p,k", [(2, 2), (5, 6)])
-def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin, p, k) -> None:  # type: ignore
-    n_labels_total = p * 6  # just some random figures
+@pytest.mark.parametrize("n_labels,n_instances", [(2, 2), (5, 6)])
+def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin, n_labels, n_instances) -> None:  # type: ignore
+    n_labels_total = n_labels * 6  # just some random figures
 
-    dataset = DummyDataset(n_labels=n_labels_total, n_samples_min=k)
+    dataset = DummyDataset(n_labels=n_labels_total, n_samples_min=n_instances)
 
     model = IdealOneHotModel(emb_dim=n_labels_total + randint(1, 5))
 
     if sampler_constructor == BalanceBatchSampler:
-        loader = DataLoader(dataset=dataset, batch_sampler=sampler_constructor(labels=dataset.get_labels(), p=p, k=k))
+        loader = DataLoader(dataset=dataset, batch_sampler=sampler_constructor(labels=dataset.get_labels(), n_labels=n_labels, n_instances=n_instances))
     elif sampler_constructor == SequentialBalanceSampler:
         loader = DataLoader(
-            dataset=dataset, sampler=sampler_constructor(labels=dataset.get_labels(), p=p, k=k), batch_size=p * k
+            dataset=dataset, sampler=sampler_constructor(labels=dataset.get_labels(), n_labels=n_labels, n_instances=n_instances), batch_size=n_labels * n_instances
         )
     else:
         raise ValueError(f"Unexpected sampler: {sampler_constructor}.")
@@ -64,7 +64,7 @@ def test_train_with_mining(sampler_constructor, miner_name, miner_params, margin
     criterion = TripletLossWithMiner(margin=margin, miner=miner, need_logs=False)
 
     for i, batch in enumerate(loader):
-        assert len(batch["labels"]) == p * k
+        assert len(batch["labels"]) == n_labels * n_instances
 
         embeddings = model(batch["input_tensors"])
         loss = criterion(embeddings, batch["labels"])
