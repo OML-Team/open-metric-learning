@@ -47,8 +47,9 @@ def main(cfg: TCfg) -> None:
     )
     df = train_dataset.df
 
-    augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
-    albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
+    if isinstance(train_augs, albu.Compose):
+        augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
+        albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
 
     if "category" not in df.columns:
         df["category"] = 0

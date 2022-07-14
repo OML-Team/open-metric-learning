@@ -11,6 +11,13 @@ from torchvision.transforms import (
 
 def get_default_torch() -> Compose:
     augs = Compose(
-        [RandomHorizontalFlip(), RandomAffine(), GaussianBlur(), ColorJitter(), RandomGrayscale(), RandomErasing()]
+        [
+            RandomHorizontalFlip(),
+            RandomAffine(degrees=0),
+            GaussianBlur(kernel_size=3),
+            ColorJitter(),
+            RandomGrayscale(),
+            RandomErasing(),
+        ]
     )
     return augs
