@@ -111,9 +111,9 @@ def check_category_balance_batch_sampler_epoch(
     for i, batch_ids in enumerate(sampled_ids):
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
         batch_categories = set(label2category[label] for label in batch_labels)
-        # check that we sampled c categories at all the batches
+        # check that we sampled n_categories at all the batches
         assert len(batch_categories) == n_categories
-        # check that new sampled at most p labels at all the batches
+        # check that new sampled at most n_labels at all the batches
         if resample_labels:
             assert len(set(batch_labels)) <= n_labels * n_categories
         else:

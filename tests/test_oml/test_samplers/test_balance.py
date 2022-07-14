@@ -48,7 +48,7 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
         # repetation sampling is needed for label #3
         ([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2], 2, 3),
         # check last batch behaviour:
-        # last batch includes less than p labels (2 < 3)
+        # last batch includes less than n_labels (2 < 3)
         ([0, 1, 2, 3, 4, 0, 1, 2, 3, 4], 3, 2),
         # we need to drop 1 label during the epoch because
         # number of labels in data % n_labels = 1

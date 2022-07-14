@@ -18,7 +18,7 @@ class HardClusterMiner(ITripletsMiner):
     anchor's label, the hardest negative sample is the closest mean vector
     of another labels.
 
-    The batch must contain k samples for p labels in it (n_instances > 1, n_labels > 1).
+    The batch must contain n_instances for n_labels in it (n_instances > 1, n_labels > 1).
 
     """
 
