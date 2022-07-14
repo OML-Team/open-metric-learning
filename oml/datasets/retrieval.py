@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import torchvision
 from PIL import Image
+from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
@@ -70,6 +71,7 @@ class BaseDataset(Dataset):
         elif isinstance(self.transform, torchvision.transforms.Compose):
             if isinstance(crop, np.ndarray):  # depends on the reader with may have numpy or pil here
                 crop = Image.fromarray(crop)
+                print("XXX")
             image_tensor = self.transform(crop)
 
         else:
@@ -103,6 +105,9 @@ class BaseDataset(Dataset):
         if not pd.isna(row.x_1):
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
             img = img[y1:y2, x1:x2, :]
+
+        if isinstance(img, TImage):
+            img = np.array(img)
 
         img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)
 

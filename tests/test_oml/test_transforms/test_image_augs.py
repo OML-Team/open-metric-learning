@@ -12,7 +12,7 @@ from tests.conftest import TESTS_MOCK_DATASET
 
 @pytest.mark.parametrize("aug_name", [None, "default_albu", "default_weak_albu", "default_torch"])
 @pytest.mark.parametrize("f_imread", [imread_cv2, imread_pillow])
-def test(aug_name: Optional[str], f_imread: Any) -> None:
+def test_transforms(aug_name: Optional[str], f_imread: Any) -> None:
     transforms = get_augs(name=aug_name) if aug_name is not None else None
 
     df = pd.read_csv(TESTS_MOCK_DATASET / "df.csv")
