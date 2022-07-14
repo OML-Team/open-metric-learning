@@ -5,9 +5,12 @@ from typing import Any, Dict, Optional, Tuple
 import albumentations as albu
 import numpy as np
 import pandas as pd
+import torchvision
+from PIL import Image
 from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
+from oml.registry.transforms import TAugs
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images import TImReader, imread_cv2
@@ -21,7 +24,7 @@ class BaseDataset(Dataset):
         im_size: int,
         pad_ratio: float,
         images_root: Optional[Path] = None,
-        transform: Optional[albu.Compose] = None,
+        transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
     ):
@@ -63,6 +66,12 @@ class BaseDataset(Dataset):
 
         if isinstance(self.transform, albu.Compose):
             image_tensor = self.transform(image=crop)["image"]
+
+        elif isinstance(self.transform, torchvision.transforms.Compose):
+            if isinstance(crop, np.ndarray):  # depends on the reader with may have numpy or pil here
+                crop = Image.fromarray(crop)
+            image_tensor = self.transform(crop)
+
         else:
             image_tensor = self.transform(crop)
 

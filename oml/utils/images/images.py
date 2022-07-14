@@ -21,6 +21,7 @@ def tensor_to_numpy_image(img: torch.Tensor) -> np.ndarray:
 
 
 def imread_cv2(im_path: str) -> np.ndarray:
+    print(im_path)
     img = cv2.cvtColor(cv2.imread(str(im_path)), cv2.COLOR_BGRA2RGB)
     if img is None:
         raise ValueError("Image can not be read")

@@ -1,3 +1,4 @@
+from pathlib import Path
 from platform import platform
 
 import pytest
@@ -5,6 +6,9 @@ import pytest
 from oml.utils.misc import set_global_seed
 
 set_global_seed(42)
+
+TESTS_ROOT = Path(__file__).parent
+TESTS_MOCK_DATASET = TESTS_ROOT / "mock_dataset"
 
 
 @pytest.fixture(scope="session")

@@ -35,7 +35,7 @@ def main(cfg: TCfg) -> None:
 
     cwd = Path.cwd()
 
-    train_augs = get_augs(cfg["augs_key"])
+    train_augs = get_augs(cfg["augs_key"]) if cfg["augs_key"] is not None else None
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         im_size=cfg["im_size"],
