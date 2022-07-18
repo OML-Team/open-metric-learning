@@ -3,7 +3,7 @@ postfix: "deepfashion"
 seed: 42
 gpus: []
 
-dataset_root: ../data
+dataset_root: ../../mock_dataset
 dataframe_name: df.csv
 logs_root: logs
 
@@ -13,7 +13,7 @@ im_pad_ratio_val: 0.0
 num_workers: 0
 cache_size: 100
 
-augs_key: all
+augs: default_torch
 
 criterion:
   name: TripletLossWithMiner

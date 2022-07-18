@@ -1,10 +1,12 @@
-from typing import Callable
+from typing import Callable, Union
 
 import cv2
 import numpy as np
 import torch
+from PIL import Image
+from PIL.Image import Image as TImage
 
-TImReader = Callable[[str], np.ndarray]
+TImReader = Callable[[str], Union[np.ndarray, TImage]]
 
 
 def tensor_to_numpy_image(img: torch.Tensor) -> np.ndarray:
@@ -26,3 +28,7 @@ def imread_cv2(im_path: str) -> np.ndarray:
         raise ValueError("Image can not be read")
     else:
         return img
+
+
+def imread_pillow(im_path: str) -> TImage:
+    return Image.open(im_path)
