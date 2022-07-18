@@ -18,7 +18,7 @@ from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import get_augs_with_default
+from oml.registry.transforms import get_augs
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
@@ -35,7 +35,7 @@ def main(cfg: TCfg) -> None:
 
     cwd = Path.cwd()
 
-    train_augs = get_augs_with_default(cfg["augs_key"])
+    train_augs = get_augs(cfg["augs"]) if cfg["augs"] is not None else None
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         im_size=cfg["im_size"],
@@ -47,8 +47,9 @@ def main(cfg: TCfg) -> None:
     )
     df = train_dataset.df
 
-    augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
-    albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
+    if isinstance(train_augs, albu.Compose):
+        augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
+        albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
 
     if "category" not in df.columns:
         df["category"] = 0

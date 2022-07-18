@@ -6,13 +6,14 @@ import torch
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
+from oml.const import MEAN, STD, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.models.vit.hubconf import dino_vitb8  # type: ignore
 from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
-from oml.utils.images.augs import get_default_transforms_albu
+from oml.transforms.images.albumentations.shared import get_normalisation_albu
 
 
 class ViTExtractor(IExtractor):
@@ -77,13 +78,15 @@ class ViTExtractor(IExtractor):
         return vis_vit(vit=self, image=image)
 
 
-def vis_vit(vit: ViTExtractor, image: np.ndarray) -> np.ndarray:
+def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
     """
     Visualisation of multi heads attention.
 
     Args:
         vit: VIT model
         image: Input image
+        mean: MEAN for the image normalisation
+        std: STD for the image normalisation
 
     Returns:
         Image with attention maps drawn on top of the input image
@@ -93,7 +96,7 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray) -> np.ndarray:
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]
 
-    img_tensor = get_default_transforms_albu()(image=image)["image"]
+    img_tensor = get_normalisation_albu(mean=mean, std=std)(image=image)["image"]
 
     w = img_tensor.shape[1] - img_tensor.shape[1] % patch_size
     h = img_tensor.shape[2] - img_tensor.shape[2] % patch_size

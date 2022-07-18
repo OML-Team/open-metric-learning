@@ -1,16 +1,8 @@
-from typing import List, Union
-
 import albumentations as albu
 import cv2
-from albumentations.pytorch import ToTensorV2
 
-from oml.const import MEAN, PAD_COLOR, STD, TNormParam
-
-TAugsList = List[Union[albu.ImageOnlyTransform, albu.DualTransform]]
-
-
-def get_default_transforms_albu(mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
-    return albu.Compose([albu.Normalize(mean=mean, std=std), ToTensorV2()])
+from oml.const import PAD_COLOR
+from oml.transforms.images.albumentations.shared import TAugsList
 
 
 def get_spatials() -> TAugsList:
@@ -71,7 +63,7 @@ def get_noise_channels() -> TAugsList:
     return channels_noise_augs
 
 
-def get_all_augs() -> albu.Compose:
+def get_default_albu() -> albu.Compose:
     """
     Note, that OneOf consider probs of augmentations
     in the list as their weights (from docs):
