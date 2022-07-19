@@ -10,7 +10,7 @@ dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size_train: 256  # because we use cropping to 224 later
+im_size_train: 224
 im_size_val: 224
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
@@ -51,10 +51,9 @@ criterion:
     margin: 0.1
     reduction: mean
     miner:
-      name: TripletMinerWithMemory
+      name: HardTripletsMiner
       args:
-        bank_size_in_batches: 20
-        tri_expand_k: 5
+        norm_required: False
 
 optimizer:
   name: adam
@@ -77,7 +76,7 @@ tags:
   - ${postfix}
   - ${pod}
   - deepfashion
-  - crops
+  - hard_mining
 
 hydra:
   run:

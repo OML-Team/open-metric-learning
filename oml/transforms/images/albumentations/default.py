@@ -74,7 +74,6 @@ def get_default_albu() -> albu.Compose:
     """
     augs = albu.Compose(
         [
-            albu.RandomCrop(height=224, width=224, p=1.0),  # todo: args
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
