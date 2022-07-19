@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.interfaces.models import IExtractor
 
@@ -17,6 +17,7 @@ class RetrievalModule(pl.LightningModule):
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
+        scheduler_monitor_metric: Optional[str] = None,
         key_input: str = "input_tensors",
         key_targets: str = "labels",
         key_embeddings: str = "embeddings",
@@ -27,6 +28,7 @@ class RetrievalModule(pl.LightningModule):
         self.criterion = criterion
         self.optimizer = optimizer
 
+        self.monitor_metric = scheduler_monitor_metric
         self.scheduler = scheduler
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
@@ -61,10 +63,14 @@ class RetrievalModule(pl.LightningModule):
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:
             return self.optimizer
-        else:
-            scheduler = {
-                "scheduler": self.scheduler,
-                "interval": self.scheduler_interval,
-                "frequency": self.scheduler_frequency,
-            }
-            return [self.optimizer], [scheduler]
+
+        scheduler = {
+            "scheduler": self.scheduler,
+            "interval": self.scheduler_interval,
+            "frequency": self.scheduler_frequency,
+        }
+
+        if isinstance(self.scheduler, ReduceLROnPlateau):
+            scheduler["monitor"] = self.monitor_metric
+
+        return [self.optimizer], [scheduler]
