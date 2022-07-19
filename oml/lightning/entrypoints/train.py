@@ -129,6 +129,13 @@ def main(cfg: TCfg) -> None:
         logger=logger,
     )
 
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
+    pl_model = RetrievalModule(
+        model=extractor,
+        criterion=criterion,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        scheduler_interval=cfg.get("scheduler", {}).get("interval", "step"),
+        scheduler_monitor_metric=cfg.get("scheduler", {}).get("monitor_metric", None),
+    )
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
