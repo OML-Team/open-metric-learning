@@ -1,19 +1,32 @@
-from typing import Optional
+from typing import Optional, Union
 
 import albumentations as albu
+import torchvision.transforms as t
 
 from oml.const import MEAN, STD, TNormParam
-from oml.utils.images.augs import get_all_augs, get_default_transforms_albu
-from oml.utils.images.augs_weak import get_all_augs_weak
+from oml.transforms.images.albumentations.default import get_default_albu
+from oml.transforms.images.albumentations.default_weak import get_default_weak_albu
+from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.transforms.images.torchvision.default import get_default_torch
+from oml.transforms.images.torchvision.shared import get_normalisation_torch
 
-AUGS_REGISTRY = {"all": get_all_augs(), "all_weak": get_all_augs_weak(), "no_augs": albu.Compose([])}
+TAugs = Union[albu.Compose, t.Compose]
+
+AUGS_REGISTRY = {
+    "default_albu": get_default_albu(),
+    "default_weak_albu": get_default_weak_albu(),
+    "default_torch": get_default_torch(),
+}
 
 
-def get_augs(name: str) -> albu.Compose:
-    return AUGS_REGISTRY[name]
+def get_augs(name: str, mean: Optional[TNormParam] = MEAN, std: Optional[TNormParam] = STD) -> TAugs:
+    augs = AUGS_REGISTRY[name]
 
+    if isinstance(augs, albu.Compose):
+        return albu.Compose([augs, get_normalisation_albu(mean=mean, std=std)])
 
-def get_augs_with_default(
-    name: str, mean: Optional[TNormParam] = MEAN, std: Optional[TNormParam] = STD
-) -> albu.Compose:
-    return albu.Compose([AUGS_REGISTRY[name], get_default_transforms_albu(mean=mean, std=std)])
+    elif isinstance(augs, t.Compose):
+        return t.Compose([get_normalisation_torch(mean=mean, std=std), augs])
+
+    else:
+        return augs

@@ -1,8 +1,0 @@
-label,path,split,is_query,is_gallery
-0,../data/images/img.jpg,train,,
-0,../data/images/img.jpg,train,,
-1,../data/images/img.jpg,train,,
-1,../data/images/img.jpg,train,,
-2,../data/images/img.jpg,validation,1,0
-2,../data/images/img.jpg,validation,0,1
-2,../data/images/img.jpg,validation,0,1

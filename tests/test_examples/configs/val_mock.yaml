@@ -1,4 +1,4 @@
-dataset_root: ../data
+dataset_root: ../../mock_dataset
 dataframe_name: df.csv
 
 logs_root: logs

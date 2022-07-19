@@ -5,11 +5,15 @@ from typing import Any, Dict, Optional, Tuple
 import albumentations as albu
 import numpy as np
 import pandas as pd
+import torchvision
+from PIL import Image
+from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
+from oml.registry.transforms import TAugs
+from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.augs import get_default_transforms_albu
 from oml.utils.images.images import TImReader, imread_cv2
 from oml.utils.images.images_resize import pad_resize
 
@@ -21,7 +25,7 @@ class BaseDataset(Dataset):
         im_size: int,
         pad_ratio: float,
         images_root: Optional[Path] = None,
-        transform: Optional[albu.Compose] = None,
+        transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
     ):
@@ -53,14 +57,24 @@ class BaseDataset(Dataset):
         self.df = df
         self.im_size = im_size
         self.pad_ratio = pad_ratio
-        self.transform = transform or get_default_transforms_albu()
+        self.transform = transform or get_normalisation_albu()
         self.f_imread = f_imread
         self.read_image_cached = lru_cache(maxsize=cache_size)(self.read_image)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        crop = self.read_image_cached(idx)
-        image_tensor = self.transform(image=crop)["image"]
         label = self.df.iloc[idx]["label"]
+        crop = self.read_image_cached(idx)
+
+        if isinstance(self.transform, albu.Compose):
+            image_tensor = self.transform(image=crop)["image"]
+
+        elif isinstance(self.transform, torchvision.transforms.Compose):
+            if isinstance(crop, np.ndarray):  # depends on the reader we may have numpy or pil here
+                crop = Image.fromarray(crop)
+            image_tensor = self.transform(crop)
+
+        else:
+            image_tensor = self.transform(crop)
 
         row = self.df.iloc[idx]
 
@@ -90,6 +104,9 @@ class BaseDataset(Dataset):
         if not pd.isna(row.x_1):
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
             img = img[y1:y2, x1:x2, :]
+
+        if isinstance(img, TImage):
+            img = np.array(img)
 
         img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)
 

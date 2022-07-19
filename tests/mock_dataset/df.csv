@@ -1,0 +1,8 @@
+label,path,split,is_query,is_gallery
+0,../mock_dataset/images/img.jpg,train,,
+0,../mock_dataset/images/img.jpg,train,,
+1,../mock_dataset/images/img.jpg,train,,
+1,../mock_dataset/images/img.jpg,train,,
+2,../mock_dataset/images/img.jpg,validation,1,0
+2,../mock_dataset/images/img.jpg,validation,0,1
+2,../mock_dataset/images/img.jpg,validation,0,1
