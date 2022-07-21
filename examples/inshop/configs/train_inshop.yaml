@@ -60,6 +60,9 @@ criterion:
         bank_size_in_batches: 20
         tri_expand_k: 2
 
+criterion_classification:
+  name: CrossEntropyLoss
+
 optimizer:
   name: adam
   args:

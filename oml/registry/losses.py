@@ -10,6 +10,7 @@ LOSSES_REGISTRY = {
     "TripletLoss": TripletLoss,
     "TripletLossPlain": TripletLossPlain,
     "TripletLossWithMiner": TripletLossWithMiner,
+    "CrossEntropyLoss": nn.CrossEntropyLoss,
 }
 
 
@@ -24,4 +25,5 @@ def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
 
 def get_criterion_by_cfg(cfg: TCfg) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
+    cfg.setdefault("args", {})
     return get_criterion(name=cfg["name"], **cfg["args"])
