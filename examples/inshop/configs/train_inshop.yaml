@@ -5,7 +5,7 @@ gpus:
   - 0
   - 1
 
-dataframe_name: df_fixed_train_fixed_val.csv
+dataframe_name: df_fixed_train_fixed_val.csvx
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
@@ -51,9 +51,10 @@ criterion:
     margin: 0.1
     reduction: mean
     miner:
-      name: HardTripletsMiner
+      name: TripletMinerWithMemory
       args:
-        norm_required: False
+        bank_size_in_batches: 20
+        tri_expand_k: 4
 
 optimizer:
   name: adam
@@ -76,7 +77,7 @@ tags:
   - ${postfix}
   - ${pod}
   - deepfashion
-  - hard_mining
+  - head_128
 
 hydra:
   run:
