@@ -11,6 +11,7 @@ class SimpleLinearHead(IHead):
     def __init__(
         self,
         weights: Union[Path, str],
+        in_features: int,
         num_classes: int,
         bias: bool = True,
         strict_load: bool = False,
@@ -18,7 +19,7 @@ class SimpleLinearHead(IHead):
         super(SimpleLinearHead, self).__init__()
 
         self._num_classes = num_classes
-        self.fc = nn.LazyLinear(num_classes, bias=bias)
+        self.fc = nn.Linear(in_features, num_classes, bias=bias)
 
         if weights == "random":
             return

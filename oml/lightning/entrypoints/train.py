@@ -70,6 +70,7 @@ def main(cfg: TCfg) -> None:
         if "head" not in cfg
         else get_head_by_cfg(
             cfg["head"],
+            in_features=extractor.feat_dim,  # type: ignore
             num_classes=train_dataset.num_labels,  # type: ignore
         )
     )
