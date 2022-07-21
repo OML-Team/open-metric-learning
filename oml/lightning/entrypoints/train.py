@@ -14,7 +14,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
-from oml.registry.models import get_extractor_by_cfg
+from oml.registry.models import get_extractor_by_cfg, get_head_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
@@ -65,8 +65,12 @@ def main(cfg: TCfg) -> None:
     sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    criterion = get_criterion_by_cfg(cfg["criterion"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
+    head = None if "head" not in cfg else get_head_by_cfg(cfg["head"])
+    emb_criterion = get_criterion_by_cfg(cfg["criterion"])
+    clf_criterion = get_criterion_by_cfg(cfg["criterion_classification"])
+    optimizer = get_optimizer_by_cfg(
+        cfg["optimizer"], params=[*extractor.parameters(), *head.parameters()]  # type: ignore
+    )
     scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
 
     loader_train = DataLoader(
@@ -129,6 +133,13 @@ def main(cfg: TCfg) -> None:
         logger=logger,
     )
 
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
+    pl_model = RetrievalModule(
+        model=extractor,
+        head=head,
+        emb_criterion=emb_criterion,
+        clf_criterion=clf_criterion,
+        optimizer=optimizer,
+        scheduler=scheduler,
+    )
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)

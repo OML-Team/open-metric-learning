@@ -10,7 +10,7 @@ from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.registry.models import get_extractor_by_cfg
+from oml.registry.models import get_extractor_by_cfg, get_head_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -29,7 +29,8 @@ def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
+    head = None if "head" not in cfg else get_head_by_cfg(cfg["head"])
+    pl_model = RetrievalModule(model=extractor, head=head, emb_criterion=None, optimizer=None, scheduler=None)
 
     metrics_calc = EmbeddingMetrics(extra_keys=("paths", "x1", "x2", "y1", "y2"), **cfg.get("metric_args", {}))
     clb_metric = MetricValCallback(metric=metrics_calc)

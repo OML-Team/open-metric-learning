@@ -13,22 +13,24 @@ class RetrievalModule(pl.LightningModule):
         self,
         model: IExtractor,
         head: Optional[IHead],
-        criterion: nn.Module,
-        clf_criterion: nn.Module,
+        emb_criterion: Optional[nn.Module],
         optimizer: torch.optim.Optimizer,
+        clf_criterion: Optional[nn.Module] = None,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
         key_input: str = "input_tensors",
         key_targets: str = "labels",
         key_embeddings: str = "embeddings",
-        key_classification: str = "class_predictions",
     ):
         super(RetrievalModule, self).__init__()
 
+        assert emb_criterion is not None or clf_criterion is not None, "You have to set at least one criterion."
+        assert clf_criterion is not None and head is None, "Head must be set if you want to use clf_criterion."
+
         self.model = model
         self.head = head
-        self.criterion = criterion
+        self.emb_criterion = emb_criterion
         self.clf_criterion = clf_criterion
         self.optimizer = optimizer
 
@@ -48,11 +50,14 @@ class RetrievalModule(pl.LightningModule):
         embeddings = self.model(batch[self.key_input])
         bs = len(embeddings)
 
-        loss = self.criterion(embeddings, batch[self.key_target])
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        if self.emb_criterion is not None:
+            loss = self.emb_criterion(embeddings, batch[self.key_target])
+            self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        else:
+            loss = 0
 
-        if hasattr(self.criterion, "last_logs"):
-            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
+        if hasattr(self.emb_criterion, "last_logs"):
+            self.log_dict(self.emb_criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
         if self.scheduler is not None:
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)

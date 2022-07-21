@@ -21,7 +21,8 @@ HEADS_REGISTRY = {
 }
 
 
-def get_head(head_name: str, **kwargs: Dict[str, Any]) -> IHead:
+def get_head_by_cfg(cfg: TCfg, **kwargs: Dict[str, Any]) -> IHead:
+    head_name = cfg["name"]
     return HEADS_REGISTRY[head_name](**kwargs)  # type: ignore
 
 
