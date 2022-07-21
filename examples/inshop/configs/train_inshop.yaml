@@ -43,6 +43,9 @@ model:
     arch: vits8
     strict_load: True
 
+head:
+  name: simple_linear
+
 criterion:
   name: TripletLossWithMiner
   args:
