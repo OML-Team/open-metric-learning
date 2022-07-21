@@ -74,7 +74,6 @@ def main(cfg: TCfg) -> None:
             num_classes=train_dataset.num_labels,  # type: ignore
         )
     )
-    print(head)
     emb_criterion = get_criterion_by_cfg(cfg["criterion"])
     clf_criterion = get_criterion_by_cfg(cfg["criterion_classification"])
     optimizer = get_optimizer_by_cfg(
