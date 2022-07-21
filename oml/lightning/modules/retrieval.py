@@ -26,7 +26,8 @@ class RetrievalModule(pl.LightningModule):
         super(RetrievalModule, self).__init__()
 
         assert emb_criterion is not None or clf_criterion is not None, "You have to set at least one criterion."
-        assert clf_criterion is not None and head is None, "Head must be set if you want to use clf_criterion."
+        # TODO: rewrite this assrtation
+        # assert (clf_criterion is not None) and (head is None), "Head must be set if you want to use clf_criterion."
 
         self.model = model
         self.head = head
