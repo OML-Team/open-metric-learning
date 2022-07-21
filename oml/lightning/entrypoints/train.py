@@ -65,11 +65,19 @@ def main(cfg: TCfg) -> None:
     sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    head = None if "head" not in cfg else get_head_by_cfg(cfg["head"])
+    head = (
+        None
+        if "head" not in cfg
+        else get_head_by_cfg(
+            cfg["head"],
+            num_classes=train_dataset.num_labels,  # type: ignore
+        )
+    )
     emb_criterion = get_criterion_by_cfg(cfg["criterion"])
     clf_criterion = get_criterion_by_cfg(cfg["criterion_classification"])
     optimizer = get_optimizer_by_cfg(
-        cfg["optimizer"], params=[*extractor.parameters(), *head.parameters()]  # type: ignore
+        cfg["optimizer"],
+        params=[*extractor.parameters(), *head.parameters()],  # type: ignore
     )
     scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
 

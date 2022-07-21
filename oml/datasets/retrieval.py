@@ -127,6 +127,10 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
     def get_labels(self) -> np.ndarray:
         return np.array(self.df["label"].tolist())
 
+    @property
+    def num_labels(self) -> int:
+        return self.df["label"].nunique()
+
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     """

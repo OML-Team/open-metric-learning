@@ -23,7 +23,9 @@ HEADS_REGISTRY = {
 
 def get_head_by_cfg(cfg: TCfg, **kwargs: Dict[str, Any]) -> IHead:
     head_name = cfg["name"]
-    return HEADS_REGISTRY[head_name](**kwargs)  # type: ignore
+    cfg.setdefault("args", {})
+    cfg["args"].update(kwargs)
+    return HEADS_REGISTRY[head_name](**cfg["args"])  # type: ignore
 
 
 def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:

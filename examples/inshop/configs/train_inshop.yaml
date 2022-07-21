@@ -45,6 +45,8 @@ model:
 
 head:
   name: simple_linear
+  args:
+    weights: random
 
 criterion:
   name: TripletLossWithMiner
