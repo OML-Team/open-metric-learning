@@ -3,6 +3,7 @@ from typing import Union
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 from oml.interfaces.models import IHead
 
@@ -30,7 +31,7 @@ class SimpleLinearHead(IHead):
         self.fc.load_state_dict(state_dict, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.fc(x)
+        return F.softmax(self.fc(x))
 
     @property
     def num_classes(self) -> int:

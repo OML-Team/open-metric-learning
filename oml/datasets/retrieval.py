@@ -8,6 +8,7 @@ import pandas as pd
 import torchvision
 from PIL import Image
 from PIL.Image import Image as TImage
+from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
@@ -184,12 +185,17 @@ def get_retrieval_datasets(
     train_transform: Any,
     dataframe_name: str,
     cache_size: int = 100_000,
+    use_label_encoder_for_train: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
     # train
     df_train = df[df["split"] == "train"].reset_index(drop=True)
+
+    if use_label_encoder_for_train:
+        df_train["label"] = LabelEncoder().fit_transform(df_train["label"])
+
     train_dataset = DatasetWithLabels(
         df=df_train,
         images_root=dataset_root,
