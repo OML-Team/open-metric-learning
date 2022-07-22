@@ -1,8 +1,6 @@
 from typing import Dict, List, Optional, Tuple, Union
 
-import numpy as np
 import torch
-from scipy.special import expit as sigmoid
 from torch import Tensor
 from torch.nn import Module
 
@@ -16,15 +14,7 @@ TLossOutput = Union[Tensor, Tuple[Tensor, TLogs]]
 
 
 class TripletLoss(Module):
-    def __init__(
-        self,
-        margin: Union[float, str, None],
-        min_margin: Optional[float] = 0.05,
-        max_margin: Optional[float] = 0.2,
-        epochs_stretch: float = 1,
-        reduction: str = "mean",
-        need_logs: bool = False,
-    ):
+    def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
 
         Args:
@@ -41,22 +31,16 @@ class TripletLoss(Module):
 
         """
         assert reduction in ("mean", "sum", "none")
-        assert (margin is None) or (margin == "soft") or (isinstance(margin, float) and margin > 0)  # type: ignore
+        assert (margin is None) or (margin > 0)
 
         super(TripletLoss, self).__init__()
 
         self.margin = margin
-        self.min_margin = min_margin
-        self.max_margin = max_margin
-        self.epochs_stretch = epochs_stretch
-
         self.reduction = reduction
         self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
 
-    def forward(
-        self, anchor: Tensor, positive: Tensor, negative: Tensor, epoch_number: Optional[int] = None
-    ) -> TLossOutput:
+    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> TLossOutput:
         """
 
         Args:
@@ -76,11 +60,6 @@ class TripletLoss(Module):
         if self.margin is None:
             # here is the soft version of TripletLoss without margin
             loss = torch.log1p(torch.exp(positive_dist - negative_dist))
-        elif self.margin == "soft":
-            margin = self.max_margin * sigmoid(
-                epoch_number * self.epochs_stretch + np.log(self.min_margin / (self.max_margin - self.min_margin))
-            )
-            loss = torch.relu(margin + positive_dist - negative_dist)
         else:
             loss = torch.relu(self.margin + positive_dist - negative_dist)
 
@@ -127,7 +106,7 @@ def get_tri_ids_in_plain(n: int) -> Tuple[List[int], List[int], List[int]]:
 
 
 class TripletLossPlain(Module):
-    def __init__(self, margin: Union[float, str, None], reduction: str = "mean", need_logs: bool = False):
+    def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
         The same as TripletLoss, but works with anchor, positive and negative
         features stacked together.
@@ -145,13 +124,13 @@ class TripletLossPlain(Module):
 
         """
         assert reduction in ("mean", "sum", "none")
-        assert (margin is None) or (margin == "soft") or (isinstance(margin, float) and margin > 0)  # type: ignore
+        assert (margin is None) or (margin > 0)
 
         super(TripletLossPlain, self).__init__()
         self.criterion = TripletLoss(margin=margin, reduction=reduction, need_logs=need_logs)
         self.last_logs = self.criterion.last_logs
 
-    def forward(self, features: torch.Tensor, epoch_number: Optional[int] = None) -> TLossOutput:
+    def forward(self, features: torch.Tensor) -> TLossOutput:
         """
 
         Args:
@@ -170,9 +149,7 @@ class TripletLossPlain(Module):
 
         anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n)
 
-        return self.criterion(
-            features[anchor_ii], features[positive_ii], features[negative_ii], epoch_number=epoch_number
-        )
+        return self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
 
 
 class TripletLossWithMiner(Module):
@@ -184,7 +161,7 @@ class TripletLossWithMiner(Module):
 
     def __init__(
         self,
-        margin: Union[float, str, None],
+        margin: Optional[float],
         miner: ITripletsMiner = AllTripletsMiner(),
         reduction: str = "mean",
         need_logs: bool = False,
@@ -204,7 +181,7 @@ class TripletLossWithMiner(Module):
                >>> self.last_logs
         """
         assert reduction in ("mean", "sum", "none")
-        assert (margin is None) or (margin == "soft") or (isinstance(margin, float) and margin > 0)  # type: ignore
+        assert (margin is None) or (margin > 0)
 
         super().__init__()
         self.tri_loss = TripletLoss(margin=margin, reduction="none", need_logs=need_logs)
@@ -214,9 +191,7 @@ class TripletLossWithMiner(Module):
 
         self.last_logs: Dict[str, float] = {}
 
-    def forward(
-        self, features: Tensor, labels: Union[Tensor, List[int]], epoch_number: Optional[int] = None
-    ) -> Tuple[Tensor, TLogs]:
+    def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tuple[Tensor, TLogs]:
         """
         Args:
             features: Features with shape [batch_size, features_dim]
@@ -232,7 +207,7 @@ class TripletLossWithMiner(Module):
         # it has to return the corresponding indicator names <is_original_tri>
         if isinstance(self.miner, TripletMinerWithMemory):
             anchor, positive, negative, is_orig_tri = self.miner.sample(features=features, labels=labels_list)
-            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative, epoch_number=epoch_number)
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
             if self.need_logs:
 
@@ -254,7 +229,7 @@ class TripletLossWithMiner(Module):
 
         else:
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
-            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative, epoch_number=epoch_number)
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
         self.last_logs.update(self.tri_loss.last_logs)
 

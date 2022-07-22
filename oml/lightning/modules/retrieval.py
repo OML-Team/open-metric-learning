@@ -14,7 +14,6 @@ class RetrievalModule(pl.LightningModule):
         model: IExtractor,
         criterion: nn.Module,
         optimizer: torch.optim.Optimizer,
-        soft_margin: bool = True,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
@@ -27,7 +26,6 @@ class RetrievalModule(pl.LightningModule):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
-        self.use_soft_margin = soft_margin
 
         self.scheduler = scheduler
         self.scheduler_interval = scheduler_interval
@@ -45,10 +43,7 @@ class RetrievalModule(pl.LightningModule):
         embeddings = self.model(batch[self.key_input])
         bs = len(embeddings)
 
-        if self.use_soft_margin:
-            loss = self.criterion(embeddings, batch[self.key_target], self.current_epoch)
-        else:
-            loss = self.criterion(embeddings, batch[self.key_target])
+        loss = self.criterion(embeddings, batch[self.key_target])
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):

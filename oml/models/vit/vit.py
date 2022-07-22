@@ -52,14 +52,14 @@ class ViTExtractor(IExtractor):
 
             self.model.load_state_dict(ckpt, strict=strict_load)
 
-        # self.model.head = nn.Linear(in_features=384, out_features=128)  # todo
+        self.model.head = nn.Linear(in_features=384, out_features=128)  # todo
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mscale:
             x = self.multi_scale(x)
         else:
             x = self.model(x)
-            # x = self.model.head(x)  # todo
+            x = self.model.head(x)  # todo
 
         if self.normalise_features:
             xn = torch.linalg.norm(x, 2, dim=1).detach()
