@@ -36,3 +36,40 @@ class SimpleLinearHead(IHead):
     @property
     def num_classes(self) -> int:
         return self._num_classes
+
+
+class ArcFaceHead(IHead):
+    def __init__(
+        self,
+        weights: Union[Path, str],
+        in_features: int,
+        num_classes: int,
+        margin: float = 0.1,
+        eps: float = 1e-8,
+    ):
+        super(ArcFaceHead, self).__init__()
+
+        self._num_classes = num_classes
+        self._eps = eps
+        self.margin = margin
+        self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
+
+        if weights == "random":
+            nn.init.xavier_uniform_(self.weight)
+            return
+        else:
+            state_dict = torch.load(weights, map_location="cpu")
+
+        state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
+        self.weight.load_state_dict(state_dict)
+
+    def fc(self, x: torch.Tensor) -> torch.Tensor:
+        return F.linear(x, F.normalize(self.weight, p=2))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        angle = torch.acos(self.fc(x).clip(-1 + self._eps, 1 - self._eps))
+        return F.softmax(torch.cos(angle + self.margin))
+
+    @property
+    def num_classes(self) -> int:
+        return self._num_classes
