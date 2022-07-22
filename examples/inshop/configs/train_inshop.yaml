@@ -44,7 +44,7 @@ model:
     strict_load: True
 
 head:
-  name: simple_linear
+  name: arcface
   args:
     weights: random
 
