@@ -59,6 +59,7 @@ def get_opt() -> Optimizer:
         ("scheduler/cyclic.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
         ("scheduler/one_cycle.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
         ("optimizer/adam.yaml", get_optimizer_by_cfg, {"params": get_params()}),
+        ("optimizer/adamw.yaml", get_optimizer_by_cfg, {"params": get_params()}),
         ("optimizer/sgd.yaml", get_optimizer_by_cfg, {"params": get_params()}),
     ],
 )

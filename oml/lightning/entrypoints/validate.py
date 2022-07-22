@@ -20,7 +20,8 @@ def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        im_size=cfg["im_size"],
+        im_size_train=cfg["im_size"],
+        im_size_val=cfg["im_size"],
         pad_ratio_train=0,
         pad_ratio_val=0,
         train_transform=None,

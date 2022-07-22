@@ -10,7 +10,8 @@ dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 224
+im_size_train: 224
+im_size_val: 224
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
@@ -29,7 +30,7 @@ max_epochs: 10000
 valid_period: 1
 
 metric_args:
-  cmc_top_k: [1, 5]
+  cmc_top_k: [1]
   map_top_k: [5]
 
 augs: default_albu
@@ -53,7 +54,7 @@ criterion:
       name: TripletMinerWithMemory
       args:
         bank_size_in_batches: 20
-        tri_expand_k: 2
+        tri_expand_k: 4
 
 optimizer:
   name: adam
@@ -76,6 +77,7 @@ tags:
   - ${postfix}
   - ${pod}
   - deepfashion
+  - head_128
 
 hydra:
   run:

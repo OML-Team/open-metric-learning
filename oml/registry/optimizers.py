@@ -7,6 +7,7 @@ from oml.utils.misc import TCfg, dictconfig_to_dict
 OPTIMIZERS_REGISTRY = {
     "sgd": opt.SGD,
     "adam": opt.Adam,
+    "adamw": opt.AdamW,
 }
 
 
