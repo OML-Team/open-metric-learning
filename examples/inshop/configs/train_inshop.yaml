@@ -20,12 +20,12 @@ cache_size: 100000
 sampler:
   name: SequentialDistinctCategoryBalanceSampler
   args:
-    n_labels: 4
+    n_labels: 13
     n_instances: 6
-    n_categories: 2
+    n_categories: 3
     epoch_size: 1992
 
-bs_val: 96
+bs_val: 256
 max_epochs: 10000
 valid_period: 1
 
@@ -38,23 +38,22 @@ augs: default_albu
 model:
   name: vit
   args:
-    normalise_features: True
+    normalise_features: False
     use_multi_scale: False
     weights: pretrained_dino
-    arch: vits8
+    arch: vits16
     strict_load: True
 
 criterion:
   name: TripletLossWithMiner
   args:
     need_logs: True
-    margin: 0.1
+    margin: null
     reduction: mean
     miner:
-      name: TripletMinerWithMemory
+      name: HardTripletsMiner
       args:
-        bank_size_in_batches: 20
-        tri_expand_k: 4
+        norm_required: False
 
 optimizer:
   name: adam
@@ -77,7 +76,7 @@ tags:
   - ${postfix}
   - ${pod}
   - deepfashion
-  - head_128
+  - hard_miner_vits16_soft
 
 hydra:
   run:
