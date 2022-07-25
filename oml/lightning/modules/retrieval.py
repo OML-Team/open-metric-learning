@@ -63,7 +63,7 @@ class RetrievalModule(pl.LightningModule):
         if self.scheduler is not None:
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
-        if self.head:
+        if self.head is not None:
             pred = self.head(embeddings)
             loss_clf = self.clf_criterion(pred, batch[self.key_target])
             self.log("loss_clf", loss_clf.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
