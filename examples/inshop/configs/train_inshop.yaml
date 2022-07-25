@@ -47,7 +47,7 @@ criterion:
   name: TripletLossWithMiner
   args:
     need_logs: True
-    margin: 0.1
+    margin: 0.05
     reduction: mean
     miner:
       name: TripletMinerWithMemory
@@ -60,7 +60,13 @@ optimizer:
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-scheduler: null
+scheduler:
+  name: ReduceLROnPlateau
+  monitor_metric: OVERALL/cmc/1
+  interval: epoch
+  args:
+    factor: 0.5
+    patience: 1
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
@@ -70,12 +76,13 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod1
+pod: pod3
 
 tags:
   - ${postfix}
   - ${pod}
   - deepfashion
+  - reducelronplateau
 
 hydra:
   run:
