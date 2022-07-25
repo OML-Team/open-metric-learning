@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
 import torch
@@ -68,3 +68,9 @@ class RetrievalModule(pl.LightningModule):
                 "frequency": self.scheduler_frequency,
             }
             return [self.optimizer], [scheduler]
+
+    def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
+        # https://github.com/Lightning-AI/lightning/issues/1595
+        tqdm_dict = super().get_progress_bar_dict()
+        tqdm_dict.pop("v_num", None)
+        return tqdm_dict
