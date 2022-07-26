@@ -116,6 +116,13 @@ in our models' zoo. In this case, you don't even need to train.
 </p>
 </details>
 
+
+## Models zoo
+|               model               | download | end of hash |       dataset      |  cmc1 |
+|:---------------------------------:|:--------:|:-----------:|:------------------:|:-----:|
+| VitExtractor("pretrained_inshop") |   [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing)   |    a69435   | DeepFashion Inshop | 0.925 |
+
+
 ## Minimal examples
 <details>
 <summary>Using pure PyTorch</summary>
