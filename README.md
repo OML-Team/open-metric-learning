@@ -118,9 +118,9 @@ in our models' zoo. In this case, you don't even need to train.
 
 
 ## Models zoo
-|               model               | download | end of hash |       dataset      |  cmc1 |
-|:---------------------------------:|:--------:|:-----------:|:------------------:|:-----:|
-| VitExtractor("pretrained_inshop") |   [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing)   |    a69435   | DeepFashion Inshop | 0.925 |
+|               model               |       dataset      |  cmc1 | download | end of hash |
+|:---------------------------------:|:------------------:|:-----:|:--------:|:-----------:|
+| VitExtractor("pretrained_inshop") | DeepFashion Inshop | 0.925 |   [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing)   |    a69435   |
 
 
 ## Minimal examples
