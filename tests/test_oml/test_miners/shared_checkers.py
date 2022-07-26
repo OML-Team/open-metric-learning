@@ -5,7 +5,7 @@ from scipy.special import binom
 
 
 def check_triplets_consistency(
-    ids_anchor: List[int], ids_pos: List[int], ids_neg: List[int], labels: List[int]
+    ids_anchor: List[int], ids_pos: List[int], ids_neg: List[int], labels: List[int], validate_duplicates: bool = True
 ) -> None:
     """
     Args:
@@ -24,9 +24,10 @@ def check_triplets_consistency(
         assert labels[i_a] == labels[i_p]
         assert labels[i_a] != labels[i_n]
 
-    unq_tri = set(zip(ids_anchor, ids_pos, ids_neg))
+    if validate_duplicates:
+        unq_tri = set(zip(ids_anchor, ids_pos, ids_neg))
 
-    assert num_sampled_tri == len(unq_tri)
+        assert num_sampled_tri == len(unq_tri)
 
 
 def calc_n_triplets(labels: List[int]) -> int:
