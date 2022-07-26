@@ -1,0 +1,5 @@
+name: TopTripletsMiner
+args:
+  top_positive: 2
+  top_negative: 2
+  duplicate_not_enough_labels: False
