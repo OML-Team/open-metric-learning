@@ -40,7 +40,7 @@ model:
     normalise_features: True
     use_multi_scale: False
     weights: pretrained_dino
-    arch: vits8
+    arch: vits16
     strict_load: True
 
 head:
@@ -78,7 +78,7 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod1
+pod: pod3
 
 tags:
   - ${postfix}

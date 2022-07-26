@@ -64,7 +64,9 @@ class ArcFaceHead(IHead):
         self.weight.load_state_dict(state_dict)
 
     def fc(self, x: torch.Tensor) -> torch.Tensor:
-        return F.linear(x, F.normalize(self.weight, p=2))
+        return F.linear(
+            F.normalize(x, p=2), F.normalize(self.weight, p=2)
+        )  # TODO: maybe remove normalization and add assert
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         angle = torch.acos(self.fc(x).clip(-1 + self._eps, 1 - self._eps))

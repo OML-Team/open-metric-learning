@@ -71,7 +71,7 @@ class RetrievalModule(pl.LightningModule):
             if hasattr(self.clf_criterion, "last_logs"):
                 self.log_dict(self.clf_criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
-            return loss + loss_clf
+            return loss + 1e-4 * loss_clf  # TODO: temporary fix (rescale)
         else:
             return loss
 
