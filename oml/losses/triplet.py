@@ -237,7 +237,7 @@ class TripletLossWithMiner(Module):
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
-        self.last_logs.update({k: v for k, v in self.tri_loss.last_logs.items()})
+        self.last_logs.update(self.tri_loss.last_logs)
 
         if self.reduction == "mean":
             loss = loss.mean()
