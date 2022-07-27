@@ -174,7 +174,8 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 def get_retrieval_datasets(
     dataset_root: Path,
-    im_size: int,
+    im_size_train: int,
+    im_size_val: int,
     pad_ratio_train: float,
     pad_ratio_val: float,
     train_transform: Any,
@@ -189,7 +190,7 @@ def get_retrieval_datasets(
     train_dataset = DatasetWithLabels(
         df=df_train,
         images_root=dataset_root,
-        im_size=im_size,
+        im_size=im_size_train,
         pad_ratio=pad_ratio_train,
         transform=train_transform,
         cache_size=cache_size,
@@ -198,7 +199,12 @@ def get_retrieval_datasets(
     # val (query + gallery)
     df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
     valid_dataset = DatasetQueryGallery(
-        df=df_query_gallery, images_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_val, cache_size=cache_size
+        df=df_query_gallery,
+        images_root=dataset_root,
+        im_size=im_size_val,
+        pad_ratio=pad_ratio_val,
+        transform=None,
+        cache_size=cache_size,
     )
 
     return train_dataset, valid_dataset
