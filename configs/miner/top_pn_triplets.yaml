@@ -1,4 +1,4 @@
-name: TopTripletsMiner
+name: TopPNTripletsMiner
 args:
   top_positive: 2
   top_negative: 2

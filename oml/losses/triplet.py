@@ -7,6 +7,7 @@ from torch.nn import Module
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.miners.inbatch_top_percent import TopPercentTripletsMiner
 from oml.utils.misc_torch import elementwise_dist
 
 TLogs = Dict[str, float]
@@ -226,12 +227,17 @@ class TripletLossWithMiner(Module):
                         "neg_dist_bank": avg_d(anchor[is_bank_tri], negative[is_bank_tri]),
                     }
                 )
+        elif isinstance(self.miner, TopPercentTripletsMiner):
+            anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
+            if self.need_logs:
+                self.last_logs.update(self.miner.last_logs)
         else:
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
-        self.last_logs.update(self.tri_loss.last_logs)
+        self.last_logs.update({k: v for k, v in self.tri_loss.last_logs.items()})
 
         if self.reduction == "mean":
             loss = loss.mean()

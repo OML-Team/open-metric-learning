@@ -11,9 +11,9 @@ from oml.utils.misc import find_value_ids
 from oml.utils.misc_torch import pairwise_dist
 
 
-class TopTripletsMiner(InBatchTripletsMiner):
+class TopPNTripletsMiner(InBatchTripletsMiner):
     """
-    This miner selects hardest triplets based on distances between features:
+    This miner selects hard triplets based on distances between features:
     hard positive sample has large distance to the anchor sample,
     hard negative sample has small distance to the anchor sample.
     """
@@ -28,13 +28,18 @@ class TopTripletsMiner(InBatchTripletsMiner):
                 duplicated with another
 
         """
+        assert top_positive >= 1
+        assert isinstance(top_positive, int)
+        assert top_negative >= 1
+        assert isinstance(top_negative, int)
+
         self.top_positive = top_positive
         self.top_negative = top_negative
         self.duplicate_not_enough_labels = duplicate_not_enough_labels
 
     def _sample(self, features: Tensor, labels: List[int]) -> TTripletsIds:
         """
-        This method samples the hardest triplets inside the batch.
+        This method samples the hard triplets inside the batch.
 
         Args:
             features: Features with the shape of [batch_size, feature_size]
@@ -54,20 +59,6 @@ class TopTripletsMiner(InBatchTripletsMiner):
         return ids_anchor, ids_pos, ids_neg
 
     def _sample_from_distmat(self, distmat: Tensor, labels: List[int]) -> TTripletsIds:
-        """
-        This method samples the hardest triplets based on the given
-        distances matrix. It chooses each sample in the batch as an
-        anchor and then finds the hard top_positive and hard top_negatives paies.
-
-        Args:
-            distmat: Matrix of distances between the features
-            labels: Labels of the samples
-
-        Returns:
-            The batch of triplets (with the size equals to the original bs)
-            in the following order: (anchor, positive, negative)
-
-        """
         ids_all = set(range(len(labels)))
 
         ids_anchor, ids_pos, ids_neg = [], [], []  # type: ignore
