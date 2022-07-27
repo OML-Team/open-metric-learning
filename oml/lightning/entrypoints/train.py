@@ -81,9 +81,13 @@ def main(cfg: TCfg) -> None:
     clf_criterion = (
         None if "criterion_classification" not in cfg else get_criterion_by_cfg(cfg["criterion_classification"])
     )
+
+    params_for_opt = [*extractor.parameters()]
+    if head is not None:
+        params_for_opt.extend(head.parameters())
     optimizer = get_optimizer_by_cfg(
         cfg["optimizer"],
-        params=[*extractor.parameters(), *head.parameters()],  # type: ignore
+        params=params_for_opt,  # type: ignore
     )
     scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
 
