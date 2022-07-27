@@ -78,7 +78,9 @@ def main(cfg: TCfg) -> None:
         )
     )
     emb_criterion = get_criterion_by_cfg(cfg["criterion"])
-    clf_criterion = get_criterion_by_cfg(cfg["criterion_classification"])
+    clf_criterion = (
+        None if "criterion_classification" not in cfg else get_criterion_by_cfg(cfg["criterion_classification"])
+    )
     optimizer = get_optimizer_by_cfg(
         cfg["optimizer"],
         params=[*extractor.parameters(), *head.parameters()],  # type: ignore
