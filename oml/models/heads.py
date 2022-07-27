@@ -75,3 +75,39 @@ class ArcFaceHead(IHead):
     @property
     def num_classes(self) -> int:
         return self._num_classes
+
+
+class ArcFaceFancy(IHead):
+    def __init__(
+        self,
+        weights: Union[Path, str],
+        in_features: int,
+        num_classes: int,
+        inter_scale: float = 1.5,
+        margin: float = 0.1,
+        eps: float = 1e-8,
+    ):
+        super(ArcFaceFancy, self).__init__()
+
+        intermidiate_fsize = int(in_features * inter_scale)
+
+        self.linear = nn.Linear(in_features, intermidiate_fsize)
+        self.mish = nn.Mish()
+        self.arcface = ArcFaceHead(
+            weights="random",
+            in_features=intermidiate_fsize,
+            num_classes=num_classes,
+            margin=margin,
+            eps=eps,
+        )
+
+        if weights == "random":
+            return
+        else:
+            state_dict = torch.load(weights, map_location="cpu")
+
+        state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
+        self.load_state_dict(state_dict)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.arcface(self.mish(self.linear(x)))

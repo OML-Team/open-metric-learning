@@ -4,7 +4,7 @@ from typing import Any, Dict
 from omegaconf import OmegaConf
 
 from oml.interfaces.models import IExtractor, IHead
-from oml.models.heads import ArcFaceHead, SimpleLinearHead
+from oml.models.heads import ArcFaceFancy, ArcFaceHead, SimpleLinearHead
 from oml.models.resnet import ResnetExtractor
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -19,6 +19,7 @@ MODELS_REGISTRY = {
 HEADS_REGISTRY = {
     "simple_linear": SimpleLinearHead,
     "arcface": ArcFaceHead,
+    "fancy_arcface": ArcFaceFancy,
 }
 
 

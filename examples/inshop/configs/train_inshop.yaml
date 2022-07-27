@@ -10,26 +10,28 @@ dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/cur/ml/deepfashion/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 224
+im_size_train: 224
+im_size_val: 224
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: SequentialDistinctCategoryBalanceSampler
+  name: SequentialCategoryBalanceSampler
   args:
-    n_labels: 4
+    n_labels: 13
     n_instances: 6
-    n_categories: 2
-    epoch_size: 1992
+    n_categories: 3
+    resample_labels: True
+    weight_categories: True
 
 bs_val: 96
 max_epochs: 10000
 valid_period: 1
 
 metric_args:
-  cmc_top_k: [1, 5]
+  cmc_top_k: [1]
   map_top_k: [5]
 
 augs: default_albu
@@ -37,31 +39,27 @@ augs: default_albu
 model:
   name: vit
   args:
-    normalise_features: True
+    normalise_features: False
     use_multi_scale: False
     weights: pretrained_dino
     arch: vits16
     strict_load: True
 
-head:
-  name: arcface
-  args:
-    weights: random
+# head:
+#   name: fancy_arcface
+#   args:
+#     weights: random
 
 criterion:
   name: TripletLossWithMiner
   args:
     need_logs: True
-    margin: 0.1
+    margin: null
     reduction: mean
     miner:
-      name: TripletMinerWithMemory
+      name: HardTripletsMiner
       args:
-        bank_size_in_batches: 20
-        tri_expand_k: 2
-
-criterion_classification:
-  name: CrossEntropyLoss
+        norm_required: False
 
 optimizer:
   name: adam
@@ -78,14 +76,13 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod3
+pod: pod1
 
 tags:
   - ${postfix}
   - ${pod}
   - deepfashion
-  - classification
-  - arcface
+  - hard_miner_vits16_soft
 
 hydra:
   run:
