@@ -18,12 +18,13 @@ num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: SequentialDistinctCategoryBalanceSampler
+  name: SequentialCategoryBalanceSampler
   args:
     n_labels: 13
     n_instances: 6
     n_categories: 3
-    epoch_size: 1992
+    resample_labels: True
+    weight_categories: True
 
 bs_val: 256
 max_epochs: 10000
@@ -76,7 +77,6 @@ tags:
   - ${postfix}
   - ${pod}
   - deepfashion
-  - hard_miner_vits16_soft
 
 hydra:
   run:

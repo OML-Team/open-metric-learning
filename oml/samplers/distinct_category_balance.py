@@ -61,11 +61,11 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
             if not isinstance(param, int):
                 raise TypeError(f"{param.__name__} must be int, {type(param)} given")
         if not 1 <= n_categories <= len(unique_categories):
-            raise ValueError(f"c must be 1 <= n_categories <= {len(unique_categories)}, {n_categories} given")
+            raise ValueError(f"must be 1 <= n_categories <= {len(unique_categories)}, {n_categories} given")
         if not 1 < n_labels <= len(unique_labels):
-            raise ValueError(f"p must be 1 < n_labels <= {len(unique_labels)}, {n_labels} given")
+            raise ValueError(f"must be 1 < n_labels <= {len(unique_labels)}, {n_labels} given")
         if n_instances <= 1:
-            raise ValueError(f"k must be not less than 1, {n_instances} given")
+            raise ValueError(f"must be not less than 1, {n_instances} given")
         if any(label not in label2category.keys() for label in unique_labels):
             raise ValueError("All the labels must have category")
         if any(label not in unique_labels for label in label2category.keys()):
