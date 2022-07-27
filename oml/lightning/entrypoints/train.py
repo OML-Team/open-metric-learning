@@ -38,7 +38,8 @@ def main(cfg: TCfg) -> None:
     train_augs = get_augs(cfg["augs"]) if cfg["augs"] is not None else None
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        im_size=cfg["im_size"],
+        im_size_train=cfg["im_size_train"],
+        im_size_val=cfg["im_size_val"],
         pad_ratio_train=cfg["im_pad_ratio_train"],
         pad_ratio_val=cfg["im_pad_ratio_val"],
         train_transform=train_augs,
@@ -50,6 +51,8 @@ def main(cfg: TCfg) -> None:
     if isinstance(train_augs, albu.Compose):
         augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
         albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
+    else:
+        augs_file = None
 
     if "category" not in df.columns:
         df["category"] = 0
@@ -116,7 +119,8 @@ def main(cfg: TCfg) -> None:
         # log hyper params and augs config
         dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
         logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
-        logger.run["augs_cfg"].upload(augs_file)
+        if augs_file is not None:
+            logger.run["augs_cfg"].upload(augs_file)
         # log source code
         source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
             map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))

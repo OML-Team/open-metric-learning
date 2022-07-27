@@ -26,7 +26,7 @@ sampler:
     resample_labels: True
     weight_categories: True
 
-bs_val: 96
+bs_val: 256
 max_epochs: 10000
 valid_period: 1
 
