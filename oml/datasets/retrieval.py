@@ -182,7 +182,6 @@ def get_retrieval_datasets(
     dataframe_name: str,
     cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
-    # todo: split to have a possibility create only 1 dataset; and naming?
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
