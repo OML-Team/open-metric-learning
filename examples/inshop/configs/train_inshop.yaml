@@ -45,10 +45,10 @@ model:
     arch: vits16
     strict_load: True
 
-# head:
-#   name: fancy_arcface
-#   args:
-#     weights: random
+head:
+  name: fancy_arcface
+  args:
+    weights: random
 
 criterion:
   name: TripletLossWithMiner
@@ -60,6 +60,9 @@ criterion:
       name: HardTripletsMiner
       args:
         norm_required: False
+
+criterion_classification:
+  name: CrossEntropyLoss
 
 optimizer:
   name: adam
