@@ -52,10 +52,7 @@ criterion:
     margin: null
     reduction: mean
     miner:
-      name: HardTripletsMiner
-      args:
-        norm_required: False
-
+      name: CentroidsTripletMiner
 optimizer:
   name: adam
   args:

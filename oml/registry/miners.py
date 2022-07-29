@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from oml.interfaces.miners import ITripletsMiner
+from oml.miners.centroids import CentroidsTripletMiner
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbactch_hard_cluster import HardClusterMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
@@ -12,6 +13,7 @@ MINERS_REGISTRY = {
     "HardClusterMiner": HardClusterMiner,
     "HardTripletsMiner": HardTripletsMiner,
     "TripletMinerWithMemory": TripletMinerWithMemory,
+    "CentroidsTripletMiner": CentroidsTripletMiner,
 }
 
 
@@ -21,4 +23,5 @@ def get_miner(name: str, **kwargs: Dict[str, Any]) -> ITripletsMiner:
 
 def get_miner_by_cfg(cfg: TCfg) -> ITripletsMiner:
     cfg = dictconfig_to_dict(cfg)
+    cfg.setdefault("args", {})
     return get_miner(name=cfg["name"], **cfg["args"])
