@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ class TopPercentTripletsMiner(InBatchTripletsMiner):
     hard negative sample has small distance to the anchor sample.
     """
 
-    def __init__(self, top_positive: float = 0.9, top_negative: float = 0.9, need_logs: bool = False):
+    def __init__(self, top_positive: float = 0.9, top_negative: float = 0.9):
         """
         The number of triplets can change in each batch
 
@@ -34,10 +34,15 @@ class TopPercentTripletsMiner(InBatchTripletsMiner):
         self.top_positive = top_positive
         self.top_negative = top_negative
 
-        self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
 
-    def _sample(self, features: Tensor, labels: List[int]) -> TTripletsIds:
+    def _sample(
+        self,
+        features: Tensor,
+        labels: List[int],
+        *_: Any,
+        ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
+    ) -> TTripletsIds:
         """
         This method samples the hard triplets inside the batch.
 
@@ -54,11 +59,19 @@ class TopPercentTripletsMiner(InBatchTripletsMiner):
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)
 
-        ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(distmat=dist_mat, labels=labels)
+        ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(
+            distmat=dist_mat, labels=labels, ignore_anchor_mask=ignore_anchor_mask
+        )
 
         return ids_anchor, ids_pos, ids_neg
 
-    def _sample_from_distmat(self, distmat: Tensor, labels: List[int]) -> TTripletsIds:
+    def _sample_from_distmat(
+        self,
+        distmat: Tensor,
+        labels: List[int],
+        *_: Any,
+        ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
+    ) -> TTripletsIds:
         logs = OnlineAvgDict()
 
         ids_all = set(range(len(labels)))
@@ -67,7 +80,12 @@ class TopPercentTripletsMiner(InBatchTripletsMiner):
 
         eps = 10 * torch.finfo(torch.float32).eps
 
-        for i_anch, label in enumerate(labels):
+        if ignore_anchor_mask is None:
+            ignore_anchor_mask = [False] * len(labels)
+
+        for i_anch, (label, ignore_anchor) in enumerate(zip(labels, ignore_anchor_mask)):
+            if ignore_anchor:
+                continue
             ids_label = set(find_value_ids(it=labels, value=label))
 
             ids_pos_cur = np.array(list(ids_label - {i_anch}), int)

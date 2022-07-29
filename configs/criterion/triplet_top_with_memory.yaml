@@ -1,0 +1,9 @@
+name: TripletLossWithMiner
+args:
+  margin: null
+  reduction: mean
+  miner:
+    name: TopPercentTripletsMiner
+    args:
+      top_positive: 0.9
+      top_negative: 0.9

@@ -6,6 +6,7 @@ from torch.nn import Module
 
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
+from oml.miners.cross_hard import TopMinerWithBank
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.miners.inbatch_top_percent import TopPercentTripletsMiner
 from oml.utils.misc_torch import elementwise_dist
@@ -227,7 +228,7 @@ class TripletLossWithMiner(Module):
                         "neg_dist_bank": avg_d(anchor[is_bank_tri], negative[is_bank_tri]),
                     }
                 )
-        elif isinstance(self.miner, TopPercentTripletsMiner):
+        elif isinstance(self.miner, (TopPercentTripletsMiner, TopMinerWithBank)):
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 

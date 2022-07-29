@@ -1,6 +1,6 @@
 from itertools import product
 from random import choices
-from typing import List
+from typing import Any, List, Optional, Union
 
 import numpy as np
 import torch
@@ -37,7 +37,13 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
         self.top_negative = top_negative
         self.duplicate_not_enough_labels = duplicate_not_enough_labels
 
-    def _sample(self, features: Tensor, labels: List[int]) -> TTripletsIds:
+    def _sample(
+        self,
+        features: Tensor,
+        labels: List[int],
+        *_: Any,
+        ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
+    ) -> TTripletsIds:
         """
         This method samples the hard triplets inside the batch.
 
@@ -54,16 +60,28 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)
 
-        ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(distmat=dist_mat, labels=labels)
+        ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(
+            distmat=dist_mat, labels=labels, ignore_anchor_mask=ignore_anchor_mask
+        )
 
         return ids_anchor, ids_pos, ids_neg
 
-    def _sample_from_distmat(self, distmat: Tensor, labels: List[int]) -> TTripletsIds:
+    def _sample_from_distmat(
+        self,
+        distmat: Tensor,
+        labels: List[int],
+        *_: Any,
+        ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
+    ) -> TTripletsIds:
         ids_all = set(range(len(labels)))
 
         ids_anchor, ids_pos, ids_neg = [], [], []  # type: ignore
+        if ignore_anchor_mask is None:
+            ignore_anchor_mask = [False] * len(labels)
 
-        for i_anch, label in enumerate(labels):
+        for i_anch, (label, ignore_anchor) in enumerate(zip(labels, ignore_anchor_mask)):
+            if ignore_anchor:
+                continue
             ids_label = set(find_value_ids(it=labels, value=label))
 
             ids_pos_cur = np.array(list(ids_label - {i_anch}), int)

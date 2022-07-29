@@ -1,0 +1,9 @@
+name: TopMinerWithBank
+args:
+  bank_size_in_batches: 3
+  need_logs: True
+  miner:
+    name: TopPercentTripletsMiner
+    args:
+      top_positive: 0.9
+      top_negative: 0.9
