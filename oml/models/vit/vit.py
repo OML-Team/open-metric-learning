@@ -14,17 +14,30 @@ from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.utils.io import download_checkpoint
+
+_FB_URL = "https://dl.fbaipublicfiles.com"
 
 
 class ViTExtractor(IExtractor):
     constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
+
+    pretrained_models = {
+        # checkpoints pretrained in DINO framework on ImageNet by MetaAI
+        "vits16_dino": (f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth", "cf0f22", None),
+        "vits8_dino": (f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth", "230cd5", None),
+        "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
+        "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
+        # our pretrained checkpoints
+        "vits16_inshop": ("1Fjf9SlhIgXi-YBf-39BWfd16rsha0qYZ", "384ead", "vits16_inshop.pth"),
+    }
 
     def __init__(
         self, weights: Union[Path, str], arch: str, normalise_features: bool, use_multi_scale: bool, strict_load: bool
     ):
         """
         Args:
-            weights: path to weights, or use "pretrained_dino" to download pretrained checkpoint
+            weights: Path to weights or special key to download pretrained checkpoint
             arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
             normalise_features: if normalise features
             use_multi_scale: if use multi scale
@@ -40,17 +53,18 @@ class ViTExtractor(IExtractor):
 
         factory_fun = self.constructors[self.arch]
 
-        if weights == "pretrained_dino":
-            self.model = factory_fun(pretrained=True)
-        elif weights == "random":
-            self.model = factory_fun(pretrained=False)
-        else:
-            self.model = factory_fun(pretrained=False)
-            ckpt = torch.load(weights, map_location="cpu")
-            state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
-            ckpt = remove_prefix_from_state_dict(state_dict, "norm.bias")
+        self.model = factory_fun(pretrained=False)
+        if weights == "random":
+            return
 
-            self.model.load_state_dict(ckpt, strict=strict_load)
+        if weights in self.pretrained_models.keys():
+            url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
+            weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+
+        ckpt = torch.load(weights, map_location="cpu")
+        state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
+        ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
+        self.model.load_state_dict(ckpt, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mscale:

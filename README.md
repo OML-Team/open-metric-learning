@@ -118,9 +118,12 @@ in our models' zoo. In this case, you don't even need to train.
 
 
 ## Models zoo
-|                model                |       dataset      |  cmc1 | download | end of hash |
-|:-----------------------------------:|:------------------:|:-----:|:--------:|:-----------:|
-| `VitExtractor("pretrained_inshop")` | DeepFashion Inshop | 0.925 |   [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing)   |    a69435   |
+|                            model                            |  cmc1 |       dataset      |                                      weights & config                                        | hash (the beginning) |
+|:-----------------------------------------------------------:|:-----:|:------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
+| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 | DeepFashion Inshop | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
+
+Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
+However, you can also check link in `weights & config` if you want to download weights manually or to reproduce the experiment.
 
 
 ## Minimal examples
