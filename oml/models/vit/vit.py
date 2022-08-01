@@ -37,7 +37,7 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or special key to download pretrained checkpoint
+            weights: Path to weights or the special key to download pretrained checkpoint
             arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
             normalise_features: if normalise features
             use_multi_scale: if use multi scale

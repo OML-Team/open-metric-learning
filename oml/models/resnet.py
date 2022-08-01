@@ -46,7 +46,7 @@ class ResnetExtractor(IExtractor):
         set both hid_dim and out_dim equal to None.
 
         Args:
-            weights: path to weights or use special key to download pretrained checkpoint
+            weights: path to weights or the special key to download pretrained checkpoint
             arch: different types of resnet, please, check self.constructors
             normalise_features: if normalise features
             gem_p: value of power in GEM pooling
