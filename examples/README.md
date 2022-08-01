@@ -32,6 +32,7 @@ the same time.
     ├── images.txt
     ├── train_test_split.txt
     ├── bounding_boxes.txt
+    ├── image_class_labels.txt
     └── images
         ├── 001.Black_footed_Albatross
         │   ├── Black_Footed_Albatross_0001_796111.jpg
