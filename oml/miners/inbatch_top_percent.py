@@ -43,18 +43,6 @@ class TopPercentTripletsMiner(InBatchTripletsMiner):
         *_: Any,
         ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
     ) -> TTripletsIds:
-        """
-        This method samples the hard triplets inside the batch.
-
-        Args:
-            features: Features with the shape of [batch_size, feature_size]
-            labels: Labels of the samples in the batch
-
-        Returns:
-            The batch of the triplets in the order below:
-            (anchor, positive, negative)
-
-        """
         assert features.shape[0] == len(labels)
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)

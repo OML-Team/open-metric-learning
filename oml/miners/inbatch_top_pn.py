@@ -25,7 +25,7 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
             top_negative: keep negative examples with topN smallest distance
             duplicate_not_enough_labels: Parameter allows automatically maintain constant number of triplets. If some
                 of labels have number of instances less than top_positive or top_negative, this labels will be
-                duplicated with another
+                duplicated with another instances
 
         """
         assert top_positive >= 1
@@ -44,18 +44,6 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
         *_: Any,
         ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
     ) -> TTripletsIds:
-        """
-        This method samples the hard triplets inside the batch.
-
-        Args:
-            features: Features with the shape of [batch_size, feature_size]
-            labels: Labels of the samples in the batch
-
-        Returns:
-            The batch of the triplets in the order below:
-            (anchor, positive, negative)
-
-        """
         assert features.shape[0] == len(labels)
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)
