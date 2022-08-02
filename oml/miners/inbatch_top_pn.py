@@ -21,7 +21,7 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
     def __init__(self, top_positive: int = 1, top_negative: int = 1, duplicate_not_enough_labels: bool = False):
         """
         Args:
-            top_positive: keep positive examples with topK largest distance
+            top_positive: keep positive examples with topP largest distance
             top_negative: keep negative examples with topN smallest distance
             duplicate_not_enough_labels: Parameter allows automatically maintain constant number of triplets. If some
                 of labels have number of instances less than top_positive or top_negative, this labels will be

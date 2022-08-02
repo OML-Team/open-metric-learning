@@ -8,9 +8,8 @@ from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.miners.inbatch_top_percent import TopPercentTripletsMiner
 from oml.miners.inbatch_top_pn import TopPNTripletsMiner
 from oml.utils.misc_torch import pairwise_dist
+from tests.test_oml.test_miners.conftest import TFeaturesAndLabels
 from tests.test_oml.test_miners.shared_checkers import check_triplets_consistency
-
-TFeaturesAndLabels = List[Tuple[torch.Tensor, List[int]]]
 
 
 @pytest.mark.parametrize("top_positive", [1, 7, 17])

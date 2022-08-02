@@ -3,9 +3,12 @@ from typing import List, Tuple
 
 import pytest
 import torch
-from torch import Tensor
 
 TLabelsLI = List[Tuple[List[int], int, int]]
+TFeaturesAndLabels = List[Tuple[torch.Tensor, List[int]]]
+
+
+TORCH_EPS = 10 * torch.finfo(torch.float32).eps
 
 
 def generate_valid_labels(num: int) -> TLabelsLI:
@@ -34,7 +37,7 @@ def generate_valid_labels(num: int) -> TLabelsLI:
 
 
 @pytest.fixture()
-def features_and_labels() -> List[Tuple[Tensor, List[int]]]:
+def features_and_labels() -> TFeaturesAndLabels:
     """
     Returns: list of features and valid labels
 

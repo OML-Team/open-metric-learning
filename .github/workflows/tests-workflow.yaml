@@ -15,7 +15,7 @@ on:
 
 
 jobs:
-  pre_commit:
+  tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout

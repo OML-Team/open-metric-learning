@@ -17,6 +17,12 @@ class TopMinerWithBank(ITripletsMiner):
         miner: Union[TopPNTripletsMiner, TopPercentTripletsMiner],
         need_logs: bool = True,
     ):
+        """
+        Bank accumulates batches from several steps. Bank uses only data from batch as anchor, and finds top
+        positives and negatives from bank and current batch using miner.
+        """
+        assert isinstance(bank_size_in_batches, int)
+        assert bank_size_in_batches >= 1
         assert isinstance(miner, (TopPNTripletsMiner, TopPercentTripletsMiner))
         self.miner = miner
 
