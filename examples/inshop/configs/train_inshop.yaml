@@ -41,7 +41,7 @@ model:
   args:
     normalise_features: False
     use_multi_scale: False
-    weights: pretrained_dino
+    weights: vits16_dino
     arch: vits16
     strict_load: True
 

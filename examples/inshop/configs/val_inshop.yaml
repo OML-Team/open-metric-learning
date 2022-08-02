@@ -1,8 +1,6 @@
 dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df_fixed_val.csv
 
-logs_root: logs
-
 im_size: 224
 bs_val: 512
 num_workers: 20
@@ -11,10 +9,10 @@ num_workers: 20
 model:
   name: vit
   args:
-    arch: vits8
+    arch: vits16
     normalise_features: False
     use_multi_scale: False
-    weights: pretrained_dino
+    weights: vits16_inshop
     strict_load: True
 
 metric_args:
