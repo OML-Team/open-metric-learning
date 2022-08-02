@@ -1,6 +1,3 @@
-**NOTE! The project is under construction. We will publish the 1st release soon.**
-
-
 <div align="center">
 <img src="https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg" width="400px">
 
@@ -14,15 +11,27 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
  (like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
  The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
  Thus, during the training we:
-   1. Use DataLoader + Sampler to form batches (for example, balanced in terms of labels or categories)
-   2. [Only for losses based on combinations] Use Miner to form effective pairs or triplets, including
+   1. Use `DataLoader` + `Sampler` to form batches (for example `SequentialBalanceSampler`)
+   2. [Only for losses based on combinations] Use `Miner` to form effective pairs or triplets, including
    those which utilize a memory bank.
    3. Compute loss.
 * **Validation part** consists of several stages:
-  1. Accumulating all of the embeddings.
+  1. Accumulating all of the embeddings (`EmbeddingMetrics`).
   2. Calculating distances between them with respect to query/gallery split.
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
   4. Calculating retrieval metrics like CMC@k, Recall@k or MeanAveragePrecision.
+
+## Installation
+Please, use pip to install the latest stable version of the library:
+
+`pip install -U open-metric-learning`
+
+You can also use docker:
+
+```
+make docker_build RUNTIME=cpu
+make docker_build RUNTIME=gpu
+```
 
 ## FAQ
 
