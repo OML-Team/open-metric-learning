@@ -142,6 +142,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     In other words, for the desired query item, the gallery is the rest of the validation dataset.
     If you want to perform this kind of validation process, then simply return
     is_query == True and is_gallery == True for every item in the dataset.
+    # todo describe when both are True
     """
 
     def __init__(

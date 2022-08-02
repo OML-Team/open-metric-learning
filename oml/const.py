@@ -10,7 +10,7 @@ CONFIGS_PATH = PROJECT_ROOT / "configs"
 
 PAD_COLOR = (255, 255, 255)
 
-T_Str2Int_or_Int2Str = Union[Dict[int, str], Dict[int, str]]
+T_Str2Int_or_Int2Str = Union[Dict[str, int], Dict[int, str]]
 
 TCfg = Union[Dict[str, Any], DictConfig]
 
