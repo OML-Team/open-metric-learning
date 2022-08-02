@@ -29,13 +29,3 @@ def get_extractor_by_cfg(cfg: TCfg) -> IExtractor:
 
 def get_extractor_by_cfg_file(cfg_path: Path) -> IExtractor:
     return get_extractor_by_cfg(OmegaConf.load(cfg_path))
-
-
-def get_pretrained_resnet() -> ResnetExtractor:
-    # ResNet model was trained on ImageNet vis MoCo Framework
-    return get_extractor_by_cfg_file(MODELS_CONFIGS_PATH / "resnet.yaml")
-
-
-def get_pretrained_vit() -> ViTExtractor:
-    # ViT model was trained on ImageNet vis DiNo Framework
-    return get_extractor_by_cfg_file(MODELS_CONFIGS_PATH / "vit.yaml")

@@ -1,10 +1,8 @@
 name: resnet
 args:
   arch: resnet50
-  hid_dim: null
-  out_dim: null
   gem_p: 7.0
   remove_fc: True
   normalise_features: False
-  weights: pretrained_moco
+  weights: resnet50_moco_v2
   strict_load: False
