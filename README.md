@@ -24,7 +24,9 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
 ## Installation
 Please, use pip to install the latest stable version of the library:
 
-`pip install -U open-metric-learning`
+```
+pip install -U open-metric-learning
+```
 
 You can also use docker:
 
