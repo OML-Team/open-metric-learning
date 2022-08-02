@@ -45,7 +45,7 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     print("Downloading checkpoint...")
 
     if validators.url(url_or_fid):
-        ckpt = requests.get(url_or_fid)
+        ckpt = requests.get(url_or_fid, timeout=120)
 
         if ckpt.status_code == 200:
             with open(save_path, "wb+") as f:

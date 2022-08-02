@@ -12,3 +12,4 @@ pandas==1.2.3
 pytest==6.2.2
 python-dotenv==0.17.0
 pytorch-lightning==1.5.9
+validators==0.20.0
