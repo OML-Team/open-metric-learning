@@ -14,9 +14,7 @@ dataset_root = "/nydl/data/CUB_200_2011/"
 df = build_cub_df(dataset_root)
 df_train = df[df["split"] == "train"].reset_index(drop=True)
 
-model = ViTExtractor(
-    "vits16_dino", arch="vits16", normalise_features=False, use_multi_scale=False, strict_load=True
-).train()
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df=df_train, im_size=224, pad_ratio=0.0, transform=get_default_albu())

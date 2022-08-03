@@ -8,7 +8,7 @@ from oml.lightning.modules.retrieval import RetrievalModule
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.resnet import ResnetExtractor
+from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import SequentialBalanceSampler
 
 # data
@@ -17,9 +17,7 @@ dataset_root = "/nydl/data/CUB_200_2011/"
 df = build_cub_df(dataset_root)
 
 # model
-model = ResnetExtractor(
-    weights="resnet50_moco_v2", arch="resnet50", normalise_features=True, gem_p=7.0, remove_fc=True, strict_load=True
-)
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 df_train = df[df["split"] == "train"].reset_index(drop=True)

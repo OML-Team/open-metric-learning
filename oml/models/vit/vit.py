@@ -33,7 +33,12 @@ class ViTExtractor(IExtractor):
     }
 
     def __init__(
-        self, weights: Union[Path, str], arch: str, normalise_features: bool, use_multi_scale: bool, strict_load: bool
+        self,
+        weights: Union[Path, str],
+        arch: str,
+        normalise_features: bool,
+        use_multi_scale: bool = False,
+        strict_load: bool = True,
     ):
         """
         Args:

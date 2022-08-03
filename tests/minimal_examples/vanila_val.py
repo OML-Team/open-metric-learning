@@ -6,9 +6,7 @@ from oml.datasets.retrieval import DatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.vit.vit import ViTExtractor
 
-model = ViTExtractor(
-    "vits16_dino", arch="vits16", normalise_features=False, use_multi_scale=False, strict_load=True
-).eval()
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
 dataset_root = "/nydl/data/CUB_200_2011/"
 # download dataset
