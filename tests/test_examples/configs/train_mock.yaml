@@ -7,7 +7,8 @@ dataset_root: ../../mock_dataset
 dataframe_name: df.csv
 logs_root: logs
 
-im_size: 32
+im_size_train: 32
+im_size_val: 32
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 0

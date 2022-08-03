@@ -1,6 +1,8 @@
 dataset_root: ../../mock_dataset
 dataframe_name: df.csv
 
+logs_root: logs
+
 im_size: 224
 num_workers: 0
 
@@ -14,10 +16,10 @@ metric_args:
 model:
   name: vit
   args:
-    arch: vits8
+    arch: vits16
     normalise_features: False
     use_multi_scale: True
-    weights: pretrained_dino
+    weights: vits16_dino
     strict_load: True
 
 gpus: null

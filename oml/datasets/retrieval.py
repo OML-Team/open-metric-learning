@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
@@ -24,7 +24,7 @@ class BaseDataset(Dataset):
         df: pd.DataFrame,
         im_size: int,
         pad_ratio: float,
-        dataset_root: Optional[Path] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
@@ -52,6 +52,7 @@ class BaseDataset(Dataset):
             df["y_2"] = None
 
         if dataset_root is not None:
+            dataset_root = Path(dataset_root)
             df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
         else:
             df["path"] = df["path"].astype(str)
@@ -153,7 +154,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         df: pd.DataFrame,
         im_size: int,
         pad_ratio: float,
-        dataset_root: Optional[Path] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
