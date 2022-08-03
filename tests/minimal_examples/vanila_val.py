@@ -13,9 +13,9 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False, use
 model.eval()
 
 dataset_root = Path("/nydl/data/CUB_200_2011/")
-val_dataset = DatasetQueryGallery(
-    df=pd.read_csv(dataset_root / "df.csv")[:10], im_size=224, pad_ratio=0.0, dataset_root=dataset_root
-)
+df = pd.read_csv(dataset_root / "df.csv")[:10]
+
+val_dataset = DatasetQueryGallery(df=df, im_size=224, pad_ratio=0.0, dataset_root=dataset_root)
 
 val_loader = DataLoader(val_dataset, batch_size=8)
 calculator = EmbeddingMetrics()

@@ -14,7 +14,7 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def build_cub(dataset_root: Path) -> pd.DataFrame:
+def build_cub_df(dataset_root: Path) -> pd.DataFrame:
     images_txt = dataset_root / "images.txt"
     train_test_split = dataset_root / "train_test_split.txt"
     bounding_boxes = dataset_root / "bounding_boxes.txt"
@@ -51,7 +51,7 @@ def build_cub(dataset_root: Path) -> pd.DataFrame:
     df["x_2"] = (df["x"] + df["width"]).apply(int)  # right
     df["y_2"] = (df["y"] + df["height"]).apply(int)  # bot
     df["y_1"] = df["y"].apply(int)  # top
-    df["path"] = "images/" + df["image_name"]
+    df["path"] = df["image_name"].apply(lambda x: dataset_root / "images" / x)
 
     df["split"] = "train"
     df["split"][df["is_training_image"] == 0] = "validation"
@@ -71,7 +71,7 @@ def build_cub(dataset_root: Path) -> pd.DataFrame:
 def main() -> None:
     print("CUB200 2011 dataset preparation started...")
     args = get_argparser().parse_args()
-    df = build_cub(args.dataset_root)
+    df = build_cub_df(args.dataset_root)
     df.to_csv(args.dataset_root / "df.csv", index=None)
     print("CUB200 2011 dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")

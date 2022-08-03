@@ -72,7 +72,7 @@ def txt_to_df(fpath: Path) -> pd.DataFrame:
     return df
 
 
-def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
+def build_inshop_df(args: Namespace) -> pd.DataFrame:
     list_eval_partition = args.dataset_root / "list_eval_partition.txt"
     list_bbox_inshop = args.dataset_root / "list_bbox_inshop.txt"
 
@@ -81,7 +81,7 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 
     df_part = txt_to_df(list_eval_partition)
 
-    df_part["path"] = df_part["image_name"].apply(lambda x: Path(x.replace("img/", "img_highres/")))
+    df_part["path"] = df_part["image_name"].apply(lambda x: Path(args.dataset_root) / x.replace("img/", "img_highres/"))
 
     df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
@@ -150,7 +150,7 @@ def get_argparser() -> ArgumentParser:
 def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
-    df = build_deepfashion_df(args)
+    df = build_inshop_df(args)
 
     save_name = "df"
     if args.fix_train_bboxes:
