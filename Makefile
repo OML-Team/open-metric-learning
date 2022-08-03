@@ -44,8 +44,8 @@ docker_tests:
 
 .PHONY: upload_to_pip
 upload_to_pip:
-#	python3 -m pip install --upgrade twine
-#	python3 -m pip install --upgrade build
+	python -m pip install --upgrade pip
+	python3 -m pip install --upgrade twine
 	rm -rf dist/*
-	python3 -m build
-	python3 -m twine upload dist/*
+	python3 setup.py sdist bdist_wheel
+	twine upload dist/*

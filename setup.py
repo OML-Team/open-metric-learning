@@ -12,15 +12,15 @@ def load_requirements(filename: str) -> List[str]:
 
 setup(
     # technical things
-    version="0.1.9",
+    version="0.1.10",
     packages=find_packages(include="oml"),
     python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
     include_package_data=True,
-    long_description=Path("Readme.md").read_text(),
+    long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
     # general information
-    name="OpenMetricLearning",
+    name="open-metric-learning",
     description="OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.",
     keywords=[
         "data-science",
