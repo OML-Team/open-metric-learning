@@ -36,7 +36,8 @@ RUN pip3 install --upgrade pip
 RUN pip install Cython==0.29.28
 
 ### Python libs
-RUN pip install torch==1.8.0+${TORCH_POSTFIX} torchvision==0.9.0+${TORCH_POSTFIX} \
+# todo: can we move it to requirements.txt?
+RUN pip install torch==1.12.0+${TORCH_POSTFIX} torchvision==0.13.0+${TORCH_POSTFIX} \
     -f https://download.pytorch.org/whl/torch_stable.html
 
 COPY ci/requirements.txt requirements.txt

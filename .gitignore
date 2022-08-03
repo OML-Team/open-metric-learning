@@ -7,6 +7,7 @@ tests/test_examples/logs/
 tests/test_examples/outputs/
 lightning_logs/
 notebooks/
+dist/*
 
 # __________________________________
 
