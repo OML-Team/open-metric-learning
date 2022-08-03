@@ -54,4 +54,5 @@ setup(
         "Homepage": "https://github.com/OML-Team/open-metric-learning",
         "Bug Tracker": "https://github.com/OML-Team/open-metric-learning/issues",
     },
+    license="Apache License 2.0",
 )
