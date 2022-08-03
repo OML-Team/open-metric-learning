@@ -92,7 +92,7 @@ def build_inshop_df(args: Namespace) -> pd.DataFrame:
 
     df["label"] = df["item_id"].apply(lambda x: int(x[3:]))
 
-    df["hw"] = df["path"].apply(lambda x: imagesize.get(str(args.dataset_root / x))[::-1])
+    df["hw"] = df["path"].apply(lambda x: imagesize.get(str(x))[::-1])
     df["h"] = df["hw"].apply(lambda x: x[0])
     df["w"] = df["hw"].apply(lambda x: x[1])
     del df["hw"]

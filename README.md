@@ -222,13 +222,3 @@ I would like to thank people who continue working on this pipeline when it becam
 [Verkhovtsev Leonid](https://github.com/leoromanovich).
 
 <a href="https://www.newyorker.de/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/New_Yorker.svg/1280px-New_Yorker.svg.png" width="100"/></a>
-
-<script src="https://gist.github.com/AlekseySh/028acea9f904242cad108b599ecd9701.js"></script>
-
-<noscript>
-<div class="embed-github-gist-source">
-<code>
-<pre>raw code here</pre>
-</code >
-</div>
-</noscript>
