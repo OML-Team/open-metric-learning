@@ -15,6 +15,8 @@ def get_argparser() -> ArgumentParser:
 
 
 def build_cub_df(dataset_root: Path) -> pd.DataFrame:
+    dataset_root = Path(dataset_root)
+
     images_txt = dataset_root / "images.txt"
     train_test_split = dataset_root / "train_test_split.txt"
     bounding_boxes = dataset_root / "bounding_boxes.txt"

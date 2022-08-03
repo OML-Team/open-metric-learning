@@ -53,6 +53,8 @@ class BaseDataset(Dataset):
 
         if dataset_root is not None:
             df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
+        else:
+            df["path"] = df["path"].astype(str)
 
         self.df = df
         self.im_size = im_size

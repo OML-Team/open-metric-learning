@@ -13,6 +13,8 @@ def get_argparser() -> ArgumentParser:
 
 
 def build_sop_df(dataset_root: Path) -> pd.DataFrame:
+    dataset_root = Path(dataset_root)
+
     ebay_train = dataset_root / "Ebay_train.txt"
     ebay_test = dataset_root / "Ebay_test.txt"
 

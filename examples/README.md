@@ -11,6 +11,11 @@ the same time.
 
 ### CARS 196
 [Dataset page.](https://ai.stanford.edu/~jkrause/cars/car_dataset.html)
+
+The dataset contains 16,185 images of 196 classes of cars.
+The data is split into 8,144 training images and 8,041 testing images,
+where each class has been split roughly in a 50-50 split
+
 ```
 └── CARS196
     ├── cars_test_annos_withlabels.mat
@@ -28,6 +33,10 @@ the same time.
 
 ### CUB 200 2011
 [Dataset page.](https://deepai.org/dataset/cub-200-2011)
+
+The dataset contains 11,788 images of 200 subcategories belonging to birds,
+5,994 for training and 5,794 for testing
+
 ```
 └── CUB_200_2011
     ├── images.txt
@@ -47,6 +56,9 @@ the same time.
 ### INSHOP (DEEPFASHION)
 [Dataset page](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html).
 [Download from Google Drive](https://drive.google.com/drive/folders/0B7EVK8r0v71pVDZFQXRsMDZCX1E?resourcekey=0-4R4v6zl4CWhHTsUGOsTstw).
+
+The dataset contains 52,712 images for 7,982 of clothing items.
+
 ```
 └── DeepFashion_InShop
     ├── list_eval_partition.txt
@@ -61,6 +73,9 @@ the same time.
 ### SOP (STANFORD ONLINE PRODUCTS)
 [Dataset page](https://cvgl.stanford.edu/projects/lifted_struct/).
 [Download from Google Drive.](https://drive.google.com/uc?export=download&id=1TclrpQOF_ullUP99wk_gjGN8pKvtErG8)
+
+The dataset has 22,634 classes with 120,053 product images. The first 11,318 classes (59,551 images)
+are split for training and the other 11,316 (60,502 images) classes are used for testing
 
 ```
 └── Stanford_Online_Products

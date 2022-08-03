@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
 from typing import List
@@ -72,16 +72,20 @@ def txt_to_df(fpath: Path) -> pd.DataFrame:
     return df
 
 
-def build_inshop_df(args: Namespace) -> pd.DataFrame:
-    list_eval_partition = args.dataset_root / "list_eval_partition.txt"
-    list_bbox_inshop = args.dataset_root / "list_bbox_inshop.txt"
+def build_inshop_df(
+    dataset_root: Path, bboxes_aspect_ratio_to_fix: float, fix_train_bboxes: bool, fix_val_bboxes: bool
+) -> pd.DataFrame:
+    dataset_root = Path(dataset_root)
+
+    list_eval_partition = dataset_root / "list_eval_partition.txt"
+    list_bbox_inshop = dataset_root / "list_bbox_inshop.txt"
 
     for file in [list_eval_partition, list_bbox_inshop]:
         assert file.is_file(), f"File {file} does not exist."
 
     df_part = txt_to_df(list_eval_partition)
 
-    df_part["path"] = df_part["image_name"].apply(lambda x: Path(args.dataset_root) / x.replace("img/", "img_highres/"))
+    df_part["path"] = df_part["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
 
     df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
@@ -124,7 +128,7 @@ def build_inshop_df(args: Namespace) -> pd.DataFrame:
     df["is_gallery"][df["split"] == "train"] = None
 
     df = expand_squeezed_bboxes(
-        df=df, ratio_th=args.bboxes_aspect_ratio_to_fix, fix_train=args.fix_train_bboxes, fix_val=args.fix_val_bboxes
+        df=df, ratio_th=bboxes_aspect_ratio_to_fix, fix_train=fix_train_bboxes, fix_val=fix_val_bboxes
     )
 
     le = preprocessing.LabelEncoder()
@@ -134,7 +138,7 @@ def build_inshop_df(args: Namespace) -> pd.DataFrame:
         ["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category", "category_name"]
     ]
 
-    check_retrieval_dataframe_format(df, dataset_root=args.dataset_root)
+    check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df.reset_index(drop=True)
 
 
@@ -150,7 +154,12 @@ def get_argparser() -> ArgumentParser:
 def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
-    df = build_inshop_df(args)
+    df = build_inshop_df(
+        dataset_root=args.dataset_root,
+        bboxes_aspect_ratio_to_fix=args.bboxes_aspect_ratio_to_fix,
+        fix_train_bboxes=args.fix_train_bboxes,
+        fix_val_bboxes=args.fix_val_bboxes,
+    )
 
     save_name = "df"
     if args.fix_train_bboxes:
