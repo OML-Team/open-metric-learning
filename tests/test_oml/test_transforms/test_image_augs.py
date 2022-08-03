@@ -19,7 +19,7 @@ def test_transforms(aug_name: Optional[str], f_imread: Any) -> None:
     df["path"] = df["path"].apply(Path)
 
     dataset = DatasetWithLabels(
-        df=df, im_size=32, pad_ratio=0, images_root=TESTS_MOCK_DATASET, transform=transforms, f_imread=f_imread
+        df=df, im_size=32, pad_ratio=0, dataset_root=TESTS_MOCK_DATASET, transform=transforms, f_imread=f_imread
     )
 
     _ = dataset[0]

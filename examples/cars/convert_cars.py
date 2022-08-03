@@ -27,7 +27,7 @@ def construct_df(annots: Dict[str, np.ndarray], meta: pd.DataFrame, path_to_imgs
 def build_cars196_df(dataset_root: Path) -> pd.DataFrame:
     cars_meta = dataset_root / "devkit" / "cars_meta.mat"
     cars_train_annos = dataset_root / "devkit" / "cars_train_annos.mat"
-    cars_test_annos_withlabels = dataset_root / "devkit" / "cars_test_annos_withlabels.mat"
+    cars_test_annos_withlabels = dataset_root / "cars_test_annos_withlabels.mat"
 
     for file in [cars_meta, cars_train_annos, cars_test_annos_withlabels]:
         assert file.is_file(), f"File {file} does not exist."

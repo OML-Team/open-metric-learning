@@ -81,7 +81,7 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 
     df_part = txt_to_df(list_eval_partition)
 
-    df_part["path"] = df_part["image_name"].apply(lambda x: args.dataset_root / x.replace("img/", "img_highres/"))
+    df_part["path"] = df_part["image_name"].apply(lambda x: Path(x.replace("img/", "img_highres/")))
 
     df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
@@ -92,7 +92,7 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
 
     df["label"] = df["item_id"].apply(lambda x: int(x[3:]))
 
-    df["hw"] = df["path"].apply(lambda x: imagesize.get(str(x))[::-1])
+    df["hw"] = df["path"].apply(lambda x: imagesize.get(str(args.dataset_root / x))[::-1])
     df["h"] = df["hw"].apply(lambda x: x[0])
     df["w"] = df["hw"].apply(lambda x: x[1])
     del df["hw"]
