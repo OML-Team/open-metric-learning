@@ -6,16 +6,19 @@ IMAGE_NAME = oml:$(RUNTIME)
 
 # ====================================== TESTS ======================================
 
+.PHONY: download_mock_dataset
+download_mock_dataset:
+	python oml/utils/download_mock_dataset.py --dataset_root /tmp/mock_dataset
+
 .PHONY: run_pytest
-run_pytest:
+run_pytest: download_mock_dataset
 	pytest tests --disable-warnings -sv
 
 .PHONY: test_scripts
-test_scripts:
+test_scripts: download_mock_dataset
 	export PYTHONWARNINGS=ignore
-	python oml/utils/download_mock_dataset.py --dataset_root /tmp/mock_dataset
-	rm -rf /tmp/logs/mock_train; python tests/test_examples/test_runs_via_configs/train_mock.py;
-	rm -rf /tmp/logs/mock_val; python tests/test_examples/test_runs_via_configs/val_mock.py;
+	python tests/test_examples/test_runs_via_configs/train_mock.py;
+	python tests/test_examples/test_runs_via_configs/val_mock.py;
 	python tests/test_examples/test_runs_via_python/vanila_train.py;
 	python tests/test_examples/test_runs_via_python/vanila_val.py;
 	python tests/test_examples/test_runs_via_python/lightning_train_val.py;
