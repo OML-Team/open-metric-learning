@@ -129,10 +129,13 @@ in our models' zoo. In this case, you don't even need to train.
 
 
 ## Models zoo
-|                            model                            |  cmc1 |          dataset         |                                      weights & config<br                                     | hash (the beginning) |
+|                            model                            | cmc1  |         dataset          |                                      weights & config<br                                     | hash (the beginning) |
 |:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
 | `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
-|   `VitExtractor(weights="vits16_sop", arch="vits16", ...)`  | 0.830 | Stanford Online Products |                                         [link](todo)                                         |         todo         |
+|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products |                                         [link](todo)                                         |         todo         |
+|  `VitExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) |        9f1e59        |
+|  `VitExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) |        e82633        |
+
 
 Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
 However, you can also check link in `weights & config` if you want to download weights manually or to reproduce the experiment.
