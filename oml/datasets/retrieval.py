@@ -27,7 +27,7 @@ class BaseDataset(Dataset):
         images_root: Optional[Path] = None,
         transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
-        cache_size: int = 100_000,
+        cache_size: int = 0,
     ):
         """
 

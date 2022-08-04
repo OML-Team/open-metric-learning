@@ -28,7 +28,7 @@ class TriDataset(Dataset):
         pad_ratio: float,
         expand_ratio: float,
         f_imread: TImReader = imread_cv2,
-        cache_size: int = 50_000,
+        cache_size: int = 0,
     ):
         """
 
