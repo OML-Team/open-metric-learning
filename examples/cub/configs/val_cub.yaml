@@ -19,8 +19,8 @@ model:
 
 metric_args:
   cmc_top_k: [1, 5]
-  map_top_k: [1, 5]
-  precision_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [5]
 
 
 gpus:
