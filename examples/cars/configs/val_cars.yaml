@@ -1,7 +1,7 @@
-dataset_root: CARS196
+dataset_root: data/CARS196/
 dataframe_name: df.csv
 
-logs_root: results
+logs_root: logs/CARS196/
 
 im_size: 224
 bs_val: 256

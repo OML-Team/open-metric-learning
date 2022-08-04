@@ -1,5 +1,7 @@
-dataset_root: /nydl/data/Stanford_Online_Products/
+dataset_root: data/Stanford_Online_Products/
 dataframe_name: df.csv
+
+logs_root: logs/Stanford_Online_Products/
 
 im_size: 224
 bs_val: 512
@@ -12,7 +14,7 @@ model:
     arch: vits16
     normalise_features: True
     use_multi_scale: False
-    weights: vits16_sop.ckpt # todo: upload to g-drive
+    weights: vits16_sop
     strict_load: True
 
 metric_args:

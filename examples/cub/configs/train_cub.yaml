@@ -5,8 +5,8 @@ gpus:
   - 0
 
 dataframe_name: df.csv
-dataset_root: "CUB_200_2011"
-logs_root: results
+dataset_root: data/CUB_200_2011/
+logs_root: logs/CUB_200_2011/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 im_size_train: 224
