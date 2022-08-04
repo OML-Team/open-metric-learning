@@ -68,8 +68,6 @@ neptune_project: null
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod1
-
 tags:
   - ${postfix}
   - cub
