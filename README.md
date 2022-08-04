@@ -19,7 +19,7 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
   1. Accumulating all of the embeddings (`EmbeddingMetrics`).
   2. Calculating distances between them with respect to query/gallery split.
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
-  4. Calculating retrieval metrics like CMC@k, Preceision@k or MeanAveragePrecision.
+  4. Calculating retrieval metrics like CMC@k, Precision@k or MeanAveragePrecision.
 
 ## Installation
 Please, use pip to install the latest stable version of the library:
@@ -129,9 +129,10 @@ in our models' zoo. In this case, you don't even need to train.
 
 
 ## Models zoo
-|                            model                            |  cmc1 |       dataset      |                                      weights & config                                        | hash (the beginning) |
-|:-----------------------------------------------------------:|:-----:|:------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
-| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 | DeepFashion Inshop | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
+|                            model                            |  cmc1 |          dataset         |                                      weights & config<br                                     | hash (the beginning) |
+|:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
+| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
+|   `VitExtractor(weights="vits16_sop", arch="vits16", ...)`  | 0.830 | Stanford Online Products |                                         [link](todo)                                         |         todo         |
 
 Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
 However, you can also check link in `weights & config` if you want to download weights manually or to reproduce the experiment.

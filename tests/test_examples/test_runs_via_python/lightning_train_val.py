@@ -21,8 +21,8 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 train_dataset = DatasetWithLabels(df=df_train, im_size=32, pad_ratio=0.0, transform=None, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = SequentialBalanceSampler(labels=train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 2)
+sampler = SequentialBalanceSampler(labels=train_dataset.get_labels(), n_labels=2, n_instances=3)
+train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
 
 # val
 val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
