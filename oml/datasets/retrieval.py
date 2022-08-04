@@ -213,3 +213,6 @@ def get_retrieval_datasets(
     )
 
     return train_dataset, valid_dataset
+
+
+__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_retrieval_datasets"]

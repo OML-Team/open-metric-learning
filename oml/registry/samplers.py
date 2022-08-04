@@ -28,3 +28,6 @@ def get_sampler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> Sampler:
     cfg = dictconfig_to_dict(cfg)
     cfg["args"].update(kwargs_runtime)
     return get_sampler(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["SAMPLERS_REGISTRY", "get_sampler", "get_sampler_by_cfg"]

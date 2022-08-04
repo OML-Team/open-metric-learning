@@ -6,8 +6,7 @@ import gdown
 import requests
 import validators
 
-# TODO: valid only on Linux and Mac
-CKPT_SAVE_ROOT = Path("/tmp/torch/checkpoints/")
+from oml.const import CKPT_SAVE_ROOT
 
 
 def calc_file_hash(fname: str) -> str:
@@ -61,3 +60,6 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
         raise Exception("Downloaded checkpoint is probably broken. " "Hash values don't match.")
 
     return str(save_path)
+
+
+__all__ = ["calc_file_hash", "download_checkpoint"]

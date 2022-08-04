@@ -85,3 +85,6 @@ class HardTripletsMiner(InBatchTripletsMiner):
             ids_neg.append(i_neg)
 
         return ids_anchor, ids_pos, ids_neg
+
+
+__all__ = ["HardTripletsMiner"]

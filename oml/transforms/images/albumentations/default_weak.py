@@ -65,3 +65,13 @@ def get_default_weak_albu() -> albu.Compose:
         ]
     )
     return augs
+
+
+__all__ = [
+    "get_spatials_weak",
+    "get_blurs_weak",
+    "get_colors_level_weak",
+    "get_noises_weak",
+    "get_noise_channels_weak",
+    "get_default_weak_albu",
+]

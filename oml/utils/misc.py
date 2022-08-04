@@ -9,6 +9,8 @@ from omegaconf import DictConfig, OmegaConf
 
 from oml.const import DOTENV_PATH
 
+TCfg = Union[Dict[str, Any], DictConfig]
+
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     """
@@ -69,9 +71,6 @@ def load_dotenv() -> None:
     dotenv.load_dotenv(DOTENV_PATH)
 
 
-TCfg = Union[Dict[str, Any], DictConfig]
-
-
 def dictconfig_to_dict(cfg: TCfg) -> Dict[str, Any]:
     if isinstance(cfg, DictConfig):
         cfg = OmegaConf.to_container(cfg, resolve=True)
@@ -110,5 +109,18 @@ def smart_sample(array: List[Any], k: int) -> List[Any]:
     return sampled
 
 
-def clip(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
+def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     return tuple(min(x, max_el) for x in arr)
+
+
+__all__ = [
+    "find_value_ids",
+    "set_global_seed",
+    "one_hot",
+    "flatten_dict",
+    "load_dotenv",
+    "TCfg",
+    "dictconfig_to_dict",
+    "smart_sample",
+    "clip_max",
+]

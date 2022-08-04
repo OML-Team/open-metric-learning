@@ -176,3 +176,6 @@ def load_moco_model(path_to_model: Path) -> nn.Module:
     model.load_state_dict(state_dict)
 
     return model
+
+
+__all__ = ["ResnetExtractor", "load_moco_model"]

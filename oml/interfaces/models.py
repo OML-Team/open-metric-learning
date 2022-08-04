@@ -14,3 +14,6 @@ class IExtractor(nn.Module, ABC):
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         raise NotImplementedError
+
+
+__all__ = ["IExtractor"]

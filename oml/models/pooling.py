@@ -26,3 +26,6 @@ class GEM(nn.Module):
         x = x.mean(axis=-1)
         x = torch.pow(x, (1.0 / self.p))
         return x
+
+
+__all__ = ["GEM"]
