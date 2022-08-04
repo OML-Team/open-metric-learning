@@ -5,7 +5,7 @@ from typing import Tuple, Union
 import gdown
 import pandas as pd
 
-MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
+from oml.const import MOCK_DATASET_URL
 
 
 def get_argparser() -> ArgumentParser:
