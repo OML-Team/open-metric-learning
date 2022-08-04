@@ -1,13 +1,13 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.train import main
+from oml.lightning.entrypoints.train import pl_train
 
 
 @hydra.main(config_path="configs", config_name="train_sop.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     print("Training model on SOP dataset.")
-    main(cfg)
+    pl_train(cfg)
 
 
 if __name__ == "__main__":

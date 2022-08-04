@@ -128,3 +128,6 @@ class RetrievalVisualizer:
         img = imread_cv2(im_name)
         img = draw_bbox(img, bbox, color)
         return img
+
+
+__all__ = ["RED", "GREEN", "BLUE", "GRAY", "TColor", "draw_bbox", "RetrievalVisualizer"]

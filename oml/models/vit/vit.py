@@ -167,3 +167,6 @@ def multi_scale(samples: torch.Tensor, model: nn.Module) -> torch.Tensor:
     v /= len(scales)
     # v /= v.norm(dim=1)  # we don't want to shift the norms values
     return v
+
+
+__all__ = ["ViTExtractor", "vis_vit", "multi_scale"]

@@ -22,3 +22,6 @@ def get_miner(name: str, **kwargs: Dict[str, Any]) -> ITripletsMiner:
 def get_miner_by_cfg(cfg: TCfg) -> ITripletsMiner:
     cfg = dictconfig_to_dict(cfg)
     return get_miner(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["MINERS_REGISTRY", "get_miner", "get_miner_by_cfg"]

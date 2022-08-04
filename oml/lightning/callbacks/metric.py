@@ -82,3 +82,6 @@ class MetricValCallback(Callback):
             f"expected: {self._expected_samples}, "
             f"'samples_in_getitem': {self.samples_in_getitem}"
         )
+
+
+__all__ = ["MetricValCallback"]

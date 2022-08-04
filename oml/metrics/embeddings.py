@@ -154,3 +154,6 @@ class EmbeddingMetrics(IBasicMetric):
             )
 
         return self.metrics
+
+
+__all__ = ["TMetricsDict_ByLabels", "IPostprocessor", "EmbeddingMetrics"]

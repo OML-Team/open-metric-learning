@@ -31,3 +31,6 @@ def remove_prefix_from_state_dict(state_dict: TStateDict, trial_key: str) -> TSt
         print(f"Prefix <{prefix}> was removed from the state dict.")
 
         return state_dict
+
+
+__all__ = ["find_prefix_in_state_dict", "remove_prefix_from_state_dict"]

@@ -19,3 +19,6 @@ def get_optimizer_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> opt.Opt
     cfg = dictconfig_to_dict(cfg)
     cfg["args"].update(kwargs_runtime)
     return get_optimizer(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["OPTIMIZERS_REGISTRY", "get_optimizer", "get_optimizer_by_cfg"]

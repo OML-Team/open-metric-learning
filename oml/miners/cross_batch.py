@@ -145,3 +145,6 @@ class TripletMinerWithMemory(ITripletsMiner):
         ii_p = ii_p[mask]
         ii_n = ii_n[mask]
         return ii_a, ii_p, ii_n
+
+
+__all__ = ["TripletMinerWithMemory"]
