@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Tuple, Union
 
+import gdown
 import pandas as pd
 
 MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
@@ -14,7 +15,17 @@ def get_argparser() -> ArgumentParser:
 
 
 def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    # gdown.download_folder(url=MOCK_DATASET_URL, output=str(dataset_root))
+    dataset_root = Path(dataset_root)
+
+    files_exist = [(dataset_root / "df.csv").exists()]
+    for im in ["rectangle", "circle", "triangle", "cross"]:
+        for i in range(1, 4):
+            files_exist.append((dataset_root / "images" / f"{im}_{i}.jpg").exists())
+
+    if not all(files_exist):
+        gdown.download_folder(url=MOCK_DATASET_URL, output=str(dataset_root))
+    else:
+        print("Mock dataset has been downloaded already.")
 
     df = pd.read_csv(Path(dataset_root) / "df.csv")
 

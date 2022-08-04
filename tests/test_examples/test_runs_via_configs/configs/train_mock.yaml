@@ -3,9 +3,9 @@ postfix: "deepfashion"
 seed: 42
 gpus: []
 
-dataset_root: ../../mock_dataset
+dataset_root: /tmp/mock_dataset
 dataframe_name: df.csv
-logs_root: logs
+logs_root: /tmp/logs/mock_train
 
 im_size_train: 32
 im_size_val: 32

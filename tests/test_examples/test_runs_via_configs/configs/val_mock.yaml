@@ -1,7 +1,7 @@
-dataset_root: ../../mock_dataset
+dataset_root: /tmp/mock_dataset
 dataframe_name: df.csv
 
-logs_root: logs
+logs_root: /tmp/logs/mock_val
 
 im_size: 224
 num_workers: 0

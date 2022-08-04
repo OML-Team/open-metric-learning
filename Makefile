@@ -12,8 +12,10 @@ run_pytest:
 
 .PHONY: run_tests_scripts
 run_tests_scripts:
-	export PYTHONWARNINGS=ignore; cd tests/test_examples; rm -rf logs; python train_mock.py; rm -rf logs;
-	export PYTHONWARNINGS=ignore; cd tests/test_examples; rm -rf logs; python val_mock.py; rm -rf logs;
+	python oml/utils/download_mock_dataset.py --dataset_root /tmp/mock_dataset
+	export PYTHONWARNINGS=ignore; cd tests/test_examples; rm -rf /tmp/logs/mock_train; python train_mock.py;
+	export PYTHONWARNINGS=ignore; cd tests/test_examples; rm -rf /tmp/logs/mock_val; python val_mock.py;
+	# todo: put new examples here
 
 # todo
 .PHONY: test_notebooks
