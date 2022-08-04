@@ -8,9 +8,12 @@ DOTENV_PATH = PROJECT_ROOT / ".env"
 
 CONFIGS_PATH = PROJECT_ROOT / "configs"
 
+MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
+MOCK_DATASET_PATH = Path("/tmp/mock_dataset")
+
 PAD_COLOR = (255, 255, 255)
 
-T_Str2Int_or_Int2Str = Union[Dict[int, str], Dict[int, str]]
+T_Str2Int_or_Int2Str = Union[Dict[str, int], Dict[int, str]]
 
 TCfg = Union[Dict[str, Any], DictConfig]
 

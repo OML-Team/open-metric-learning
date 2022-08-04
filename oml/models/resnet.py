@@ -39,7 +39,7 @@ class ResnetExtractor(IExtractor):
         normalise_features: bool,
         gem_p: Optional[float],
         remove_fc: bool,
-        strict_load: bool,
+        strict_load: bool = True,
     ):
         """
         If you want to load FC layer from checkpoint and keep it untouched,
