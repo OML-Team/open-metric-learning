@@ -144,39 +144,70 @@ However, you can also check link in `weights & config` if you want to download w
 <p>
 
 Training
-```python
-model = VitExtractor("pretrained_dino")
-model.train()
-optimizer = SGD(model.paremeters())
-train_dataset = DatasetWithLabels(...)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
-train_loader = DataLoader(train_dataset, batch_sampler=sampler)
 
-for batch in train_loader:
+[comment]:vanilla-train-start
+```python
+import torch
+from tqdm import tqdm
+
+from oml.datasets.retrieval import DatasetWithLabels
+from oml.losses.triplet import TripletLossWithMiner
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.vit.vit import ViTExtractor
+from oml.samplers.balance import BalanceBatchSampler
+from oml.utils.download_mock_dataset import download_mock_dataset
+
+dataset_root = "/tmp/mock_dataset"
+df_train, _ = download_mock_dataset(dataset_root)
+
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+
+train_dataset = DatasetWithLabels(df=df_train, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
+criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+sampler = BalanceBatchSampler(labels=train_dataset.get_labels(), n_labels=2, n_instances=2)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
+
+for batch in tqdm(train_loader):
     embeddings = model(batch["input_tensors"])
     loss = criterion(embeddings, batch["labels"])
-    optmizer.zero_grad()
     loss.backward()
     optimizer.step()
+    optimizer.zero_grad()
 ```
+[comment]:vanilla-train-end
 
 Validation
+
+[comment]:vanilla-validation-start
 ```python
-model = VitExtractor("pretrained_dino")
-model.eval()
-val_dataset = DatasetQueryGallery(...)
-val_loader = DataLoader(val_dataset)
-caclulator = EmbeddingMetrics()
-caclulator.setup()
+import torch
+from tqdm import tqdm
+
+from oml.datasets.retrieval import DatasetQueryGallery
+from oml.metrics.embeddings import EmbeddingMetrics
+from oml.models.vit.vit import ViTExtractor
+from oml.utils.download_mock_dataset import download_mock_dataset
+
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
+
+dataset_root = "/tmp/mock_dataset"
+_, df_val = download_mock_dataset(dataset_root)
+
+val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
+
+val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
+calculator = EmbeddingMetrics()
+calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():
-    for batch in val_loader:
+    for batch in tqdm(val_loader):
         batch["embeddings"] = model(batch["input_tensors"])
-        calc.update_data(data_dict=batch)
+        calculator.update_data(data_dict=batch)
 
-metrics = calc.compute_metrics()
+metrics = calculator.compute_metrics()
 ```
+[comment]:vanilla-validation-end
 </p>
 </details>
 
@@ -184,26 +215,45 @@ metrics = calc.compute_metrics()
 <summary>Using PyTorch Lightning</summary>
 <p>
 
+[comment]:lightning-start
 ```python
-model = ResnetExtractor("pretrained_moco")
+import pytorch_lightning as pl
+import torch
+
+from oml.datasets.retrieval import DatasetQueryGallery, DatasetWithLabels
+from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning.modules.retrieval import RetrievalModule
+from oml.losses.triplet import TripletLossWithMiner
+from oml.metrics.embeddings import EmbeddingMetrics
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.vit.vit import ViTExtractor
+from oml.samplers.balance import SequentialBalanceSampler
+from oml.utils.download_mock_dataset import download_mock_dataset
+
+dataset_root = "/tmp/mock_dataset"
+df_train, df_val = download_mock_dataset(dataset_root)
+
+# model
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
-optimizer = SGD(model.paremeters())
-train_dataset = DatasetWithLabels(...)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+train_dataset = DatasetWithLabels(df=df_train, im_size=32, pad_ratio=0.0, transform=None, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = BalanceBatchSampler(labels=dataset.get_labels(), p=4, k=4)
-train_loader = DataLoader(train_dataset, batch_sampler=sampler)
+sampler = SequentialBalanceSampler(labels=train_dataset.get_labels(), n_labels=2, n_instances=3)
+train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
 
 # val
-val_dataset = DatasetQueryGallery(...)
-val_loader = DataLoader(val_dataset)
-metric_callback = MetricValCallback(EmbeddingMetrics())
+val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
+val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
+metric_callback = MetricValCallback(metric=EmbeddingMetrics())
 
 # run
 pl_model = RetrievalModule(model, criterion, optimizer)
-trainer = pl.Trainer(callbacks=[metric_callback])
-trainer.fit(pl_model, train_loader, val_loader)
+trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0)
+trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 ```
+[comment]:lightning-end
 </p>
 </details>
 
