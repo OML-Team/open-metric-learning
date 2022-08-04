@@ -10,8 +10,8 @@ IMAGE_NAME = oml:$(RUNTIME)
 run_pytest:
 	pytest tests --disable-warnings -sv
 
-.PHONY: run_tests_scripts
-run_tests_scripts:
+.PHONY: test_scripts
+test_scripts:
 	export PYTHONWARNINGS=ignore
 	python oml/utils/download_mock_dataset.py --dataset_root /tmp/mock_dataset
 	rm -rf /tmp/logs/mock_train; python tests/test_examples/test_runs_via_configs/train_mock.py;
@@ -45,7 +45,7 @@ docker_build:
 
 .PHONY: docker_tests
 docker_tests:
-	docker run -t $(IMAGE_NAME) bash -c "make run_tests_scripts; make run_pytest"
+	docker run -t $(IMAGE_NAME) bash -c "make test_scripts; make run_pytest"
 
 .PHONY: upload_to_pip
 upload_to_pip:
