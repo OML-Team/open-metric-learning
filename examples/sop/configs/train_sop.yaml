@@ -39,7 +39,7 @@ augs: default_albu
 model:
   name: vit
   args:
-    normalise_features: False
+    normalise_features: True
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
@@ -49,7 +49,7 @@ criterion:
   name: TripletLossWithMiner
   args:
     need_logs: True
-    margin: null
+    margin: 0.1
     reduction: mean
     miner:
       name: HardTripletsMiner

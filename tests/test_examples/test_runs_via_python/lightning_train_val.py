@@ -11,7 +11,7 @@ from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import SequentialBalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root = "figures"
+dataset_root = "/tmp/mock_dataset"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model

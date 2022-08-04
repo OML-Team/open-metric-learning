@@ -8,7 +8,7 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-dataset_root = "figures"
+dataset_root = "/tmp/mock_dataset"
 _, df_val = download_mock_dataset(dataset_root)
 
 val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
