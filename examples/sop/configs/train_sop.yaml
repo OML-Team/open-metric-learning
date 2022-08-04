@@ -6,8 +6,8 @@ gpus:
   - 1
 
 dataframe_name: df.csv
-dataset_root: /nydl/data/Stanford_Online_Products/
-logs_root: /nydl/logs/cur/ml/sop/
+dataset_root: data/Stanford_Online_Products/
+logs_root: logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 im_size_train: 224
@@ -71,11 +71,8 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod1
-
 tags:
   - ${postfix}
-  - ${pod}
   - sop
 
 hydra:

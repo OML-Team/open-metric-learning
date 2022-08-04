@@ -1,7 +1,7 @@
-dataset_root: "CUB_200_2011"
+dataset_root: data/CUB_200_2011/
 dataframe_name: df.csv
 
-logs_root: results
+logs_root: logs/CUB_200_2011/
 
 im_size: 224
 bs_val: 256
