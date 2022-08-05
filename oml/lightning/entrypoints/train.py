@@ -27,7 +27,7 @@ from oml.utils.misc import (
 )
 
 
-def main(cfg: TCfg) -> None:
+def pl_train(cfg: TCfg) -> None:
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 
@@ -162,3 +162,6 @@ def main(cfg: TCfg) -> None:
     )
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+
+
+__all__ = ["pl_train"]

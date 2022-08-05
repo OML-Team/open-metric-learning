@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
-from oml.utils.misc import clip
+from oml.utils.misc import clip_max
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
 TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
@@ -69,9 +69,9 @@ def calc_retrieval_metrics(
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
-    cmc_top_k_clipped = clip(cmc_top_k, gallery_sz)
-    precision_top_k_clipped = clip(precision_top_k, gallery_sz)
-    map_top_k_clipped = clip(map_top_k, gallery_sz)
+    cmc_top_k_clipped = clip_max(cmc_top_k, gallery_sz)
+    precision_top_k_clipped = clip_max(precision_top_k, gallery_sz)
+    map_top_k_clipped = clip_max(map_top_k, gallery_sz)
 
     max_k = max([*cmc_top_k, *precision_top_k, *map_top_k])
     max_k = min(max_k, gallery_sz)
@@ -196,3 +196,14 @@ def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         return torch.from_numpy(array)
     else:
         raise TypeError("Wrong type")
+
+
+__all__ = [
+    "TMetricsDict",
+    "calc_retrieval_metrics",
+    "apply_mask_to_ignore",
+    "calc_gt_mask",
+    "calc_mask_to_ignore",
+    "calc_distance_matrix",
+    "calculate_accuracy_on_triplets",
+]

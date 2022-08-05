@@ -53,3 +53,6 @@ class AccuracyOnTriplets(IBasicMetric):
 
     def compute_metrics(self) -> Dict[str, Any]:  # type: ignore
         return self.avg_online.get_dict_with_results()
+
+
+__all__ = ["AccuracyOnTriplets"]

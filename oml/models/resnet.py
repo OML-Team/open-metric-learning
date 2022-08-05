@@ -16,11 +16,6 @@ from oml.utils.io import download_checkpoint
 
 
 class ResnetExtractor(IExtractor):
-    moco_v2_800_epoch = (
-        "https://dl.fbaipublicfiles.com/" "moco/moco_checkpoints/moco_v2_800ep/" "moco_v2_800ep_pretrain.pth.tar",
-        "a04e12f8",
-    )
-
     constructors = {
         "resnet18": resnet18,
         "resnet34": resnet34,
@@ -29,26 +24,30 @@ class ResnetExtractor(IExtractor):
         "resnet152": resnet152,
     }
 
+    pretrained_models = {
+        "resnet50_moco_v2": (
+            "https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar",
+            "a04e12f8",
+            None,
+        )
+    }
+
     def __init__(
         self,
         weights: Union[Path, str],
         arch: str,
-        hid_dim: Optional[int],
-        out_dim: Optional[int],
         normalise_features: bool,
         gem_p: Optional[float],
         remove_fc: bool,
-        strict_load: bool,
+        strict_load: bool = True,
     ):
         """
         If you want to load FC layer from checkpoint and keep it untouched,
         set both hid_dim and out_dim equal to None.
 
         Args:
-            weights: path to weights, or use "pretrained_moco" to download pretrained checkpoint
+            weights: path to weights or the special key to download pretrained checkpoint
             arch: different types of resnet, please, check self.constructors
-            hid_dim: hidden dimension
-            out_dim: output dimension
             normalise_features: if normalise features
             gem_p: value of power in GEM pooling
             remove_fc: if remove fully connected layer
@@ -66,62 +65,41 @@ class ResnetExtractor(IExtractor):
         factory_fun = self.constructors[self.arch]
 
         self.model = factory_fun(pretrained=False)
-        self.last_conv_channels = self.calc_last_conv_channels()
 
-        keep_fc_untouched = (hid_dim is None) and (out_dim is None)
-
-        # change last fc layer if needed
-        if keep_fc_untouched:
-            pass
-
-        elif (hid_dim is not None) and (out_dim is not None):
-            head_layers = [
-                nn.Linear(in_features=self.last_conv_channels, out_features=hid_dim),
+        if weights == "resnet50_moco_v2":
+            # todo:
+            # in the next iterations we should use head as a separate entity to change fc
+            self.model.fc = nn.Sequential(
+                nn.Linear(self.model.fc.weight.shape[1], self.model.fc.weight.shape[1]),
                 nn.ReLU(),
-                nn.Linear(in_features=hid_dim, out_features=out_dim),
-            ]
-            if weights != "pretrained_moco":
-                # insert bn before relu
-                head_layers.insert(1, nn.BatchNorm1d(num_features=hid_dim))
+                nn.Linear(self.model.fc.weight.shape[1], 128),  # output size in moco v2
+            )
 
-            self.model.fc = nn.Sequential(*head_layers)
-
-        elif (hid_dim is None) and (out_dim is not None):
-            self.model.fc = nn.Linear(in_features=self.last_conv_channels, out_features=out_dim)
-
-        else:
-            raise ValueError("Unexpected cfg: (hid_dim is not None) and (out_dim is None)")
+        self.last_conv_channels = self.calc_last_conv_channels()
 
         if gem_p is not None:
             self.model.avgpool = GEM(p=gem_p)
 
-        if remove_fc:
-            assert (hid_dim is None) and (out_dim is None)
-            self.model.fc = nn.Identity()
-
         if weights == "random":
             return
+
         elif weights == "pretrained":
             state_dict = factory_fun(pretrained=True).state_dict()
-        elif weights == "pretrained_moco":
-            assert self.arch == "resnet50", "We have MoCo model only for ResNet50"
-            url, hash_md5 = self.moco_v2_800_epoch
-            path_to_model = download_checkpoint(url=url, hash_md5=hash_md5)
-            state_dict = load_moco_model(path_to_model=Path(path_to_model)).state_dict()
+
+        elif weights in self.pretrained_models:
+            url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
+            path_to_ckpt = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            state_dict = load_moco_model(path_to_model=Path(path_to_ckpt)).state_dict()
+
         else:
             state_dict = torch.load(weights, map_location="cpu")
 
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
         state_dict = remove_prefix_from_state_dict(state_dict, "layer4.")
-
-        if not keep_fc_untouched:
-            assert not strict_load, "Strict load has to be False if you want to change original FC"
-            print("FC layer from the original checkpoint will be removed.")
-            fc_keys = [key for key in state_dict.keys() if key.startswith("fc")]
-            for key in fc_keys:
-                del state_dict[key]
-
         self.model.load_state_dict(state_dict, strict=strict_load)
+
+        if remove_fc:
+            self.model.fc = nn.Identity()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
@@ -183,7 +161,7 @@ def load_moco_model(path_to_model: Path) -> nn.Module:
             state_dict[k[len("module.encoder_q.") :]] = state_dict[k]
         del state_dict[k]
 
-    model = resnet50(num_classes=128)
+    model = resnet50(num_classes=128)  # output size in moco v2
 
     if "fc.2.weight" in state_dict.keys():
         print("MOCO V2 architecture was detected!")
@@ -198,3 +176,6 @@ def load_moco_model(path_to_model: Path) -> nn.Module:
     model.load_state_dict(state_dict)
 
     return model
+
+
+__all__ = ["ResnetExtractor", "load_moco_model"]

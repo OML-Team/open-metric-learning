@@ -21,3 +21,6 @@ def get_default_torch() -> Compose:
         ]
     )
     return augs
+
+
+__all__ = ["get_default_torch"]

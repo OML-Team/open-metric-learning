@@ -20,3 +20,6 @@ class IHead(nn.Module, ABC):
     @property
     def num_classes(self) -> int:
         raise NotImplementedError()
+
+
+__all__ = ["IExtractor", "IHead"]

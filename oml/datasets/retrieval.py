@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
@@ -25,7 +25,7 @@ class BaseDataset(Dataset):
         df: pd.DataFrame,
         im_size: int,
         pad_ratio: float,
-        images_root: Optional[Path] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
@@ -35,11 +35,11 @@ class BaseDataset(Dataset):
         Args:
             df: Table with the following columns:
                   obligatory: "label" - id of the item,
-                              "path" - to the image, absolute or relative from "images_root"
+                              "path" - to the image, absolute or relative from "dataset_root"
                   optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
             im_size: Images will be resized to (image_size, image_size)
             pad_ratio: Padding ratio
-            images_root: Path to the images dir, set None if you provided the absolute paths
+            dataset_root: Path to the images dir, set None if you provided the absolute paths
             transform: Augmentations for the images, set None to skip it
             f_imread: Function to read the image
         """
@@ -52,8 +52,11 @@ class BaseDataset(Dataset):
             df["y_1"] = None
             df["y_2"] = None
 
-        if images_root is not None:
-            df["path"] = df["path"].apply(lambda x: str(images_root / x))
+        if dataset_root is not None:
+            dataset_root = Path(dataset_root)
+            df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
+        else:
+            df["path"] = df["path"].astype(str)
 
         self.df = df
         self.im_size = im_size
@@ -147,6 +150,8 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     In other words, for the desired query item, the gallery is the rest of the validation dataset.
     If you want to perform this kind of validation process, then simply return
     is_query == True and is_gallery == True for every item in the dataset.
+    Note, that is_query and is_gallery can be True both at the same time. In this case, we perform
+    a validation procedure for every item in the validation set using the "1 vs rest" approach.
     """
 
     def __init__(
@@ -154,7 +159,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         df: pd.DataFrame,
         im_size: int,
         pad_ratio: float,
-        images_root: Optional[Path] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
@@ -162,7 +167,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         super(DatasetQueryGallery, self).__init__(
             df=df,
             im_size=im_size,
-            images_root=images_root,
+            dataset_root=dataset_root,
             transform=transform,
             pad_ratio=pad_ratio,
             f_imread=f_imread,
@@ -199,7 +204,7 @@ def get_retrieval_datasets(
 
     train_dataset = DatasetWithLabels(
         df=df_train,
-        images_root=dataset_root,
+        dataset_root=dataset_root,
         im_size=im_size_train,
         pad_ratio=pad_ratio_train,
         transform=train_transform,
@@ -210,7 +215,7 @@ def get_retrieval_datasets(
     df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,
-        images_root=dataset_root,
+        dataset_root=dataset_root,
         im_size=im_size_val,
         pad_ratio=pad_ratio_val,
         transform=None,
@@ -218,3 +223,6 @@ def get_retrieval_datasets(
     )
 
     return train_dataset, valid_dataset
+
+
+__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_retrieval_datasets"]

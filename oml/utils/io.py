@@ -1,10 +1,12 @@
 import hashlib
 from pathlib import Path
+from typing import Optional
 
+import gdown
 import requests
+import validators
 
-# TODO: valid only on Linux and Mac
-CKPT_SAVE_ROOT = Path("/tmp/torch/checkpoints/")
+from oml.const import CKPT_SAVE_ROOT
 
 
 def calc_file_hash(fname: str) -> str:
@@ -15,9 +17,21 @@ def calc_file_hash(fname: str) -> str:
     return hash_md5.hexdigest()
 
 
-def download_checkpoint(url: str, hash_md5: str) -> str:
+def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = None) -> str:
+    """
+    Args:
+        url_or_fid: URL to the checkpoint or file id on Google Drive
+        hash_md5: Value of md5sum
+        fname: Name of the checkpoint after the downloading process
+
+    Returns:
+        Path to the checkpoint
+
+    """
     CKPT_SAVE_ROOT.mkdir(exist_ok=True, parents=True)
-    save_path = str(CKPT_SAVE_ROOT / Path(url).name)
+
+    fname = fname if fname else Path(url_or_fid).name
+    save_path = str(CKPT_SAVE_ROOT / fname)
 
     if Path(save_path).exists():
         if calc_file_hash(save_path).startswith(hash_md5):
@@ -28,16 +42,24 @@ def download_checkpoint(url: str, hash_md5: str) -> str:
             Path(save_path).unlink()
 
     print("Downloading checkpoint...")
-    ckpt = requests.get(url)
 
-    if ckpt.status_code == 200:
-        with open(save_path, "wb+") as f:
-            f.write(ckpt.content)
-        print(f"File was saved to {str(save_path)}")
-    else:
-        raise Exception(f"Cannot download file from {save_path}")
+    if validators.url(url_or_fid):
+        ckpt = requests.get(url_or_fid, timeout=120)
+
+        if ckpt.status_code == 200:
+            with open(save_path, "wb+") as f:
+                f.write(ckpt.content)
+            print(f"Checkpoint was saved to {str(save_path)}")
+        else:
+            raise Exception(f"Cannot download checkpoint from {save_path}")
+
+    else:  # we assume we work we file id (Google Drive)
+        gdown.download(id=url_or_fid, output=save_path, quiet=False)
 
     if not calc_file_hash(save_path).startswith(hash_md5):
         raise Exception("Downloaded checkpoint is probably broken. " "Hash values don't match.")
 
     return str(save_path)
+
+
+__all__ = ["calc_file_hash", "download_checkpoint"]

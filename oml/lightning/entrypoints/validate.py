@@ -14,7 +14,7 @@ from oml.registry.models import get_extractor_by_cfg, get_head_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
-def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
+def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 
@@ -47,3 +47,6 @@ def main(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
 
     return trainer, logs
+
+
+__all__ = ["pl_val"]

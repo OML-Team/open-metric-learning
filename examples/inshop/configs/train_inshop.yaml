@@ -6,8 +6,8 @@ gpus:
   - 1
 
 dataframe_name: df_fixed_train_fixed_val.csv
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/cur/ml/deepfashion/
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 im_size_train: 224
@@ -41,7 +41,7 @@ model:
   args:
     normalise_features: False
     use_multi_scale: False
-    weights: pretrained_dino
+    weights: vits16_dino
     arch: vits16
     strict_load: True
 
@@ -79,11 +79,8 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod1
-
 tags:
   - ${postfix}
-  - ${pod}
   - deepfashion
   - hard_miner_vits16_soft
 

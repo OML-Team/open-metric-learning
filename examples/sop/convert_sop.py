@@ -12,7 +12,9 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def build_sop(dataset_root: Path) -> pd.DataFrame:
+def build_sop_df(dataset_root: Path) -> pd.DataFrame:
+    dataset_root = Path(dataset_root)
+
     ebay_train = dataset_root / "Ebay_train.txt"
     ebay_test = dataset_root / "Ebay_test.txt"
 
@@ -35,8 +37,8 @@ def build_sop(dataset_root: Path) -> pd.DataFrame:
     test_data["is_gallery"] = True
 
     df = pd.concat((train_data, test_data))
-
-    df["category_name"] = df["path"].apply(lambda x: x.split("/")[0])
+    df["path"] = df["path"].apply(lambda x: dataset_root / x)
+    df["category_name"] = df["path"].apply(lambda x: x.parent.name)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df
@@ -45,7 +47,7 @@ def build_sop(dataset_root: Path) -> pd.DataFrame:
 def main() -> None:
     print("SOP dataset preparation started...")
     args = get_argparser().parse_args()
-    df = build_sop(args.dataset_root)
+    df = build_sop_df(args.dataset_root)
     df.to_csv(args.dataset_root / "df.csv", index=None)
     print("SOP dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")

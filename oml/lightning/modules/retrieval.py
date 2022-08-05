@@ -95,3 +95,6 @@ class RetrievalModule(pl.LightningModule):
         tqdm_dict = super().get_progress_bar_dict()
         tqdm_dict.pop("v_num", None)
         return tqdm_dict
+
+
+__all__ = ["RetrievalModule"]

@@ -27,3 +27,6 @@ def get_criterion_by_cfg(cfg: TCfg) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
     cfg.setdefault("args", {})
     return get_criterion(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["LOSSES_REGISTRY", "get_criterion", "get_criterion_by_cfg"]

@@ -1,9 +1,11 @@
-dataset_root: ../../mock_dataset
+dataset_root: /tmp/mock_dataset
 dataframe_name: df.csv
 
-logs_root: logs
+gpus: []
 
-im_size: 224
+logs_root: /tmp/logs/mock_val
+
+im_size: 32
 num_workers: 0
 
 bs_val: 2
@@ -16,13 +18,11 @@ metric_args:
 model:
   name: vit
   args:
-    arch: vits8
+    arch: vits16
     normalise_features: False
     use_multi_scale: True
-    weights: pretrained_dino
+    weights: vits16_dino
     strict_load: True
-
-gpus: null
 
 hydra:
   run:
