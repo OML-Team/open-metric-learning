@@ -153,9 +153,9 @@ Training
 import torch
 from tqdm import tqdm
 
-from oml.datasets.retrieval import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.datasets import DatasetWithLabels
+from oml.losses import TripletLossWithMiner
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.samplers import BalanceBatchSampler
 from oml.utils import download_mock_dataset
