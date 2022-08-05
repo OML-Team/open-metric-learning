@@ -15,7 +15,6 @@ LIBS_TO_IGNORE = ["torch_xla"]
 def get_files_with_imports() -> List[str]:
     folder_with_scripts = PROJECT_ROOT / "oml"
     scriptes_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_scripts.rglob("*.py"))
-    scriptes_files.remove("oml/utils/misc.py")
 
     folder_with_tests = PROJECT_ROOT / "tests"
     tests_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_tests.rglob("*.py"))
@@ -81,10 +80,7 @@ def test_project_imports(file: str) -> None:
         raise ValueError
 
     for library in imports:
-        try:
+        if any(library.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
+            continue
+        else:
             importlib.import_module(library)
-        except Exception as e:
-            if library in LIBS_TO_IGNORE:
-                pass
-            else:
-                raise e

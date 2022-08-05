@@ -5,4 +5,3 @@ from oml.utils.images.images_resize import *
 from oml.utils.io import *
 from oml.utils.misc import *
 from oml.utils.misc_torch import *
-from oml.utils.visualisation import *
