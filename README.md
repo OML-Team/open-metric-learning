@@ -129,7 +129,7 @@ in our models' zoo. In this case, you don't even need to train.
 
 
 ## Models zoo
-|                            model                            | cmc1  |         dataset          |                                      weights & config.                                       | hash (the beginning) |
+|                            model                            | cmc1  |         dataset          |                                      weights & config                                        | hash (the beginning) |
 |:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
 | `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
 |  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing)   |        85cfa5        |
