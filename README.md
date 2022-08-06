@@ -153,12 +153,12 @@ Training
 import torch
 from tqdm import tqdm
 
-from oml.datasets import DatasetWithLabels
-from oml.losses import TripletLossWithMiner
-from oml.miners import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers import BalanceBatchSampler
-from oml.utils import download_mock_dataset
+from oml.datasets.retrieval import DatasetWithLabels
+from oml.losses.triplet import TripletLossWithMiner
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.vit.vit import ViTExtractor
+from oml.samplers.balance import BalanceBatchSampler
+from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root = "/tmp/mock_dataset"
 df_train, _ = download_mock_dataset(dataset_root)
@@ -187,10 +187,10 @@ Validation
 import torch
 from tqdm import tqdm
 
-from oml.datasets import DatasetQueryGallery
-from oml.metrics import EmbeddingMetrics
-from oml.models import ViTExtractor
-from oml.utils import download_mock_dataset
+from oml.datasets.retrieval import DatasetQueryGallery
+from oml.metrics.embeddings import EmbeddingMetrics
+from oml.models.vit.vit import ViTExtractor
+from oml.utils.download_mock_dataset import download_mock_dataset
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
@@ -223,14 +223,15 @@ metrics = calculator.compute_metrics()
 import pytorch_lightning as pl
 import torch
 
-from oml.datasets import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning import MetricValCallback, RetrievalModule
-from oml.losses import TripletLossWithMiner
-from oml.metrics import EmbeddingMetrics
-from oml.miners import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers import SequentialBalanceSampler
-from oml.utils import download_mock_dataset
+from oml.datasets.retrieval import DatasetQueryGallery, DatasetWithLabels
+from oml.lightning.modules.retrieval import RetrievalModule
+from oml.lightning.callbacks.metric import  MetricValCallback
+from oml.losses.triplet import TripletLossWithMiner
+from oml.metrics.embeddings import EmbeddingMetrics
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.vit.vit import ViTExtractor
+from oml.samplers.balance import SequentialBalanceSampler
+from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root = "/tmp/mock_dataset"
 df_train, df_val = download_mock_dataset(dataset_root)
