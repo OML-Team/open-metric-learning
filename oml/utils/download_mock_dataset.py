@@ -5,7 +5,7 @@ from typing import Tuple, Union
 import gdown
 import pandas as pd
 
-from oml.const import MOCK_DATASET_URL, MOCK_DATASET_PATH
+from oml.const import MOCK_DATASET_PATH, MOCK_DATASET_URL
 
 
 def get_argparser() -> ArgumentParser:
