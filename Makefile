@@ -8,7 +8,7 @@ IMAGE_NAME = oml:$(RUNTIME)
 
 .PHONY: download_mock_dataset
 download_mock_dataset:
-	python oml/utils/download_mock_dataset.py --dataset_root /tmp/mock_dataset
+	python oml/utils/download_mock_dataset.py
 
 .PHONY: run_pytest
 run_pytest: download_mock_dataset
@@ -17,11 +17,11 @@ run_pytest: download_mock_dataset
 .PHONY: test_scripts
 test_scripts: download_mock_dataset
 	export PYTHONWARNINGS=ignore
-	python tests/test_examples/test_runs_via_configs/train_mock.py;
-	python tests/test_examples/test_runs_via_configs/val_mock.py;
-	python tests/test_examples/test_runs_via_python/vanila_train.py;
-	python tests/test_examples/test_runs_via_python/vanila_val.py;
-	python tests/test_examples/test_runs_via_python/lightning_train_val.py;
+	python tests/test_examples/test_runs_via_configs/train_mock.py
+	python tests/test_examples/test_runs_via_configs/val_mock.py
+	python tests/test_examples/test_runs_via_python/vanila_train.py
+	python tests/test_examples/test_runs_via_python/vanila_val.py
+	python tests/test_examples/test_runs_via_python/lightning_train_val.py
 
 # todo
 .PHONY: test_notebooks
@@ -48,7 +48,8 @@ docker_build:
 
 .PHONY: docker_tests
 docker_tests:
-	docker run -t $(IMAGE_NAME) bash -c "make test_scripts; make run_pytest"
+	docker run -t $(IMAGE_NAME) make test_scripts
+	docker run -t $(IMAGE_NAME) make run_pytest
 
 .PHONY: upload_to_pip
 upload_to_pip:

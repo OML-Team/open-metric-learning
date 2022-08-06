@@ -5,12 +5,12 @@ from typing import Tuple, Union
 import gdown
 import pandas as pd
 
-from oml.const import MOCK_DATASET_URL
+from oml.const import MOCK_DATASET_URL, MOCK_DATASET_PATH
 
 
 def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
-    parser.add_argument("--dataset_root", type=Path)
+    parser.add_argument("--dataset_root", type=Path, default=MOCK_DATASET_PATH)
     return parser
 
 
