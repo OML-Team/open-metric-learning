@@ -94,7 +94,20 @@ class ViTExtractor(IExtractor):
         return len(self.model.norm.bias)
 
     def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
-        return multi_scale(samples=samples, model=self.model)
+        # code from the original DINO
+        v = torch.tensor(0)
+        scales = [1.0, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
+        for s in scales:
+            if s == 1:
+                inp = samples.clone()
+            else:
+                inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
+            feats = self.model.forward(inp).clone()
+            v += feats
+
+        v /= len(scales)
+        # v /= v.norm(dim=1)  # we don't want to shift the norms values
+        return v
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         return vis_vit(vit=self, image=image)
@@ -153,23 +166,4 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
     return arr
 
 
-def multi_scale(samples: torch.Tensor, model: nn.Module) -> torch.Tensor:
-    # code from the original DINO
-    v = None
-    scales = [1, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
-    for s in scales:
-        if s == 1:
-            inp = samples.clone()
-        else:
-            inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
-        feats = model(inp).clone()
-        if v is None:
-            v = feats
-        else:
-            v += feats
-    v /= len(scales)
-    # v /= v.norm(dim=1)  # we don't want to shift the norms values
-    return v
-
-
-__all__ = ["ViTExtractor", "vis_vit", "multi_scale"]
+__all__ = ["ViTExtractor", "vis_vit"]
