@@ -159,9 +159,8 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceBatchSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.const import MOCK_DATASET_PATH
 
-dataset_root = MOCK_DATASET_PATH
+dataset_root = "dataset/mock"
 df_train, _ = download_mock_dataset(dataset_root)
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
@@ -192,9 +191,8 @@ from oml.datasets.retrieval import DatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.const import MOCK_DATASET_PATH
 
-dataset_root = MOCK_DATASET_PATH
+dataset_root = "dataset/mock"
 _, df_val = download_mock_dataset(dataset_root)
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
@@ -234,9 +232,8 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import SequentialBalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.const import MOCK_DATASET_PATH
 
-dataset_root = MOCK_DATASET_PATH
+dataset_root = "dataset/mock"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model

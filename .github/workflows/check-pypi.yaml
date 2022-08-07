@@ -1,0 +1,30 @@
+name: Check PyPi
+
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+
+
+jobs:
+  check_pypi:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8.0"
+    - name: Install OML
+      run: |
+        pip install --no-dependencies open-metric-learning
+    - name: Check importable
+      run: |
+        python -c "import oml"
