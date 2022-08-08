@@ -1,9 +1,9 @@
-dataset_root: /tmp/mock_dataset
+dataset_root: null  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
 
 gpus: []
 
-logs_root: /tmp/logs/mock_val
+logs_root: null   # we will replace it in runtime with the tmp folder
 
 im_size: 32
 num_workers: 0

@@ -1,3 +1,4 @@
+import tempfile
 from functools import partial
 from typing import Any, Dict, List
 
@@ -8,7 +9,6 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 
-from oml.const import TMP_PATH
 from oml.datasets.triplet import TItem, tri_collate
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossPlain, TripletLossWithMiner
@@ -167,7 +167,7 @@ def test_lightning(
     callbacks = [create_callback(loader_idx=k, samples_in_getitem=samples_in_getitem) for k in range(num_dataloaders)]
 
     trainer = pl.Trainer(
-        default_root_dir=TMP_PATH,
+        default_root_dir=tempfile.gettempdir(),
         max_epochs=2,
         enable_progress_bar=False,
         num_nodes=1,

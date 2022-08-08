@@ -9,6 +9,7 @@ dataset
 lightning_logs/
 notebooks/
 dist/*
+tests/test_examples/test_runs_via_python/mock_dataset/
 
 # __________________________________
 
