@@ -13,7 +13,7 @@ def load_requirements(filename: str) -> List[str]:
 setup(
     # technical things
     version="0.1.17",
-    packages=find_packages(exclude=["examples", "examples", "configs", "ci", "tests"]),
+    packages=find_packages(include="oml"),
     python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
     include_package_data=True,

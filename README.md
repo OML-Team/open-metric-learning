@@ -160,7 +160,7 @@ from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceBatchSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root = "/tmp/mock_dataset"
+dataset_root = "mock_dataset/"
 df_train, _ = download_mock_dataset(dataset_root)
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
@@ -192,10 +192,10 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
-
-dataset_root = "/tmp/mock_dataset"
+dataset_root =  "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root)
+
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
 val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
 
@@ -233,7 +233,7 @@ from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import SequentialBalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root = "/tmp/mock_dataset"
+dataset_root =  "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model
