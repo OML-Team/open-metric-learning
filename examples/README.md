@@ -1,13 +1,25 @@
-### Retrieval DataFrame Format
-Expecting columns: `label`, `path`, `split`, `is_query`, `is_gallery` and
+# Config API
+
+With our Config API you can run experiments on your own datasets without writing any ML code.
+All you need is to prepare the `.csv` table which describes your dataset.
+
+<details>
+<summary>Table Format</summary>
+<p>
+
+Expected columns: `label`, `path`, `split`, `is_query`, `is_gallery` and
 optional `category`, `category_name`, `x_1`, `x_2`, `y_1`, `y_2`.
 
-* `split` must be on of 2 values: `train` or `validation`
+* `split` must be one of 2 values: `train` or `validation`
 * `is_query` and `is_gallery` have to be `None` where `split == train` and `True`
-or `False` where `split == validation`. Note, that both values may be equal `True` in
-the same time.
+or `False` where `split == validation`. Note, that both values can be `True` at
+the same time. In this case, we perform a validation procedure for every item
+ in the validation set using the "1 vs rest" approach (datasets of this kind are `CARS196` or `CUB`).
 * `x_1`, `x_2`, `y_1`, `y_2` are in the following format `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
+</p>
+</details>
 
+todo
 
 ### CARS 196
 [Dataset page.](https://ai.stanford.edu/~jkrause/cars/car_dataset.html)
