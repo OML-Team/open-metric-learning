@@ -45,6 +45,7 @@ docker_tests:
 upload_to_pip:
 	python -m pip install --upgrade pip
 	python3 -m pip install --upgrade twine
-	rm -rf dist/*
+	pip install --upgrade pip setuptools wheel
+	rm -rf dist build open_metric_learning.egg-info
 	python3 setup.py sdist bdist_wheel
 	twine upload dist/*
