@@ -166,9 +166,9 @@ df_train, _ = download_mock_dataset(dataset_root)
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df=df_train, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = BalanceBatchSampler(labels=train_dataset.get_labels(), n_labels=2, n_instances=2)
+sampler = BalanceBatchSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
@@ -197,7 +197,7 @@ _, df_val = download_mock_dataset(dataset_root)
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 calculator = EmbeddingMetrics()
@@ -206,7 +206,7 @@ calculator.setup(num_samples=len(val_dataset))
 with torch.no_grad():
     for batch in tqdm(val_loader):
         batch["embeddings"] = model(batch["input_tensors"])
-        calculator.update_data(data_dict=batch)
+        calculator.update_data(batch)
 
 metrics = calculator.compute_metrics()
 ```
@@ -241,13 +241,13 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df=df_train, im_size=32, pad_ratio=0.0, transform=None, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = SequentialBalanceSampler(labels=train_dataset.get_labels(), n_labels=2, n_instances=3)
+sampler = SequentialBalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
 
 # val
-val_dataset = DatasetQueryGallery(df=df_val, im_size=32, pad_ratio=0.0, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics())
 
