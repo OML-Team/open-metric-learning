@@ -5,13 +5,9 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
   push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
 
 
 jobs:
@@ -27,4 +23,6 @@ jobs:
     - name: Install OML
       run: pip install open-metric-learning
     - name: Check is importable
-      run: python -c "import oml"
+      run: |
+        python -c "import omlxxxx"
+        python3 -c "from oml.losses.triplet import TripletLoss"
