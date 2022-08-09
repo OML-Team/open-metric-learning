@@ -1,22 +1,24 @@
 # Config API
 
 Config API is a way to run metric learning experiments via changing only the config.
-It allows you to train the model without knowing Machine Learning and python.
+It allows you to train the model without knowing Machine Learning.
 All you need is to prepare the `.csv` table which describes your dataset, so the converter
 can be implemented in any programming language.
 
 
-## Usage with public dataset
+## Usage with public datasets
 
 We've prepared the examples on 4 popular benchmarks used by researchers to evaluate metric learning models,
 [link](https://paperswithcode.com/task/metric-learning).
-After downloading the dataset you can train or validate your model by the following commands:
+After downloading a dataset you can train or validate your model by the following commands:
 ```
 cd <example>
 python convert_<example>.py --dataset_root=/path/to/example/dataset
 python train_<example>.py
 python validate_<example>.py
 ```
+
+Note, you can find our pretrained checkpoints for these datasets in the `Models zoo` section of the main readme.
 
 <details>
 <summary>CARS 196</summary>
@@ -154,7 +156,7 @@ python train_cars.py optimizer.args.lr=0.000001 bs_val=128
 Instead of changing some parameters in the config file, you may
 also want to completely change the model, loss, optimizer, etc.
 To do this you can check which entities are already available in our registry.
-You can manually visit `oml.registry.models` or use the function:
+You can manually inspect `oml.registry.models` or use the function:
 ```python
 from oml.registry import show_registry
 show_registry()
@@ -162,7 +164,7 @@ show_registry()
 
 ## How to use my own implementation of loss, model, augmentations, etc?
 You should put your python object inside the corresponding registry by some key.
-After that, you can access this object in the config file by that key.
+It allows you to access this object in the config file by that key.
 
 Let's consider an example of using custom augmentations.
 Your `config.yaml` and `train.py` may look like this:

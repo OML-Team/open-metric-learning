@@ -22,14 +22,12 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
   4. Calculating retrieval metrics like CMC@k, Precision@k or MeanAveragePrecision.
 
 ## Installation
-Please, use pip to install the latest stable version of the library:
-
+OML is available in PyPI:
 ```
 pip install -U open-metric-learning
 ```
 
 You can also use docker:
-
 ```
 make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
@@ -128,17 +126,17 @@ in our models' zoo. In this case, you don't even need to train.
 </details>
 
 
-## Models zoo
-|                            model                            | cmc1  |         dataset          |                                      weights & config                                        | hash (the beginning) |
-|:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
-| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
-|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing)   |        85cfa5        |
-|  `VitExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) |        9f1e59        |
-|  `VitExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) |        e82633        |
+## Get started
+The design of OML assumes that you may train your model in 2 different ways:
 
+* **Via Configs**. The best option is if your dataset and pipeline are standard enough or if you are not
+experienced in Machine Learning or Python. You can find more details in the *examples* submodule and it's
+[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/README.md).
 
-Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
-However, you can also check link in `weights & config` if you want to download weights manually or to reproduce the experiment.
+* **Via Python**. The most flexible, but but knowledge-requiring approach.
+You are not limited by our project structure and you can use only that part of the functionality which you need.
+In the *Minimal examples* section you can find fully working code snippets that train and validate the model
+on a tiny dataset (less than 1 Mb).
 
 
 ## Minimal examples
@@ -259,6 +257,22 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 [comment]:lightning-end
 </p>
 </details>
+
+
+## Models zoo
+|                            model                            | cmc1  |         dataset          |                                      weights & config                                        | hash (the beginning) |
+|:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
+| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
+|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing)   |        85cfa5        |
+|  `VitExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) |        9f1e59        |
+|  `VitExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) |        e82633        |
+
+
+Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
+However, you can also check link in `weights & config` column if you want to download weights manually or to reproduce the experiment.
+
+For more details about the training process, please, visit *examples* submodule and it's
+[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/README.md).
 
 ## Acknowledgments
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
