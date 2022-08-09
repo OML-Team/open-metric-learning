@@ -22,7 +22,6 @@ SCHEDULERS_REGISTRY = {
     "MultiStepLR": MultiStepLR,
     "ExponentialLR": ExponentialLR,
     "CosineAnnealingLR": CosineAnnealingLR,
-    "ReduceLROnPlateau": ReduceLROnPlateau,
     "CyclicLR": CyclicLR,
     "OneCycleLR": OneCycleLR,
 }

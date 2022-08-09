@@ -8,6 +8,8 @@ can be implemented in any programming language.
 
 ## Usage with public dataset
 
+We've prepared the examples on 4 popular benchmarks used by researchers to evaluate metric learning models,
+[link](https://paperswithcode.com/task/metric-learning).
 After downloading the dataset you can train or validate your model by the following commands:
 ```
 cd <example>
@@ -73,7 +75,7 @@ The dataset contains 11,788 images of 200 labels belonging to birds,
 
 
 <details>
-<summary>INSHOP (DEEPFASHION)</summary>
+<summary>InShop (DeepFashion)</summary>
 <p>
 
 [Dataset page](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html).
@@ -96,7 +98,7 @@ The dataset contains 52,712 images for 7,982 of clothing items.
 
 
 <details>
-<summary>SOP (STANFORD ONLINE PRODUCTS)</summary>
+<summary>SOP (Stanford Online Products)</summary>
 <p>
 
 [Dataset page](https://cvgl.stanford.edu/projects/lifted_struct/).
@@ -121,7 +123,7 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
 
 
 ## Usage with custom dataset
-The only difference from the public dataset is that you have to implement the converter by yourself.
+The only difference from the public dataset case is that you have to implement the converter by yourself.
 We expect the `.csv` file in the following format:
 
 Required columns:
@@ -141,6 +143,53 @@ Optional columns:
 You can check the tables for the public datasets via the [link](todo).
 
 
-## Usage with custom loss, model, optimizer, augmentations, etc.
+## How to work with a config?
+We use [Hydra](https://hydra.cc/docs/intro/) as a parser for `.yaml` configs.
+So, you can change whatever you want directly in the config file or override some parameters
+using command line interface:
+```
+python train_cars.py optimizer.args.lr=0.000001 bs_val=128
+```
 
-ToDo about registry.
+Instead of changing some parameters in the config file, you may
+also want to completely change the model, loss, optimizer, etc.
+To do this you can check which entities are already available in our registry.
+You can manually visit `oml.registry.models` or use the function:
+```python
+from oml.registry import show_registry
+show_registry()
+```
+
+## How to use my own implementation of loss, model, augmentations, etc?
+You should put your python object inside the corresponding registry by some key.
+After that, you can access this object in the config file by that key.
+
+Let's consider an example of using custom augmentations.
+Your `config.yaml` and `train.py` may look like this:
+```yaml
+...
+augs: custom_augmentations
+...
+```
+
+```python
+import hydra
+import torchvision.transforms as t
+from omegaconf import DictConfig
+
+from oml.lightning.entrypoints.train import pl_train
+from oml.registry.transforms import AUGS_REGISTRY
+
+AUGS_REGISTRY["custom_augmentations"] = t.Compose([t.RandomHorizontalFlip(), t.RandomGrayscale()])
+
+
+@hydra.main(config_path="configs", config_name="train.yaml")
+def main_hydra(cfg: DictConfig) -> None:
+    pl_train(cfg)
+
+
+if __name__ == "__main__":
+    main_hydra()
+```
+
+The same logic works for models, samplers, losses, etc.

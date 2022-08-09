@@ -14,7 +14,7 @@ im_pad_ratio_val: 0.0
 num_workers: 0
 cache_size: 100
 
-augs: default_torch
+augs: custom_augmentations
 
 criterion:
   name: TripletLossWithMiner
@@ -38,7 +38,6 @@ model:
     normalise_features: False
     use_multi_scale: False
     weights: random
-    strict_load: True
 
 scheduler:
   name: MultiStepLR

@@ -39,7 +39,7 @@ model:
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    strict_load: True
+
 
 criterion:
   name: TripletLossWithMiner
