@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 from sys import platform
 from typing import Any, Dict, Tuple, Union
@@ -22,6 +23,7 @@ def get_cache_folder() -> Path:
 
 PROJECT_ROOT = Path(__file__).parent.parent
 CACHE_PATH = get_cache_folder()
+TMP_PATH = Path(tempfile.gettempdir())
 
 DOTENV_PATH = PROJECT_ROOT / ".env"
 CONFIGS_PATH = PROJECT_ROOT / "configs"
