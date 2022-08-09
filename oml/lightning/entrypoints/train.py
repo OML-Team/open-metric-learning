@@ -1,6 +1,7 @@
 import os
 import warnings
 from pathlib import Path
+from pprint import pprint
 
 import albumentations as albu
 import pytorch_lightning as pl
@@ -29,7 +30,7 @@ from oml.utils.misc import (
 
 def pl_train(cfg: TCfg) -> None:
     cfg = dictconfig_to_dict(cfg)
-    print(cfg)
+    pprint(cfg)
 
     set_global_seed(cfg["seed"], cfg["num_workers"])
 
@@ -84,13 +85,21 @@ def pl_train(cfg: TCfg) -> None:
 
     metrics_calc = EmbeddingMetrics(**cfg.get("metric_args", {}))
     metrics_clb = MetricValCallback(metric=metrics_calc)
-    ckpt_clb = pl.callbacks.ModelCheckpoint(
+    ckpt_clb_cmc = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
         monitor="OVERALL/cmc/1",
         mode="max",
         save_top_k=1,
         verbose=True,
-        filename="best",
+        filename="best_cmc",
+    )
+    ckpt_clb_precision = pl.callbacks.ModelCheckpoint(
+        dirpath=Path.cwd() / "checkpoints",
+        monitor="OVERALL/precision/5",
+        mode="max",
+        save_top_k=1,
+        verbose=True,
+        filename="best_precision",
     )
 
     # Here we try to load NEPTUNE_API_TOKEN from .env file
@@ -126,10 +135,11 @@ def pl_train(cfg: TCfg) -> None:
         enable_checkpointing=True,
         enable_progress_bar=True,
         enable_model_summary=True,
+        precision=cfg["precision"],
         num_nodes=1,
         gpus=cfg["gpus"],
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
-        callbacks=[metrics_clb, ckpt_clb],
+        callbacks=[metrics_clb, ckpt_clb_cmc, ckpt_clb_precision],
         logger=logger,
     )
 
