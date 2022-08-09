@@ -62,11 +62,16 @@ class BaseDataset(Dataset):
         self.pad_ratio = pad_ratio
         self.transform = transform or get_normalisation_albu()
         self.f_imread = f_imread
-        self.read_image_cached = lru_cache(maxsize=cache_size)(self.read_image)
+        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
+
+    @staticmethod
+    def _read_bytes_image(path: Union[Path, str]) -> bytes:
+        with open(str(path), "rb") as fin:
+            return fin.read()
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         label = self.df.iloc[idx]["label"]
-        crop = self.read_image_cached(idx)
+        crop = self.read_image(idx)
 
         if isinstance(self.transform, albu.Compose):
             image_tensor = self.transform(image=crop)["image"]
@@ -100,7 +105,8 @@ class BaseDataset(Dataset):
         return len(self.df)
 
     def read_image(self, idx: int) -> np.ndarray:
-        img = self.f_imread(self.df.iloc[idx]["path"])
+        img_bytes = self.read_bytes_image_cached(self.df.iloc[idx]["path"])
+        img = self.f_imread(img_bytes)
 
         row = self.df.iloc[idx]
 
