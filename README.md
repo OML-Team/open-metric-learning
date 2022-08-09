@@ -139,7 +139,7 @@ In the *Minimal examples* section you can find fully working code snippets that 
 on a tiny dataset (less than 1 Mb).
 
 
-## Minimal examples
+## Minimal Python examples
 <details>
 <summary>Using pure PyTorch</summary>
 <p>
