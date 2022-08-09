@@ -16,6 +16,7 @@ class RetrievalModule(pl.LightningModule):
         emb_criterion: Optional[nn.Module],
         optimizer: torch.optim.Optimizer,
         clf_criterion: Optional[nn.Module] = None,
+        clf_weight: float = 1,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
@@ -33,6 +34,7 @@ class RetrievalModule(pl.LightningModule):
         self.head = head
         self.emb_criterion = emb_criterion
         self.clf_criterion = clf_criterion
+        self.clf_weight = clf_weight
         self.optimizer = optimizer
 
         self.scheduler = scheduler
@@ -65,13 +67,13 @@ class RetrievalModule(pl.LightningModule):
 
         if self.head is not None:
             pred = self.head(embeddings)
-            loss_clf = self.clf_criterion(pred, batch[self.key_target])
+            loss_clf = self.clf_weight * self.clf_criterion(pred, batch[self.key_target])
             self.log("loss_clf", loss_clf.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
             if hasattr(self.clf_criterion, "last_logs"):
                 self.log_dict(self.clf_criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
-            return loss + 1e-4 * loss_clf  # TODO: temporary fix (rescale)
+            return loss + loss_clf
         else:
             return loss
 

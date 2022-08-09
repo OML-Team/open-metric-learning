@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from omegaconf import OmegaConf
+from torch import nn
 
 from oml.interfaces.models import IExtractor, IHead
 from oml.models.heads import ArcFaceFancy, ArcFaceHead, SimpleLinearHead
@@ -17,6 +18,7 @@ HEADS_REGISTRY = {
     "simple_linear": SimpleLinearHead,
     "arcface": ArcFaceHead,
     "fancy_arcface": ArcFaceFancy,
+    "fake_head": nn.Identity,
 }
 
 

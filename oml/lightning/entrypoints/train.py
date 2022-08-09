@@ -64,7 +64,8 @@ def pl_train(cfg: TCfg) -> None:
             )
 
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
-    runtime_args = {"labels": train_dataset.get_labels(), "label2category": dict(zip(df["label"], df["category"]))}
+    label2category = dict(zip(df["label"], df["category"]))
+    runtime_args = {"labels": train_dataset.get_labels(), "label2category": label2category}
     sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
@@ -79,7 +80,14 @@ def pl_train(cfg: TCfg) -> None:
     )
     emb_criterion = get_criterion_by_cfg(cfg["criterion"])
     clf_criterion = (
-        None if "criterion_classification" not in cfg else get_criterion_by_cfg(cfg["criterion_classification"])
+        None
+        if "criterion_classification" not in cfg
+        else get_criterion_by_cfg(
+            cfg["criterion_classification"],
+            in_features=extractor.feat_dim,
+            num_classes=train_dataset.num_labels,
+            label2category=label2category,
+        )
     )
 
     params_for_opt = [*extractor.parameters()]

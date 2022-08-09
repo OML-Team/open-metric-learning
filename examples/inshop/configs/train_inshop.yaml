@@ -6,8 +6,8 @@ gpus:
   - 1
 
 dataframe_name: df_fixed_train_fixed_val.csv
-dataset_root: data/DeepFashion_InShop/
-logs_root: logs/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 im_size_train: 224
@@ -46,7 +46,7 @@ model:
     strict_load: True
 
 head:
-  name: fancy_arcface
+  name: fake_head
   args:
     weights: random
 
@@ -62,7 +62,9 @@ criterion:
         norm_required: False
 
 criterion_classification:
-  name: CrossEntropyLoss
+  name: ArcFaceLoss
+  args:
+    label_smoothing: 0.2
 
 optimizer:
   name: adam
@@ -81,8 +83,8 @@ hydra_dir: ${logs_root}/${logs_folder}/
 
 tags:
   - ${postfix}
-  - deepfashion
-  - hard_miner_vits16_soft
+  - arcface_fix
+  - label_smoothing
 
 hydra:
   run:

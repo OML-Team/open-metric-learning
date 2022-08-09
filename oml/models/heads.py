@@ -45,6 +45,7 @@ class ArcFaceHead(IHead):
         in_features: int,
         num_classes: int,
         margin: float = 0.1,
+        s: float = 16,
         eps: float = 1e-8,
     ):
         super(ArcFaceHead, self).__init__()
@@ -53,6 +54,7 @@ class ArcFaceHead(IHead):
         self._eps = eps
         self.margin = margin
         self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
+        self.rescale = nn.Parameter(torch.ones(1, dtype=torch.float) * s)
 
         if weights == "random":
             nn.init.xavier_uniform_(self.weight)
@@ -64,13 +66,12 @@ class ArcFaceHead(IHead):
         self.weight.load_state_dict(state_dict)
 
     def fc(self, x: torch.Tensor) -> torch.Tensor:
-        return F.linear(
-            F.normalize(x, p=2), F.normalize(self.weight, p=2)
-        )  # TODO: maybe remove normalization and add assert
+        return F.linear(F.normalize(x, p=2), F.normalize(self.weight, p=2))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         angle = torch.acos(self.fc(x).clip(-1 + self._eps, 1 - self._eps))
-        return F.softmax(torch.cos(angle + self.margin))
+        logit = torch.cos(angle + self.margin) * self.rescale
+        return F.softmax(logit)
 
     @property
     def num_classes(self) -> int:
