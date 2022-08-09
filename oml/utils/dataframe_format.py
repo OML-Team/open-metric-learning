@@ -57,3 +57,6 @@ def check_retrieval_dataframe_format(
         ), "Amount of unique categories and their names are not equal"
 
         assert df["category"].dtypes == int, "Category have to be int dtype"
+
+
+__all__ = ["check_retrieval_dataframe_format"]

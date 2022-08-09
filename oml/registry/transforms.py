@@ -30,3 +30,6 @@ def get_augs(name: str, mean: Optional[TNormParam] = MEAN, std: Optional[TNormPa
 
     else:
         return augs
+
+
+__all__ = ["TAugs", "AUGS_REGISTRY", "get_augs"]

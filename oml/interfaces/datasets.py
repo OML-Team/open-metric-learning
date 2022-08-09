@@ -53,3 +53,6 @@ class IDatasetQueryGallery(Dataset, ABC):
               'input_tensors', 'labels', 'is_query', 'is_gallery'
         """
         raise NotImplementedError()
+
+
+__all__ = ["IDatasetWithLabels", "IDatasetQueryGallery"]

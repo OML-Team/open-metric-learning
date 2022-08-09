@@ -26,3 +26,6 @@ class IBasicMetric(ABC):
         Method for obtaining dictionary with metric
         """
         raise NotImplementedError
+
+
+__all__ = ["IBasicMetric"]

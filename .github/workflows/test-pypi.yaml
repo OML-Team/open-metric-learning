@@ -1,0 +1,28 @@
+name: Check installation from PyPi
+
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8.0"
+    - name: Install OML
+      run: pip install open-metric-learning
+    - name: Check is importable
+      run: |
+        python -c "import oml"
+        python3 -c "from oml.losses.triplet import TripletLoss"

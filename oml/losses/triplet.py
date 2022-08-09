@@ -250,3 +250,6 @@ class TripletLossWithMiner(Module):
             raise ValueError()
 
         return loss
+
+
+__all__ = ["TLogs", "TLossOutput", "TripletLoss", "get_tri_ids_in_plain", "TripletLossPlain", "TripletLossWithMiner"]
