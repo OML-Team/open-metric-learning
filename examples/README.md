@@ -1,53 +1,25 @@
 # Config API
 
+Config API is a way to run metric learning experiments via changing only the config.
+It allows you to train the model without knowing Machine Learning and python.
+All you need is to prepare the `.csv` table which describes your dataset, so the converter
+can be implemented in any programming language.
 
-## Usage with custom dataset
-
-With our Config API you can run experiments on your own dataset without knowing Machine Learning and python.
-All you need is to prepare the `.csv` table which describes your dataset. So, you can write the converter
-in any language you like. After that you can set up the training parameters in the config and run the
-training or validation scripts:
-
-```
-python train.py
-python validate.py
-```
-
-<details>
-<summary>Table Format</summary>
-<p>
-
-Required columns:
-* `label` - integer value indicates the label.
-* `path` - path to sample.
-* `split` - must be one of 2 values: `train` or `validation`.
-* `is_query`, `is_gallery` - have to be `None` where `split == train` and `True`
-or `False` where `split == validation`. Note, that both values can be `True` at
-the same time. Then we will validate every item
- in the validation set using the "1 vs rest" approach (datasets of this kind are `CARS196` or `CUB`).
-
-Optional columns:
-* `category` - integer value indicates the category if your dataset have one.
-* `category_name` - name of the category.
-* `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
-
-You can check examples of the tables via the [link](todo).
-
-</p>
-</details>
-
-We also prepared 4 examples using popular public datasets which can help you to get started.
 
 ## Usage with public dataset
 
-After downloading the dataset you can start the training or validation by the following commands:
+After downloading the dataset you can train or validate your model by the following commands:
 ```
-python convert_*.py
-python train_*.py
-python validate_*.py
+cd <example>
+python convert_<example>.py --dataset_root=/path/to/example/dataset
+python train_<example>.py
+python validate_<example>.py
 ```
 
-#### CARS 196
+<details>
+<summary>CARS 196</summary>
+<p>
+
 [Dataset page.](https://ai.stanford.edu/~jkrause/cars/car_dataset.html)
 
 The dataset contains 16,185 images of 196 labels of cars.
@@ -68,8 +40,14 @@ where each label has been split roughly in a 50-50 split.
         ├── 00001.jpg
         └── ...
 ```
+</p>
+</details>
 
-#### CUB 200 2011
+
+<details>
+<summary>CUB 200 2011</summary>
+<p>
+
 [Dataset page.](https://deepai.org/dataset/cub-200-2011)
 
 The dataset contains 11,788 images of 200 labels belonging to birds,
@@ -90,8 +68,14 @@ The dataset contains 11,788 images of 200 labels belonging to birds,
         │   └── ...
         └── ...
 ```
+</p>
+</details>
 
-#### INSHOP (DEEPFASHION)
+
+<details>
+<summary>INSHOP (DEEPFASHION)</summary>
+<p>
+
 [Dataset page](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html).
 [Download from Google Drive](https://drive.google.com/drive/folders/0B7EVK8r0v71pVDZFQXRsMDZCX1E?resourcekey=0-4R4v6zl4CWhHTsUGOsTstw).
 
@@ -107,8 +91,14 @@ The dataset contains 52,712 images for 7,982 of clothing items.
         └── WOMEN
             └── ...
 ```
+</p>
+</details>
 
-#### SOP (STANFORD ONLINE PRODUCTS)
+
+<details>
+<summary>SOP (STANFORD ONLINE PRODUCTS)</summary>
+<p>
+
 [Dataset page](https://cvgl.stanford.edu/projects/lifted_struct/).
 [Download from Google Drive.](https://drive.google.com/uc?export=download&id=1TclrpQOF_ullUP99wk_gjGN8pKvtErG8)
 
@@ -126,4 +116,31 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
         ├── 110715681235_0.JPG
         └── ...
 ```
+</p>
+</details>
 
+
+## Usage with custom dataset
+The only difference from the public dataset is that you have to implement the converter by yourself.
+We expect the `.csv` file in the following format:
+
+Required columns:
+* `label` - integer value indicates the label.
+* `path` - path to sample.
+* `split` - must be one of 2 values: `train` or `validation`.
+* `is_query`, `is_gallery` - have to be `None` where `split == train` and `True`
+or `False` where `split == validation`. Note, that both values can be `True` at
+the same time. Then we will validate every item
+ in the validation set using the "1 vs rest" approach (datasets of this kind are `CARS196` or `CUB`).
+
+Optional columns:
+* `category` - integer value indicates the category if your dataset have one.
+* `category_name` - name of the category.
+* `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
+
+You can check the tables for the public datasets via the [link](todo).
+
+
+## Usage with custom loss, model, optimizer, augmentations, etc.
+
+ToDo about registry.
