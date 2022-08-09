@@ -100,13 +100,12 @@ TripletLoss.
 No, you don't. OML is a framework-agnostic. Despite we use PyTorch Lightning as a loop
 runner for the experiments, we also keep the possibility to run everything on pure PyTorch.
 Thus, only the tiny part of OML is Lightning-specific and we keep this logic separately from
-other code (see oml.lightning). Even when you use Lightning, you don't need to know it, since
-we provide ready to use entry points with configs based API.
+other code (see `oml.lightning`). Even when you use Lightning, you don't need to know it, since
+we provide ready to use [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
 The possibility of using pure PyTorch and modular structure of the code leaves a room for utilizing
 OML with your favourite framework after the implementation of the necessary wrappers.
 
-Please, see "Minimal examples" section for more details.
 </p>
 </details>
 
@@ -115,13 +114,14 @@ Please, see "Minimal examples" section for more details.
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
 
-Yes. To run the experiment you only need to write a converter
+Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/)
+you only need to write a converter
  to our format (it means preparing the
-table with 5 predefined columns). Then you adjust the config file and run the experiment.
+`.csv` table with 5 predefined columns).
 That's it!
 
 Probably we already have a suitable pre-trained model for your domain
-in our models' zoo. In this case, you don't even need to train.
+in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
@@ -131,7 +131,7 @@ The design of OML assumes that you may train your model in 2 different ways:
 
 * **Via Configs**. The best option is if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the *examples* submodule and it's
-[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/README.md).
+[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
 * **Via Python**. The most flexible, but but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
@@ -272,7 +272,7 @@ Note, if you pass one of the special keys to the constructor we will download th
 However, you can also check link in `weights & config` column if you want to download weights manually or to reproduce the experiment.
 
 For more details about the training process, please, visit *examples* submodule and it's
-[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/README.md).
+[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
 ## Acknowledgments
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
