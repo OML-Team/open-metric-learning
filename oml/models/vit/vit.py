@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -37,7 +37,7 @@ class ViTExtractor(IExtractor):
 
     def __init__(
         self,
-        weights: Union[Path, str],
+        weights: Optional[Union[Path, str]],
         arch: str,
         normalise_features: bool,
         use_multi_scale: bool = False,
@@ -45,7 +45,7 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or the special key to download pretrained checkpoint
+            weights: Path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights
             arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
             normalise_features: if normalise features
             use_multi_scale: if use multi scale
@@ -62,7 +62,7 @@ class ViTExtractor(IExtractor):
         factory_fun = self.constructors[self.arch]
 
         self.model = factory_fun(pretrained=False)
-        if weights == "random":
+        if weights is None:
             return
 
         if weights in self.pretrained_models.keys():
