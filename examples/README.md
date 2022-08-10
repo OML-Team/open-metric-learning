@@ -156,7 +156,7 @@ python train_cars.py optimizer.args.lr=0.000001 bs_val=128
 Instead of changing some parameters in the config file, you may
 also want to completely change the model, loss, optimizer, etc.
 To do this you can check which entities are already available in our registry.
-You can manually inspect `oml.registry.models` or use the function:
+You can manually inspect `oml.registry` or `oml.configs` or use the function:
 ```python
 from oml.registry import show_registry
 show_registry()

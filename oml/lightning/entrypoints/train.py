@@ -74,8 +74,8 @@ def pl_train(cfg: TCfg) -> None:
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
     scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
 
-    assert issubclass(extractor, IExtractor), "You model must to be child of IExtractor"
-    assert issubclass(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
+    assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
+    assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
     loader_train = DataLoader(
         dataset=train_dataset,

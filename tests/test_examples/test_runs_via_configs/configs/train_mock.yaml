@@ -26,10 +26,9 @@ criterion:
       name: all_triplets
       args: {}
 
-optimizer:
-  name: sgd
-  args:
-    lr: 1e-5
+defaults:
+  - optimizer: sgd
+  - sampler: sequential_balance
 
 model:
   name: vit
@@ -46,12 +45,6 @@ scheduler:
       - 1
       - 2
       - 3
-
-sampler:
-  name: sequential_balance
-  args:
-    n_labels: 2
-    n_instances: 8
 
 bs_val: 2
 
@@ -71,3 +64,5 @@ tags:
 hydra:
   run:
     dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs

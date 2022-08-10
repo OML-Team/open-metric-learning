@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 CACHE_PATH = get_cache_folder()
 
 DOTENV_PATH = PROJECT_ROOT / ".env"
-CONFIGS_PATH = PROJECT_ROOT / "configs"
+CONFIGS_PATH = PROJECT_ROOT / "oml" / "configs"
 MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"

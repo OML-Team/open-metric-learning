@@ -6,7 +6,7 @@ from torch import Tensor, nn
 
 class IExtractor(nn.Module, ABC):
     def extract(self, x: Tensor) -> Tensor:
-        raise self.forward(x)
+        return self.forward(x)
 
     @property
     def feat_dim(self) -> int:

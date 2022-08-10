@@ -1,3 +1,5 @@
+import inspect
+
 from oml.registry.losses import LOSSES_REGISTRY
 from oml.registry.miners import MINERS_REGISTRY
 from oml.registry.models import MODELS_REGISTRY
@@ -18,5 +20,13 @@ def show_registry() -> None:
         ("Augmentations", AUGS_REGISTRY),
     ]:
         print(f"{name}: ")
-        print(list(registry.keys()))  # type: ignore
+
+        if name == "Augmentations":
+            for k, constructor in registry.items():  # type: ignore
+                print(f"{k}:", constructor.__class__.__name__ + str(inspect.signature(constructor)))
+
+        else:
+            for k, constructor in registry.items():  # type: ignore
+                print(f"{k}:", constructor.__name__ + str(inspect.signature(constructor)))
+
         print()
