@@ -46,7 +46,7 @@ class ResnetExtractor(IExtractor):
         set both hid_dim and out_dim equal to None.
 
         Args:
-            weights: path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights
+            weights: path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights or 'default' to use the checkpoint pretrained on ImageNet
             arch: different types of resnet, please, check self.constructors
             normalise_features: if normalise features
             gem_p: value of power in GEM pooling
@@ -83,7 +83,7 @@ class ResnetExtractor(IExtractor):
         if weights is None:
             return
 
-        elif weights == "DEFAULT":
+        elif isinstance(weights, str) and weights.lower() == "default":
             state_dict = factory_fun(weights="DEFAULT").state_dict()
 
         elif weights in self.pretrained_models:
