@@ -135,7 +135,7 @@ def pl_train(cfg: TCfg) -> None:
         enable_checkpointing=True,
         enable_progress_bar=True,
         enable_model_summary=True,
-        precision=cfg["precision"],
+        precision=cfg.get("precision", 32),
         num_nodes=1,
         gpus=cfg["gpus"],
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
