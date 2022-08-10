@@ -56,6 +56,17 @@ Here are a few examples of such tasks from the computer vision sphere:
 
 
 <details>
+<summary>Why do I need OML?</summary>
+<p>
+- If I need image embeddings I can simply train a vanilla classifier and take its penultimate layer.
+- Well, it makes sense as a starting point. But there are several drawbacks:
+todo
+
+</p>
+</details>
+
+
+<details>
 <summary>Glossary</summary>
 <p>
 
@@ -71,6 +82,10 @@ the combinations of samples only inside the current batch, thus, the memory bank
  (we name the individual photo as `instance` or `sample`). All of the fashion item ids have their groups like
   "skirts", "jackets", "shorts" and so on (we name them `categories`).
   Note, we avoid using the term `class` to avoid misunderstanding.
+* `training epoch` - batch samplers which we use for combination-based losses usually have a length equal to
+<number of labels in training dataset> / <numbers of labels in one batch>. It means that we don't observe all of
+the available training samples in one epoch (as opposed to vanilla classification),
+instead, we observe all of the available labels.
 </p>
 </details>
 

@@ -14,6 +14,8 @@ model:
     arch: vits16
     normalise_features: False
     use_multi_scale: False
+    weights: vits16_inshop
+
 
 metric_args:
   cmc_top_k: [1, 5]
