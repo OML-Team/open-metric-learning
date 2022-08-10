@@ -11,7 +11,7 @@ can be implemented in any programming language.
 We've prepared the examples on 4 popular benchmarks used by researchers to evaluate metric learning models,
 [link](https://paperswithcode.com/task/metric-learning).
 After downloading a dataset you can train or validate your model by the following commands:
-```
+```shell script
 cd <example>
 python convert_<example>.py --dataset_root=/path/to/example/dataset
 python train_<example>.py
@@ -142,7 +142,7 @@ Optional columns:
 * `category_name` - name of the category.
 * `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
 
-You can check the tables for the public datasets via the [link](todo).
+You can check the tables for the public datasets via the [link](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing).
 
 
 ## How to work with a config?
@@ -166,11 +166,25 @@ show_registry()
 You should put your python object inside the corresponding registry by some key.
 It allows you to access this object in the config file by that key.
 
-Let's consider an example of using custom augmentations.
+You may change the following blocks and to work correctly some of them have to inherit our interfaces:
+* `Transforms`, `Sampler`, `Optimizer`, `Scheduler` - follow the standard PyTorch interfaces.
+* `Model` - have to be child of `IExtractor` (see `oml.interfaces.models`)
+* `Criterion` - have to be child of `ITripletLossWithMiner` (see `oml.interfaces.criterions`)
+    * You may want to change only `Miner` inside the criterion. It has to be a child of `ITripletsMiner`
+      (see `oml.interfaces.miners`).
+
+
+Let's consider an example of using custom augmentations & model.
 Your `config.yaml` and `train.py` may look like this:
 ```yaml
 ...
+
 augs: custom_augmentations
+
+model:
+  name: custom_model
+  args: {}
+
 ...
 ```
 
@@ -178,11 +192,29 @@ augs: custom_augmentations
 import hydra
 import torchvision.transforms as t
 from omegaconf import DictConfig
+from torchvision.models import resnet18
 
+from oml.interfaces.models import IExtractor
 from oml.lightning.entrypoints.train import pl_train
+from oml.registry.models import MODELS_REGISTRY
 from oml.registry.transforms import AUGS_REGISTRY
 
+class CustomModel(IExtractor):
+
+    def __init__(self):
+        super().__init__()
+        self.resnet = resnet18()
+
+    def forward(self, x):
+        self.resnet(x)
+
+    @property
+    def feat_dim(self):
+        return self.resnet.fc.out_features
+
+
 AUGS_REGISTRY["custom_augmentations"] = t.Compose([t.RandomHorizontalFlip(), t.RandomGrayscale()])
+MODELS_REGISTRY["custom_model"] = CustomModel
 
 
 @hydra.main(config_path="configs", config_name="train.yaml")

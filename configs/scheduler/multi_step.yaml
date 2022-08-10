@@ -1,4 +1,4 @@
-name: MultiStepLR
+name: multi_step
 args:
   milestones:
     - 30

@@ -23,12 +23,12 @@ Specifically, our pipeline includes supervised training and a retrieval-like val
 
 ## Installation
 OML is available in PyPI:
-```
+```shell script
 pip install -U open-metric-learning
 ```
 
 You can also use docker:
-```
+```shell script
 make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```

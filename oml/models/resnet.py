@@ -110,9 +110,6 @@ class ResnetExtractor(IExtractor):
 
         return x
 
-    def extract(self, x: torch.Tensor) -> torch.Tensor:
-        return self.forward(x)
-
     def calc_last_conv_channels(self) -> int:
         last_block = self.model.layer4[-1]
         if self.arch in ("resnet18", "resnet34"):

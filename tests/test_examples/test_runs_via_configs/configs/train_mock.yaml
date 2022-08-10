@@ -17,13 +17,13 @@ cache_size: 100
 augs: custom_augmentations
 
 criterion:
-  name: TripletLossWithMiner
+  name: triplet_with_miner
   args:
     margin: null
     reduction: mean
     need_logs: True
     miner:
-      name: AllTripletsMiner
+      name: all_triplets
       args: {}
 
 optimizer:
@@ -40,7 +40,7 @@ model:
     weights: random
 
 scheduler:
-  name: MultiStepLR
+  name: multi_step
   args:
     milestones:
       - 1
@@ -48,7 +48,7 @@ scheduler:
       - 3
 
 sampler:
-  name: SequentialBalanceSampler
+  name: sequential_balance
   args:
     n_labels: 2
     n_instances: 8

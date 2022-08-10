@@ -18,7 +18,7 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 class IPostprocessor:
     def process(self, *args, **kwargs):  # type: ignore
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class EmbeddingMetrics(IBasicMetric):
