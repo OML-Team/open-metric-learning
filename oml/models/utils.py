@@ -9,6 +9,7 @@ def find_prefix_in_state_dict(state_dict: TStateDict, trial_key: str) -> str:
     k0 = [k for k in state_dict.keys() if trial_key in k][0]
     prefix = k0[: k0.index(trial_key)]
 
+    # TODO: check if we need this for strict = False
     assert all(k.startswith(prefix) for k in state_dict.keys())
 
     return prefix
