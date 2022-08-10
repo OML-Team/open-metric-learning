@@ -17,6 +17,7 @@ TColor = Tuple[int, int, int]
 
 
 def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
+    # TODO: add missing comments
     im_ret = im.copy()
     if not torch.isnan(bbox[0]):
         x1, y1, x2, y2 = list(map(int, bbox))
@@ -41,6 +42,7 @@ class RetrievalVisualizer:
         query_bboxes: torch.Tensor,
         gallery_bboxes: torch.Tensor,
     ):
+        # TODO: add explanation to arguments
         self.query_paths = query_paths
         self.query_labels = query_labels
 
@@ -57,6 +59,7 @@ class RetrievalVisualizer:
 
     @classmethod
     def from_embeddings_metric(cls, emb: EmbeddingMetrics) -> "RetrievalVisualizer":
+        # TODO: add missing comments
         is_query = emb.acc.storage[emb.is_query_key]
         is_gallery = emb.acc.storage[emb.is_gallery_key]
 
@@ -84,6 +87,7 @@ class RetrievalVisualizer:
         )
 
     def visualise(self, query_idx: int, top_k: int, skip_no_errors: bool = False) -> None:
+        # TODO: add missing comments
         ids = torch.argsort(self.dist_matrix[query_idx])[:top_k]
 
         if skip_no_errors and torch.all(self.mask_gt[query_idx, ids]):
@@ -125,6 +129,7 @@ class RetrievalVisualizer:
 
     @staticmethod
     def get_img_with_bbox(im_name: str, bbox: Tuple[int, int, int, int], color: TColor) -> np.ndarray:
+        # TODO: add missing comments
         img = imread_cv2(im_name)
         img = draw_bbox(img, bbox, color)
         return img

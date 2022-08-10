@@ -28,6 +28,7 @@ from oml.utils.misc import (
 
 
 def pl_train(cfg: TCfg) -> None:
+    # TODO: definitly comment needed
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 

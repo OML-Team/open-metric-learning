@@ -23,6 +23,7 @@ from oml.interfaces.miners import ITripletsMiner
 
 @no_grad()
 def get_pos_pairs(lbl2idx: Dict[Tensor, Tensor], n: int = None) -> Tensor:
+    # TODO: Maybe add this as a class method? This isn't using anywhere else
     pos_batch_pairs = zeros(0, 2)
 
     if n is not None:
