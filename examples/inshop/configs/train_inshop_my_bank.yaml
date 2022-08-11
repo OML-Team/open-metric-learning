@@ -1,0 +1,107 @@
+postfix: metric_learning
+
+seed: 42
+precision: 16
+gpus:
+  - 0
+  - 1
+
+dataframe_name: df_fixed_train_fixed_val.csv
+dataset_root: /nydl/data/DeepFashion_InShop
+logs_root: /nydl/logs/DeepFashion_InShop
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+im_size_train: 224
+im_size_val: 224
+im_pad_ratio_train: 0.0
+im_pad_ratio_val: 0.0
+num_workers: 15
+cache_size: 100000
+
+sampler:
+  name: SequentialCategoryBalanceSampler
+  args:
+    n_labels: 11
+    n_instances: 4
+    n_categories: 8
+#    n_labels: 7
+#    n_instances: 4
+#    n_categories: 1
+    resample_labels: True
+    weight_categories: True
+
+bs_val: 256
+max_epochs: 40
+valid_period: 1
+
+metric_args:
+  cmc_top_k: [1]
+  map_top_k: [5]
+
+augs: default_albu
+
+model:
+  name: vit
+  args:
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
+    strict_load: True
+
+
+criterion:
+  name: TripletLossWithMiner
+  args:
+    need_logs: True
+    margin: null
+    reduction: mean
+    miner:
+      name: TopMinerWithBank
+      args:
+        bank_size_in_batches: 3
+        need_logs: True
+        miner:
+          name: TopPNTripletsMiner
+          args:
+            top_positive: 2
+            top_negative: 2
+            top_negative_gap: 4
+
+
+
+optimizer:
+  name: adam
+  args:
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
+
+scheduler: null
+
+
+# To use neptune you should also specify NEPTUNE_API_TOKEN in
+# .env file or via `export NEPTUNE_API_TOKEN=...`
+neptune_project: NEWYORKER/similarity-api
+
+
+hydra_dir: ${logs_root}/${logs_folder}
+
+
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+    - file://../../configs
+
+exp: 0
+
+tags:
+  - weekend
+  - pod=ds-training-3-tarasov
+  - experiment=${exp}
+  - bank_size=${criterion.args.miner.args.bank_size_in_batches}
+  - miner=${criterion.args.miner.name}
+  - deepfashion
+  - n_categories=${sampler.args.n_categories}
+  - n_labels=${sampler.args.n_labels}
+  - n_instances=${sampler.args.n_instances}

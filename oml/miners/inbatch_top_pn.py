@@ -1,5 +1,3 @@
-from itertools import product
-from random import choices
 from typing import Any, List, Optional, Union
 
 import numpy as np
@@ -7,7 +5,6 @@ import torch
 from torch import Tensor
 
 from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
-from oml.utils.misc import find_value_ids
 from oml.utils.misc_torch import pairwise_dist
 
 
@@ -18,14 +15,11 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
     hard negative sample has small distance to the anchor sample.
     """
 
-    def __init__(self, top_positive: int = 1, top_negative: int = 1, duplicate_not_enough_labels: bool = False):
+    def __init__(self, top_positive: int = 1, top_negative: int = 1, top_negative_gap: int = 0):
         """
         Args:
             top_positive: keep positive examples with topP largest distance
             top_negative: keep negative examples with topN smallest distance
-            duplicate_not_enough_labels: Parameter allows automatically maintain constant number of triplets. If some
-                of labels have number of instances less than top_positive or top_negative, this labels will be
-                duplicated with another instances
 
         """
         assert top_positive >= 1
@@ -35,7 +29,7 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
 
         self.top_positive = top_positive
         self.top_negative = top_negative
-        self.duplicate_not_enough_labels = duplicate_not_enough_labels
+        self.top_negative_gap = top_negative_gap
 
     def _sample(
         self,
@@ -54,56 +48,6 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
 
         return ids_anchor, ids_pos, ids_neg
 
-    def _sample_from_distmat_prev(
-        self,
-        distmat: Tensor,
-        labels: List[int],
-        *_: Any,
-        ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
-    ) -> TTripletsIds:
-        ids_all = set(range(len(labels)))
-
-        ids_anchor, ids_pos, ids_neg = [], [], []  # type: ignore
-        if ignore_anchor_mask is None:
-            ignore_anchor_mask = [False] * len(labels)
-
-        for i_anch, (label, ignore_anchor) in enumerate(zip(labels, ignore_anchor_mask)):
-            if ignore_anchor:
-                continue
-            ids_label = set(find_value_ids(it=labels, value=label))
-
-            ids_pos_cur = np.array(list(ids_label - {i_anch}), int)
-            ids_neg_cur = np.array(list(ids_all - ids_label), int)
-
-            num_hardest_positive = min(self.top_positive, len(ids_label) - 1)
-            num_hardest_negative = min(self.top_negative, len(ids_all) - len(ids_label))
-
-            _, hardest_positive = torch.topk(distmat[i_anch, ids_pos_cur], k=num_hardest_positive, largest=True)
-            _, hardest_negative = torch.topk(distmat[i_anch, ids_neg_cur], k=num_hardest_negative, largest=False)
-
-            if self.duplicate_not_enough_labels:
-                if len(hardest_positive) < self.top_positive:
-                    extra_positives = torch.tensor(
-                        choices(hardest_positive, k=self.top_positive - len(hardest_positive))
-                    )
-                    hardest_positive = torch.cat([hardest_positive, extra_positives])
-                if len(hardest_negative) < self.top_negative:
-                    extra_negatives = torch.tensor(
-                        choices(hardest_negative, k=self.top_negative - len(hardest_negative))
-                    )
-                    hardest_negative = torch.cat([hardest_negative, extra_negatives])
-
-            ii_pos = [int(ids_pos_cur[idx]) for idx in hardest_positive]
-            ii_neg = [int(ids_neg_cur[idx]) for idx in hardest_negative]
-
-            i_pos, i_neg = list(zip(*product(ii_pos, ii_neg)))
-
-            ids_anchor.extend([i_anch] * len(i_pos))
-            ids_pos.extend(i_pos)
-            ids_neg.extend(i_neg)
-
-        return ids_anchor, ids_pos, ids_neg
-
     def _sample_from_distmat(
         self,
         distmat: Tensor,
@@ -111,13 +55,49 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
         *_: Any,
         ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
     ) -> TTripletsIds:
+        if isinstance(labels, (list, tuple)):
+            labels = torch.tensor(labels, device=distmat.device).long()
 
         if ignore_anchor_mask is None:
-            ignore_anchor_mask = torch.zeros(len(distmat), dtype=torch.bool)
+            ignore_anchor_mask = torch.zeros(len(distmat), dtype=torch.bool, device=distmat.device)
 
-        _, ids_highest_distance = torch.topk(distmat, k=distmat.shape[-1], largest=True)
+        all_ids_reduced = torch.arange(len(labels), device=distmat.device)[torch.logical_not(ignore_anchor_mask)]
 
-        print(ids_highest_distance.shape)
-        ids_highest_distance = ids_highest_distance[[torch.logical_not(ignore_anchor_mask)]]
-        print(ids_highest_distance.shape)
-        ids_smallest_distance = ids_highest_distance[:, ::-1]
+        distmat_reduced = distmat[torch.logical_not(ignore_anchor_mask)]
+        ii_arange = torch.arange(len(distmat_reduced), device=distmat.device).unsqueeze(-1).expand(distmat_reduced.shape)
+
+        _, ids_highest_distance = torch.topk(distmat_reduced, k=distmat_reduced.shape[-1], largest=True)
+        mask_same_label = labels[:, None] == labels[None, :]
+        mask_same_label.fill_diagonal_(False)
+        mask_same_label = mask_same_label[torch.logical_not(ignore_anchor_mask)]
+        mask_same_label_sorted_by_dist = mask_same_label[ii_arange, ids_highest_distance]
+        idx_anch_pos_reduced, idx_pos_sorted_by_dist = torch.nonzero(mask_same_label_sorted_by_dist, as_tuple=True)
+        hardest_positive = ids_highest_distance[idx_anch_pos_reduced, idx_pos_sorted_by_dist]
+        idx_anch_pos = all_ids_reduced[idx_anch_pos_reduced]
+
+        ids_smallest_distance = torch.flip(ids_highest_distance, dims=(1,))
+        mask_diff_label = labels[:, None] != labels[None, :]
+        mask_diff_label = mask_diff_label[torch.logical_not(ignore_anchor_mask)]
+        diff_label_sorted_by_dist = mask_diff_label[ii_arange, ids_smallest_distance]
+        idx_anch_neg_reduced, idx_neg_sorted_by_dist = torch.nonzero(diff_label_sorted_by_dist, as_tuple=True)
+        hardest_negative = ids_smallest_distance[idx_anch_neg_reduced, idx_neg_sorted_by_dist]
+        idx_anch_neg = all_ids_reduced[idx_anch_neg_reduced]
+
+        ids_a = []
+        ids_p = []
+        ids_n = []
+
+        for idx_anch in torch.arange(len(labels))[torch.logical_not(ignore_anchor_mask)]:
+            positives = hardest_positive[idx_anch_pos == idx_anch][:self.top_positive]
+
+            negatives = hardest_negative[idx_anch_neg == idx_anch]
+            negative_start = min(self.top_negative_gap, len(negatives) - 1)
+            negative_end = self.top_negative + negative_start
+            negatives = negatives[negative_start: negative_end]
+
+            i_pos, i_neg = list(zip(*torch.cartesian_prod(positives, negatives).tolist()))
+            ids_a.extend([idx_anch] * len(i_pos))
+            ids_p.extend(i_pos)
+            ids_n.extend(i_neg)
+
+        return ids_a, ids_p, ids_n

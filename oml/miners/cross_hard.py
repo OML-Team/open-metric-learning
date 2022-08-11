@@ -44,8 +44,10 @@ class TopMinerWithBank(ITripletsMiner):
             bs = features.shape[0]
             self.feat_dim = features.shape[-1]
             self.bank_size = self.bank_size_in_batches * bs
-            self.bank_labels = torch.empty(self.bank_size).long().to(features.device)
-            self.bank_features = torch.empty((self.bank_size, self.feat_dim), dtype=features.dtype).to(features.device)
+            self.bank_labels = torch.empty(self.bank_size, dtype=torch.long, device=features.device)
+            self.bank_features = torch.empty((self.bank_size, self.feat_dim),
+                                             dtype=features.dtype,
+                                             device=features.device)
 
     @no_grad()
     def update_bank(self, features: Tensor, labels: Tensor) -> None:
@@ -58,19 +60,21 @@ class TopMinerWithBank(ITripletsMiner):
         self.ptr = (self.ptr + bs) % self.bank_size
 
     def sample(self, features: Tensor, labels: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        labels = torch.tensor(labels).long()
+        if isinstance(labels, (list, tuple)):
+            labels = torch.tensor(labels, dtype=torch.long, device=features.device)
+
         self.__allocate_if_needed(features=features, labels=labels)
 
         if self.is_accumulated:
             len_batch = len(labels)
             features_miner = torch.cat([features, self.bank_features], dim=0)
             labels_miner = torch.cat([labels, self.bank_labels], dim=0)
-            ignore_anchor_mask = torch.zeros(len(labels_miner), dtype=torch.bool)
+            ignore_anchor_mask = torch.zeros(len(labels_miner), dtype=torch.bool, device=features.device)
             ignore_anchor_mask[len_batch:] = True
         else:
             features_miner = features
             labels_miner = labels
-            ignore_anchor_mask = torch.zeros(len(labels_miner), dtype=torch.bool)
+            ignore_anchor_mask = torch.zeros(len(labels_miner), dtype=torch.bool, device=features.device)
 
         ids_a, ids_p, ids_n = self.miner._sample(
             features=features_miner, labels=labels_miner, ignore_anchor_mask=ignore_anchor_mask
