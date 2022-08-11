@@ -18,7 +18,7 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 class IPostprocessor:
     def process(self, *args, **kwargs):  # type: ignore
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class EmbeddingMetrics(IBasicMetric):
@@ -40,7 +40,7 @@ class EmbeddingMetrics(IBasicMetric):
     ):
         if (categories_names_mapping is not None) and (categories_key is None):
             raise ValueError(
-                "You have not specified category key but specified the mapping for " "the categories in the same time."
+                "You have not specified category key but specified the mapping for " "the categories at the same time."
             )
 
         self.embeddings_key = embeddings_key

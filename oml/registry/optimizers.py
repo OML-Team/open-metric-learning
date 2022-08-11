@@ -5,9 +5,16 @@ import torch.optim as opt
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 OPTIMIZERS_REGISTRY = {
-    "sgd": opt.SGD,
+    "adadelta": opt.Adadelta,
+    "adagrad": opt.Adagrad,
     "adam": opt.Adam,
     "adamw": opt.AdamW,
+    "adamax": opt.Adamax,
+    "asgd": opt.ASGD,
+    "lbfgs": opt.LBFGS,
+    "rmsprop": opt.RMSprop,
+    "rprop": opt.Rprop,
+    "sgd": opt.SGD,
 }
 
 

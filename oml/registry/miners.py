@@ -8,10 +8,10 @@ from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 MINERS_REGISTRY = {
-    "AllTripletsMiner": AllTripletsMiner,
-    "HardClusterMiner": HardClusterMiner,
-    "HardTripletsMiner": HardTripletsMiner,
-    "TripletMinerWithMemory": TripletMinerWithMemory,
+    "all_triplets": AllTripletsMiner,
+    "hard_cluster": HardClusterMiner,
+    "hard_triplets": HardTripletsMiner,
+    "triplets_with_memory": TripletMinerWithMemory,
 }
 
 

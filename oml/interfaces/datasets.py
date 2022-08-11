@@ -25,7 +25,7 @@ class IDatasetWithLabels(Dataset, ABC):
             Dict with the following keys:
               "input_tensors", "labels"
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_labels(self) -> np.ndarray:

@@ -86,9 +86,6 @@ class ViTExtractor(IExtractor):
 
         return x
 
-    def extract(self, x: torch.Tensor) -> torch.Tensor:
-        return self.forward(x)
-
     @property
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)

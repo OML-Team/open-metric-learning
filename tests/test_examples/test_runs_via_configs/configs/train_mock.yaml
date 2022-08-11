@@ -14,22 +14,21 @@ im_pad_ratio_val: 0.0
 num_workers: 0
 cache_size: 100
 
-augs: default_torch
+augs: custom_augmentations
 
 criterion:
-  name: TripletLossWithMiner
+  name: triplet_with_miner
   args:
     margin: null
     reduction: mean
     need_logs: True
     miner:
-      name: AllTripletsMiner
+      name: all_triplets
       args: {}
 
-optimizer:
-  name: sgd
-  args:
-    lr: 1e-5
+defaults:
+  - optimizer: sgd
+  - sampler: sequential_balance
 
 model:
   name: vit
@@ -38,21 +37,15 @@ model:
     normalise_features: False
     use_multi_scale: False
     weights: null
-    strict_load: True
+
 
 scheduler:
-  name: MultiStepLR
+  name: multi_step
   args:
     milestones:
       - 1
       - 2
       - 3
-
-sampler:
-  name: SequentialBalanceSampler
-  args:
-    n_labels: 2
-    n_instances: 8
 
 bs_val: 2
 
@@ -72,3 +65,5 @@ tags:
 hydra:
   run:
     dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs

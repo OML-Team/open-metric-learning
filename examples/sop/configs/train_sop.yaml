@@ -18,7 +18,7 @@ num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: SequentialCategoryBalanceSampler
+  name: sequential_category_balance
   args:
     n_labels: 13
     n_instances: 6
@@ -43,16 +43,15 @@ model:
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    strict_load: True
 
 criterion:
-  name: TripletLossWithMiner
+  name: triplet_with_miner
   args:
     need_logs: True
     margin: 0.1
     reduction: mean
     miner:
-      name: HardTripletsMiner
+      name: hard_triplets
       args:
         norm_required: False
 

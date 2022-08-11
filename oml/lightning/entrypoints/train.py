@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 
 from oml.const import PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
+from oml.interfaces.criterions import ITripletLossWithMiner
+from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -71,6 +73,9 @@ def pl_train(cfg: TCfg) -> None:
     criterion = get_criterion_by_cfg(cfg["criterion"])
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
     scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
+
+    assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
+    assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
     loader_train = DataLoader(
         dataset=train_dataset,

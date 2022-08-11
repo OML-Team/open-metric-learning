@@ -22,7 +22,6 @@ model:
     normalise_features: False
     use_multi_scale: True
     weights: vits16_dino
-    strict_load: True
 
 hydra:
   run:
