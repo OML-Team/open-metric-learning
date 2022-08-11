@@ -11,6 +11,7 @@ from oml.utils.misc import flatten_dict
 class MetricValCallback(Callback):
     def __init__(self, metric: IBasicMetric, loader_idx: int = 0, samples_in_getitem: int = 1):
         """
+        It's a wrapper which allows to use IBasicMetric with PyTorch Lightning.
 
         Args:
             metric: metric

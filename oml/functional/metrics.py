@@ -110,7 +110,6 @@ def calc_retrieval_metrics(
 def apply_mask_to_ignore(
     distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    # TODO: add missing comments
     distances[mask_to_ignore] = float("inf")
     mask_gt[mask_to_ignore] = False
     return distances, mask_gt
@@ -121,7 +120,6 @@ def calc_gt_mask(
     is_query: Union[np.ndarray, torch.Tensor],
     is_gallery: Union[np.ndarray, torch.Tensor],
 ) -> torch.Tensor:
-    # TODO: add missing comments
     assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [labels, is_query, is_gallery])
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
@@ -140,7 +138,6 @@ def calc_gt_mask(
 def calc_mask_to_ignore(
     is_query: Union[np.ndarray, torch.Tensor], is_gallery: Union[np.ndarray, torch.Tensor]
 ) -> torch.Tensor:
-    # TODO: add missing comments
     assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [is_query, is_gallery])
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
@@ -159,7 +156,6 @@ def calc_distance_matrix(
     is_query: Union[np.ndarray, torch.Tensor],
     is_gallery: Union[np.ndarray, torch.Tensor],
 ) -> torch.Tensor:
-    # TODO: add missing comments
     assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [embeddings, is_query, is_gallery])
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)

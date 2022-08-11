@@ -18,11 +18,12 @@ TColor = Tuple[int, int, int]
 
 def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     """
-    Draws single bounding box on the image. If first two elements of bbox are NaNs, then they will be replaced with zeros.
-    
+    Draws a single bounding box on the image.
+    If the elements of the bbox are NaNs, we will draw bbox around the whole image.
+
     Args:
         im: image
-        bbox: single bounding box of type [x1, y1, x2, y2]
+        bbox: single bounding in the format of [x1, y1, x2, y2]
         color: tuple of 3 ints
     """
     im_ret = im.copy()
@@ -49,7 +50,22 @@ class RetrievalVisualizer:
         query_bboxes: torch.Tensor,
         gallery_bboxes: torch.Tensor,
     ):
-        # TODO: add explanation to arguments
+        """
+        This class allows you to visualize the searching results for the desired queries and
+        highlight bad and good predictions with the different colors.
+
+        Args:
+            query_paths: Q paths to queries images
+            query_labels: Q labels of query images
+            gallery_paths: G paths to gallery images
+            gallery_labels: G labels of gallery images
+            dist_matrix: (Q x G) matrix of the distances between queries and galleries
+            mask_to_ignore: (Q x G) boolean matrix. If (i,j) is True we will ignore j-th gallery for i-th query.
+            mask_gt: (Q x G) boolean matrix. The (i,j) element indicates if j-th gallery is the correct output for the i-th query.
+            query_bboxes: (Q x 4) matrix of the bboxes in the format of [x1, y1, x2, y2]. Use torch("nan") if you have no bboxes for the sample.
+            gallery_bboxes: (G x 4) matrix of the bboxes in the format of [x1, y1, x2, y2]. Use torch("nan") if you have no bboxes for the sample.
+
+        """
         self.query_paths = query_paths
         self.query_labels = query_labels
 
@@ -66,7 +82,16 @@ class RetrievalVisualizer:
 
     @classmethod
     def from_embeddings_metric(cls, emb: EmbeddingMetrics) -> "RetrievalVisualizer":
-        # TODO: add missing comments
+        """
+        In some cases, you may prefer to instantiate Visualizer from
+        >>> EmbeddingMetrics
+        which you usually have after the validation procedure since it
+        contains the information needed for visualization.
+
+        Args:
+            emb: EmbeddingMetrics object
+
+        """
         is_query = emb.acc.storage[emb.is_query_key]
         is_gallery = emb.acc.storage[emb.is_gallery_key]
 
@@ -94,7 +119,15 @@ class RetrievalVisualizer:
         )
 
     def visualise(self, query_idx: int, top_k: int, skip_no_errors: bool = False) -> None:
-        # TODO: add missing comments
+        """
+        Visualize the predictions for the query with the index <query_idx>.
+
+        Args:
+            query_idx: Index of the query
+            top_k: Amount of the predictions to show
+            skip_no_errors: We skip the current query if we have no errors among first top_k predictions
+
+        """
         ids = torch.argsort(self.dist_matrix[query_idx])[:top_k]
 
         if skip_no_errors and torch.all(self.mask_gt[query_idx, ids]):
@@ -135,14 +168,14 @@ class RetrievalVisualizer:
         plt.show()
 
     @staticmethod
-    def get_img_with_bbox(im_name: str, bbox: Tuple[int, int, int, int], color: TColor) -> np.ndarray:
+    def get_img_with_bbox(im_name: str, bbox: torch.Tensor, color: TColor) -> np.ndarray:
         """
-        Reads image from its name and draws bbox on it.
-    
+        Reads the image by its name and draws bbox on it.
+
         Args:
-            im_name: image path
-            bbox: single bounding box of type [x1, y1, x2, y2]
-            color: tuple of 3 ints
+            im_name: Image path
+            bbox: Single bounding box in the format of [x1, y1, x2, y2]. It may also be a list of 4 torch("nan").
+            color: Tuple of 3 ints from 0 to 255
         """
         img = imread_cv2(im_name)
         img = draw_bbox(img, bbox, color)
