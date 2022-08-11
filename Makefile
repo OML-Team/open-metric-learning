@@ -10,13 +10,9 @@ IMAGE_NAME = oml:$(RUNTIME)
 download_mock_dataset:
 	python oml/utils/download_mock_dataset.py
 
-.PHONY: run_pytest
-run_pytest: download_mock_dataset
+.PHONY: run_tests
+run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
-
-# todo
-.PHONY: test_notebooks
-test_notebooks:
 	$(JUPYTER_CMD) --execute examples/visualization.ipynb
 
 .PHONY: test_converters
@@ -39,7 +35,7 @@ docker_build:
 
 .PHONY: docker_tests
 docker_tests:
-	docker run -t $(IMAGE_NAME) make run_pytest
+	docker run -t $(IMAGE_NAME) make run_tests
 
 .PHONY: upload_to_pip
 upload_to_pip:
