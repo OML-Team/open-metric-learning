@@ -2,7 +2,7 @@ JUPYTER_CMD=export TEST_RUN=1; jupyter nbconvert --to html --output-dir /tmp
 
 DATA_DIR ?= data
 RUNTIME ?= cpu
-IMAGE_NAME = oml
+IMAGE_NAME = oml:$(RUNTIME)
 
 # ====================================== TESTS ======================================
 
@@ -31,7 +31,7 @@ run_precommit:
 
 .PHONY: docker_build
 docker_build:
-	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME):$(RUNTIME) -f ci/Dockerfile .
+	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME) -f ci/Dockerfile .
 
 .PHONY: docker_tests
 docker_tests:
