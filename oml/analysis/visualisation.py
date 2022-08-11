@@ -17,7 +17,14 @@ TColor = Tuple[int, int, int]
 
 
 def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
-    # TODO: add missing comments
+    """
+    Draws single bounding box on the image. If first two elements of bbox are NaNs, then they will be replaced with zeros.
+    
+    Args:
+        im: image
+        bbox: single bounding box of type [x1, y1, x2, y2]
+        color: tuple of 3 ints
+    """
     im_ret = im.copy()
     if not torch.isnan(bbox[0]):
         x1, y1, x2, y2 = list(map(int, bbox))
@@ -129,7 +136,14 @@ class RetrievalVisualizer:
 
     @staticmethod
     def get_img_with_bbox(im_name: str, bbox: Tuple[int, int, int, int], color: TColor) -> np.ndarray:
-        # TODO: add missing comments
+        """
+        Reads image from its name and draws bbox on it.
+    
+        Args:
+            im_name: image path
+            bbox: single bounding box of type [x1, y1, x2, y2]
+            color: tuple of 3 ints
+        """
         img = imread_cv2(im_name)
         img = draw_bbox(img, bbox, color)
         return img

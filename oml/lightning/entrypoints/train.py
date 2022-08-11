@@ -30,7 +30,14 @@ from oml.utils.misc import (
 
 
 def pl_train(cfg: TCfg) -> None:
-    # TODO: definitly comment needed
+    """
+    This is a function for training with basic functionality: global seeding, adding augmentations, choosing loss, model, etc.
+    
+    Config can be specified as a dictionary or with hydra: https://hydra.cc/
+    For config example look at examples/inshop/configs/train_inshop.yaml
+    
+    For more details look at README.
+    """
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 
