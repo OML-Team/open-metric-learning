@@ -1,6 +1,8 @@
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
 
+logs_root: logs
+
 gpus: []
 
 im_size: 32
@@ -23,4 +25,4 @@ model:
 
 hydra:
   run:
-    dir: /tmp/
+    dir: ${logs_root}
