@@ -12,7 +12,7 @@
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
-Specifically, our pipeline includes supervised training and a retrieval-like validation process.
+Specifically, our framework provides modules for supervised training and retrieval-like validation, and a single pipeline for them.
 * **Training part** implies using losses, well-established for metric learning, such as the angular losses
  (like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
  The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
@@ -181,7 +181,7 @@ on a tiny dataset (less than 1 Mb).
 <summary>Using pure PyTorch</summary>
 <p>
 
-Training
+**Training**
 
 [comment]:vanilla-train-start
 ```python
@@ -215,7 +215,7 @@ for batch in tqdm(train_loader):
 ```
 [comment]:vanilla-train-end
 
-Validation
+**Validation**
 
 [comment]:vanilla-validation-start
 ```python
@@ -250,7 +250,7 @@ metrics = calculator.compute_metrics()
 </details>
 
 <details>
-<summary>Using PyTorch Lightning</summary>
+<summary>**Using PyTorch Lightning**</summary>
 <p>
 
 [comment]:lightning-start
