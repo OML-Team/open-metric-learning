@@ -168,9 +168,9 @@ It allows you to access this object in the config file by that key.
 
 You may change the following blocks and to work correctly some of them have to inherit our interfaces:
 * `Transforms`, `Sampler`, `Optimizer`, `Scheduler` - follow the standard PyTorch interfaces.
-* `Model` - have to be child of `IExtractor` (see `oml.interfaces.models`)
-* `Criterion` - have to be child of `ITripletLossWithMiner` (see `oml.interfaces.criterions`)
-    * You may want to change only `Miner` inside the criterion. It has to be a child of `ITripletsMiner`
+* `Model` - have to be successor of `IExtractor` (see `oml.interfaces.models`)
+* `Criterion` - have to be successor of `ITripletLossWithMiner` (see `oml.interfaces.criterions`)
+    * You may want to change only `Miner` inside the criterion. It has to be a successor of `ITripletsMiner`
       (see `oml.interfaces.miners`).
 
 

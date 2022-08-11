@@ -36,6 +36,33 @@ make docker_build RUNTIME=gpu
 ## FAQ
 
 <details>
+<summary>Why do I need OML?</summary>
+<p>
+
+You may think *"If I need image embeddings I can simply train a vanilla classifier and take its penultimate layer"*.
+Well, it makes sense as a starting point. But there are several possible drawbacks:
+* If you want to use embeddings to perform searching you need to calculate some distance among them (for example, cosine or L2).
+Usually, you don't directly optimize these distances during the training in the classification setup. So, you can only hope that
+final embeddings will have the desired properties.
+
+* The second problem is the validation process.
+In the searching setup, you usually care how related your top-N outputs are to the query.
+The natural way to evaluate the model is to simulate searching requests to the reference set
+and apply one of the retrieval metrics.
+So, there is no guarantee that classification accuracy will correlate with these metrics.
+
+* Finally, you may want to implement a metric learning pipeline by yourself.
+There is a lot of work: to use triplet loss you need to form batches in a specific way,
+implement different kinds of triplets mining, tracking distances, etc. For the validation, you also need to
+implement retrieval metrics,
+which include effective embeddings accumulation during the epoch, covering corner cases, etc.
+You may also want to visualize your search requests by highlighting good and bad search results.
+Instead of doing it by yourself, you can simply use OML for your purposes.
+</p>
+</details>
+
+
+<details>
 <summary>What is Metric Learning?</summary>
 <p>
 
@@ -51,17 +78,6 @@ Here are a few examples of such tasks from the computer vision sphere:
 * Landmark Recognition
 * Searching engines for online shops
  and many others.
-</p>
-</details>
-
-
-<details>
-<summary>Why do I need OML?</summary>
-<p>
-- If I need image embeddings I can simply train a vanilla classifier and take its penultimate layer.
-- Well, it makes sense as a starting point. But there are several drawbacks:
-todo
-
 </p>
 </details>
 
@@ -148,7 +164,7 @@ The design of OML assumes that you may train your model in 2 different ways:
 experienced in Machine Learning or Python. You can find more details in the *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
-* **Via Python**. The most flexible, but but knowledge-requiring approach.
+* **Via Python**. The most flexible, but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
 In the *Minimal examples* section you can find fully working code snippets that train and validate the model
 on a tiny dataset (less than 1 Mb).
