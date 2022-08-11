@@ -36,7 +36,8 @@ model:
     arch: vits8
     normalise_features: False
     use_multi_scale: False
-    weights: random
+    weights: null
+
 
 scheduler:
   name: multi_step
