@@ -54,7 +54,7 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
 
         return ids_anchor, ids_pos, ids_neg
 
-    def _sample_from_distmat(
+    def _sample_from_distmat_prev(
         self,
         distmat: Tensor,
         labels: List[int],
@@ -103,3 +103,21 @@ class TopPNTripletsMiner(InBatchTripletsMiner):
             ids_neg.extend(i_neg)
 
         return ids_anchor, ids_pos, ids_neg
+
+    def _sample_from_distmat(
+        self,
+        distmat: Tensor,
+        labels: List[int],
+        *_: Any,
+        ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None
+    ) -> TTripletsIds:
+
+        if ignore_anchor_mask is None:
+            ignore_anchor_mask = torch.zeros(len(distmat), dtype=torch.bool)
+
+        _, ids_highest_distance = torch.topk(distmat, k=distmat.shape[-1], largest=True)
+
+        print(ids_highest_distance.shape)
+        ids_highest_distance = ids_highest_distance[[torch.logical_not(ignore_anchor_mask)]]
+        print(ids_highest_distance.shape)
+        ids_smallest_distance = ids_highest_distance[:, ::-1]
