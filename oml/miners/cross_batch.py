@@ -21,23 +21,6 @@ from torch import (
 from oml.interfaces.miners import ITripletsMiner
 
 
-@no_grad()
-def get_pos_pairs(lbl2idx: Dict[Tensor, Tensor], n: int = None) -> Tensor:
-    pos_batch_pairs = zeros(0, 2)
-
-    if n is not None:
-        while len(pos_batch_pairs) < n:
-            pos_ii = choice(list(lbl2idx.values()))
-            combs = combinations(pos_ii, r=2)
-            pos_batch_pairs = cat([pos_batch_pairs, combs, flip(combs, [1])])
-    else:
-        for pos_ii in lbl2idx.values():
-            combs = combinations(pos_ii, r=2)
-            pos_batch_pairs = cat([pos_batch_pairs, combs, flip(combs, [1])])
-
-    return pos_batch_pairs.long()[randperm(len(pos_batch_pairs))[:n]]
-
-
 class TripletMinerWithMemory(ITripletsMiner):
     def __init__(self, bank_size_in_batches: int, tri_expand_k: int):
         """
@@ -80,6 +63,22 @@ class TripletMinerWithMemory(ITripletsMiner):
         self.bank_labels[self.ptr : self.ptr + self.bs] = labels.clone()
         self.ptr = (self.ptr + self.bs) % self.bank_size
 
+    @no_grad()
+    def get_pos_pairs(self, lbl2idx: Dict[Tensor, Tensor], n: int = None) -> Tensor:
+        pos_batch_pairs = zeros(0, 2)
+
+        if n is not None:
+            while len(pos_batch_pairs) < n:
+                pos_ii = choice(list(lbl2idx.values()))
+                combs = combinations(pos_ii, r=2)
+                pos_batch_pairs = cat([pos_batch_pairs, combs, flip(combs, [1])])
+        else:
+            for pos_ii in lbl2idx.values():
+                combs = combinations(pos_ii, r=2)
+                pos_batch_pairs = cat([pos_batch_pairs, combs, flip(combs, [1])])
+
+        return pos_batch_pairs.long()[randperm(len(pos_batch_pairs))[:n]]
+
     def sample(  # type: ignore
         self, features: Tensor, labels: Tensor  # type: ignore
     ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:  # type: ignore
@@ -93,7 +92,7 @@ class TripletMinerWithMemory(ITripletsMiner):
         lbl2idx_batch = {lb: arange(self.bs)[labels == lb] for lb in unique(labels)}
 
         # part1: anchor + positive + negative come from batch
-        ii_anch_pos_1 = get_pos_pairs(lbl2idx_batch)
+        ii_anch_pos_1 = self.get_pos_pairs(lbl2idx_batch)
         ii_all = arange(self.bs)
         ii_pos_pairs_1, ii_neg_1 = cartesian_prod(arange(len(ii_anch_pos_1)), ii_all).T
         ii_anch_1, ii_pos_1 = ii_anch_pos_1[ii_pos_pairs_1].T
@@ -105,7 +104,7 @@ class TripletMinerWithMemory(ITripletsMiner):
 
         # part2: anchor + positive come from bank, negative comes from batch
         n_tri_positives_from_bank = int(n_batch_tri * (self.tri_expand_k - 1) / 2)
-        ii_anch_2, ii_pos_2 = get_pos_pairs(lbl2idx_bank, n_tri_positives_from_bank).T
+        ii_anch_2, ii_pos_2 = self.get_pos_pairs(lbl2idx_bank, n_tri_positives_from_bank).T
         ii_neg_2 = randint(0, self.bs, size=(len(ii_anch_2),))
 
         ii_anch_2, ii_pos_2, ii_neg_2 = self.take_tri_by_mask(
@@ -115,7 +114,7 @@ class TripletMinerWithMemory(ITripletsMiner):
         # part3: anchor + positive come from batch, negative comes from bank
         # we try to make size of this part equals to part2
         n_tri_negatives_from_bank = n_tri_positives_from_bank
-        ii_anch_3, ii_pos_3 = get_pos_pairs(lbl2idx_batch).T
+        ii_anch_3, ii_pos_3 = self.get_pos_pairs(lbl2idx_batch).T
         ii_neg_3 = randint(0, self.bank_size, size=(n_tri_negatives_from_bank,))
         ii_3 = randint(0, len(ii_anch_3), size=(n_tri_negatives_from_bank,))
 

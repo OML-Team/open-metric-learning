@@ -30,6 +30,13 @@ from oml.utils.misc import (
 
 
 def pl_train(cfg: TCfg) -> None:
+    """
+    This is an entrypoint for the model training in metric learning setup.
+
+    The config can be specified as a dictionary or with hydra: https://hydra.cc/
+    For more details look at examples/README.md
+
+    """
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 

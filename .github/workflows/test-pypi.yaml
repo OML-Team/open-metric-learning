@@ -1,4 +1,4 @@
-name: Check installation from PyPi
+name: PyPI
 
 
 on:
