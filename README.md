@@ -250,8 +250,10 @@ metrics = calculator.compute_metrics()
 </details>
 
 <details>
-<summary>**Using PyTorch Lightning**</summary>
+<summary>Using PyTorch Lightning</summary>
 <p>
+
+**Training + Validation**
 
 [comment]:lightning-start
 ```python
