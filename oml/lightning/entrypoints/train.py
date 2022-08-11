@@ -143,6 +143,7 @@ def pl_train(cfg: TCfg) -> None:
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
+        precision=cfg.get("precision", 32),
     )
 
     pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
