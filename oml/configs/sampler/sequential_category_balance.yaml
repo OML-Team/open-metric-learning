@@ -1,4 +1,4 @@
-name: SequentialCategoryBalanceSampler
+name: sequential_category_balance
 args:
   n_labels: 2
   n_instances: 2

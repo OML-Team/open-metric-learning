@@ -1,0 +1,3 @@
+name: exponential
+args:
+  gamma: 0.5

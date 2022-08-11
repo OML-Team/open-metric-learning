@@ -81,7 +81,7 @@ class InBatchTripletsMiner(ITripletsMiner):
         Returns: indices of the batch samples to form the triplets
 
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
         """

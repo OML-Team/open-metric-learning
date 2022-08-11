@@ -1,7 +1,7 @@
-name: TripletLossWithMiner
+name: triplet_with_miner
 args:
   margin: null
   reduction: mean
   miner:
-    name: AllTripletsMiner
+    name: all_triplets
     args: {}

@@ -1,0 +1,4 @@
+name: triplet_plain
+args:
+  margin: null
+  reduction: mean
