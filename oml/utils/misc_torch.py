@@ -59,6 +59,7 @@ def _check_is_sequence(val: Any) -> bool:
 
 class OnlineCalc:
     def __init__(self, val: Optional[TOnlineValues] = None):
+        # TODO: What are we calculating? Add comments
         self.result: float = 0.0
         if val is not None:
             self.update(val)

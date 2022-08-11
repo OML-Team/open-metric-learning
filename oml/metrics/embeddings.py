@@ -38,6 +38,8 @@ class EmbeddingMetrics(IBasicMetric):
         categories_names_mapping: Optional[T_Str2Int_or_Int2Str] = None,
         postprocessor: Optional[IPostprocessor] = None,
     ):
+        # TODO: specify what is this, add a bit more comments
+        # because now it looks like a big scary chunk of code
         if (categories_names_mapping is not None) and (categories_key is None):
             raise ValueError(
                 "You have not specified category key but specified the mapping for " "the categories at the same time."

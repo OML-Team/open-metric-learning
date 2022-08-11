@@ -51,6 +51,7 @@ def set_global_seed(seed: int, num_workers: int = 0) -> None:
 
 
 def one_hot(i: int, dim: int) -> torch.Tensor:
+    # TODO: Maybe refactor to use torch.nn.functional.one_hot?
     vector = torch.zeros(dim)
     vector[i] = 1
     return vector

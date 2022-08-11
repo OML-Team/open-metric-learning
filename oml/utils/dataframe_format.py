@@ -10,6 +10,7 @@ BBOXES_FIELDS = ["x_1", "x_2", "y_1", "y_2"]
 def check_retrieval_dataframe_format(
     df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ","
 ) -> None:
+    # TODO: Add comments
     if isinstance(df, (Path, str)):
         df = pd.read_csv(df, sep=sep, index_col=None)
 
