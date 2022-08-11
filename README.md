@@ -1,14 +1,14 @@
 <div align="center">
 <img src="https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg" width="400px">
 
-<div align="left">
-
-OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
-
 ![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg)
 ![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/pre-commit-workflow.yaml/badge.svg)
 ![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests-workflow.yaml/badge.svg)
 [![Pipi version](https://img.shields.io/pypi/v/open-metric-learning.svg)](https://pypi.org/project/open-metric-learning/)
+
+<div align="left">
+
+OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
 Specifically, our pipeline includes supervised training and a retrieval-like validation process.
 * **Training part** implies using losses, well-established for metric learning, such as the angular losses
