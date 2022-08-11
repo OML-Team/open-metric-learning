@@ -28,8 +28,7 @@ RUN pip install Cython==0.29.28
 
 ### Python libs
 # todo: can we move it to requirements.txt?
-RUN pip install torch==1.12.0+${TORCH_POSTFIX} torchvision==0.13.0+${TORCH_POSTFIX} \
-    -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install torch==1.12.0 torchvision==0.13.0 --extra-index-url https://download.pytorch.org/whl/${TORCH_POSTFIX}
 
 COPY ci/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
