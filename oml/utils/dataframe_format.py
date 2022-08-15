@@ -53,11 +53,11 @@ def check_retrieval_dataframe_format(
     # check bboxes if exist
     if set(BBOXES_FIELDS).intersection(set(list(df.columns))):
         assert all(x in df.columns for x in BBOXES_FIELDS), df.columns
-
-        assert all((df["x_1"] < df["x_2"]).to_list())
-        assert all((df["y_1"] < df["y_2"]).to_list())
+        bboxes_df = df[~(df["x_1"].isna() | df["x_2"].isna() | df["y_1"].isna() | df["y_2"].isna())]
+        assert all((bboxes_df["x_1"] < bboxes_df["x_2"]).to_list())
+        assert all((bboxes_df["y_1"] < bboxes_df["y_2"]).to_list())
         for coord in BBOXES_FIELDS:
-            assert all((df[coord] >= 0).to_list()), coord
+            assert all((bboxes_df[coord] >= 0).to_list()), coord
 
     # check categories format
     if ("category" in df.columns) and ("category_name" in df.columns):
