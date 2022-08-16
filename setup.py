@@ -3,6 +3,8 @@ from typing import List
 
 from setuptools import find_packages, setup
 
+from oml.const import PROJECT_ROOT
+
 
 def load_requirements(filename: str) -> List[str]:
     with open(filename, "r") as f:
@@ -10,9 +12,17 @@ def load_requirements(filename: str) -> List[str]:
     return reqs
 
 
+def load_version() -> str:
+    context = {}  # type: ignore
+    with open(PROJECT_ROOT / "oml" / "__version__.py") as f:
+        exec(f.read(), context)
+    version = context["__version__"]
+    return version
+
+
 setup(
     # technical things
-    version="0.1.18",
+    version=load_version(),
     packages=find_packages(include="oml"),
     python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
