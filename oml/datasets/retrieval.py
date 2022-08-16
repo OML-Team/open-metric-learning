@@ -28,6 +28,13 @@ class BaseDataset(Dataset):
         transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
+        input_tensors_key: str = "input_tensors",
+        labels_key: str = "labels",
+        paths_key: str = "paths",
+        x1_key: str = "x1",
+        x2_key: str = "x2",
+        y1_key: str = "y1",
+        y2_key: str = "y2",
     ):
         """
 
@@ -41,9 +48,22 @@ class BaseDataset(Dataset):
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             transform: Augmentations for the images, set None to skip it
             f_imread: Function to read the image
+            input_tensors_key: Key to get input_tensors from batch
+            labels_key: Key to get labels from batch
+            paths_key: Key to get paths from batch
+            x1_key: Key to get x1 from batch
+            x2_key: Key to get x2 from batch
+            y1_key: Key to get y1 from batch
+            y2_key: Key to get y2 from batch
+
         """
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
+
+        self.input_tensors_key = input_tensors_key
+        self.labels_key = labels_key
+        self.paths_key = paths_key
+        self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
 
         if not all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2")):
             df["x_1"] = None
@@ -92,13 +112,13 @@ class BaseDataset(Dataset):
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
         return {
-            "input_tensors": image_tensor,
-            "labels": label,
-            "paths": row.path,
-            "x1": x1,
-            "y1": y1,
-            "x2": x2,
-            "y2": y2,
+            self.input_tensors_key: image_tensor,
+            self.labels_key: label,
+            self.paths_key: row.path,
+            self.x1_key: x1,
+            self.y1_key: y1,
+            self.x2_key: x2,
+            self.y2_key: y2,
         }
 
     def __len__(self) -> int:
@@ -164,6 +184,15 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
+        input_tensors_key: str = "input_tensors",
+        labels_key: str = "labels",
+        paths_key: str = "paths",
+        x1_key: str = "x1",
+        x2_key: str = "x2",
+        y1_key: str = "y1",
+        y2_key: str = "y2",
+        is_query_key: str = "is_query",
+        is_gallery_key: str = "is_gallery",
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
@@ -173,13 +202,23 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
             pad_ratio=pad_ratio,
             f_imread=f_imread,
             cache_size=cache_size,
+            input_tensors_key=input_tensors_key,
+            labels_key=labels_key,
+            paths_key=paths_key,
+            x1_key=x1_key,
+            x2_key=x2_key,
+            y1_key=y1_key,
+            y2_key=y2_key,
         )
         assert all(x in df.columns for x in ("is_query", "is_gallery"))
 
+        self.is_query_key = is_query_key
+        self.is_gallery_key = is_gallery_key
+
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = super().__getitem__(idx)
-        item["is_query"] = bool(self.df.iloc[idx]["is_query"])
-        item["is_gallery"] = bool(self.df.iloc[idx]["is_gallery"])
+        item[self.is_query_key] = bool(self.df.iloc[idx]["is_query"])
+        item[self.is_gallery_key] = bool(self.df.iloc[idx]["is_gallery"])
         return item
 
 
