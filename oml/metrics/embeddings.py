@@ -104,9 +104,9 @@ class EmbeddingMetrics(IBasicMetric):
     def _validate_dataset(self) -> None:
         if not self.acc.is_storage_full():
             raise ValueError("Trying to validate dataset before it was collected.")
-        if not hasattr(self, "mask_to_ignore"):
+        if not hasattr(self, "mask_to_ignore") or self.mask_to_ignore is None:
             raise ValueError("Trying to validate dataset before mask_to_ignore was calculated.")
-        if not hasattr(self, "mask_gt"):
+        if not hasattr(self, "mask_gt") or self.mask_gt is None:
             raise ValueError("Trying to validate dataset before mask_gt was calculated.")
         assert (self.mask_gt & ~self.mask_to_ignore).any(1).all(), "There are queries without galleries!"  # type: ignore
 

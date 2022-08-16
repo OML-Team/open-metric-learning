@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 import torch
 
+from oml.functional.metrics import calc_gt_mask
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
 
@@ -206,3 +207,63 @@ def test_mixed_epochs(perfect_case, imperfect_case, worst_case):  # type: ignore
     for case1 in cases:
         for case2 in cases:
             run_across_epochs(case1, case2)
+
+
+def test_validate_dataset() -> None:  # type: ignore
+    calc = EmbeddingMetrics(
+        embeddings_key="embeddings",
+        labels_key="labels",
+        is_query_key="is_query",
+        is_gallery_key="is_gallery",
+        categories_key="categories",
+        cmc_top_k=(1,),
+        precision_top_k=tuple(),
+        map_top_k=tuple(),
+    )
+    # 0, 0, 0, 1, 1
+    l = torch.zeros(5)
+    l[-2:] = 1
+
+    # 1, 0, 0, 1, 1
+    isq = torch.zeros(5)
+    isq[[0, 3, 4]] = 1
+
+    # 0, 1, 1, 0, 1
+    isg = torch.zeros(5)
+    isg[[1, 2, 4]] = 1
+
+    calc.acc.storage[calc.labels_key] = l
+    calc.acc.storage[calc.is_query_key] = isq
+    calc.acc.storage[calc.is_gallery_key] = isg
+
+    # is_storage_full will return False in this case
+    calc.acc.num_samples  # type: ignore
+    calc.acc._collected_samples = 3
+    with pytest.raises(ValueError):
+        # fails because of is_storage_full()
+        calc._validate_dataset()
+    calc.acc.num_samples = 3  # type: ignore
+
+    with pytest.raises(ValueError):
+        # fails because there is no mask_to_ignore
+        calc._validate_dataset()
+    ids_query = torch.nonzero(isq).squeeze()
+    ids_gallery = torch.nonzero(isg).squeeze()
+    calc.mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+
+    with pytest.raises(ValueError):
+        # fails because there is no mask_gt
+        calc._validate_dataset()
+    calc.mask_gt = calc_gt_mask(labels=l, is_query=isq, is_gallery=isg)
+
+    with pytest.raises(AssertionError):
+        # fails because of bad queries
+        calc._validate_dataset()
+
+    # 1, 0, 0, 1, 0
+    isq[-1] = 0
+    ids_query = torch.nonzero(isq).squeeze()
+    ids_gallery = torch.nonzero(isg).squeeze()
+    calc.mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+    calc.mask_gt = calc_gt_mask(labels=l, is_query=isq, is_gallery=isg)
+    calc._validate_dataset()
