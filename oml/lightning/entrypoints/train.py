@@ -79,7 +79,16 @@ def pl_train(cfg: TCfg) -> None:
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
-    scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
+
+    # unpack scheduler to the Lightning format
+    if cfg["scheduling"]:
+        scheduler_args = {
+            "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
+            "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
+            "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
+        }
+    else:
+        scheduler_args = {"scheduler": None}
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
@@ -146,7 +155,7 @@ def pl_train(cfg: TCfg) -> None:
         precision=cfg.get("precision", 32),
     )
 
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
+    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, **scheduler_args)
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
