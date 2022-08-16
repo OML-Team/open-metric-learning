@@ -1,10 +1,20 @@
 from pathlib import Path
 from typing import Optional, Union
 
+import numpy as np
 import pandas as pd
 
 REQUIRED_FIELDS = ["label", "path", "split", "is_query", "is_gallery"]
 BBOXES_FIELDS = ["x_1", "x_2", "y_1", "y_2"]
+
+
+def _is_valid_bbox(bbox: pd.Series) -> bool:
+    bbox_list = [bbox.x_1, bbox.x_2, bbox.y_1, bbox.y_2]
+    if np.isnan(bbox_list).sum() == 4:
+        return True
+    elif np.all(np.mod(bbox_list, 1) == 0):
+        return True
+    return False
 
 
 def check_retrieval_dataframe_format(
@@ -53,6 +63,7 @@ def check_retrieval_dataframe_format(
     # check bboxes if exist
     if set(BBOXES_FIELDS).intersection(set(list(df.columns))):
         assert all(x in df.columns for x in BBOXES_FIELDS), df.columns
+        assert all((df[BBOXES_FIELDS].apply(lambda bbox: _is_valid_bbox(bbox), axis=1)).to_list())
         bboxes_df = df[~(df["x_1"].isna() | df["x_2"].isna() | df["y_1"].isna() | df["y_2"].isna())]
         assert all((bboxes_df["x_1"] < bboxes_df["x_2"]).to_list())
         assert all((bboxes_df["y_1"] < bboxes_df["y_2"]).to_list())
