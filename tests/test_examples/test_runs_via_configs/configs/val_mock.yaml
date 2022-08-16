@@ -1,9 +1,9 @@
-dataset_root: tmp  # we will replace it in runtime with the default dataset folder
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
 
-gpus: []
+logs_root: logs
 
-logs_root: logs   # we will replace it in runtime with the tmp folder
+gpus: []
 
 im_size: 32
 num_workers: 0
