@@ -9,3 +9,6 @@ class IPostprocessor:
 
     def process(self, *args, **kwargs):  # type: ignore
         raise NotImplementedError()
+
+
+__all__ = ["IPostprocessor"]

@@ -1,1 +1,1 @@
-from oml.__version__ import __version__
+__version__ = "0.1.18"
