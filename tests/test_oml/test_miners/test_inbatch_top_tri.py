@@ -14,15 +14,13 @@ from tests.test_oml.test_miners.shared_checkers import check_triplets_consistenc
 
 @pytest.mark.parametrize("top_positive", [1, 7, 17])
 @pytest.mark.parametrize("top_negative", [1, 5, 13])
-@pytest.mark.parametrize("duplicate_not_enough_labels", [True, False])
 def test_top_pn_tri_miner(
     features_and_labels: TFeaturesAndLabels,
     top_positive: int,
     top_negative: int,
-    duplicate_not_enough_labels: bool,
 ) -> None:
     miner = TopPNTripletsMiner(
-        top_positive=top_positive, top_negative=top_negative, duplicate_not_enough_labels=duplicate_not_enough_labels
+        top_positive=top_positive, top_negative=top_negative
     )
     check_miner(miner, features_and_labels, validate_duplicates=False)
 

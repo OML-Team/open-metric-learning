@@ -101,6 +101,14 @@ def pl_train(cfg: TCfg) -> None:
         verbose=True,
         filename="best_precision",
     )
+    ckpt_clb_map = pl.callbacks.ModelCheckpoint(
+        dirpath=Path.cwd() / "checkpoints",
+        monitor="OVERALL/map/5",
+        mode="max",
+        save_top_k=1,
+        verbose=True,
+        filename="best_map",
+    )
 
     # Here we try to load NEPTUNE_API_TOKEN from .env file
     # You can also set it up via `export NEPTUNE_API_TOKEN=...`
@@ -139,7 +147,7 @@ def pl_train(cfg: TCfg) -> None:
         num_nodes=1,
         gpus=cfg["gpus"],
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
-        callbacks=[metrics_clb, ckpt_clb_cmc, ckpt_clb_precision],
+        callbacks=[metrics_clb, ckpt_clb_cmc, ckpt_clb_precision, ckpt_clb_map],
         logger=logger,
     )
 
