@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional, Union
 
+import numpy as np
 import pandas as pd
 
 REQUIRED_FIELDS = ["label", "path", "split", "is_query", "is_gallery"]
@@ -54,10 +55,22 @@ def check_retrieval_dataframe_format(
     if set(BBOXES_FIELDS).intersection(set(list(df.columns))):
         assert all(x in df.columns for x in BBOXES_FIELDS), df.columns
 
-        assert all((df["x_1"] < df["x_2"]).to_list())
-        assert all((df["y_1"] < df["y_2"]).to_list())
+        bboxes_columns = df[BBOXES_FIELDS]
+
+        # here we check that for one example bounding box consists of four None (no bounding box) or have 4
+        # integers as corners (checking that we don't use float indexes for the array)
+        assert np.all(
+            np.logical_or(
+                np.isnan(bboxes_columns.values).sum(axis=1) == 4,
+                (np.mod(bboxes_columns.values, 1) == 0).sum(axis=1) == 4,
+            )
+        )
+
+        bboxes_df = df[~(df["x_1"].isna())]
+        assert all((bboxes_df["x_1"] < bboxes_df["x_2"]).to_list())
+        assert all((bboxes_df["y_1"] < bboxes_df["y_2"]).to_list())
         for coord in BBOXES_FIELDS:
-            assert all((df[coord] >= 0).to_list()), coord
+            assert all((bboxes_df[coord] >= 0).to_list()), coord
 
     # check categories format
     if ("category" in df.columns) and ("category_name" in df.columns):
