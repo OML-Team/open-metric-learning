@@ -39,14 +39,16 @@ model:
     use_multi_scale: False
     weights: null
 
-
-scheduler:
-  name: multi_step
-  args:
-    milestones:
-      - 1
-      - 2
-      - 3
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      milestones:
+        - 1
+        - 2
+        - 3
 
 bs_val: 2
 
