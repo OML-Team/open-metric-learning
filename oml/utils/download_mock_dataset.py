@@ -14,7 +14,7 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def mock_dataset_exist(dataset_root: Union[str, Path]) -> bool:
+def check_mock_dataset_exists(dataset_root: Union[str, Path]) -> bool:
     dataset_root = Path(dataset_root)
     files_exist = [(dataset_root / "df.csv").exists()]
     for im in ["rectangle", "circle", "triangle", "cross"]:
@@ -26,7 +26,7 @@ def mock_dataset_exist(dataset_root: Union[str, Path]) -> bool:
 def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     dataset_root = Path(dataset_root)
 
-    if not mock_dataset_exist(dataset_root):
+    if not check_mock_dataset_exists(dataset_root):
         gdown.download_folder(url=MOCK_DATASET_URL, output=str(dataset_root))
     else:
         print("Mock dataset has been downloaded already.")
