@@ -101,6 +101,15 @@ class EmbeddingMetrics(IBasicMetric):
     def update_data(self, data_dict: Dict[str, Any]) -> None:  # type: ignore
         self.acc.update_data(data_dict=data_dict)
 
+    def _validate_dataset(self) -> None:
+        if not self.acc.is_storage_full():
+            raise ValueError("Trying to validate dataset before it was collected.")
+        if not hasattr(self, "mask_to_ignore"):
+            raise ValueError("Trying to validate dataset before mask_to_ignore was calculated.")
+        if not hasattr(self, "mask_gt"):
+            raise ValueError("Trying to validate dataset before mask_gt was calculated.")
+        assert (self.mask_gt & ~self.mask_to_ignore).any(1).all(), "There are queries without galleries!"  # type: ignore
+
     def _calc_matrices(self) -> None:
         embeddings = self.acc.storage[self.embeddings_key]
         labels = self.acc.storage[self.labels_key]
@@ -110,14 +119,17 @@ class EmbeddingMetrics(IBasicMetric):
         if self.postprocessor:
             embeddings = self.postprocessor.process(embeddings, labels, is_query, is_gallery)
 
-        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
-
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         ids_query = nonzero(is_query).squeeze()
         ids_gallery = nonzero(is_gallery).squeeze()
         self.mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+
+        # validate dataset before long computation
+        self._validate_dataset()
+
+        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
