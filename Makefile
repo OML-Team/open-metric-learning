@@ -2,7 +2,7 @@ JUPYTER_CMD=export TEST_RUN=1; jupyter nbconvert --to html --output-dir /tmp
 
 DATA_DIR ?= data
 RUNTIME ?= cpu
-IMAGE_NAME = oml:$(RUNTIME)
+IMAGE_NAME = omlteam/oml:$(RUNTIME)
 
 # ====================================== TESTS ======================================
 
