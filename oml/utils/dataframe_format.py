@@ -56,6 +56,9 @@ def check_retrieval_dataframe_format(
         assert all(x in df.columns for x in BBOXES_FIELDS), df.columns
 
         bboxes_columns = df[BBOXES_FIELDS]
+
+        # here we check that for one example bounding box consists of four None (no bounding box) or have 4
+        # integers as corners (checking that we don't use float indexes for the array)
         assert np.all(
             np.logical_or(
                 np.isnan(bboxes_columns.values).sum(axis=1) == 4,
