@@ -108,7 +108,7 @@ the combinations of samples only inside the current batch, thus, the memory bank
   "skirts", "jackets", "shorts" and so on (we name them `categories`).
   Note, we avoid using the term `class` to avoid misunderstanding.
 * `training epoch` - batch samplers which we use for combination-based losses usually have a length equal to
-<number of labels in training dataset> / <numbers of labels in one batch>. It means that we don't observe all of
+[number of labels in training dataset] / [numbers of labels in one batch]. It means that we don't observe all of
 the available training samples in one epoch (as opposed to vanilla classification),
 instead, we observe all of the available labels.
 </p>
