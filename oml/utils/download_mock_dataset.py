@@ -14,15 +14,19 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def mock_dataset_exist(dataset_root: Union[str, Path]) -> bool:
     dataset_root = Path(dataset_root)
-
     files_exist = [(dataset_root / "df.csv").exists()]
     for im in ["rectangle", "circle", "triangle", "cross"]:
         for i in range(1, 4):
             files_exist.append((dataset_root / "images" / f"{im}_{i}.jpg").exists())
+    return all(files_exist)
 
-    if not all(files_exist):
+
+def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    dataset_root = Path(dataset_root)
+
+    if not mock_dataset_exist(dataset_root):
         gdown.download_folder(url=MOCK_DATASET_URL, output=str(dataset_root))
     else:
         print("Mock dataset has been downloaded already.")
