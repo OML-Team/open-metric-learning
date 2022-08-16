@@ -66,7 +66,7 @@ def check_retrieval_dataframe_format(
             )
         )
 
-        bboxes_df = df[~(df["x_1"].isna() | df["x_2"].isna() | df["y_1"].isna() | df["y_2"].isna())]
+        bboxes_df = df[~(df["x_1"].isna())]
         assert all((bboxes_df["x_1"] < bboxes_df["x_2"]).to_list())
         assert all((bboxes_df["y_1"] < bboxes_df["y_2"]).to_list())
         for coord in BBOXES_FIELDS:
