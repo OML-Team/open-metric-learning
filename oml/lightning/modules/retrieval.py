@@ -52,7 +52,7 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         if self.emb_criterion is not None:
-            loss = self.emb_criterion(embeddings, batch[self.key_target])
+            loss = self.emb_criterion(embeddings, batch[self.targets_key])
             self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
         else:
             loss = 0
@@ -64,7 +64,7 @@ class RetrievalModule(pl.LightningModule):
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
         if self.clf_criterion is not None:
-            loss_clf = self.clf_weight * self.clf_criterion(embeddings, batch[self.key_target])
+            loss_clf = self.clf_weight * self.clf_criterion(embeddings, batch[self.targets_key])
             self.log("loss_clf", loss_clf.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
             if hasattr(self.clf_criterion, "last_logs"):
