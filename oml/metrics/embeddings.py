@@ -31,7 +31,6 @@ class EmbeddingMetrics(IBasicMetric):
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         categories_key: Optional[str] = None,
-        categories_names_mapping: Optional[T_Str2Int_or_Int2Str] = None,
         postprocessor: Optional[IPostprocessor] = None,
     ):
         """
@@ -51,15 +50,9 @@ class EmbeddingMetrics(IBasicMetric):
             precision_top_k: Values of k to compute Precision@k metrics
             map_top_k: Values of k to compute MAP@k metrics
             categories_key: Key to take the samples categories from the batches (if you have ones)
-            categories_names_mapping: The mapping from the categories to their names (if you have ones)
             postprocessor: IPostprocessor which applies some techniques like query reranking
 
         """
-        if (categories_names_mapping is not None) and (categories_key is None):
-            raise ValueError(
-                "You have not specified category key but specified the mapping for " "the categories at the same time."
-            )
-
         self.embeddings_key = embeddings_key
         self.labels_key = labels_key
         self.is_query_key = is_query_key
@@ -70,7 +63,6 @@ class EmbeddingMetrics(IBasicMetric):
         self.map_top_k = map_top_k
 
         self.categories_key = categories_key
-        self.categories_names_mapping = categories_names_mapping
         self.postprocessor = postprocessor
 
         self.distance_matrix = None
@@ -149,9 +141,6 @@ class EmbeddingMetrics(IBasicMetric):
 
             for category in np.unique(query_categories):
                 mask = query_categories == category
-
-                if self.categories_names_mapping is not None:
-                    category = self.categories_names_mapping[category]
 
                 metrics[category] = calc_retrieval_metrics(
                     distances=self.distance_matrix[mask],  # type: ignore

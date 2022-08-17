@@ -87,8 +87,6 @@ def build_inshop_df(
 
     df_part["path"] = df_part["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
 
-    df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
-
     df_bbox = txt_to_df(list_bbox_inshop)
 
     df = df_part.merge(df_bbox, on="image_name", how="inner")
@@ -132,11 +130,9 @@ def build_inshop_df(
     )
 
     le = preprocessing.LabelEncoder()
-    df["category"] = le.fit_transform(df["category_name"])
+    df["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
-    df = df[
-        ["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category", "category_name"]
-    ]
+    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category"]]
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df.reset_index(drop=True)

@@ -119,6 +119,7 @@ def check_category_balance_batch_sampler_epoch(
         else:
             assert len(set(batch_labels)) == n_labels * n_categories
         collected_labels.update(batch_labels)
+        collected_categories.update(batch_categories)
 
         labels_counter = Counter(batch_labels)
         num_batch_labels = len(labels_counter)
@@ -139,6 +140,8 @@ def check_category_balance_batch_sampler_epoch(
     assert len(collected_categories) <= len(set(label2category.values()))
     assert len(sampler) == epoch_size
 
+    print(collected_categories, " xxx")
+
 
 @pytest.mark.parametrize(
     "sampler_class,sampler_kwargs",
@@ -149,7 +152,7 @@ def check_category_balance_batch_sampler_epoch(
 )
 def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwargs: Dict[str, Any]) -> None:
     """Check the behavior of samplers in case of lack of labels in a category."""
-    label2category = {0: 0, 1: 0, 2: 0, 3: 0, 4: 1, 5: 1}
+    label2category = {0: "0", 1: "0", 2: "0", 3: "0", 4: "1", 5: "1"}
     labels = [0] * 5 + [1] * 4 + [2] * 6 + [3] * 5 + [4] * 5 + [5] * 6
     n_categories, n_labels, n_instances = 2, 3, 2
     with pytest.raises(ValueError, match="All the categories must have at least 3 unique labels"):

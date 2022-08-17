@@ -1,10 +1,7 @@
 import os
-import warnings
 from pathlib import Path
-from typing import Dict, Optional
 
 import albumentations as albu
-import pandas as pd
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
@@ -29,15 +26,6 @@ from oml.utils.misc import (
     load_dotenv,
     set_global_seed,
 )
-
-
-def _get_categories_mapping_from_df(df: pd.DataFrame) -> Optional[Dict[int, str]]:
-    mapping = None
-    if "category_name" in df.columns:
-        mapping = {}
-        for _, row in df.iterrows():
-            mapping[row["category"]] = row["category_name"]
-    return mapping
 
 
 def pl_train(cfg: TCfg) -> None:
@@ -74,14 +62,12 @@ def pl_train(cfg: TCfg) -> None:
     else:
         augs_file = None
 
-    if "category" not in df.columns:
-        df["category"] = 0
-        if cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
-            warnings.warn(
-                "NOTE! You are trying to use Sampler which works with the information related"
-                "to categories, but there is no <category> column in your DataFrame."
-                "We will add this column filled with the trivial value."
-            )
+    if ("category" not in df.columns) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
+        raise ValueError(
+            "NOTE! You are trying to use Sampler which works with the information related"
+            "to categories, but there is no <category> column in your DataFrame."
+            "We will add this column filled with the trivial value."
+        )
 
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     runtime_args = {"labels": train_dataset.get_labels(), "label2category": dict(zip(df["label"], df["category"]))}
@@ -114,11 +100,8 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(
-        categories_key="categories",
-        categories_names_mapping=_get_categories_mapping_from_df(valid_dataset.df),
-        **cfg.get("metric_args", {})
-    )
+    metrics_calc = EmbeddingMetrics(categories_key="categories", **cfg.get("metric_args", {}))
+
     metrics_clb = MetricValCallback(metric=metrics_calc)
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",

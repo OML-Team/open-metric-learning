@@ -15,15 +15,6 @@ from oml.registry.models import get_extractor_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
-def _get_categories_mapping_from_df(df: pd.DataFrame) -> Optional[Dict[int, str]]:
-    mapping = None
-    if "category_name" in df.columns:
-        mapping = {}
-        for _, row in df.iterrows():
-            mapping[row["category"]] = row["category_name"]
-    return mapping
-
-
 def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
     This is an entrypoint for the model validation in metric learning setup.
@@ -50,10 +41,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
 
     metrics_calc = EmbeddingMetrics(
-        extra_keys=("paths", "x1", "x2", "y1", "y2"),
-        categories_key="categories",
-        categories_names_mapping=_get_categories_mapping_from_df(valid_dataset.df),
-        **cfg.get("metric_args", {})
+        extra_keys=("paths", "x1", "x2", "y1", "y2"), categories_key="categories", **cfg.get("metric_args", {})
     )
     clb_metric = MetricValCallback(metric=metrics_calc)
 

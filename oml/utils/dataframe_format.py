@@ -73,15 +73,13 @@ def check_retrieval_dataframe_format(
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 
     # check categories format
-    if ("category" in df.columns) and ("category_name" in df.columns):
-        assert (
-            df.groupby("category")["category_name"].apply(lambda x: x.nunique() == 1).all()
-        ), "category_name and category have not one-to-one correspondence"
-        assert len(df["category"].unique()) == len(
-            df["category_name"].unique()
-        ), "Amount of unique categories and their names are not equal"
+    if "category" in df.columns:
+        label_to_category = dict()  # type: ignore
+        for _, row in df.iterrows():
+            if (row["label"] in label_to_category) and (label_to_category[row["label"]] != row["category"]):
+                assert False, f"Label belongs to several categories"
 
-        assert df["category"].dtypes == int, "Category have to be int dtype"
+            label_to_category[row["label"]] = row["category"]
 
 
 __all__ = ["check_retrieval_dataframe_format"]
