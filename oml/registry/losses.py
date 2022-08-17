@@ -8,9 +8,9 @@ from oml.registry.miners import get_miner_by_cfg
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 LOSSES_REGISTRY = {
-    "TripletLoss": TripletLoss,
-    "TripletLossPlain": TripletLossPlain,
-    "TripletLossWithMiner": TripletLossWithMiner,
+    "triplet": TripletLoss,
+    "triplet_plain": TripletLossPlain,
+    "triplet_with_miner": TripletLossWithMiner,
     "CrossEntropyLoss": nn.CrossEntropyLoss,
     "ArcFaceLoss": ArcFaceLoss,
 }
