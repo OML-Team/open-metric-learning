@@ -194,7 +194,7 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
 
 
 def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
-    assert (mask_gt & ~mask_to_ignore).any(1).all(), "There are queries without galleries!"  # type: ignore
+    assert (mask_gt & ~mask_to_ignore).any(1).all(), "There are queries without available correct answers in the gallery!"  # type: ignore
 
 
 def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
