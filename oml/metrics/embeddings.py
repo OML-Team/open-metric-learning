@@ -11,14 +11,10 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
 )
 from oml.interfaces.metrics import IBasicMetric
+from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
-
-
-class IPostprocessor:
-    def process(self, *args, **kwargs):  # type: ignore
-        raise NotImplementedError()
 
 
 class EmbeddingMetrics(IBasicMetric):
@@ -117,7 +113,8 @@ class EmbeddingMetrics(IBasicMetric):
         is_gallery = self.acc.storage[self.is_gallery_key]
 
         if self.postprocessor:
-            embeddings = self.postprocessor.process(embeddings, labels, is_query, is_gallery)
+            # we have no this functionality yet
+            self.postprocessor.process()
 
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
@@ -189,4 +186,4 @@ class EmbeddingMetrics(IBasicMetric):
         return self.metrics
 
 
-__all__ = ["TMetricsDict_ByLabels", "IPostprocessor", "EmbeddingMetrics"]
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]

@@ -48,6 +48,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
         replace_sampler_ddp=False,
         callbacks=[clb_metric],
+        precision=cfg.get("precision", 32),
     )
 
     logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
