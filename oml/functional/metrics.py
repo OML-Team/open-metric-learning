@@ -20,7 +20,7 @@ def calc_retrieval_metrics(
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
-    check_dataset_validity: bool = True,
+    check_dataset_validity: bool = False,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
