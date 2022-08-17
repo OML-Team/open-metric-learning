@@ -15,7 +15,6 @@ model:
     normalise_features: True
     use_multi_scale: False
     weights: vits16_sop
-    strict_load: True
 
 metric_args:
   cmc_top_k: [1, 5]

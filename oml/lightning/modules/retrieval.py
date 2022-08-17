@@ -19,9 +19,9 @@ class RetrievalModule(pl.LightningModule):
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "epoch",
         scheduler_frequency: int = 1,
-        key_input: str = "input_tensors",
-        key_targets: str = "labels",
-        key_embeddings: str = "embeddings",
+        input_tensors_key: str = "input_tensors",
+        targets_key: str = "labels",
+        embeddings_key: str = "embeddings",
     ):
         super(RetrievalModule, self).__init__()
 
@@ -39,16 +39,16 @@ class RetrievalModule(pl.LightningModule):
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
 
-        self.key_input = key_input
-        self.key_target = key_targets
-        self.key_embeddings = key_embeddings
+        self.input_tensors_key = input_tensors_key
+        self.targets_key = targets_key
+        self.embeddings_key = embeddings_key
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         embeddings = self.model(x)
         return embeddings
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int) -> torch.Tensor:
-        embeddings = self.model(batch[self.key_input])
+        embeddings = self.model(batch[self.input_tensors_key])
         bs = len(embeddings)
 
         if self.emb_criterion is not None:
@@ -76,8 +76,8 @@ class RetrievalModule(pl.LightningModule):
             return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
-        embeddings = self.model(batch[self.key_input])
-        return {**batch, **{self.key_embeddings: embeddings}}
+        embeddings = self.model.extract(batch[self.input_tensors_key])
+        return {**batch, **{self.embeddings_key: embeddings}}
 
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:

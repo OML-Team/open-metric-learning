@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 
 from oml.const import PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
+from oml.interfaces.criterions import ITripletLossWithMiner
+from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -28,6 +30,13 @@ from oml.utils.misc import (
 
 
 def pl_train(cfg: TCfg) -> None:
+    """
+    This is an entrypoint for the model training in metric learning setup.
+
+    The config can be specified as a dictionary or with hydra: https://hydra.cc/
+    For more details look at examples/README.md
+
+    """
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 
@@ -86,7 +95,18 @@ def pl_train(cfg: TCfg) -> None:
         cfg["optimizer"],
         params=params_for_opt,  # type: ignore
     )
-    scheduler = get_scheduler_by_cfg(cfg["scheduler"], optimizer=optimizer) if cfg["scheduler"] is not None else None
+
+    # unpack scheduler to the Lightning format
+    if cfg["scheduling"]:
+        scheduler_args = {
+            "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
+            "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
+            "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
+        }
+    else:
+        scheduler_args = {"scheduler": None}
+
+    assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
 
     loader_train = DataLoader(
         dataset=train_dataset,
@@ -144,10 +164,11 @@ def pl_train(cfg: TCfg) -> None:
         enable_model_summary=True,
         num_nodes=1,
         gpus=cfg["gpus"],
-        strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
+        strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         gradient_clip_val=cfg.get("gradient_clip_val", None),
+        precision=cfg.get("precision", 32),
     )
 
     pl_model = RetrievalModule(
@@ -155,7 +176,7 @@ def pl_train(cfg: TCfg) -> None:
         emb_criterion=emb_criterion,
         clf_criterion=clf_criterion,
         optimizer=optimizer,
-        scheduler=scheduler,
+        **scheduler_args,
     )
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)

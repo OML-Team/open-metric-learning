@@ -1,3 +1,4 @@
+import tempfile
 from functools import partial
 from typing import Any, Dict, List
 
@@ -166,7 +167,7 @@ def test_lightning(
     callbacks = [create_callback(loader_idx=k, samples_in_getitem=samples_in_getitem) for k in range(num_dataloaders)]
 
     trainer = pl.Trainer(
-        default_root_dir="/tmp",
+        default_root_dir=tempfile.gettempdir(),
         max_epochs=2,
         enable_progress_bar=False,
         num_nodes=1,

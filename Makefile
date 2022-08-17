@@ -2,30 +2,17 @@ JUPYTER_CMD=export TEST_RUN=1; jupyter nbconvert --to html --output-dir /tmp
 
 DATA_DIR ?= data
 RUNTIME ?= cpu
-IMAGE_NAME = oml:$(RUNTIME)
+IMAGE_NAME = omlteam/oml:$(RUNTIME)
 
 # ====================================== TESTS ======================================
 
 .PHONY: download_mock_dataset
 download_mock_dataset:
-	python oml/utils/download_mock_dataset.py --dataset_root /tmp/mock_dataset
+	python oml/utils/download_mock_dataset.py
 
-.PHONY: run_pytest
-run_pytest: download_mock_dataset
-	pytest tests --disable-warnings -sv
-
-.PHONY: test_scripts
-test_scripts: download_mock_dataset
-	export PYTHONWARNINGS=ignore
-	python tests/test_examples/test_runs_via_configs/train_mock.py;
-	python tests/test_examples/test_runs_via_configs/val_mock.py;
-	python tests/test_examples/test_runs_via_python/vanila_train.py;
-	python tests/test_examples/test_runs_via_python/vanila_val.py;
-	python tests/test_examples/test_runs_via_python/lightning_train_val.py;
-
-# todo
-.PHONY: test_notebooks
-test_notebooks:
+.PHONY: run_tests
+run_tests: download_mock_dataset
+	pytest --disable-warnings -sv tests
 	$(JUPYTER_CMD) --execute examples/visualization.ipynb
 
 .PHONY: test_converters
@@ -48,12 +35,13 @@ docker_build:
 
 .PHONY: docker_tests
 docker_tests:
-	docker run -t $(IMAGE_NAME) bash -c "make test_scripts; make run_pytest"
+	docker run -t $(IMAGE_NAME) make run_tests
 
 .PHONY: upload_to_pip
 upload_to_pip:
 	python -m pip install --upgrade pip
 	python3 -m pip install --upgrade twine
-	rm -rf dist/*
+	pip install --upgrade pip setuptools wheel
+	rm -rf dist build open_metric_learning.egg-info
 	python3 setup.py sdist bdist_wheel
 	twine upload dist/*

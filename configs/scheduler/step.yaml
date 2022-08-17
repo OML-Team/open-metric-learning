@@ -1,3 +1,0 @@
-name: StepLR
-args:
-  step_size: 30

@@ -11,14 +11,10 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
 )
 from oml.interfaces.metrics import IBasicMetric
+from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
-
-
-class IPostprocessor:
-    def process(self, *args, **kwargs):  # type: ignore
-        raise NotImplementedError
 
 
 class EmbeddingMetrics(IBasicMetric):
@@ -38,9 +34,30 @@ class EmbeddingMetrics(IBasicMetric):
         categories_names_mapping: Optional[T_Str2Int_or_Int2Str] = None,
         postprocessor: Optional[IPostprocessor] = None,
     ):
+        """
+        This class accumulates the information from the batches and embeddings produced by the model
+        at every batch in epoch. After all of the samples have been stored you can call the function
+        which computes retrievals metrics. To get the needed information from the batches it uses
+        keys which have to be provided as init arguments. Please, check the example in the <Using pure PyTorch>
+        section in the main Readme.md.
+
+        Args:
+            embeddings_key: Key to take the embeddings from the batches
+            labels_key: Key to take the labels from the batches
+            is_query_key: Key to take the information whether every batch sample belongs to the query
+            is_gallery_key: Key to take the information whether every batch sample belongs to the gallery
+            extra_keys: Keys to accumulate some additional information from the batches
+            cmc_top_k: Values of k to compute CMC@k metrics
+            precision_top_k: Values of k to compute Precision@k metrics
+            map_top_k: Values of k to compute MAP@k metrics
+            categories_key: Key to take the samples categories from the batches (if you have ones)
+            categories_names_mapping: The mapping from the categories to their names (if you have ones)
+            postprocessor: IPostprocessor which applies some techniques like query reranking
+
+        """
         if (categories_names_mapping is not None) and (categories_key is None):
             raise ValueError(
-                "You have not specified category key but specified the mapping for " "the categories in the same time."
+                "You have not specified category key but specified the mapping for " "the categories at the same time."
             )
 
         self.embeddings_key = embeddings_key
@@ -87,7 +104,8 @@ class EmbeddingMetrics(IBasicMetric):
         is_gallery = self.acc.storage[self.is_gallery_key]
 
         if self.postprocessor:
-            embeddings = self.postprocessor.process(embeddings, labels, is_query, is_gallery)
+            # we have no this functionality yet
+            self.postprocessor.process()
 
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
@@ -156,4 +174,4 @@ class EmbeddingMetrics(IBasicMetric):
         return self.metrics
 
 
-__all__ = ["TMetricsDict_ByLabels", "IPostprocessor", "EmbeddingMetrics"]
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]

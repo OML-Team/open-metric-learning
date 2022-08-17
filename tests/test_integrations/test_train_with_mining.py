@@ -36,10 +36,10 @@ class DummyDataset(IDatasetWithLabels):
 @pytest.mark.parametrize(
     "miner_name,miner_params",
     [
-        ("HardTripletsMiner", {"norm_required": True}),
-        ("AllTripletsMiner", dict()),
-        ("HardClusterMiner", dict()),
-        ("TripletMinerWithMemory", {"bank_size_in_batches": 5, "tri_expand_k": 3}),
+        ("hard_triplets", {"norm_required": True}),
+        ("all_triplets", dict()),
+        ("hard_cluster", dict()),
+        ("triplets_with_memory", {"bank_size_in_batches": 5, "tri_expand_k": 3}),
     ],
 )
 @pytest.mark.parametrize("margin", [None, 0.5])

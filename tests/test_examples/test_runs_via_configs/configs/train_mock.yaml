@@ -2,10 +2,11 @@ postfix: "deepfashion"
 
 seed: 42
 gpus: []
+precision: 32
 
-dataset_root: /tmp/mock_dataset
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
-logs_root: /tmp/logs/mock_train
+logs_root: logs
 
 im_size_train: 32
 im_size_val: 32
@@ -14,22 +15,21 @@ im_pad_ratio_val: 0.0
 num_workers: 0
 cache_size: 100
 
-augs: default_torch
+augs: custom_augmentations
 
 criterion:
-  name: TripletLossWithMiner
+  name: triplet_with_miner
   args:
     margin: null
     reduction: mean
     need_logs: True
     miner:
-      name: AllTripletsMiner
+      name: all_triplets
       args: {}
 
-optimizer:
-  name: sgd
-  args:
-    lr: 1e-5
+defaults:
+  - optimizer: sgd
+  - sampler: sequential_balance
 
 model:
   name: vit
@@ -37,22 +37,18 @@ model:
     arch: vits8
     normalise_features: False
     use_multi_scale: False
-    weights: random
-    strict_load: True
+    weights: null
 
-scheduler:
-  name: MultiStepLR
-  args:
-    milestones:
-      - 1
-      - 2
-      - 3
-
-sampler:
-  name: SequentialBalanceSampler
-  args:
-    n_labels: 2
-    n_instances: 8
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      milestones:
+        - 1
+        - 2
+        - 3
 
 bs_val: 2
 
@@ -72,3 +68,5 @@ tags:
 hydra:
   run:
     dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs

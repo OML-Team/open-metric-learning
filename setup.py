@@ -1,7 +1,11 @@
+import io
+import re
 from pathlib import Path
 from typing import List
 
 from setuptools import find_packages, setup
+
+from oml.const import PROJECT_ROOT
 
 
 def load_requirements(filename: str) -> List[str]:
@@ -10,9 +14,15 @@ def load_requirements(filename: str) -> List[str]:
     return reqs
 
 
+def load_version() -> str:
+    version_file = PROJECT_ROOT / "oml" / "__init__.py"
+    with io.open(version_file, encoding="utf-8") as f:
+        return re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
+
+
 setup(
     # technical things
-    version="0.1.11",
+    version=load_version(),
     packages=find_packages(include="oml"),
     python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),

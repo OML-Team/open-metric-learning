@@ -1,7 +1,0 @@
-name: TripletLossWithMiner
-args:
-  margin: null
-  reduction: mean
-  miner:
-    name: AllTripletsMiner
-    args: {}

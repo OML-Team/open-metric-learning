@@ -1,4 +1,0 @@
-name: TripletLoss
-args:
-  margin: null
-  reduction: mean

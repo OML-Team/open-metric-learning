@@ -15,6 +15,13 @@ from oml.utils.misc import dictconfig_to_dict
 
 
 def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
+    """
+    This is an entrypoint for the model validation in metric learning setup.
+
+    The config can be specified as a dictionary or with hydra: https://hydra.cc/
+    For more details look at examples/README.md
+
+    """
     cfg = dictconfig_to_dict(cfg)
     print(cfg)
 
@@ -41,6 +48,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
         replace_sampler_ddp=False,
         callbacks=[clb_metric],
+        precision=cfg.get("precision", 32),
     )
 
     logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)

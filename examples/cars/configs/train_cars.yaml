@@ -1,6 +1,7 @@
 postfix: metric_learning_cars
 
 seed: 42
+precision: 32
 gpus:
   - 0
 
@@ -17,7 +18,7 @@ num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: SequentialBalanceSampler
+  name: sequential_balance
   args:
     n_labels: 20
     n_instances: 10
@@ -39,16 +40,16 @@ model:
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    strict_load: True
+
 
 criterion:
-  name: TripletLossWithMiner
+  name: triplet_with_miner
   args:
     need_logs: True
     margin: null
     reduction: mean
     miner:
-      name: AllTripletsMiner
+      name: all_triplets
       args: {}
 
 

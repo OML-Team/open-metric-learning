@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -37,7 +37,7 @@ class ViTExtractor(IExtractor):
 
     def __init__(
         self,
-        weights: Union[Path, str],
+        weights: Optional[Union[Path, str]],
         arch: str,
         normalise_features: bool,
         use_multi_scale: bool = False,
@@ -45,7 +45,7 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or the special key to download pretrained checkpoint
+            weights: Path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights
             arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
             normalise_features: if normalise features
             use_multi_scale: if use multi scale
@@ -62,7 +62,7 @@ class ViTExtractor(IExtractor):
         factory_fun = self.constructors[self.arch]
 
         self.model = factory_fun(pretrained=False)
-        if weights == "random":
+        if weights is None:
             return
 
         if weights in self.pretrained_models.keys():
@@ -86,15 +86,26 @@ class ViTExtractor(IExtractor):
 
         return x
 
-    def extract(self, x: torch.Tensor) -> torch.Tensor:
-        return self.forward(x)
-
     @property
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)
 
     def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
-        return multi_scale(samples=samples, model=self.model)
+        # code from the original DINO
+        # TODO: check grads later
+        v = torch.zeros((len(samples), self.feat_dim))
+        scales = [1.0, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
+        for s in scales:
+            if s == 1:
+                inp = samples.clone()
+            else:
+                inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
+            feats = self.model.forward(inp).clone()
+            v += feats
+
+        v /= len(scales)
+        # v /= v.norm(dim=1)  # we don't want to shift the norms values
+        return v
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         return vis_vit(vit=self, image=image)
@@ -153,23 +164,4 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
     return arr
 
 
-def multi_scale(samples: torch.Tensor, model: nn.Module) -> torch.Tensor:
-    # code from the original DINO
-    v = None
-    scales = [1, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
-    for s in scales:
-        if s == 1:
-            inp = samples.clone()
-        else:
-            inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
-        feats = model(inp).clone()
-        if v is None:
-            v = feats
-        else:
-            v += feats
-    v /= len(scales)
-    # v /= v.norm(dim=1)  # we don't want to shift the norms values
-    return v
-
-
-__all__ = ["ViTExtractor", "vis_vit", "multi_scale"]
+__all__ = ["ViTExtractor", "vis_vit"]

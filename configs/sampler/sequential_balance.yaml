@@ -1,4 +1,0 @@
-name: SequentialBalanceSampler
-args:
-  n_labels: 2
-  n_instances: 2

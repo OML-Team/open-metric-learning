@@ -34,7 +34,7 @@ class ResnetExtractor(IExtractor):
 
     def __init__(
         self,
-        weights: Union[Path, str],
+        weights: Optional[Union[Path, str]],
         arch: str,
         normalise_features: bool,
         gem_p: Optional[float],
@@ -46,7 +46,7 @@ class ResnetExtractor(IExtractor):
         set both hid_dim and out_dim equal to None.
 
         Args:
-            weights: path to weights or the special key to download pretrained checkpoint
+            weights: path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights or 'default' to use the checkpoint pretrained on ImageNet
             arch: different types of resnet, please, check self.constructors
             normalise_features: if normalise features
             gem_p: value of power in GEM pooling
@@ -64,7 +64,7 @@ class ResnetExtractor(IExtractor):
 
         factory_fun = self.constructors[self.arch]
 
-        self.model = factory_fun(pretrained=False)
+        self.model = factory_fun(weights=None)
 
         if weights == "resnet50_moco_v2":
             # todo:
@@ -80,11 +80,11 @@ class ResnetExtractor(IExtractor):
         if gem_p is not None:
             self.model.avgpool = GEM(p=gem_p)
 
-        if weights == "random":
+        if weights is None:
             return
 
-        elif weights == "pretrained":
-            state_dict = factory_fun(pretrained=True).state_dict()
+        elif isinstance(weights, str) and weights.lower() == "default":
+            state_dict = factory_fun(weights="DEFAULT").state_dict()
 
         elif weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
@@ -109,9 +109,6 @@ class ResnetExtractor(IExtractor):
             x = x.div(xn.unsqueeze(1))
 
         return x
-
-    def extract(self, x: torch.Tensor) -> torch.Tensor:
-        return self.forward(x)
 
     def calc_last_conv_channels(self) -> int:
         last_block = self.model.layer4[-1]

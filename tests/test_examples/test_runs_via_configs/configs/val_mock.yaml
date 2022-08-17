@@ -1,9 +1,9 @@
-dataset_root: /tmp/mock_dataset
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
 
-gpus: []
+logs_root: logs
 
-logs_root: /tmp/logs/mock_val
+gpus: []
 
 im_size: 32
 num_workers: 0
@@ -22,7 +22,6 @@ model:
     normalise_features: False
     use_multi_scale: True
     weights: vits16_dino
-    strict_load: True
 
 hydra:
   run:

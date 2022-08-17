@@ -5,24 +5,28 @@ from typing import Tuple, Union
 import gdown
 import pandas as pd
 
-from oml.const import MOCK_DATASET_URL
+from oml.const import MOCK_DATASET_PATH, MOCK_DATASET_URL
 
 
 def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
-    parser.add_argument("--dataset_root", type=Path)
+    parser.add_argument("--dataset_root", type=Path, default=MOCK_DATASET_PATH)
     return parser
+
+
+def check_mock_dataset_exists(dataset_root: Union[str, Path]) -> bool:
+    dataset_root = Path(dataset_root)
+    files_exist = [(dataset_root / "df.csv").exists()]
+    for im in ["rectangle", "circle", "triangle", "cross"]:
+        for i in range(1, 4):
+            files_exist.append((dataset_root / "images" / f"{im}_{i}.jpg").exists())
+    return all(files_exist)
 
 
 def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     dataset_root = Path(dataset_root)
 
-    files_exist = [(dataset_root / "df.csv").exists()]
-    for im in ["rectangle", "circle", "triangle", "cross"]:
-        for i in range(1, 4):
-            files_exist.append((dataset_root / "images" / f"{im}_{i}.jpg").exists())
-
-    if not all(files_exist):
+    if not check_mock_dataset_exists(dataset_root):
         gdown.download_folder(url=MOCK_DATASET_URL, output=str(dataset_root))
     else:
         print("Mock dataset has been downloaded already.")

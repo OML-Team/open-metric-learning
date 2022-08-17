@@ -16,15 +16,14 @@ from torch.optim.lr_scheduler import (
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 SCHEDULERS_REGISTRY = {
-    "LambdaLR": LambdaLR,
-    "MultiplicativeLR": MultiplicativeLR,
-    "StepLR": StepLR,
-    "MultiStepLR": MultiStepLR,
-    "ExponentialLR": ExponentialLR,
-    "CosineAnnealingLR": CosineAnnealingLR,
-    "ReduceLROnPlateau": ReduceLROnPlateau,
-    "CyclicLR": CyclicLR,
-    "OneCycleLR": OneCycleLR,
+    "lambda": LambdaLR,
+    "multiplicative": MultiplicativeLR,
+    "step": StepLR,
+    "multi_step": MultiStepLR,
+    "exponential": ExponentialLR,
+    "cosine_annealing": CosineAnnealingLR,
+    "cyclic": CyclicLR,
+    "one_cycle": OneCycleLR,
 }
 
 
