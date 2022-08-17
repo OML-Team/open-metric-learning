@@ -52,7 +52,7 @@ model:
     normalise_features: True
     weights: resnet50_moco_v2
     arch: resnet50
-    gem_p: 2
+    gem_p: 1
     remove_fc: True
     strict_load: False
 
