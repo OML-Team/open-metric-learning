@@ -74,6 +74,9 @@ def check_retrieval_dataframe_format(
 
     # check categories format
     if ("category" in df.columns) and ("category_name" in df.columns):
+        assert (
+            df.groupby("category")["category_name"].apply(lambda x: x.nunique() == 1).all()
+        ), "category_name and category have not one-to-one correspondence"
         assert len(df["category"].unique()) == len(
             df["category_name"].unique()
         ), "Amount of unique categories and their names are not equal"
