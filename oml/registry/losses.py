@@ -11,8 +11,8 @@ LOSSES_REGISTRY = {
     "triplet": TripletLoss,
     "triplet_plain": TripletLossPlain,
     "triplet_with_miner": TripletLossWithMiner,
-    "CrossEntropyLoss": nn.CrossEntropyLoss,
-    "ArcFaceLoss": ArcFaceLoss,
+    "ce": nn.CrossEntropyLoss,
+    "arcface": ArcFaceLoss,
 }
 
 
@@ -33,7 +33,7 @@ def get_criterion_by_cfg(
 ) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
     cfg.setdefault("args", {})
-    if cfg["name"] == "ArcFaceLoss":
+    if cfg["name"] == "arcface":
         cfg["args"]["in_features"] = in_features
         cfg["args"]["num_classes"] = num_classes
         if "label_smoothing" in cfg["args"]:

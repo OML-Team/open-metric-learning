@@ -68,7 +68,7 @@ criterion:
         norm_required: False
 
 criterion_classification:
-  name: ArcFaceLoss
+  name: arcface
   args:
     label_smoothing: 0
     s: 64
@@ -79,11 +79,14 @@ optimizer:
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-scheduler:
-  name: MultiStepLR
-  args:
-    milestones: [20, 40, 60, 80]
-    gamma: 0.25
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      milestones: [20, 40, 60, 80]
+      gamma: 0.25
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
