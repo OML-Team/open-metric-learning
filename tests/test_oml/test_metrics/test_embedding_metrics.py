@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 import torch
 
-from oml.functional.metrics import calc_gt_mask
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
 

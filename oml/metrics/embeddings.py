@@ -140,7 +140,8 @@ class EmbeddingMetrics(IBasicMetric):
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
             mask_to_ignore=self.mask_to_ignore,
-            check_dataset_validity=self.check_dataset_validity**args,  # type: ignore
+            check_dataset_validity=self.check_dataset_validity,
+            **args,  # type: ignore
         )
 
         if self.categories_key is not None:

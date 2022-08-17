@@ -5,8 +5,6 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
-from ..functional.metrics import calc_gt_mask, calc_mask_to_ignore, validate_dataset
-
 REQUIRED_FIELDS = ["label", "path", "split", "is_query", "is_gallery"]
 BBOXES_FIELDS = ["x_1", "x_2", "y_1", "y_2"]
 
@@ -48,13 +46,6 @@ def check_retrieval_dataframe_format(
     labels_query = set(df["label"][df["is_query"] == True])  # noqa
     labels_gallery = set(df["label"][df["is_gallery"] == True])  # noqa
     assert labels_query.intersection(labels_gallery) == labels_query
-
-    isq = df["is_query"][val_mask].astype(bool).values
-    isg = df["is_gallery"][val_mask].astype(bool).values
-    labels = df["label"][val_mask].values
-    mask_gt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
-    mask_to_ignore = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
-    validate_dataset(mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     if dataset_root is None:
         dataset_root = Path("")
