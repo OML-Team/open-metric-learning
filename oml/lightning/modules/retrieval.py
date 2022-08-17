@@ -5,20 +5,19 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import _LRScheduler
 
-from oml.interfaces.models import IExtractor, IHead
+from oml.interfaces.models import IExtractor
 
 
 class RetrievalModule(pl.LightningModule):
     def __init__(
         self,
         model: IExtractor,
-        head: Optional[IHead],
         emb_criterion: Optional[nn.Module],
         optimizer: torch.optim.Optimizer,
         clf_criterion: Optional[nn.Module] = None,
         clf_weight: float = 1,
         scheduler: Optional[_LRScheduler] = None,
-        scheduler_interval: str = "step",
+        scheduler_interval: str = "epoch",
         scheduler_frequency: int = 1,
         key_input: str = "input_tensors",
         key_targets: str = "labels",
@@ -31,7 +30,6 @@ class RetrievalModule(pl.LightningModule):
         # assert (clf_criterion is not None) and (head is None), "Head must be set if you want to use clf_criterion."
 
         self.model = model
-        self.head = head
         self.emb_criterion = emb_criterion
         self.clf_criterion = clf_criterion
         self.clf_weight = clf_weight
@@ -65,15 +63,15 @@ class RetrievalModule(pl.LightningModule):
         if self.scheduler is not None:
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
-        if self.head is not None:
-            pred = self.head(embeddings)
-            loss_clf = self.clf_weight * self.clf_criterion(pred, batch[self.key_target])
+        if self.clf_criterion is not None:
+            loss_clf = self.clf_weight * self.clf_criterion(embeddings, batch[self.key_target])
             self.log("loss_clf", loss_clf.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
             if hasattr(self.clf_criterion, "last_logs"):
                 self.log_dict(self.clf_criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
-            return loss + loss_clf
+            # return loss + loss_clf  # TODO: fix this
+            return loss_clf
         else:
             return loss
 
@@ -97,6 +95,10 @@ class RetrievalModule(pl.LightningModule):
         tqdm_dict = super().get_progress_bar_dict()
         tqdm_dict.pop("v_num", None)
         return tqdm_dict
+
+    def on_epoch_start(self) -> None:
+        if getattr(self.clf_criterion, "renormalize", None):
+            self.clf_criterion.renormalize()
 
 
 __all__ = ["RetrievalModule"]

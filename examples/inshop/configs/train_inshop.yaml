@@ -36,19 +36,24 @@ metric_args:
 
 augs: default_albu
 
-model:
-  name: vit
-  args:
-    normalise_features: False
-    use_multi_scale: False
-    weights: vits16_dino
-    arch: vits16
-    strict_load: True
+# model:
+#   name: vit
+#   args:
+#     normalise_features: False
+#     use_multi_scale: False
+#     weights: vits16_dino
+#     arch: vits16
+#     strict_load: True
 
-head:
-  name: fake_head
+model:
+  name: resnet
   args:
-    weights: random
+    normalise_features: True
+    weights: resnet50_moco_v2
+    arch: resnet50
+    gem_p: 2
+    remove_fc: True
+    strict_load: False
 
 criterion:
   name: TripletLossWithMiner
@@ -64,14 +69,20 @@ criterion:
 criterion_classification:
   name: ArcFaceLoss
   args:
-    label_smoothing: 0.2
+    label_smoothing: 0
+    s: 64
+    m: 0.5
 
 optimizer:
   name: adam
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-scheduler: null
+scheduler:
+  name: MultiStepLR
+  args:
+    milestones: [20, 40, 60, 80]
+    gamma: 0.25
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
@@ -85,6 +96,7 @@ tags:
   - ${postfix}
   - arcface_fix
   - label_smoothing
+  - classification_only
 
 hydra:
   run:

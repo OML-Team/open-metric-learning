@@ -16,10 +16,4 @@ class IExtractor(nn.Module, ABC):
         raise NotImplementedError
 
 
-class IHead(nn.Module, ABC):
-    @property
-    def num_classes(self) -> int:
-        raise NotImplementedError()
-
-
-__all__ = ["IExtractor", "IHead"]
+__all__ = ["IExtractor"]

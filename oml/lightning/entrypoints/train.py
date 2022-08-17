@@ -14,7 +14,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
-from oml.registry.models import get_extractor_by_cfg, get_head_by_cfg
+from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
@@ -69,30 +69,19 @@ def pl_train(cfg: TCfg) -> None:
     sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    head = (
-        None
-        if "head" not in cfg
-        else get_head_by_cfg(
-            cfg["head"],
-            in_features=extractor.feat_dim,  # type: ignore
-            num_classes=train_dataset.num_labels,  # type: ignore
-        )
-    )
     emb_criterion = get_criterion_by_cfg(cfg["criterion"])
-    clf_criterion = (
-        None
-        if "criterion_classification" not in cfg
-        else get_criterion_by_cfg(
+    params_for_opt = [*extractor.parameters()]
+    if "criterion_classification" in cfg:
+        clf_criterion = get_criterion_by_cfg(
             cfg["criterion_classification"],
             in_features=extractor.feat_dim,
             num_classes=train_dataset.num_labels,
             label2category=label2category,
         )
-    )
+        params_for_opt.extend(clf_criterion.parameters())
+    else:
+        clf_criterion = None
 
-    params_for_opt = [*extractor.parameters()]
-    if head is not None:
-        params_for_opt.extend(head.parameters())
     optimizer = get_optimizer_by_cfg(
         cfg["optimizer"],
         params=params_for_opt,  # type: ignore
@@ -158,11 +147,11 @@ def pl_train(cfg: TCfg) -> None:
         strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
+        gradient_clip_val=cfg.get("gradient_clip_val", None),
     )
 
     pl_model = RetrievalModule(
         model=extractor,
-        head=head,
         emb_criterion=emb_criterion,
         clf_criterion=clf_criterion,
         optimizer=optimizer,
