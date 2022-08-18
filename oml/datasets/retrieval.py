@@ -59,6 +59,8 @@ class BaseDataset(Dataset):
             y2_key: Key to get y2 from batch
 
         """
+        df = df.copy()
+
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
 

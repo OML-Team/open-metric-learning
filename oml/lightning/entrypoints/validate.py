@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
-import pandas as pd
 import pytorch_lightning as pl
 from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
@@ -40,8 +39,9 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     extractor = get_extractor_by_cfg(cfg["model"])
     pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
 
+    # todo: move logic about empty categories key to dataset
     metrics_calc = EmbeddingMetrics(
-        categories_key=valid_dataset.categories_key if "category" in valid_dataset.df else None,
+        categories_key=valid_dataset.categories_key if valid_dataset.df["category"].nunique() > 1 else None,
         extra_keys=("paths", "x1", "x2", "y1", "y2"),
         **cfg.get("metric_args", {})
     )

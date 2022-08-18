@@ -100,8 +100,10 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
+    # todo: move logic about empty categories key to dataset
     metrics_calc = EmbeddingMetrics(
-        categories_key=valid_dataset.categories_key if "category" in df.columns else None, **cfg.get("metric_args", {})
+        categories_key=valid_dataset.categories_key if valid_dataset.df["category"].nunique() > 1 else None,
+        **cfg.get("metric_args", {})
     )
 
     metrics_clb = MetricValCallback(metric=metrics_calc)
