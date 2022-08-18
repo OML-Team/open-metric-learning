@@ -1,0 +1,6 @@
+name: arcface
+args:
+  s: 64
+  m: 0.5
+  num_classes: 3985
+  in_features: 2048
