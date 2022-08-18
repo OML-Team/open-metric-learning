@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union, List
 
 import numpy as np
 from torch import nonzero
@@ -89,6 +89,12 @@ class EmbeddingMetrics(IBasicMetric):
             self.keys_to_accumulate.extend(list(extra_keys))
 
         self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
+
+    def get_keys_for_metric(self) -> List[str]:
+        keys = [self.embeddings_key, self.labels_key, self.is_query_key, self.is_gallery_key, *self.extra_keys]
+        if self.categories_key is not None:
+            keys += [self.categories_key]
+        return keys
 
     def setup(self, num_samples: int) -> None:  # type: ignore
         self.distance_matrix = None

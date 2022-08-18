@@ -2,12 +2,12 @@ from collections import Counter
 from typing import Any, Dict, Iterator, List, Union
 
 import numpy as np
-from torch.utils.data.sampler import Sampler
+from torch.utils.data.sampler import Sampler, BatchSampler
 
 from oml.utils.misc import smart_sample
 
 
-class BalanceBatchSampler(Sampler):
+class BalanceBatchSampler(BatchSampler):
     """
     This kind of sampler can be used for both metric learning and
     classification task.
@@ -50,7 +50,7 @@ class BalanceBatchSampler(Sampler):
 
     def __init__(self, labels: Union[List[int], np.ndarray], n_labels: int, n_instances: int, **kwargs: Dict[str, Any]):
         """Sampler initialisation."""
-        super().__init__(self)
+        # super().__init__(self)
         unq_labels = set(labels)
 
         assert isinstance(n_labels, int) and isinstance(n_instances, int)

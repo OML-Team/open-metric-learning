@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
@@ -44,17 +45,22 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         loss = self.criterion(embeddings, batch[self.key_target])
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', [Path(fname).name for fname in batch['paths']])
+        # print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', batch[self.key_target])
+        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True, sync_dist=True)
 
         if hasattr(self.criterion, "last_logs"):
-            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
+            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False, sync_dist=True)
 
         if self.scheduler is not None:
-            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
+            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False, sync_dist=True)
 
         return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+        # print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', batch['paths'])
+
+        # print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', batch[self.key_target])
         embeddings = self.model.extract(batch[self.key_input])
         return {**batch, **{self.key_embeddings: embeddings}}
 

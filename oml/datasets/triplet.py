@@ -45,7 +45,7 @@ class TriDataset(Dataset):
         """
         assert expand_ratio >= 0
         assert pad_ratio >= 0
-
+        # triplets = triplets[:30]
         self.triplets = triplets
 
         self.all_ims = set(chain(*triplets))

@@ -93,7 +93,7 @@ class ViTExtractor(IExtractor):
     def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
         # code from the original DINO
         # TODO: check grads later
-        v = torch.zeros((len(samples), self.feat_dim))
+        v = torch.zeros((len(samples), self.feat_dim), device=samples.device)
         scales = [1.0, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
         for s in scales:
             if s == 1:

@@ -6,7 +6,8 @@ import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
-from torch.utils.data import DataLoader
+from pytorch_lightning.strategies import DDPStrategy
+from torch.utils.data import DataLoader, DistributedSampler, BatchSampler
 
 from oml.const import PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
@@ -63,6 +64,8 @@ def pl_train(cfg: TCfg) -> None:
     else:
         augs_file = None
 
+    DistributedSampler
+
     if "category" not in df.columns:
         df["category"] = 0
         if cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
@@ -86,10 +89,11 @@ def pl_train(cfg: TCfg) -> None:
 
     loader_train = DataLoader(
         dataset=train_dataset,
-        sampler=sampler,
+        # batch_sampler=sampler,
         num_workers=cfg["num_workers"],
-        batch_size=sampler.batch_size,
-        drop_last=True,
+        sampler=sampler,
+        batch_size=sampler.batch_size
+        # batch_sampler=BatchSampler(sampler=sampler, drop_last=True, batch_size=sampler.batch_size)
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
@@ -108,26 +112,28 @@ def pl_train(cfg: TCfg) -> None:
     # Here we try to load NEPTUNE_API_TOKEN from .env file
     # You can also set it up via `export NEPTUNE_API_TOKEN=...`
     load_dotenv()
-    if ("NEPTUNE_API_TOKEN" in os.environ.keys()) and (cfg["neptune_project"] is not None):
-        logger = NeptuneLogger(
-            api_key=os.environ["NEPTUNE_API_TOKEN"],
-            project=cfg["neptune_project"],
-            tags=list(cfg["tags"]) + [cfg["postfix"]] + [cwd.name],
-            log_model_checkpoints=False,
-        )
-        # log hyper params and augs config
-        dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
-        logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
-        if augs_file is not None:
-            logger.run["augs_cfg"].upload(augs_file)
-        # log source code
-        source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
-            map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
-        )
-        logger.run["code"].upload_files(source_files)
+    # if ("NEPTUNE_API_TOKEN" in os.environ.keys()) and (cfg["neptune_project"] is not None):
+    #     logger = NeptuneLogger(
+    #         api_key=os.environ["NEPTUNE_API_TOKEN"],
+    #         project=cfg["neptune_project"],
+    #         tags=list(cfg["tags"]) + [cfg["postfix"]] + [cwd.name],
+    #         log_model_checkpoints=False,
+    #     )
+    #     # log hyper params and augs config
+    #     dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
+    #     logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
+    #     if augs_file is not None:
+    #         logger.run["augs_cfg"].upload(augs_file)
+    #     # log source code
+    #     source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
+    #         map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
+    #     )
+    #     logger.run["code"].upload_files(source_files)
+    #
+    # else:
+    #     logger = True
 
-    else:
-        logger = True
+    logger = True
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],
@@ -140,14 +146,15 @@ def pl_train(cfg: TCfg) -> None:
         enable_model_summary=True,
         num_nodes=1,
         gpus=cfg["gpus"],
-        strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
+        # strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
+        strategy=DDPStrategy(find_unused_parameters=False) if cfg["gpus"] else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
     )
 
     pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
-
-    trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+    trainer.validate(model=pl_model, dataloaders=loaders_val)
+    # trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
 
 __all__ = ["pl_train"]

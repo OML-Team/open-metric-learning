@@ -3,7 +3,7 @@ from collections import Counter
 from typing import Dict, Iterator, List, Union
 
 import numpy as np
-from torch.utils.data import Sampler
+from torch.utils.data import Sampler, BatchSampler
 
 from oml.utils.misc import smart_sample
 
@@ -98,6 +98,7 @@ class CategoryBalanceBatchSampler(Sampler):
             [category_weights[cat] for cat in self._unique_categories] if self._weight_categories else None
         )
         self._batch_number = math.ceil(len(self._unique_labels) / self._n_labels)
+        # self._batch_number = 100
 
     @property
     def batch_size(self) -> int:

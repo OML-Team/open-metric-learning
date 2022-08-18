@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from oml.const import T_Str2Int_or_Int2Str
 from oml.functional.metrics import calculate_accuracy_on_triplets
@@ -34,6 +34,12 @@ class AccuracyOnTriplets(IBasicMetric):
         self.categories_names_mapping = categories_names_mapping
 
         self.avg_online = OnlineAvgDict()
+
+    def get_keys_for_metric(self) -> List[str]:
+        keys = [self.embeddings_key]
+        if self.categories_key is not None:
+            keys += [self.categories_key]
+        return keys
 
     def setup(self, *args: Any, **kwargs: Any) -> None:  # type: ignore
         self.avg_online = OnlineAvgDict()

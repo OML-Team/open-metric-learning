@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, List
 
 
 class IBasicMetric(ABC):
@@ -24,6 +24,14 @@ class IBasicMetric(ABC):
     def compute_metrics(self, *args: Any, **kwargs: Any) -> Any:
         """
         Method for obtaining dictionary with metric
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_keys_for_metric(self) -> List[str]:
+        """
+        Method return list of keys which is neccesary to get from batch to calculate metrics. We use it to reduce
+        overhead of gathering data from different devices
         """
         raise NotImplementedError()
 
