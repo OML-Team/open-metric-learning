@@ -74,8 +74,8 @@ class BaseDataset(Dataset):
             df["y_1"] = None
             df["y_2"] = None
 
-        # if "category" not in df.columns:
-        #     df["category"] = "OVERALL"
+        if "category" not in df.columns:
+            df["category"] = "OVERALL"
 
         if dataset_root is not None:
             dataset_root = Path(dataset_root)

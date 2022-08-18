@@ -41,7 +41,9 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
 
     metrics_calc = EmbeddingMetrics(
-        extra_keys=("paths", "x1", "x2", "y1", "y2"), categories_key="categories", **cfg.get("metric_args", {})
+        categories_key=valid_dataset.categories_key if "category" in valid_dataset.df else None,
+        extra_keys=("paths", "x1", "x2", "y1", "y2"),
+        **cfg.get("metric_args", {})
     )
     clb_metric = MetricValCallback(metric=metrics_calc)
 

@@ -100,7 +100,9 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(categories_key="categories", **cfg.get("metric_args", {}))
+    metrics_calc = EmbeddingMetrics(
+        categories_key=valid_dataset.categories_key if "category" in df.columns else None, **cfg.get("metric_args", {})
+    )
 
     metrics_clb = MetricValCallback(metric=metrics_calc)
     ckpt_clb = pl.callbacks.ModelCheckpoint(
