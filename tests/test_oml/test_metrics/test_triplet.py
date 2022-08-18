@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 import torch
 
-from oml.const import MAIN_CATEGORY_KEY
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.metrics.triplets import AccuracyOnTriplets
 from oml.utils.misc import one_hot
 
@@ -21,7 +21,7 @@ def perfect_case() -> Any:
     categories_mapping = {"cat": 0, "dog": 1}
 
     gt_metrics = {
-        f"{AccuracyOnTriplets.metric_name}/{MAIN_CATEGORY_KEY}": 1,
+        f"{AccuracyOnTriplets.metric_name}/{OVERALL_CATEGORIES_KEY}": 1,
         f"{AccuracyOnTriplets.metric_name}/0": 1,
         f"{AccuracyOnTriplets.metric_name}/1": 1,
     }
@@ -74,7 +74,7 @@ def some_case() -> Any:
     categories_mapping = {0: "cat", 1: "dog"}
 
     gt_metrics = {
-        f"{AccuracyOnTriplets.metric_name}/{MAIN_CATEGORY_KEY}": 1 / 2,
+        f"{AccuracyOnTriplets.metric_name}/{OVERALL_CATEGORIES_KEY}": 1 / 2,
         f"{AccuracyOnTriplets.metric_name}/cat": 1 / 2,
         f"{AccuracyOnTriplets.metric_name}/dog": 1 / 2,
     }

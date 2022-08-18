@@ -45,4 +45,4 @@ TNormParam = Tuple[float, float, float]
 MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
 
-MAIN_CATEGORY_KEY = "OVERALL"
+OVERALL_CATEGORIES_KEY = "OVERALL"

@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 
-from oml.const import MAIN_CATEGORY_KEY
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
 from tests.test_integrations.utils import IdealClusterEncoder
@@ -93,4 +93,4 @@ def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, 
 
     metrics = calc.compute_metrics()
 
-    assert isclose(metrics[MAIN_CATEGORY_KEY]["cmc"][1], cmc_gt, abs_tol=1e-5)
+    assert isclose(metrics[OVERALL_CATEGORIES_KEY]["cmc"][1], cmc_gt, abs_tol=1e-5)

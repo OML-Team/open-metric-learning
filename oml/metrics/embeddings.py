@@ -126,7 +126,7 @@ class EmbeddingMetrics(IBasicMetric):
         metrics: TMetricsDict_ByLabels = dict()
 
         # note, here we do micro averaging
-        metrics[self.main_category_key] = calc_retrieval_metrics(
+        metrics[self.overall_categories_key] = calc_retrieval_metrics(
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
             mask_to_ignore=self.mask_to_ignore,
