@@ -1,4 +1,7 @@
+import warnings
+from collections import defaultdict
 from pathlib import Path
+from pprint import pprint
 from typing import Optional, Union
 
 import numpy as np
@@ -72,14 +75,20 @@ def check_retrieval_dataframe_format(
         for coord in BBOXES_FIELDS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 
-    # check categories format
     if "category" in df.columns:
-        label_to_category = dict()  # type: ignore
+        label_to_category = defaultdict(set)
         for _, row in df.iterrows():
-            if (row["label"] in label_to_category) and (label_to_category[row["label"]] != row["category"]):
-                assert False, f"Label belongs to several categories"
+            label_to_category[row.label].add(row.category)
 
-            label_to_category[row["label"]] = row["category"]
+        bad_categories = {k: v for k, v in label_to_category.items() if len(v) > 1}
+
+        if bad_categories:
+            warnings.warn(
+                "Note! You mapping between categories and labels is not bijection!"
+                "During the training and validation we will force it to be bijection by picking"
+                "one random category for each label."
+            )
+            pprint(bad_categories)
 
 
 __all__ = ["check_retrieval_dataframe_format"]
