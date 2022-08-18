@@ -25,7 +25,7 @@ class ArcFaceLoss(nn.Module):
 
         self.criterion = criterion if criterion is not None else nn.CrossEntropyLoss()
         self.num_classes = num_classes
-        self.label2category = torch.arange(num_classes).apply_(label2category.get)
+        self.label2category = {} if label2category is None else torch.arange(num_classes).apply_(label2category.get)
         self.label_smoothing = label_smoothing
         self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
         self.rescale = nn.Parameter(torch.ones(1, dtype=torch.float) * s)

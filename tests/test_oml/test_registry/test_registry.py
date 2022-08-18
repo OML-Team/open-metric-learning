@@ -47,6 +47,7 @@ def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
     for obj_name in registry.keys():
         with open(CONFIGS_PATH / folder_name / f"{obj_name}.yaml", "r") as f:
             cfg = dictconfig_to_dict(OmegaConf.load(f))
+            cfg.setdefault("args", {})
             args = cfg["args"]
 
             # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
