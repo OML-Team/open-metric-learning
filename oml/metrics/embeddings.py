@@ -1,9 +1,7 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
-from torch import nonzero
 
-from oml.const import T_Str2Int_or_Int2Str
 from oml.functional.metrics import (
     TMetricsDict,
     calc_distance_matrix,
@@ -128,7 +126,7 @@ class EmbeddingMetrics(IBasicMetric):
         metrics: TMetricsDict_ByLabels = dict()
 
         # note, here we do micro averaging
-        metrics["OVERALL"] = calc_retrieval_metrics(
+        metrics[self.main_category_key] = calc_retrieval_metrics(
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
             mask_to_ignore=self.mask_to_ignore,
@@ -154,15 +152,6 @@ class EmbeddingMetrics(IBasicMetric):
         self.metrics = metrics  # type: ignore
 
         return metrics
-
-    @property
-    def get_metrics(self) -> TMetricsDict:
-        if self.metrics is None:
-            raise ValueError(
-                f"Metrics have not been calculated." f"Make sure you've called {self.compute_metrics.__name__}"
-            )
-
-        return self.metrics
 
 
 __all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]

@@ -7,7 +7,7 @@ from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
-from oml.const import PROJECT_ROOT, TCfg
+from oml.const import MAIN_CATEGORY_KEY, PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
@@ -62,7 +62,8 @@ def pl_train(cfg: TCfg) -> None:
     else:
         augs_file = None
 
-    if ("category" not in df.columns) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
+    # todo: move this category logic to dataset
+    if (df["category"].nunique() == 1) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
         raise ValueError(
             "NOTE! You are trying to use Sampler which works with the information related"
             "to categories, but there is no <category> column in your DataFrame."
@@ -103,13 +104,13 @@ def pl_train(cfg: TCfg) -> None:
     # todo: move logic about empty categories key to dataset
     metrics_calc = EmbeddingMetrics(
         categories_key=valid_dataset.categories_key if valid_dataset.df["category"].nunique() > 1 else None,
-        **cfg.get("metric_args", {})
+        **cfg.get("metric_args", {}),
     )
 
     metrics_clb = MetricValCallback(metric=metrics_calc)
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
-        monitor="OVERALL/cmc/1",
+        monitor=f"{MAIN_CATEGORY_KEY}/cmc/1",
         mode="max",
         save_top_k=1,
         verbose=True,

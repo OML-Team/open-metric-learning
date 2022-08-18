@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 import torch
 
+from oml.const import MAIN_CATEGORY_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
 
@@ -50,7 +51,7 @@ def perfect_case() -> Any:
 
     k = 1
     metrics = defaultdict(lambda: defaultdict(dict))  # type: ignore
-    metrics["OVERALL"]["cmc"][k] = 1.0
+    metrics[MAIN_CATEGORY_KEY]["cmc"][k] = 1.0
     metrics["cat"]["cmc"][k] = 1.0
     metrics["dog"]["cmc"][k] = 1.0
 
@@ -77,7 +78,7 @@ def imperfect_case() -> Any:
 
     k = 1
     metrics = defaultdict(lambda: defaultdict(dict))  # type: ignore
-    metrics["OVERALL"]["cmc"][k] = 0.6666666865348816  # it's 2/3 in float precision
+    metrics[MAIN_CATEGORY_KEY]["cmc"][k] = 0.6666666865348816  # it's 2/3 in float precision
     metrics[10]["cmc"][k] = 1.0
     metrics[20]["cmc"][k] = 0.5
 
@@ -104,7 +105,7 @@ def worst_case() -> Any:
 
     k = 1
     metrics = defaultdict(lambda: defaultdict(dict))  # type: ignore
-    metrics["OVERALL"]["cmc"][k] = 0
+    metrics[MAIN_CATEGORY_KEY]["cmc"][k] = 0
     metrics[10]["cmc"][k] = 0
     metrics[20]["cmc"][k] = 0
 

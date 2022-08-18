@@ -73,6 +73,8 @@ class MetricValCallback(Callback):
 
     def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
         metrics = self.metric.compute_metrics()
+        # In Tensorboard/Neptune we only log metrics for the main category
+        metrics = {self.metric.main_category_key: metrics[self.metric.main_category_key]}
         metrics = flatten_dict(metrics, sep="/")
         pl_module.log_dict(metrics, rank_zero_only=True, add_dataloader_idx=True)
 

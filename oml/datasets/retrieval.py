@@ -10,6 +10,7 @@ from PIL import Image
 from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
+from oml.const import MAIN_CATEGORY_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TAugs
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
@@ -77,7 +78,7 @@ class BaseDataset(Dataset):
             df["y_2"] = None
 
         if "category" not in df.columns:
-            df["category"] = "OVERALL"
+            df["category"] = MAIN_CATEGORY_KEY
 
         if dataset_root is not None:
             dataset_root = Path(dataset_root)
