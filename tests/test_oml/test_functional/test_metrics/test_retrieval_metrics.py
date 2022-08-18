@@ -113,18 +113,7 @@ def test_on_synthetic_cases(
         compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce=True)
 
 
-def test_validate_dataset() -> None:
-
-    with pytest.raises(AssertionError):
-        isq = np.r_[True, False, False, True, True]
-        isg = np.r_[False, True, True, False, True]
-        labels = np.r_[0, 0, 0, 1, 1]
-
-        mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
-        m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
-
-        validate_dataset(mask_gt=mgt, mask_to_ignore=m2i)
-
+def test_validate_dataset_good_case() -> None:
     isq = np.r_[True, False, False, True, False, False]
     isg = np.r_[False, True, True, False, True, True]
     labels = np.r_[0, 0, 0, 1, 1, 1]
@@ -132,6 +121,17 @@ def test_validate_dataset() -> None:
     mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
     m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
     validate_dataset(mask_gt=mgt, mask_to_ignore=m2i)
+
+
+def test_validate_dataset_bad_case() -> None:
+    with pytest.raises(AssertionError):
+        isq = np.r_[True, False, False, True, True]
+        isg = np.r_[False, True, True, False, True]
+        labels = np.r_[0, 0, 0, 1, 1]
+
+        mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
+        m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
+        validate_dataset(mask_gt=mgt, mask_to_ignore=m2i)
 
 
 def compare_metrics(
