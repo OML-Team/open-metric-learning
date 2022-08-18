@@ -7,6 +7,10 @@ from oml.const import MEAN, STD, TNormParam
 from oml.transforms.images.albumentations.default import get_default_albu
 from oml.transforms.images.albumentations.default_weak import get_default_weak_albu
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.transforms.images.torchvision.broadface import (
+    get_arcface_transform_train_only,
+    get_arcface_transform_val_only,
+)
 from oml.transforms.images.torchvision.default import get_default_torch
 from oml.transforms.images.torchvision.shared import get_normalisation_torch
 
@@ -16,6 +20,8 @@ AUGS_REGISTRY = {
     "default_albu": get_default_albu(),
     "default_weak_albu": get_default_weak_albu(),
     "default_torch": get_default_torch(),
+    "arcface_train": get_arcface_transform_train_only(),
+    "arcface_val": get_arcface_transform_val_only(),
 }
 
 

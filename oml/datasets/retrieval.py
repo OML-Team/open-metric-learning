@@ -234,6 +234,7 @@ def get_retrieval_datasets(
     pad_ratio_val: float,
     train_transform: Any,
     dataframe_name: str,
+    val_transform: Optional[Any] = None,
     cache_size: int = 100_000,
     use_label_encoder_for_train: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
@@ -263,7 +264,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         im_size=im_size_val,
         pad_ratio=pad_ratio_val,
-        transform=None,
+        transform=val_transform,
         cache_size=cache_size,
     )
 

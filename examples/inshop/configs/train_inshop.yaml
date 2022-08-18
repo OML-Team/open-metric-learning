@@ -6,7 +6,7 @@ gpus:
   - 0
   - 1
 
-dataframe_name: df_fixed_train_fixed_val.csv
+dataframe_name: df_fixed_train_fixed_val_wo_boxes.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
@@ -35,7 +35,7 @@ metric_args:
   cmc_top_k: [1]
   map_top_k: [5]
 
-augs: default_albu
+augs: arcface_train
 
 # model:
 #   name: vit
@@ -47,14 +47,14 @@ augs: default_albu
 #     strict_load: True
 
 model:
-  name: resnet
+  name: resnet_arcface
   args:
-    normalise_features: True
-    weights: resnet50_moco_v2
-    arch: resnet50
-    gem_p: 1
-    remove_fc: True
-    strict_load: False
+    normalise_features: False
+    # weights: resnet50_moco_v2
+    # arch: resnet50
+    # gem_p: 1
+    # remove_fc: True
+    # strict_load: False
 
 criterion:
   name: triplet_with_miner
@@ -77,7 +77,7 @@ criterion_classification:
 optimizer:
   name: adam
   args:
-    lr: 1e-5  # if you provide scheduler this parameter will be ignored
+    lr: 1e-4  # if you provide scheduler this parameter will be ignored
 
 scheduling:
   scheduler_interval: epoch
@@ -85,8 +85,8 @@ scheduling:
   scheduler:
     name: multi_step
     args:
-      milestones: [20, 40, 60, 80]
-      gamma: 0.25
+      milestones: [40, 60, 80]
+      gamma: 0.2
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
