@@ -30,4 +30,4 @@ def get_sampler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> Sampler:
     return get_sampler(name=cfg["name"], **cfg["args"])
 
 
-__all__ = ["SAMPLERS_REGISTRY", "get_sampler", "get_sampler_by_cfg"]
+__all__ = ["SAMPLERS_REGISTRY", "SAMPLERS_CATEGORIES_BASED", "get_sampler", "get_sampler_by_cfg"]

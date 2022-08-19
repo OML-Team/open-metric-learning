@@ -24,7 +24,7 @@ def build_sop_df(dataset_root: Path) -> pd.DataFrame:
     train_data = pd.read_csv(ebay_train, sep=" ")
     test_data = pd.read_csv(ebay_test, sep=" ")
 
-    col_map = {"class_id": "label", "super_class_id": "category"}
+    col_map = {"class_id": "label"}
     train_data = train_data.rename(columns=col_map)
     test_data = test_data.rename(columns=col_map)
 
@@ -38,7 +38,7 @@ def build_sop_df(dataset_root: Path) -> pd.DataFrame:
 
     df = pd.concat((train_data, test_data))
     df["path"] = df["path"].apply(lambda x: dataset_root / x)
-    df["category_name"] = df["path"].apply(lambda x: x.parent.name)
+    df["category"] = df["path"].apply(lambda x: x.parent.name)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df

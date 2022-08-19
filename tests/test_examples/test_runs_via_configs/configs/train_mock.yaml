@@ -29,7 +29,7 @@ criterion:
 
 defaults:
   - optimizer: sgd
-  - sampler: sequential_balance
+  - sampler: sequential_category_balance
 
 model:
   name: vit
@@ -56,6 +56,8 @@ metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [1, 5]
+
+log_only_main_category: True
 
 max_epochs: 2
 valid_period: 1

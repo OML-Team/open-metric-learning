@@ -39,8 +39,12 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     extractor = get_extractor_by_cfg(cfg["model"])
     pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
 
-    metrics_calc = EmbeddingMetrics(extra_keys=("paths", "x1", "x2", "y1", "y2"), **cfg.get("metric_args", {}))
-    clb_metric = MetricValCallback(metric=metrics_calc)
+    metrics_calc = EmbeddingMetrics(
+        categories_key=valid_dataset.categories_key,
+        extra_keys=("paths", "x1", "x2", "y1", "y2"),
+        **cfg.get("metric_args", {})
+    )
+    clb_metric = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
 
     trainer = pl.Trainer(
         gpus=cfg["gpus"],
