@@ -91,10 +91,7 @@ class EmbeddingMetrics(IBasicMetric):
         self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
 
     def get_keys_for_metric(self) -> List[str]:
-        keys = [self.embeddings_key, self.labels_key, self.is_query_key, self.is_gallery_key, *self.extra_keys]
-        if self.categories_key is not None:
-            keys += [self.categories_key]
-        return keys
+        return self.keys_to_accumulate
 
     def setup(self, num_samples: int) -> None:  # type: ignore
         self.distance_matrix = None
@@ -106,6 +103,9 @@ class EmbeddingMetrics(IBasicMetric):
 
     def update_data(self, data_dict: Dict[str, Any]) -> None:  # type: ignore
         self.acc.update_data(data_dict=data_dict)
+
+    def sync(self) -> None:
+        self.acc = self.acc.sync()
 
     def _calc_matrices(self) -> None:
         embeddings = self.acc.storage[self.embeddings_key]

@@ -209,7 +209,7 @@ def get_retrieval_datasets(
 
     # val (query + gallery)
     df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
-    # df_query_gallery = df_query_gallery[df_query_gallery["label"].isin(list(df_query_gallery["label"].unique())[:10])]
+    # df_query_gallery = df_query_gallery[df_query_gallery["label"].isin(list(df_query_gallery["label"].unique())[:4])]
 
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,

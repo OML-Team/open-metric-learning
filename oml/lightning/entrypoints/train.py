@@ -137,7 +137,7 @@ def pl_train(cfg: TCfg) -> None:
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],
-        replace_sampler_ddp=False,
+        replace_sampler_ddp=True,
         num_sanity_val_steps=0,
         check_val_every_n_epoch=cfg["valid_period"],
         default_root_dir=cwd,
@@ -146,15 +146,15 @@ def pl_train(cfg: TCfg) -> None:
         enable_model_summary=True,
         num_nodes=1,
         gpus=cfg["gpus"],
-        # strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
-        strategy=DDPStrategy(find_unused_parameters=False) if cfg["gpus"] else None,
+        strategy=DDPStrategy(find_unused_parameters=False) if len(cfg["gpus"]) > 1 else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
     )
 
     pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
-    trainer.validate(model=pl_model, dataloaders=loaders_val)
-    # trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+    # trainer.validate(model=pl_model, dataloaders=loaders_val)
+    # trainer.validate(model=pl_model, dataloaders=loaders_val)
+    trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
 
 __all__ = ["pl_train"]

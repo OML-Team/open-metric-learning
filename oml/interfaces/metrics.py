@@ -35,5 +35,11 @@ class IBasicMetric(ABC):
         """
         raise NotImplementedError()
 
+    def sync(self) -> None:
+        """
+        Method aggregate data in DDP mode before metric calculations
+        """
+        pass
+
 
 __all__ = ["IBasicMetric"]
