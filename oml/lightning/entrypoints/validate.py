@@ -44,7 +44,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         extra_keys=("paths", "x1", "x2", "y1", "y2"),
         **cfg.get("metric_args", {})
     )
-    clb_metric = MetricValCallback(metric=metrics_calc)
+    clb_metric = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
 
     trainer = pl.Trainer(
         gpus=cfg["gpus"],

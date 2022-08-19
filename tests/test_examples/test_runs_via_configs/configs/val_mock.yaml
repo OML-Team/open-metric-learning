@@ -15,6 +15,8 @@ metric_args:
   map_top_k: [5]
   precision_top_k: [1, 5]
 
+log_only_main_category: False
+
 model:
   name: vit
   args:

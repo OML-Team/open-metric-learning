@@ -57,6 +57,8 @@ metric_args:
   map_top_k: [5]
   precision_top_k: [1, 5]
 
+log_only_main_category: True
+
 max_epochs: 2
 valid_period: 1
 

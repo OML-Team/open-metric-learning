@@ -102,7 +102,7 @@ def pl_train(cfg: TCfg) -> None:
 
     metrics_calc = EmbeddingMetrics(categories_key=valid_dataset.categories_key, **cfg.get("metric_args", {}))
 
-    metrics_clb = MetricValCallback(metric=metrics_calc)
+    metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
         monitor=f"{OVERALL_CATEGORIES_KEY}/cmc/1",

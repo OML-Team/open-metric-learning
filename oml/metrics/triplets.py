@@ -24,7 +24,7 @@ class AccuracyOnTriplets(IBasicMetric):
         self.avg_online = defaultdict(OnlineAvgDict)  # type: ignore
 
     def setup(self, *args: Any, **kwargs: Any) -> None:  # type: ignore
-        pass
+        self.avg_online = defaultdict(OnlineAvgDict)  # type: ignore
 
     def update_data(self, data_dict: Dict[str, Any]) -> None:  # type: ignore
         acc_batch = calculate_accuracy_on_triplets(data_dict[self.embeddings_key], reduce_mean=False)
