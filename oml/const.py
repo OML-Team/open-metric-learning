@@ -36,8 +36,6 @@ MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTj
 
 PAD_COLOR = (255, 255, 255)
 
-T_Str2Int_or_Int2Str = Union[Dict[str, int], Dict[int, str]]
-
 TCfg = Union[Dict[str, Any], DictConfig]
 
 # ImageNet Params

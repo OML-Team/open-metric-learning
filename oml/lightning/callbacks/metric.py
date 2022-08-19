@@ -75,7 +75,8 @@ class MetricValCallback(Callback):
         metrics = self.metric.compute_metrics()
         # In Tensorboard/Neptune we only log metrics for the main category
         metrics = {self.metric.overall_categories_key: metrics[self.metric.overall_categories_key]}
-        metrics = flatten_dict(metrics, sep="/")
+
+        metrics = flatten_dict(metrics, sep="/")  # to-do: don't need
         pl_module.log_dict(metrics, rank_zero_only=True, add_dataloader_idx=True)
 
     def _raise_computation_error(self) -> Exception:

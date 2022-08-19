@@ -3,7 +3,6 @@ import subprocess
 import warnings
 from pathlib import Path
 
-import pytest
 import yaml  # type: ignore
 
 from oml.const import PROJECT_ROOT
@@ -21,8 +20,15 @@ def rm_logs(cfg_name: Path) -> None:
         shutil.rmtree(cfg["logs_root"])
 
 
-@pytest.mark.parametrize("file", ["train_mock.py", "val_mock.py"])
-def test_mock_examples(file: str) -> None:
+def run(file: str) -> None:
     subprocess.run(["python", str(SCRIPTS_PATH / file)], check=True)
 
     rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
+
+
+def test_train() -> None:
+    run("train_mock.py")
+
+
+def test_val() -> None:
+    run("val_mock.py")
