@@ -54,9 +54,6 @@ def pl_train(cfg: TCfg) -> None:
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )
-    df = train_dataset.df
-
-    print(df.columns, "xxx")
 
     if isinstance(train_augs, albu.Compose):
         augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
@@ -70,9 +67,11 @@ def pl_train(cfg: TCfg) -> None:
             "to categories, but there is no <categories_key> in your Dataset."
         )
 
+    sampler_runtime_args = {"labels": train_dataset.get_labels()}
+    if train_dataset.categories_key:
+        sampler_runtime_args["label2category"] = dict(zip(train_dataset.df["label"], train_dataset.df["category"]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
-    runtime_args = {"labels": train_dataset.get_labels(), "label2category": dict(zip(df["label"], df["category"]))}
-    sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
+    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
