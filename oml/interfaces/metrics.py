@@ -26,10 +26,16 @@ class IBasicMetric(ABC):
     @abstractmethod
     def compute_metrics(self, *args: Any, **kwargs: Any) -> Any:
         """
-        Method for obtaining dictionary with metric on categories level
-        The main metric calculated for all of the categories is available by the key:
-        >>> self.overall_categories_key
+        The output must be in the following format:
+        {
+            "self.overall_categories_key": {"metric1": v1, "metric2": v2},
+            "category1": {"metric1": v1, "metric2": v2},
+            "category2": {"metric1": v1, "metric2": v2}
+        }
+        Where "category1" and "category2" are optional.
+
         """
+
         raise NotImplementedError()
 
 
