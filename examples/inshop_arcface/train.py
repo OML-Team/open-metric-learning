@@ -8,8 +8,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 from omegaconf import DictConfig
-from PIL import Image
-from torchvision import transforms
 
 from oml.interfaces.models import IExtractor
 from oml.lightning.entrypoints.train import pl_train
@@ -19,7 +17,7 @@ from oml.registry.transforms import AUGS_REGISTRY
 
 AUGS_REGISTRY["broadface"] = albu.Compose(
     [
-        albu.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), height=224, width=224),
+        albu.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), height=224, width=224, always_apply=True),
         albu.HorizontalFlip(),
     ]
 )
