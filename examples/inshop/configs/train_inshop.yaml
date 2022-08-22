@@ -61,15 +61,7 @@ optimizer:
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-scheduling:
-  scheduler_interval: epoch
-  scheduler_frequency: 1
-  monitor_metric: OVERALL/cmc/1
-  scheduler:
-    name: reduce_on_plateau
-    args:
-      factor: 0.25
-      patience: 5
+scheduling: null
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
