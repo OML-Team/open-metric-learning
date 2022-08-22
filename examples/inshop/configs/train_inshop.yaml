@@ -4,11 +4,10 @@ seed: 42
 precision: 32
 gpus:
   - 0
-  - 1
 
 dataframe_name: df_fixed_train_fixed_val.csv
-dataset_root: data/DeepFashion_InShop/
-logs_root: logs/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 im_size_train: 224
@@ -21,9 +20,9 @@ cache_size: 100000
 sampler:
   name: sequential_category_balance
   args:
-    n_labels: 13
-    n_instances: 6
-    n_categories: 3
+    n_labels: 4
+    n_instances: 2
+    n_categories: 2
     resample_labels: True
     weight_categories: True
 
@@ -63,7 +62,15 @@ optimizer:
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-scheduling: null
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  monitor_metric: OVERALL/cmc/1
+  scheduler:
+    name: reduce_on_plateau
+    args:
+      factor: 0.25
+      patience: 5
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
