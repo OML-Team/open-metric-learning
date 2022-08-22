@@ -138,14 +138,14 @@ class BaseDataset(Dataset):
         img_bytes = self.read_bytes_image_cached(self.df.iloc[idx]["path"])
         img = self.f_imread(img_bytes)
 
-        row = self.df.iloc[idx]
-
-        if not pd.isna(row.x_1):
-            x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
-            img = img[y1:y2, x1:x2, :]
-
-        if isinstance(img, TImage):
-            img = np.array(img)
+        # row = self.df.iloc[idx]
+        #
+        # if not pd.isna(row.x_1):
+        #     x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
+        #     img = img[y1:y2, x1:x2, :]
+        #
+        # if isinstance(img, TImage):
+        #     img = np.array(img)
 
         # todo
         # img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)

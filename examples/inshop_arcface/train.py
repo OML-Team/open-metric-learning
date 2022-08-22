@@ -11,6 +11,7 @@ from omegaconf import DictConfig
 
 from oml.interfaces.models import IExtractor
 from oml.lightning.entrypoints.train import pl_train
+from oml.lightning.entrypoints.validate import pl_val
 from oml.registry.losses import LOSSES_REGISTRY
 from oml.registry.models import MODELS_REGISTRY
 from oml.registry.transforms import AUGS_REGISTRY
@@ -104,25 +105,26 @@ class ResNet50(nn.Module):
 
 
 class LinearEmbedding(IExtractor):
-    def __init__(self, embedding_size, l2norm_on_train=True):
+    def __init__(self, embedding_size, l2norm_on_train):
         super(LinearEmbedding, self).__init__()
         self.base = ResNet50(pretrained=True)
         self.linear = nn.Linear(ResNet50.output_size, embedding_size)
         self.l2norm_on_train = l2norm_on_train
 
-        # ckpt = torch.load("/nydl/code/BroadFace/result/best.pth", map_location="cpu")
+        # todo
+        # ckpt = torch.load("/nydl/code/BroadFace/result/last.pth", map_location="cpu")
         # self.load_state_dict(ckpt)
 
     def forward(self, x):
-        feat = self.base(x)
-        feat = feat.view(x.size(0), -1)
-        embedding = self.linear(feat)
+        x = self.base(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear(x)
 
         if self.training and (not self.l2norm_on_train):
-            return embedding
+            return x
 
-        embedding = F.normalize(embedding, dim=1, p=2)
-        return embedding
+        x = F.normalize(x, dim=1, p=2)
+        return x
 
     def feat_dim(self) -> int:
         return self.linear.out_features
@@ -133,7 +135,7 @@ MODELS_REGISTRY["resnet_broadface"] = LinearEmbedding
 
 @hydra.main(config_path="configs", config_name="train_arcface.yaml")
 def main_hydra(cfg: DictConfig) -> None:
-    pl_train(cfg)
+    pl_val(cfg)
 
 
 if __name__ == "__main__":

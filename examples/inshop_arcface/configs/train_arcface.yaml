@@ -5,17 +5,19 @@ precision: 32
 gpus:
   - 1
 
-dataframe_name: df_fixed_train_fixed_val_wo_boxes.csv
+dataframe_name: df.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
+# todo
+im_size: 256
 im_size_train: 256
 im_size_val: 256
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
-cache_size: 100000
+cache_size: 0
 
 sampler: null
 
@@ -36,13 +38,14 @@ model:
   name: resnet_broadface
   args:
     embedding_size: ${emb_size}
+    l2norm_on_train: False
 
 
 criterion:
   name: arcface
   args:
     in_features: ${emb_size}
-    out_features: 3985
+    out_features: 3997
     scale_factor: 64.0
     margin: 0.50
 

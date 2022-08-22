@@ -126,20 +126,22 @@ def build_inshop_df(
     assert df["label"].nunique() == 7982
     assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
 
-    # rm bad bboxes
-    thr_bbox_size = 10
-    mask_bad_bboxes = df.apply(
-        lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
-    )
-    df = df[~mask_bad_bboxes]
-    df.reset_index(drop=True, inplace=True)
-    print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
+    # # rm bad bboxes
+    # thr_bbox_size = 10
+    # mask_bad_bboxes = df.apply(
+    #     lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
+    # )
+    # df = df[~mask_bad_bboxes]
+    # df.reset_index(drop=True, inplace=True)
+    # print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
+    #
+    # # rm bad labels
+    # mask_non_single_images = df.groupby("label").label.transform("count") > 1
+    # df = df[mask_non_single_images]
+    # df.reset_index(drop=True, inplace=True)
+    # print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
 
-    # rm bad labels
-    mask_non_single_images = df.groupby("label").label.transform("count") > 1
-    df = df[mask_non_single_images]
-    df.reset_index(drop=True, inplace=True)
-    print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
+    df = df.drop(columns=["x_1", "x_2", "y_1", "y_2"])
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df.reset_index(drop=True)
