@@ -20,7 +20,7 @@ cache_size: 100000
 sampler: null
 
 bs_val: 512
-bs_train: 256
+bs_train: 128
 max_epochs: 10000
 valid_period: 1
 

@@ -12,7 +12,7 @@ BBOXES_FIELDS = ["x_1", "x_2", "y_1", "y_2"]
 
 
 def check_retrieval_dataframe_format(
-    df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ","
+    df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ",", verbose: bool = False
 ) -> None:
     """
     Function checks if the data is in the correct format.
@@ -82,14 +82,13 @@ def check_retrieval_dataframe_format(
 
         bad_categories = {k: v for k, v in label_to_category.items() if len(v) > 1}
 
-        # todo
-        # if bad_categories:
-        #     warnings.warn(
-        #         "Note! You mapping between categories and labels is not bijection!"
-        #         "During the training and validation we will force it to be bijection by picking"
-        #         "one random category for each label."
-        #     )
-        #     pprint(bad_categories)
+        if bad_categories and verbose:
+            warnings.warn(
+                "Note! You mapping between categories and labels is not bijection!"
+                "During the training and validation we will force it to be bijection by picking"
+                "one random category for each label."
+            )
+            pprint(bad_categories)
 
 
 __all__ = ["check_retrieval_dataframe_format"]
