@@ -64,8 +64,6 @@ def pl_train(cfg: TCfg) -> None:
     else:
         augs_file = None
 
-    DistributedSampler
-
     if "category" not in df.columns:
         df["category"] = 0
         if cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
@@ -86,13 +84,17 @@ def pl_train(cfg: TCfg) -> None:
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
+    # print('LEN SEQ', len(sampler))
+    # batch_sampler = BatchSampler(sampler=sampler, drop_last=True, batch_size=sampler.batch_size)
+    # print('LEN BATCH', len(batch_sampler))
 
     loader_train = DataLoader(
         dataset=train_dataset,
-        # batch_sampler=sampler,
+        batch_sampler=sampler,
+        # batch_sampler=batch_sampler,
         num_workers=cfg["num_workers"],
-        sampler=sampler,
-        batch_size=sampler.batch_size
+        # sampler=sampler,
+        # batch_size=sampler.batch_size
         # batch_sampler=BatchSampler(sampler=sampler, drop_last=True, batch_size=sampler.batch_size)
     )
 
@@ -137,7 +139,7 @@ def pl_train(cfg: TCfg) -> None:
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],
-        replace_sampler_ddp=True,
+        replace_sampler_ddp=False,
         num_sanity_val_steps=0,
         check_val_every_n_epoch=cfg["valid_period"],
         default_root_dir=cwd,
@@ -151,10 +153,12 @@ def pl_train(cfg: TCfg) -> None:
         logger=logger,
     )
 
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler)
+    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler,
+                               loaders_train=loader_train, loaders_val=loaders_val)
+    # data = DataDDP(loaders_train=[loader_train], loaders_val=[loaders_val])
+    # trainer.validate(model=pl_model)
     # trainer.validate(model=pl_model, dataloaders=loaders_val)
-    # trainer.validate(model=pl_model, dataloaders=loaders_val)
-    trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+    trainer.fit(model=pl_model)
 
 
 __all__ = ["pl_train"]

@@ -1,20 +1,101 @@
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List, Sequence
 
 import pytorch_lightning as pl
 import torch
+from pytorch_lightning import LightningDataModule
+from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
+from torch.distributed import get_rank, get_world_size
 from torch.optim.lr_scheduler import _LRScheduler
+from torch.utils.data import DistributedSampler, DataLoader, Dataset, BatchSampler, Sampler
 
 from oml.interfaces.models import IExtractor
 
 
-class RetrievalModule(pl.LightningModule):
+class BatchSampler2Dataset(Dataset):
+    def __init__(self, batch_sampler: BatchSampler):
+        self.batch_sampler = batch_sampler
+        self.sampler_readed = None
+
+    def __getitem__(self, item: int) -> List[int]:
+        if self.sampler_readed is None:
+            self.sampler_readed = list(self.batch_sampler)
+
+        return self.sampler_readed[item]
+
+    def __len__(self):
+        return len(self.batch_sampler)
+
+
+class DDPBatchSamplerWrapper(DistributedSampler):
+    def __init__(self,
+                 batch_sampler: BatchSampler,
+                 shuffle: bool = True,
+                 drop_last: bool = False
+                 ):
+        super().__init__(dataset=BatchSampler2Dataset(batch_sampler), shuffle=shuffle, drop_last=drop_last)
+
+    def __iter__(self):
+        for sampler_idx in super().__iter__():
+            output = self.dataset[sampler_idx]
+            yield output
+
+
+class ModuleDDP(pl.LightningModule):
+    def __init__(self,
+                 loaders_train: Optional[TRAIN_DATALOADERS] = None,
+                 loaders_val: Optional[EVAL_DATALOADERS] = None,
+                 ):
+        super().__init__()
+        self.loaders_train = [loaders_train] if isinstance(loaders_train, DataLoader) else loaders_train
+        self.loaders_val = [loaders_val] if isinstance(loaders_val, DataLoader) else loaders_val
+
+    def train_dataloader(self) -> TRAIN_DATALOADERS:
+        return self._patch_loaders('train')
+
+    def val_dataloader(self) -> EVAL_DATALOADERS:
+        return self._patch_loaders('val')
+
+    def _patch_loaders(self, mode: str):
+        assert mode in ('train', 'val')
+        patcher = self._patch_train_loader_to_ddp if mode == 'train' else self._patch_val_loader_to_ddp
+        loaders = self.loaders_train if mode == 'train' else self.loaders_val
+
+        ddp_loaders = patcher(loaders) if isinstance(loaders, DataLoader) else [patcher(loader) for loader in loaders]
+        return ddp_loaders
+
+    def _patch_val_loader_to_ddp(self, loader: DataLoader) -> DataLoader:
+        dataset = loader.dataset
+        ddp_sampler = DistributedSampler(dataset=dataset, shuffle=False, drop_last=False)
+        loader = DataLoader(dataset=loader.dataset,
+                            sampler=ddp_sampler,
+                            batch_size=loader.batch_size,
+                            num_workers=loader.num_workers)
+        return loader
+
+    def _patch_train_loader_to_ddp(self, loader: DataLoader) -> DataLoader:
+        if loader.batch_sampler is not None:
+            ddp_batch_sampler = DDPBatchSamplerWrapper(batch_sampler=loader.batch_sampler,
+                                                       shuffle=True,
+                                                       drop_last=True)
+            ddp_batch_sampler.set_epoch(self.trainer.current_epoch)
+            loader = DataLoader(loader.dataset,
+                                batch_sampler=ddp_batch_sampler,
+                                num_workers=loader.num_workers)
+            return loader
+        else:
+            raise TypeError('NON SUPPORTED')
+
+
+class RetrievalModule(ModuleDDP):
     def __init__(
         self,
         model: IExtractor,
         criterion: nn.Module,
         optimizer: torch.optim.Optimizer,
+        loaders_train: Optional[TRAIN_DATALOADERS] = None,
+        loaders_val: Optional[EVAL_DATALOADERS] = None,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
@@ -22,7 +103,7 @@ class RetrievalModule(pl.LightningModule):
         key_targets: str = "labels",
         key_embeddings: str = "embeddings",
     ):
-        super(RetrievalModule, self).__init__()
+        super(RetrievalModule, self).__init__(loaders_train=loaders_train, loaders_val=loaders_val)
 
         self.model = model
         self.criterion = criterion
@@ -45,8 +126,6 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         loss = self.criterion(embeddings, batch[self.key_target])
-        print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', [Path(fname).name for fname in batch['paths']])
-        # print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', batch[self.key_target])
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True, sync_dist=True)
 
         if hasattr(self.criterion, "last_logs"):
@@ -58,9 +137,6 @@ class RetrievalModule(pl.LightningModule):
         return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
-        # print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', batch['paths'])
-
-        # print(f'{batch_idx=}', f'{self.local_rank=}', f'{self.global_rank=}', batch[self.key_target])
         embeddings = self.model.extract(batch[self.key_input])
         return {**batch, **{self.key_embeddings: embeddings}}
 
