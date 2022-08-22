@@ -4,8 +4,6 @@ from typing import List, Tuple, Union
 
 from torch import Tensor
 
-from oml.samplers.balance import BalanceBatchSampler  # noqa
-
 TTriplets = Tuple[Tensor, Tensor, Tensor]
 TTripletsIds = Tuple[List[int], List[int], List[int]]
 TLabels = Union[List[int], Tensor]
@@ -50,8 +48,8 @@ class InBatchTripletsMiner(ITripletsMiner):
     will be used for mining triplets inside the batches.
     The batches must contain at least 2 samples for
     each class and at least 2 different labels,
-    such behaviour can be garantee via using
-    >>> BalanceBatchSampler
+    such behaviour can be guarantee via using
+    <BalanceBatchSampler>
 
     But you are not limited to using it in any other way.
 
@@ -83,7 +81,7 @@ class InBatchTripletsMiner(ITripletsMiner):
         Returns: indices of the batch samples to form the triplets
 
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
         """
@@ -103,3 +101,6 @@ class InBatchTripletsMiner(ITripletsMiner):
         ids_anchor, ids_pos, ids_neg = self._sample(features, labels=labels)
 
         return features[ids_anchor], features[ids_pos], features[ids_neg]
+
+
+__all__ = ["TTriplets", "TTripletsIds", "TLabels", "labels2list", "ITripletsMiner", "InBatchTripletsMiner"]

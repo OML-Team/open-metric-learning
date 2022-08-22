@@ -1,18 +1,9 @@
 ARG RUNTIME=cpu
 
 
-FROM nvidia/cuda:11.1-devel-ubuntu18.04 AS gpu_base
+FROM nvidia/cuda:11.1.1-devel-ubuntu18.04 AS gpu_base
 
 ENV TORCH_POSTFIX=cu111
-
-### NVIDIA keys trouble
-RUN rm /etc/apt/sources.list.d/cuda.list
-RUN rm /etc/apt/sources.list.d/nvidia-ml.list
-RUN apt-key del 7fa2af80
-RUN apt-get update && apt-get install -y --no-install-recommends wget
-RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb
-RUN dpkg -i cuda-keyring_1.0-1_all.deb
-
 
 FROM ubuntu:18.04 AS cpu_base
 ENV TORCH_POSTFIX=cpu
@@ -36,8 +27,8 @@ RUN pip3 install --upgrade pip
 RUN pip install Cython==0.29.28
 
 ### Python libs
-RUN pip install torch==1.8.0+${TORCH_POSTFIX} torchvision==0.9.0+${TORCH_POSTFIX} \
-    -f https://download.pytorch.org/whl/torch_stable.html
+# todo: can we move it to requirements.txt?
+RUN pip install torch==1.12.0 torchvision==0.13.0 --extra-index-url https://download.pytorch.org/whl/${TORCH_POSTFIX}
 
 COPY ci/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt

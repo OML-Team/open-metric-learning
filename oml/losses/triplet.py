@@ -4,13 +4,13 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.utils.misc_torch import elementwise_dist
 
 TLogs = Dict[str, float]
-TLossOutput = Union[Tensor, Tuple[Tensor, TLogs]]
 
 
 class TripletLoss(Module):
@@ -40,7 +40,7 @@ class TripletLoss(Module):
         self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
 
-    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> TLossOutput:
+    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> Tensor:
         """
 
         Args:
@@ -130,7 +130,7 @@ class TripletLossPlain(Module):
         self.criterion = TripletLoss(margin=margin, reduction=reduction, need_logs=need_logs)
         self.last_logs = self.criterion.last_logs
 
-    def forward(self, features: torch.Tensor) -> TLossOutput:
+    def forward(self, features: torch.Tensor) -> Tensor:
         """
 
         Args:
@@ -152,7 +152,7 @@ class TripletLossPlain(Module):
         return self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
 
 
-class TripletLossWithMiner(Module):
+class TripletLossWithMiner(ITripletLossWithMiner):
     """
     This class combines in-batch mining of triplets and
     computing of TripletLoss.
@@ -191,7 +191,7 @@ class TripletLossWithMiner(Module):
 
         self.last_logs: Dict[str, float] = {}
 
-    def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tuple[Tensor, TLogs]:
+    def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
         """
         Args:
             features: Features with shape [batch_size, features_dim]
@@ -243,3 +243,6 @@ class TripletLossWithMiner(Module):
             raise ValueError()
 
         return loss
+
+
+__all__ = ["TLogs", "TripletLoss", "get_tri_ids_in_plain", "TripletLossPlain", "TripletLossWithMiner"]

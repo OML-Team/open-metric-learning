@@ -29,7 +29,7 @@ class CategoryBalanceBatchSampler(Sampler):
     def __init__(
         self,
         labels: Union[List[int], np.ndarray],
-        label2category: Dict[int, int],
+        label2category: Dict[int, Union[str, int]],
         n_categories: int,
         n_labels: int,
         n_instances: int,
@@ -60,11 +60,11 @@ class CategoryBalanceBatchSampler(Sampler):
             if not isinstance(param, int):
                 raise TypeError(f"{param.__name__} must be int, {type(param)} given")
         if not 1 <= n_categories <= len(unique_categories):
-            raise ValueError(f"c must be 1 <= n_categories <= {len(unique_categories)}, {n_categories} given")
+            raise ValueError(f"must be 1 <= n_categories <= {len(unique_categories)}, {n_categories} given")
         if not 1 < n_labels <= len(unique_labels):
-            raise ValueError(f"p must be 1 < n_labels <= {len(unique_labels)}, {n_labels} given")
+            raise ValueError(f"must be 1 < n_labels <= {len(unique_labels)}, {n_labels} given")
         if n_instances <= 1:
-            raise ValueError(f"k must be not less than 1, {n_instances} given")
+            raise ValueError(f"must be not less than 1, {n_instances} given")
         if any(label not in label2category.keys() for label in unique_labels):
             raise ValueError("All the labels must have category")
         if any(label not in unique_labels for label in label2category.keys()):
@@ -74,6 +74,9 @@ class CategoryBalanceBatchSampler(Sampler):
         if not resample_labels:
             if any(len(list(labs)) < n_labels for labs in category2labels.values()):
                 raise ValueError(f"All the categories must have at least {n_labels} unique labels")
+
+        unique_categories = sorted(list(unique_categories))
+
         self._resample_labels = resample_labels
         self._labels = np.array(labels)
         self._label2category = label2category
@@ -82,22 +85,20 @@ class CategoryBalanceBatchSampler(Sampler):
         self._n_instances = n_instances
 
         self._batch_size = self._n_categories * self._n_labels * self._n_instances
-        self._unique_labels = list(unique_labels)
-        self._unique_categories = list(unique_categories)
         self._weight_categories = weight_categories
 
         self._label2index = {
-            label: np.arange(len(self._labels))[self._labels == label].tolist() for label in self._unique_labels
+            label: np.arange(len(self._labels))[self._labels == label].tolist() for label in sorted(list(unique_labels))
         }
         self._category2labels = {
             category: {label for label, cat in self._label2category.items() if category == cat}
-            for category in self._unique_categories
+            for category in unique_categories
         }
         category_weights = {cat: len(labels) / len(unique_labels) for cat, labels in self._category2labels.items()}
         self._category_weights = (
-            [category_weights[cat] for cat in self._unique_categories] if self._weight_categories else None
+            [category_weights[cat] for cat in unique_categories] if self._weight_categories else None
         )
-        self._batch_number = math.ceil(len(self._unique_labels) / self._n_labels)
+        self._batch_number = math.ceil(len(unique_labels) / self._n_labels)
 
     @property
     def batch_size(self) -> int:
@@ -132,7 +133,7 @@ class CategoryBalanceBatchSampler(Sampler):
         epoch_indices = []
         for _ in range(self.batches_in_epoch):
             categories = np.random.choice(
-                self._unique_categories,
+                list(self._category2labels.keys()),
                 size=self._n_categories,
                 replace=False,
                 p=self._category_weights,
@@ -165,3 +166,6 @@ class SequentialCategoryBalanceSampler(CategoryBalanceBatchSampler):
 
     def __len__(self) -> int:
         return self.batches_in_epoch * self._batch_size
+
+
+__all__ = ["CategoryBalanceBatchSampler", "SequentialCategoryBalanceSampler"]

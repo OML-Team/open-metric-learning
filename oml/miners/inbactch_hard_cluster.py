@@ -166,3 +166,6 @@ class HardClusterMiner(ITripletsMiner):
         positives = torch.stack([features[idx][pos_idx] for idx, pos_idx in enumerate(pos_indices)])
 
         return mean_vectors, positives, mean_vectors[neg_indices]
+
+
+__all__ = ["HardClusterMiner"]

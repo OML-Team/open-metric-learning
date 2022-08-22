@@ -1,5 +1,5 @@
-from pathlib import Path
-from typing import Any, Callable, Dict
+# type: ignore
+from typing import Any
 
 import pytest
 from omegaconf import OmegaConf
@@ -7,28 +7,17 @@ from torch import nn
 from torch.optim import Optimizer
 
 from oml.const import CONFIGS_PATH
-from oml.registry.losses import get_criterion_by_cfg
-from oml.registry.miners import get_miner_by_cfg
-from oml.registry.models import get_extractor_by_cfg
-from oml.registry.optimizers import get_optimizer_by_cfg
-from oml.registry.samplers import get_sampler_by_cfg
-from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.utils.misc import TCfg
-
-
-@pytest.mark.parametrize(
-    "folder_name,factory_fun",
-    [
-        ("model", get_extractor_by_cfg),
-        ("criterion", get_criterion_by_cfg),
-        ("miner", get_miner_by_cfg),
-    ],
+from oml.registry.losses import LOSSES_REGISTRY, get_criterion
+from oml.registry.miners import MINERS_REGISTRY, get_miner
+from oml.registry.models import MODELS_REGISTRY, get_extractor
+from oml.registry.optimizers import (
+    OPTIMIZERS_REGISTRY,
+    get_optimizer,
+    get_optimizer_by_cfg,
 )
-def test_registry(folder_name: str, factory_fun: Callable[[TCfg], Any]) -> None:
-    for cfg_path in (CONFIGS_PATH / folder_name).glob("**/*.yaml"):
-        with open(cfg_path, "r") as f:
-            factory_fun(OmegaConf.load(f))
-    assert True
+from oml.registry.samplers import SAMPLERS_REGISTRY, get_sampler
+from oml.registry.schedulers import SCHEDULERS_REGISTRY, get_scheduler
+from oml.utils.misc import dictconfig_to_dict
 
 
 def get_sampler_kwargs_runtime() -> Any:
@@ -44,27 +33,29 @@ def get_opt() -> Optimizer:
 
 
 @pytest.mark.parametrize(
-    "cfg_path,factory_fun,runtime_params",
+    "folder_name,registry,factory_fun,runtime_args",
     [
-        ("sampler/sequential_balance.yaml", get_sampler_by_cfg, get_sampler_kwargs_runtime()),
-        ("sampler/sequential_category_balance.yaml", get_sampler_by_cfg, get_sampler_kwargs_runtime()),
-        ("sampler/sequential_distinct_category_balance.yaml", get_sampler_by_cfg, get_sampler_kwargs_runtime()),
-        ("scheduler/lambda.yaml", get_scheduler_by_cfg, {"optimizer": get_opt(), "lr_lambda": lambda e: 0.9}),
-        ("scheduler/multiplicative.yaml", get_scheduler_by_cfg, {"optimizer": get_opt(), "lr_lambda": lambda e: 0.9}),
-        ("scheduler/step.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("scheduler/multi_step.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("scheduler/exponential.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("scheduler/cosine_annealing.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("scheduler/reduce_on_plateau.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("scheduler/cyclic.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("scheduler/one_cycle.yaml", get_scheduler_by_cfg, {"optimizer": get_opt()}),
-        ("optimizer/adam.yaml", get_optimizer_by_cfg, {"params": get_params()}),
-        ("optimizer/sgd.yaml", get_optimizer_by_cfg, {"params": get_params()}),
+        ("model", MODELS_REGISTRY, get_extractor, None),
+        ("criterion", LOSSES_REGISTRY, get_criterion, None),
+        ("miner", MINERS_REGISTRY, get_miner, None),
+        ("optimizer", OPTIMIZERS_REGISTRY, get_optimizer, {"params": get_params()}),
+        ("sampler", SAMPLERS_REGISTRY, get_sampler, get_sampler_kwargs_runtime()),
+        ("scheduler", SCHEDULERS_REGISTRY, get_scheduler, {"optimizer": get_opt()}),
     ],
 )
-def test_registry_with_runtime_args(
-    cfg_path: Path, factory_fun: Callable[[TCfg], Any], runtime_params: Dict[str, Any]
-) -> None:
-    with open(CONFIGS_PATH / cfg_path, "r") as f:
-        factory_fun(OmegaConf.load(f), **runtime_params)  # type: ignore
+def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
+    for obj_name in registry.keys():
+        with open(CONFIGS_PATH / folder_name / f"{obj_name}.yaml", "r") as f:
+            cfg = dictconfig_to_dict(OmegaConf.load(f))
+            args = cfg["args"]
+
+            # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
+            if (folder_name == "scheduler") and (obj_name == "lambda" or obj_name == "multiplicative"):
+                args["lr_lambda"] = lambda epoch: 0.9
+
+            if runtime_args is not None:
+                args = dict(**args, **runtime_args)
+
+            factory_fun(cfg["name"], **args)
+
     assert True

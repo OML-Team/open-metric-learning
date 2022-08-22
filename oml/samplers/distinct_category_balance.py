@@ -33,7 +33,7 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
     def __init__(
         self,
         labels: Union[List[int], np.ndarray],
-        label2category: Dict[int, int],
+        label2category: Dict[int, Union[str, int]],
         n_categories: int,
         n_labels: int,
         n_instances: int,
@@ -54,18 +54,18 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
         unique_categories = set(label2category.values())
         category2labels = {
             category: {label for label, cat in label2category.items() if category == cat}
-            for category in unique_categories
+            for category in sorted(list(unique_categories))
         }
 
         for param in [n_categories, n_labels, n_instances]:
             if not isinstance(param, int):
                 raise TypeError(f"{param.__name__} must be int, {type(param)} given")
         if not 1 <= n_categories <= len(unique_categories):
-            raise ValueError(f"c must be 1 <= n_categories <= {len(unique_categories)}, {n_categories} given")
+            raise ValueError(f"must be 1 <= n_categories <= {len(unique_categories)}, {n_categories} given")
         if not 1 < n_labels <= len(unique_labels):
-            raise ValueError(f"p must be 1 < n_labels <= {len(unique_labels)}, {n_labels} given")
+            raise ValueError(f"must be 1 < n_labels <= {len(unique_labels)}, {n_labels} given")
         if n_instances <= 1:
-            raise ValueError(f"k must be not less than 1, {n_instances} given")
+            raise ValueError(f"must be not less than 1, {n_instances} given")
         if any(label not in label2category.keys() for label in unique_labels):
             raise ValueError("All the labels must have category")
         if any(label not in unique_labels for label in label2category.keys()):
@@ -83,16 +83,11 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
         self._epoch_size = epoch_size
 
         self._batch_size = self._n_categories * self._n_labels * self._n_instances
-        self._unique_labels = unique_labels
-        self._unique_categories = unique_categories
 
         self._label2index = {
-            label: np.arange(len(self._labels))[self._labels == label].tolist() for label in self._unique_labels
+            label: np.arange(len(self._labels))[self._labels == label].tolist() for label in sorted(list(unique_labels))
         }
-        self._category2labels = {
-            category: {label for label, cat in self._label2category.items() if category == cat}
-            for category in self._unique_categories
-        }
+        self._category2labels = category2labels
 
     @property
     def batch_size(self) -> int:
@@ -173,3 +168,6 @@ class SequentialDistinctCategoryBalanceSampler(DistinctCategoryBalanceBatchSampl
 
     def __len__(self) -> int:
         return self.batches_in_epoch * self.batch_size
+
+
+__all__ = ["DistinctCategoryBalanceBatchSampler", "SequentialDistinctCategoryBalanceSampler"]

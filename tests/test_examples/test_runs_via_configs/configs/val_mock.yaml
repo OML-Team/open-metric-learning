@@ -1,0 +1,30 @@
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df.csv
+
+logs_root: logs
+
+gpus: []
+
+im_size: 32
+num_workers: 0
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [1, 5]
+
+log_only_main_category: False
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: True
+    weights: vits16_dino
+
+hydra:
+  run:
+    dir: ${logs_root}

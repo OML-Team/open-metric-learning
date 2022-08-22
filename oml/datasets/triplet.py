@@ -57,9 +57,20 @@ class TriDataset(Dataset):
         self.expand_ratio = expand_ratio
         self.f_imread = f_imread
 
-        self.cached_get_image = lru_cache(cache_size)(self.get_image)
+        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
 
         logging.info(f"Dataset contains {len(self.triplets)} triplets.")
+
+    @staticmethod
+    def _read_bytes_image(path: Union[Path, str]) -> bytes:
+        with open(str(path), "rb") as fin:
+            return fin.read()
+
+    def get_image(self, path: Union[Path, str]) -> np.ndarray:
+        image_bytes = self.read_bytes_image_cached(path)
+        image = self.f_imread(image_bytes)
+        image = pad_resize(im=image, size=self.image_size, pad_ratio=self.pad_ratio)
+        return image
 
     def __len__(self) -> int:
         return int((1 + self.expand_ratio) * len(self.triplets))
@@ -75,17 +86,12 @@ class TriDataset(Dataset):
 
         assert len(triplet) == 3
 
-        images = tuple(map(lambda x: self.cached_get_image(self.im_root / Path(x).name), triplet))
+        images = tuple(map(lambda x: self.get_image(self.im_root / Path(x).name), triplet))
 
         tensors = tuple(map(lambda x: self.transforms(image=x)["image"], images))
 
         tri_ids = (f"{idx}_a", f"{idx}_p", f"{idx}_n")
         return {"input_tensors": tensors, "tri_ids": tri_ids, "images": images}
-
-    def get_image(self, path: Path) -> np.ndarray:
-        img = self.f_imread(str(path))
-        img = pad_resize(im=img, size=self.image_size, pad_ratio=self.pad_ratio)
-        return img
 
 
 def tri_collate(items: List[TItem]) -> Dict[str, Any]:
@@ -99,3 +105,6 @@ def tri_collate(items: List[TItem]) -> Dict[str, Any]:
             batch[key] = list(chain(*[item[key] for item in items]))
 
     return batch
+
+
+__all__ = ["TPath", "TTriplet", "TItem", "TriDataset", "tri_collate"]

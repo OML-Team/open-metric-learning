@@ -1,4 +1,4 @@
-name: OML tests
+name: Tests
 
 
 on:
@@ -15,7 +15,7 @@ on:
 
 
 jobs:
-  pre_commit:
+  oml_tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout

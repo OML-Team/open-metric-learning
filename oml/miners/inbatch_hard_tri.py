@@ -40,8 +40,10 @@ class HardTripletsMiner(InBatchTripletsMiner):
         """
         assert features.shape[0] == len(labels)
 
+        features = features.clone().detach()
+
         if self._norm_required:
-            features = F.normalize(features.detach(), p=2, dim=1)
+            features = F.normalize(features, p=2, dim=1)
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)
 
@@ -83,3 +85,6 @@ class HardTripletsMiner(InBatchTripletsMiner):
             ids_neg.append(i_neg)
 
         return ids_anchor, ids_pos, ids_neg
+
+
+__all__ = ["HardTripletsMiner"]

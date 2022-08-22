@@ -7,6 +7,7 @@ class GEM(nn.Module):
     def __init__(self, p: float, eps: float = 1e-6):
         """
         Generalised Mean Pooling (GEM)
+        https://paperswithcode.com/method/generalized-mean-pooling
 
         Args:
             p: if p == 1 it's average pooling, if p == inf it's max-pooling
@@ -26,3 +27,6 @@ class GEM(nn.Module):
         x = x.mean(axis=-1)
         x = torch.pow(x, (1.0 / self.p))
         return x
+
+
+__all__ = ["GEM"]

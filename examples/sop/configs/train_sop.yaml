@@ -1,0 +1,84 @@
+postfix: metric_learning
+
+seed: 42
+precision: 32
+gpus:
+  - 0
+  - 1
+
+dataframe_name: df.csv
+dataset_root: data/Stanford_Online_Products/
+logs_root: logs/Stanford_Online_Products/
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+im_size_train: 224
+im_size_val: 224
+im_pad_ratio_train: 0.0
+im_pad_ratio_val: 0.0
+num_workers: 20
+cache_size: 100000
+
+sampler:
+  name: sequential_category_balance
+  args:
+    n_labels: 13
+    n_instances: 6
+    n_categories: 3
+    resample_labels: True
+    weight_categories: True
+
+bs_val: 256
+max_epochs: 10000
+valid_period: 1
+
+metric_args:
+  cmc_top_k: [1]
+  map_top_k: [5]
+
+log_only_main_category: True
+
+augs: default_albu
+
+model:
+  name: vit
+  args:
+    normalise_features: True
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
+
+criterion:
+  name: triplet_with_miner
+  args:
+    need_logs: True
+    margin: 0.1
+    reduction: mean
+    miner:
+      name: hard_triplets
+      args:
+        norm_required: False
+
+optimizer:
+  name: adam
+  args:
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
+
+scheduling: null
+
+
+# To use neptune you should also specify NEPTUNE_API_TOKEN in
+# .env file or via `export NEPTUNE_API_TOKEN=...`
+neptune_project: NEWYORKER/similarity-api
+
+
+hydra_dir: ${logs_root}/${logs_folder}/
+
+tags:
+  - ${postfix}
+  - sop
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+    - file://../../configs

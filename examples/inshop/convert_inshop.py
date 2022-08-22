@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
 from typing import List
@@ -72,18 +72,20 @@ def txt_to_df(fpath: Path) -> pd.DataFrame:
     return df
 
 
-def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
-    list_eval_partition = args.dataset_root / "list_eval_partition.txt"
-    list_bbox_inshop = args.dataset_root / "list_bbox_inshop.txt"
+def build_inshop_df(
+    dataset_root: Path, bboxes_aspect_ratio_to_fix: float, fix_train_bboxes: bool, fix_val_bboxes: bool
+) -> pd.DataFrame:
+    dataset_root = Path(dataset_root)
+
+    list_eval_partition = dataset_root / "list_eval_partition.txt"
+    list_bbox_inshop = dataset_root / "list_bbox_inshop.txt"
 
     for file in [list_eval_partition, list_bbox_inshop]:
         assert file.is_file(), f"File {file} does not exist."
 
     df_part = txt_to_df(list_eval_partition)
 
-    df_part["path"] = df_part["image_name"].apply(lambda x: args.dataset_root / x.replace("img/", "img_highres/"))
-
-    df_part["category_name"] = df_part["path"].apply(lambda x: x.parent.parent.name)
+    df_part["path"] = df_part["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
 
     df_bbox = txt_to_df(list_bbox_inshop)
 
@@ -101,18 +103,6 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     for i, name in zip([0, 1, 2, 3], ["x_1", "y_1", "x_2", "y_2"]):
         df[name] = bboxes[i]
 
-    thr_bbox_size = 10
-    mask_bad_bboxes = df.apply(
-        lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
-    )
-    df = df[~mask_bad_bboxes]
-    print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
-    df.reset_index(drop=True, inplace=True)
-
-    mask_non_single_images = df.groupby("label").label.transform("count") > 1
-    df = df[mask_non_single_images]
-    print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
-
     df["split"] = "validation"
     df["split"][df["evaluation_status"] == "train"] = "train"
 
@@ -124,17 +114,34 @@ def build_deepfashion_df(args: Namespace) -> pd.DataFrame:
     df["is_gallery"][df["split"] == "train"] = None
 
     df = expand_squeezed_bboxes(
-        df=df, ratio_th=args.bboxes_aspect_ratio_to_fix, fix_train=args.fix_train_bboxes, fix_val=args.fix_val_bboxes
+        df=df, ratio_th=bboxes_aspect_ratio_to_fix, fix_train=fix_train_bboxes, fix_val=fix_val_bboxes
     )
 
-    le = preprocessing.LabelEncoder()
-    df["category"] = le.fit_transform(df["category_name"])
+    df["category"] = df_part["path"].apply(lambda x: f"{x.parent.parent.parent.name}/{x.parent.parent.name}")
 
-    df = df[
-        ["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category", "category_name"]
-    ]
+    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category"]]
 
-    check_retrieval_dataframe_format(df, dataset_root=args.dataset_root)
+    # check stat
+    assert df["path"].nunique() == len(df) == 52712
+    assert df["label"].nunique() == 7982
+    assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
+
+    # rm bad bboxes
+    thr_bbox_size = 10
+    mask_bad_bboxes = df.apply(
+        lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
+    )
+    df = df[~mask_bad_bboxes]
+    df.reset_index(drop=True, inplace=True)
+    print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
+
+    # rm bad labels
+    mask_non_single_images = df.groupby("label").label.transform("count") > 1
+    df = df[mask_non_single_images]
+    df.reset_index(drop=True, inplace=True)
+    print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
+
+    check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df.reset_index(drop=True)
 
 
@@ -150,7 +157,12 @@ def get_argparser() -> ArgumentParser:
 def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
-    df = build_deepfashion_df(args)
+    df = build_inshop_df(
+        dataset_root=args.dataset_root,
+        bboxes_aspect_ratio_to_fix=args.bboxes_aspect_ratio_to_fix,
+        fix_train_bboxes=args.fix_train_bboxes,
+        fix_val_bboxes=args.fix_val_bboxes,
+    )
 
     save_name = "df"
     if args.fix_train_bboxes:

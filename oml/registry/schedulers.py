@@ -22,15 +22,15 @@ class ReduceLROnPlateauPatch(ReduceLROnPlateau):
 
 
 SCHEDULERS_REGISTRY = {
-    "LambdaLR": LambdaLR,
-    "MultiplicativeLR": MultiplicativeLR,
-    "StepLR": StepLR,
-    "MultiStepLR": MultiStepLR,
-    "ExponentialLR": ExponentialLR,
-    "CosineAnnealingLR": CosineAnnealingLR,
-    "ReduceLROnPlateau": ReduceLROnPlateauPatch,
-    "CyclicLR": CyclicLR,
-    "OneCycleLR": OneCycleLR,
+    "lambda": LambdaLR,
+    "multiplicative": MultiplicativeLR,
+    "step": StepLR,
+    "multi_step": MultiStepLR,
+    "exponential": ExponentialLR,
+    "cosine_annealing": CosineAnnealingLR,
+    "cyclic": CyclicLR,
+    "one_cycle": OneCycleLR,
+    "reduce_on_plateau": ReduceLROnPlateauPatch,
 }
 
 
@@ -42,3 +42,6 @@ def get_scheduler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> _LRSche
     cfg = dictconfig_to_dict(cfg)
     cfg["args"].update(kwargs_runtime)
     return get_scheduler(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["SCHEDULERS_REGISTRY", "get_scheduler", "get_scheduler_by_cfg"]

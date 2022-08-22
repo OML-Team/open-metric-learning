@@ -8,10 +8,10 @@ from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 MINERS_REGISTRY = {
-    "AllTripletsMiner": AllTripletsMiner,
-    "HardClusterMiner": HardClusterMiner,
-    "HardTripletsMiner": HardTripletsMiner,
-    "TripletMinerWithMemory": TripletMinerWithMemory,
+    "all_triplets": AllTripletsMiner,
+    "hard_cluster": HardClusterMiner,
+    "hard_triplets": HardTripletsMiner,
+    "triplets_with_memory": TripletMinerWithMemory,
 }
 
 
@@ -22,3 +22,6 @@ def get_miner(name: str, **kwargs: Dict[str, Any]) -> ITripletsMiner:
 def get_miner_by_cfg(cfg: TCfg) -> ITripletsMiner:
     cfg = dictconfig_to_dict(cfg)
     return get_miner(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["MINERS_REGISTRY", "get_miner", "get_miner_by_cfg"]

@@ -1,5 +1,0 @@
-name: MultiStepLR
-args:
-  milestones:
-    - 30
-    - 80

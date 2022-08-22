@@ -10,13 +10,13 @@ from oml.samplers.distinct_category_balance import (
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 SAMPLERS_CATEGORIES_BASED = {
-    "SequentialCategoryBalanceSampler": SequentialCategoryBalanceSampler,
-    "SequentialDistinctCategoryBalanceSampler": SequentialDistinctCategoryBalanceSampler,
+    "sequential_category_balance": SequentialCategoryBalanceSampler,
+    "sequential_distinct_category_balance": SequentialDistinctCategoryBalanceSampler,
 }
 
 SAMPLERS_REGISTRY = {
     **SAMPLERS_CATEGORIES_BASED,  # type: ignore
-    "SequentialBalanceSampler": SequentialBalanceSampler,
+    "sequential_balance": SequentialBalanceSampler,
 }
 
 
@@ -28,3 +28,6 @@ def get_sampler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> Sampler:
     cfg = dictconfig_to_dict(cfg)
     cfg["args"].update(kwargs_runtime)
     return get_sampler(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["SAMPLERS_REGISTRY", "SAMPLERS_CATEGORIES_BASED", "get_sampler", "get_sampler_by_cfg"]

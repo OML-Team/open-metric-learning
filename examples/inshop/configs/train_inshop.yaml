@@ -1,72 +1,69 @@
 postfix: metric_learning
 
 seed: 42
+precision: 32
 gpus:
   - 0
   - 1
 
 dataframe_name: df_fixed_train_fixed_val.csv
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/cur/ml/deepfashion/
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size: 224
+im_size_train: 224
+im_size_val: 224
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: SequentialDistinctCategoryBalanceSampler
+  name: sequential_category_balance
   args:
-    n_labels: 4
+    n_labels: 13
     n_instances: 6
-    n_categories: 2
-    epoch_size: 1992
+    n_categories: 3
+    resample_labels: True
+    weight_categories: True
 
-bs_val: 96
+bs_val: 256
 max_epochs: 10000
 valid_period: 1
 
 metric_args:
-  cmc_top_k: [1, 5]
+  cmc_top_k: [1]
   map_top_k: [5]
+
+log_only_main_category: True
 
 augs: default_albu
 
 model:
   name: vit
   args:
-    normalise_features: True
+    normalise_features: False
     use_multi_scale: False
-    weights: pretrained_dino
-    arch: vits8
-    strict_load: True
+    weights: vits16_dino
+    arch: vits16
 
 criterion:
-  name: TripletLossWithMiner
+  name: triplet_with_miner
   args:
     need_logs: True
-    margin: 0.05
+    margin: null
     reduction: mean
     miner:
-      name: TripletMinerWithMemory
+      name: hard_triplets
       args:
-        bank_size_in_batches: 20
-        tri_expand_k: 2
+        norm_required: False
 
 optimizer:
   name: adam
   args:
     lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
-scheduler:
-  name: ReduceLROnPlateau
-  monitor_metric: OVERALL/cmc/1
-  interval: epoch
-  args:
-    factor: 0.5
-    patience: 1
+scheduling: null
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
@@ -76,11 +73,8 @@ neptune_project: NEWYORKER/similarity-api
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
-pod: pod3
-
 tags:
   - ${postfix}
-  - ${pod}
   - deepfashion
   - reducelronplateau
 

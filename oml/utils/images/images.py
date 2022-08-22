@@ -1,3 +1,5 @@
+from io import BytesIO
+from pathlib import Path
 from typing import Callable, Union
 
 import cv2
@@ -6,7 +8,7 @@ import torch
 from PIL import Image
 from PIL.Image import Image as TImage
 
-TImReader = Callable[[str], Union[np.ndarray, TImage]]
+TImReader = Callable[[Union[Path, str, bytes]], Union[np.ndarray, TImage]]
 
 
 def tensor_to_numpy_image(img: torch.Tensor) -> np.ndarray:
@@ -22,13 +24,26 @@ def tensor_to_numpy_image(img: torch.Tensor) -> np.ndarray:
     return img
 
 
-def imread_cv2(im_path: str) -> np.ndarray:
-    img = cv2.cvtColor(cv2.imread(str(im_path)), cv2.COLOR_BGRA2RGB)
-    if img is None:
-        raise ValueError("Image can not be read")
+def imread_cv2(im_src: Union[Path, str, bytes]) -> np.ndarray:
+    if isinstance(im_src, (Path, str)):
+        image = cv2.imread(str(im_src), cv2.IMREAD_UNCHANGED)
+    elif isinstance(im_src, bytes):
+        image_raw = np.frombuffer(im_src, np.uint8)
+        image = cv2.imdecode(image_raw, cv2.IMREAD_UNCHANGED)
     else:
-        return img
+        raise TypeError("Unsupported type")
+
+    return cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
 
 
-def imread_pillow(im_path: str) -> TImage:
-    return Image.open(im_path)
+def imread_pillow(im_src: Union[Path, str, bytes]) -> TImage:
+    if isinstance(im_src, (Path, str)):
+        image = Image.open(im_src)
+    elif isinstance(im_src, bytes):
+        image = Image.open(BytesIO(im_src))
+    else:
+        raise TypeError("Unsupported type")
+    return image.convert("RGB")
+
+
+__all__ = ["TImReader", "tensor_to_numpy_image", "imread_cv2", "imread_pillow"]

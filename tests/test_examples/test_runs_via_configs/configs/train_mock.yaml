@@ -1,0 +1,74 @@
+postfix: "deepfashion"
+
+seed: 42
+gpus: []
+precision: 32
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df.csv
+logs_root: logs
+
+im_size_train: 32
+im_size_val: 32
+im_pad_ratio_train: 0.0
+im_pad_ratio_val: 0.0
+num_workers: 0
+cache_size: 100
+
+augs: custom_augmentations
+
+criterion:
+  name: triplet_with_miner
+  args:
+    margin: null
+    reduction: mean
+    need_logs: True
+    miner:
+      name: all_triplets
+      args: {}
+
+defaults:
+  - optimizer: sgd
+  - sampler: sequential_category_balance
+
+model:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: False
+    use_multi_scale: False
+    weights: null
+
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      milestones:
+        - 1
+        - 2
+        - 3
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [1, 5]
+
+log_only_main_category: True
+
+max_epochs: 2
+valid_period: 1
+
+neptune_project: null
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs

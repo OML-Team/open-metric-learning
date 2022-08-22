@@ -1,0 +1,4 @@
+name: one_cycle
+args:
+  max_lr: 0.1
+  total_steps: 100

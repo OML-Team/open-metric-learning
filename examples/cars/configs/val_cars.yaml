@@ -1,0 +1,31 @@
+dataset_root: data/CARS196/
+dataframe_name: df.csv
+
+logs_root: logs/CARS196/
+
+im_size: 224
+bs_val: 256
+num_workers: 8
+
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_cars
+
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [5]
+
+log_only_main_category: False
+
+gpus:
+  - 0
+
+hydra:
+  searchpath:
+    - file://../../configs

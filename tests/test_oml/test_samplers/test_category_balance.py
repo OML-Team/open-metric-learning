@@ -1,13 +1,21 @@
 import math
 from collections import Counter
+from functools import partial
 from operator import itemgetter
 from random import randint, shuffle
 from typing import Any, Dict, List, Set, Tuple, Union
 
 import pytest
 
-from oml.samplers.category_balance import CategoryBalanceBatchSampler
-from oml.samplers.distinct_category_balance import DistinctCategoryBalanceBatchSampler
+from oml.samplers.category_balance import (
+    CategoryBalanceBatchSampler,
+    SequentialCategoryBalanceSampler,
+)
+from oml.samplers.distinct_category_balance import (
+    DistinctCategoryBalanceBatchSampler,
+    SequentialDistinctCategoryBalanceSampler,
+)
+from oml.utils.misc import set_global_seed
 
 TLabalesMappingCLI = List[Tuple[List[int], Dict[int, int], int, int, int]]
 
@@ -119,6 +127,7 @@ def check_category_balance_batch_sampler_epoch(
         else:
             assert len(set(batch_labels)) == n_labels * n_categories
         collected_labels.update(batch_labels)
+        collected_categories.update(batch_categories)
 
         labels_counter = Counter(batch_labels)
         num_batch_labels = len(labels_counter)
@@ -162,6 +171,8 @@ def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwar
             **sampler_kwargs
         )
 
+    assert True
+
 
 @pytest.mark.parametrize(
     "fixture_name,resample_labels",
@@ -204,6 +215,8 @@ def test_category_balance_batch_sampler(
             epoch_size=math.ceil(len(set(labels)) / n_labels),
         )
 
+    assert True
+
 
 def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_sampler: TLabalesMappingCLI) -> None:
     """Check that CategoryBalanceBatchSampler behaves the same in case
@@ -215,7 +228,7 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
     for labels, label2category, n_categories, n_labels, n_instances in input_for_category_balance_batch_sampler:
         sampler = CategoryBalanceBatchSampler(
             labels=labels,
-            label2category=label2category,
+            label2category=label2category,  # type: ignore
             resample_labels=True,
             n_categories=n_categories,
             n_labels=n_labels,
@@ -231,6 +244,8 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
             resample_labels=False,
             epoch_size=math.ceil(len(set(labels)) / n_labels),
         )
+
+    assert True
 
 
 @pytest.mark.parametrize(
@@ -270,3 +285,27 @@ def test_distinct_category_balance_batch_sampler(
             resample_labels=True,
             epoch_size=epoch_size,
         )
+
+    assert True
+
+
+@pytest.mark.parametrize(
+    "sampler_constructor",
+    [SequentialCategoryBalanceSampler, partial(DistinctCategoryBalanceBatchSampler, epoch_size=50)],
+)
+def test_categories_as_strings(sampler_constructor) -> None:  # type: ignore
+    labels, label2category, n_categories, n_labels, n_instances = generate_valid_categories_labels(
+        1, guarantee_enough_labels=True
+    )[0]
+
+    label2category_str = {label: str(cat) for label, cat in label2category.items()}
+
+    set_global_seed(0)
+    sampler = sampler_constructor(labels, label2category, n_categories, n_labels, n_instances)
+    ii_sampled = list(iter(sampler))
+
+    set_global_seed(0)
+    sampler_with_str = sampler_constructor(labels, label2category_str, n_categories, n_labels, n_instances)
+    ii_sampled_with_str = list(iter(sampler_with_str))
+
+    assert ii_sampled == ii_sampled_with_str, list(zip(ii_sampled, ii_sampled_with_str))

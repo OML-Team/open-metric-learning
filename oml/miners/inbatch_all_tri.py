@@ -54,3 +54,6 @@ class AllTripletsMiner(InBatchTripletsMiner):
         ids_anchor, ids_pos, ids_neg = zip(*triplets)
 
         return list(ids_anchor), list(ids_pos), list(ids_neg)
+
+
+__all__ = ["AllTripletsMiner"]

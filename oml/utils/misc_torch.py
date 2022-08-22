@@ -1,3 +1,4 @@
+from abc import ABC
 from collections.abc import MutableMapping
 from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
 
@@ -57,7 +58,12 @@ def _check_is_sequence(val: Any) -> bool:
         return False
 
 
-class OnlineCalc:
+class OnlineCalc(ABC):
+    """
+    The base class to calculate some statistics online (on the steam of values).
+
+    """
+
     def __init__(self, val: Optional[TOnlineValues] = None):
         self.result: float = 0.0
         if val is not None:
@@ -73,14 +79,16 @@ class OnlineCalc:
         """
         Calculation with non iterable types: float, int / numpy and torch elements (array and elements of
         array have different types and methods)
+
         """
         self.calc_with_batch([val])
 
     def calc_with_batch(self, val: TSequenceValues) -> None:
         """
         Vectorized calculation of online value
+
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({str(self.__dict__)})"
@@ -106,6 +114,7 @@ class OnlineDict(MutableMapping):  # type: ignore
     """
     We don't inherite from built-in 'dict' due to internal C optimization. We mimic to dict with MutableMapping
     https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
+
     """
 
     online_calculator: Type[OnlineCalc]
@@ -152,3 +161,15 @@ class OnlineAvgDict(OnlineDict):
 
 class OnlineSumDict(OnlineDict):
     online_calculator = SumOnline
+
+
+__all__ = [
+    "elementwise_dist",
+    "pairwise_dist",
+    "OnlineCalc",
+    "AvgOnline",
+    "SumOnline",
+    "OnlineDict",
+    "OnlineAvgDict",
+    "OnlineSumDict",
+]

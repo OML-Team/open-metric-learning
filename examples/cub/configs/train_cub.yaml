@@ -1,0 +1,81 @@
+postfix: metric_learning
+
+seed: 42
+precision: 32
+gpus:
+  - 0
+
+dataframe_name: df.csv
+dataset_root: data/CUB_200_2011/
+logs_root: logs/CUB_200_2011/
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+im_size_train: 224
+im_size_val: 224
+im_pad_ratio_train: 0.0
+im_pad_ratio_val: 0.0
+num_workers: 20
+cache_size: 100000
+
+sampler:
+  name: sequential_balance
+  args:
+    n_labels: 8
+    n_instances: 4
+
+bs_val: 256
+max_epochs: 10000
+valid_period: 5
+
+metric_args:
+  cmc_top_k: [1]
+  map_top_k: [5]
+
+log_only_main_category: True
+
+augs: default_albu
+
+model:
+  name: vit
+  args:
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
+
+criterion:
+  name: triplet_with_miner
+  args:
+    need_logs: True
+    margin: null
+    reduction: mean
+    miner:
+      name: triplets_with_memory
+      args:
+        bank_size_in_batches: 50
+        tri_expand_k: 3
+
+optimizer:
+  name: adam
+  args:
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
+
+scheduling: null
+
+
+# To use neptune you should also specify NEPTUNE_API_TOKEN in
+# .env file or via `export NEPTUNE_API_TOKEN=...`
+neptune_project: null
+
+
+hydra_dir: ${logs_root}/${logs_folder}/
+
+tags:
+  - ${postfix}
+  - cub
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+    - file://../../configs

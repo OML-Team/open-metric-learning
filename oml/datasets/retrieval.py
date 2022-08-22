@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
@@ -10,6 +10,7 @@ from PIL import Image
 from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TAugs
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
@@ -23,27 +24,52 @@ class BaseDataset(Dataset):
         self,
         df: pd.DataFrame,
         im_size: int,
-        pad_ratio: float,
-        images_root: Optional[Path] = None,
+        pad_ratio: float = 0.0,
+        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[TAugs] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
+        input_tensors_key: str = "input_tensors",
+        labels_key: str = "labels",
+        paths_key: str = "paths",
+        categories_key: Optional[str] = "categories",
+        x1_key: str = "x1",
+        x2_key: str = "x2",
+        y1_key: str = "y1",
+        y2_key: str = "y2",
     ):
         """
 
         Args:
             df: Table with the following columns:
                   obligatory: "label" - id of the item,
-                              "path" - to the image, absolute or relative from "images_root"
+                              "path" - to the image, absolute or relative from "dataset_root"
                   optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
             im_size: Images will be resized to (image_size, image_size)
             pad_ratio: Padding ratio
-            images_root: Path to the images dir, set None if you provided the absolute paths
+            dataset_root: Path to the images dir, set None if you provided the absolute paths
             transform: Augmentations for the images, set None to skip it
             f_imread: Function to read the image
+            input_tensors_key: Key to get input_tensors from batch
+            labels_key: Key to get labels from batch
+            paths_key: Key to get paths from batch
+            categories_key: Key to get categories from batch
+            x1_key: Key to get x1 from batch
+            x2_key: Key to get x2 from batch
+            y1_key: Key to get y1 from batch
+            y2_key: Key to get y2 from batch
+
         """
+        df = df.copy()
+
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
+
+        self.input_tensors_key = input_tensors_key
+        self.labels_key = labels_key
+        self.paths_key = paths_key
+        self.categories_key = categories_key if ("category" in df.columns) else None
+        self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
 
         if not all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2")):
             df["x_1"] = None
@@ -51,19 +77,27 @@ class BaseDataset(Dataset):
             df["y_1"] = None
             df["y_2"] = None
 
-        if images_root is not None:
-            df["path"] = df["path"].apply(lambda x: str(images_root / x))
+        if dataset_root is not None:
+            dataset_root = Path(dataset_root)
+            df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
+        else:
+            df["path"] = df["path"].astype(str)
 
         self.df = df
         self.im_size = im_size
         self.pad_ratio = pad_ratio
         self.transform = transform or get_normalisation_albu()
         self.f_imread = f_imread
-        self.read_image_cached = lru_cache(maxsize=cache_size)(self.read_image)
+        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
+
+    @staticmethod
+    def _read_bytes_image(path: Union[Path, str]) -> bytes:
+        with open(str(path), "rb") as fin:
+            return fin.read()
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         label = self.df.iloc[idx]["label"]
-        crop = self.read_image_cached(idx)
+        crop = self.read_image(idx)
 
         if isinstance(self.transform, albu.Compose):
             image_tensor = self.transform(image=crop)["image"]
@@ -83,21 +117,27 @@ class BaseDataset(Dataset):
         else:
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
-        return {
-            "input_tensors": image_tensor,
-            "labels": label,
-            "paths": row.path,
-            "x1": x1,
-            "y1": y1,
-            "x2": x2,
-            "y2": y2,
+        item = {
+            self.input_tensors_key: image_tensor,
+            self.labels_key: label,
+            self.paths_key: row.path,
+            self.x1_key: x1,
+            self.y1_key: y1,
+            self.x2_key: x2,
+            self.y2_key: y2,
         }
+
+        if self.categories_key:
+            item[self.categories_key] = row.category
+
+        return item
 
     def __len__(self) -> int:
         return len(self.df)
 
     def read_image(self, idx: int) -> np.ndarray:
-        img = self.f_imread(self.df.iloc[idx]["path"])
+        img_bytes = self.read_bytes_image_cached(self.df.iloc[idx]["path"])
+        img = self.f_imread(img_bytes)
 
         row = self.df.iloc[idx]
 
@@ -142,39 +182,63 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     In other words, for the desired query item, the gallery is the rest of the validation dataset.
     If you want to perform this kind of validation process, then simply return
     is_query == True and is_gallery == True for every item in the dataset.
+    Note, that is_query and is_gallery can be True both at the same time. In this case, we perform
+    a validation procedure for every item in the validation set using the "1 vs rest" approach.
     """
 
     def __init__(
         self,
         df: pd.DataFrame,
         im_size: int,
-        pad_ratio: float,
-        images_root: Optional[Path] = None,
+        pad_ratio: float = 0.0,
+        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
+        input_tensors_key: str = "input_tensors",
+        labels_key: str = "labels",
+        paths_key: str = "paths",
+        categories_key: str = "categories",
+        x1_key: str = "x1",
+        x2_key: str = "x2",
+        y1_key: str = "y1",
+        y2_key: str = "y2",
+        is_query_key: str = "is_query",
+        is_gallery_key: str = "is_gallery",
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
             im_size=im_size,
-            images_root=images_root,
+            dataset_root=dataset_root,
             transform=transform,
             pad_ratio=pad_ratio,
             f_imread=f_imread,
             cache_size=cache_size,
+            input_tensors_key=input_tensors_key,
+            labels_key=labels_key,
+            paths_key=paths_key,
+            categories_key=categories_key,
+            x1_key=x1_key,
+            x2_key=x2_key,
+            y1_key=y1_key,
+            y2_key=y2_key,
         )
         assert all(x in df.columns for x in ("is_query", "is_gallery"))
 
+        self.is_query_key = is_query_key
+        self.is_gallery_key = is_gallery_key
+
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = super().__getitem__(idx)
-        item["is_query"] = bool(self.df.iloc[idx]["is_query"])
-        item["is_gallery"] = bool(self.df.iloc[idx]["is_gallery"])
+        item[self.is_query_key] = bool(self.df.iloc[idx]["is_query"])
+        item[self.is_gallery_key] = bool(self.df.iloc[idx]["is_gallery"])
         return item
 
 
 def get_retrieval_datasets(
     dataset_root: Path,
-    im_size: int,
+    im_size_train: int,
+    im_size_val: int,
     pad_ratio_train: float,
     pad_ratio_val: float,
     train_transform: Any,
@@ -188,8 +252,8 @@ def get_retrieval_datasets(
     df_train = df[df["split"] == "train"].reset_index(drop=True)
     train_dataset = DatasetWithLabels(
         df=df_train,
-        images_root=dataset_root,
-        im_size=im_size,
+        dataset_root=dataset_root,
+        im_size=im_size_train,
         pad_ratio=pad_ratio_train,
         transform=train_transform,
         cache_size=cache_size,
@@ -198,7 +262,15 @@ def get_retrieval_datasets(
     # val (query + gallery)
     df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
     valid_dataset = DatasetQueryGallery(
-        df=df_query_gallery, images_root=dataset_root, im_size=im_size, pad_ratio=pad_ratio_val, cache_size=cache_size
+        df=df_query_gallery,
+        dataset_root=dataset_root,
+        im_size=im_size_val,
+        pad_ratio=pad_ratio_val,
+        transform=None,
+        cache_size=cache_size,
     )
 
     return train_dataset, valid_dataset
+
+
+__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_retrieval_datasets"]

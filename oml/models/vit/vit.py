@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -14,17 +14,38 @@ from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.utils.io import download_checkpoint
+
+_FB_URL = "https://dl.fbaipublicfiles.com"
 
 
 class ViTExtractor(IExtractor):
     constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
 
+    pretrained_models = {
+        # checkpoints pretrained in DINO framework on ImageNet by MetaAI
+        "vits16_dino": (f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth", "cf0f22", None),
+        "vits8_dino": (f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth", "230cd5", None),
+        "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
+        "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
+        # our pretrained checkpoints
+        "vits16_inshop": ("1Fjf9SlhIgXi-YBf-39BWfd16rsha0qYZ", "384ead", "vits16_inshop.ckpt"),
+        "vits16_sop": ("1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt", "85cfa5", "vits16_sop.ckpt"),
+        "vits16_cub": ("1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G", "e82633", "vits16_cub.ckpt"),
+        "vits16_cars": ("1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg", "9f1e59", "vits16_cars.ckpt"),
+    }
+
     def __init__(
-        self, weights: Union[Path, str], arch: str, normalise_features: bool, use_multi_scale: bool, strict_load: bool
+        self,
+        weights: Optional[Union[Path, str]],
+        arch: str,
+        normalise_features: bool,
+        use_multi_scale: bool = False,
+        strict_load: bool = True,
     ):
         """
         Args:
-            weights: path to weights, or use "pretrained_dino" to download pretrained checkpoint
+            weights: Path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights
             arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
             normalise_features: if normalise features
             use_multi_scale: if use multi scale
@@ -40,17 +61,18 @@ class ViTExtractor(IExtractor):
 
         factory_fun = self.constructors[self.arch]
 
-        if weights == "pretrained_dino":
-            self.model = factory_fun(pretrained=True)
-        elif weights == "random":
-            self.model = factory_fun(pretrained=False)
-        else:
-            self.model = factory_fun(pretrained=False)
-            ckpt = torch.load(weights, map_location="cpu")
-            state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
-            ckpt = remove_prefix_from_state_dict(state_dict, "norm.bias")
+        self.model = factory_fun(pretrained=False)
+        if weights is None:
+            return
 
-            self.model.load_state_dict(ckpt, strict=strict_load)
+        if weights in self.pretrained_models.keys():
+            url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
+            weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+
+        ckpt = torch.load(weights, map_location="cpu")
+        state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
+        ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
+        self.model.load_state_dict(ckpt, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mscale:
@@ -64,15 +86,26 @@ class ViTExtractor(IExtractor):
 
         return x
 
-    def extract(self, x: torch.Tensor) -> torch.Tensor:
-        return self.forward(x)
-
     @property
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)
 
     def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
-        return multi_scale(samples=samples, model=self.model)
+        # code from the original DINO
+        # TODO: check grads later
+        v = torch.zeros((len(samples), self.feat_dim), device=samples.device)
+        scales = [1.0, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
+        for s in scales:
+            if s == 1:
+                inp = samples.clone()
+            else:
+                inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
+            feats = self.model.forward(inp).clone()
+            v += feats
+
+        v /= len(scales)
+        # v /= v.norm(dim=1)  # we don't want to shift the norms values
+        return v
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         return vis_vit(vit=self, image=image)
@@ -131,20 +164,4 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
     return arr
 
 
-def multi_scale(samples: torch.Tensor, model: nn.Module) -> torch.Tensor:
-    # code from the original DINO
-    v = None
-    scales = [1, 1 / 2 ** (1 / 2), 1 / 2]  # we use 3 different scales
-    for s in scales:
-        if s == 1:
-            inp = samples.clone()
-        else:
-            inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
-        feats = model(inp).clone()
-        if v is None:
-            v = feats
-        else:
-            v += feats
-    v /= len(scales)
-    # v /= v.norm(dim=1)  # we don't want to shift the norms values
-    return v
+__all__ = ["ViTExtractor", "vis_vit"]

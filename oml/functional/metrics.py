@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
-from oml.utils.misc import clip
+from oml.utils.misc import clip_max
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
 TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
@@ -20,6 +20,7 @@ def calc_retrieval_metrics(
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
+    check_dataset_validity: bool = False,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -39,6 +40,9 @@ def calc_retrieval_metrics(
 
     if not any(top_k_args):
         raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
+
+    if check_dataset_validity:
+        validate_dataset(mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     for top_k_arg in top_k_args:
         if top_k_arg:
@@ -69,9 +73,9 @@ def calc_retrieval_metrics(
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
-    cmc_top_k_clipped = clip(cmc_top_k, gallery_sz)
-    precision_top_k_clipped = clip(precision_top_k, gallery_sz)
-    map_top_k_clipped = clip(map_top_k, gallery_sz)
+    cmc_top_k_clipped = clip_max(cmc_top_k, gallery_sz)
+    precision_top_k_clipped = clip_max(precision_top_k, gallery_sz)
+    map_top_k_clipped = clip_max(map_top_k, gallery_sz)
 
     max_k = max([*cmc_top_k, *precision_top_k, *map_top_k])
     max_k = min(max_k, gallery_sz)
@@ -189,6 +193,10 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc
 
 
+def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
+    assert (mask_gt & ~mask_to_ignore).any(1).all(), "There are queries without available correct answers in the gallery!"  # type: ignore
+
+
 def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
     if isinstance(array, torch.Tensor):
         return array
@@ -196,3 +204,14 @@ def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         return torch.from_numpy(array)
     else:
         raise TypeError("Wrong type")
+
+
+__all__ = [
+    "TMetricsDict",
+    "calc_retrieval_metrics",
+    "apply_mask_to_ignore",
+    "calc_gt_mask",
+    "calc_mask_to_ignore",
+    "calc_distance_matrix",
+    "calculate_accuracy_on_triplets",
+]

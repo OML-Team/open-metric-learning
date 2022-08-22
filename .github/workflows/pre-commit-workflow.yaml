@@ -1,4 +1,4 @@
-name: Pre-commits check
+name: Linters
 
 
 on:

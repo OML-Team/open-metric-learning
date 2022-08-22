@@ -7,9 +7,9 @@ from oml.registry.miners import get_miner_by_cfg
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 LOSSES_REGISTRY = {
-    "TripletLoss": TripletLoss,
-    "TripletLossPlain": TripletLossPlain,
-    "TripletLossWithMiner": TripletLossWithMiner,
+    "triplet": TripletLoss,
+    "triplet_plain": TripletLossPlain,
+    "triplet_with_miner": TripletLossWithMiner,
 }
 
 
@@ -25,3 +25,6 @@ def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
 def get_criterion_by_cfg(cfg: TCfg) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
     return get_criterion(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["LOSSES_REGISTRY", "get_criterion", "get_criterion_by_cfg"]
