@@ -5,13 +5,13 @@ precision: 32
 gpus:
   - 1
 
-dataframe_name: df_fixed_train_fixed_val.csv
+dataframe_name: df_fixed_train_fixed_val_wo_boxes.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 im_size_train: 256
-im_size_val: 224
+im_size_val: 256
 im_pad_ratio_train: 0.0
 im_pad_ratio_val: 0.0
 num_workers: 20
@@ -26,9 +26,9 @@ valid_period: 1
 
 metric_args:
   cmc_top_k: [1]
-  map_top_k: [5]
 
 augs: broadface
+test_transform: center_crop
 
 emb_size: 128
 
@@ -56,13 +56,13 @@ scheduling:
   scheduler_interval: epoch
   scheduler_frequency: 1
   scheduler:
-     name: multi_step
-     args:
-       gamma: 0.2
-       milestones:
-         - 40
-         - 60
-         - 80
+    name: multi_step
+    args:
+      gamma: 0.2
+      milestones:
+        - 40
+        - 60
+        - 80
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in

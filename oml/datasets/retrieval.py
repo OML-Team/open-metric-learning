@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 import albumentations as albu
+import cv2
 import numpy as np
 import pandas as pd
 import torchvision
@@ -10,13 +11,11 @@ from PIL import Image
 from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
-from oml.const import OVERALL_CATEGORIES_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TAugs
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images import TImReader, imread_cv2
-from oml.utils.images.images_resize import pad_resize
 
 
 class BaseDataset(Dataset):
@@ -148,7 +147,9 @@ class BaseDataset(Dataset):
         if isinstance(img, TImage):
             img = np.array(img)
 
-        img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)
+        # todo
+        # img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)
+        img = cv2.resize(img, (self.im_size, self.im_size))
 
         return img
 
@@ -242,7 +243,8 @@ def get_retrieval_datasets(
     pad_ratio_train: float,
     pad_ratio_val: float,
     train_transform: Any,
-    dataframe_name: str,
+    test_transform: Any = None,
+    dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
@@ -266,7 +268,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         im_size=im_size_val,
         pad_ratio=pad_ratio_val,
-        transform=None,
+        transform=test_transform,
         cache_size=cache_size,
     )
 

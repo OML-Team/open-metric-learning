@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
-from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
@@ -45,6 +44,8 @@ def pl_train(cfg: TCfg) -> None:
     cwd = Path.cwd()
 
     train_augs = get_augs(cfg["augs"]) if cfg["augs"] is not None else None
+    test_transform = get_augs(cfg["test_transform"]) if cfg["test_transform"] is not None else None
+
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         im_size_train=cfg["im_size_train"],
@@ -52,6 +53,7 @@ def pl_train(cfg: TCfg) -> None:
         pad_ratio_train=cfg["im_pad_ratio_train"],
         pad_ratio_val=cfg["im_pad_ratio_val"],
         train_transform=train_augs,
+        test_transform=test_transform,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )

@@ -22,6 +22,12 @@ AUGS_REGISTRY["broadface"] = albu.Compose(
     ]
 )
 
+AUGS_REGISTRY["center_crop"] = albu.Compose(
+    [
+        albu.CenterCrop(height=224, width=224),
+    ]
+)
+
 
 class ArcFace(nn.Module):
     def __init__(self, in_features, out_features, scale_factor=64.0, margin=0.50):
@@ -103,6 +109,9 @@ class LinearEmbedding(IExtractor):
         self.base = ResNet50(pretrained=True)
         self.linear = nn.Linear(ResNet50.output_size, embedding_size)
         self.l2norm_on_train = l2norm_on_train
+
+        # ckpt = torch.load("/nydl/code/BroadFace/result/best.pth", map_location="cpu")
+        # self.load_state_dict(ckpt)
 
     def forward(self, x):
         feat = self.base(x)
