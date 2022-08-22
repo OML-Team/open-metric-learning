@@ -72,9 +72,11 @@ class MetricValCallback(Callback):
             # To avoid the problem we calculate metrics `on_validation_batch_end` for the last batch in the loader.
             is_last_expected_batch = self._collected_samples == self._expected_samples
             if is_last_expected_batch:
+                # TODO: optimize to avoid duplication of metrics on all devices.
+                #  Note: if we calculate metric only on main device, we need to log metric for all devices,
+                #  because they need this metric for checkpointing
                 self.metric.sync()
-                if pl_module.global_rank == 0:
-                    self.calc_and_log_metrics(pl_module)
+                self.calc_and_log_metrics(pl_module)
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._ready_to_accumulate = False

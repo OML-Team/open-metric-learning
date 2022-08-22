@@ -151,11 +151,12 @@ def pl_train(cfg: TCfg) -> None:
         strategy=DDPStrategy(find_unused_parameters=False) if len(cfg["gpus"]) > 1 else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
+        limit_train_batches=2,
+        reload_dataloaders_every_n_epochs=1
     )
 
     pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler,
                                loaders_train=loader_train, loaders_val=loaders_val)
-    # data = DataDDP(loaders_train=[loader_train], loaders_val=[loaders_val])
     # trainer.validate(model=pl_model)
     # trainer.validate(model=pl_model, dataloaders=loaders_val)
     trainer.fit(model=pl_model)
