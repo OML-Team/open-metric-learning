@@ -78,7 +78,9 @@ def pl_train(cfg: TCfg) -> None:
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
+    optimizer = get_optimizer_by_cfg(
+        cfg["optimizer"], params={"model": extractor.parameters(), "optimizer": criterion.parameters()}
+    )
 
     # unpack scheduler to the Lightning format
     if cfg["scheduling"]:
@@ -99,6 +101,7 @@ def pl_train(cfg: TCfg) -> None:
         num_workers=cfg["num_workers"],
         batch_size=sampler.batch_size,
         drop_last=True,
+        shuffle=bool(sampler),
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
