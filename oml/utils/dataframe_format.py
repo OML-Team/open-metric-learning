@@ -82,13 +82,14 @@ def check_retrieval_dataframe_format(
 
         bad_categories = {k: v for k, v in label_to_category.items() if len(v) > 1}
 
-        if bad_categories:
-            warnings.warn(
-                "Note! You mapping between categories and labels is not bijection!"
-                "During the training and validation we will force it to be bijection by picking"
-                "one random category for each label."
-            )
-            pprint(bad_categories)
+        # todo
+        # if bad_categories:
+        #     warnings.warn(
+        #         "Note! You mapping between categories and labels is not bijection!"
+        #         "During the training and validation we will force it to be bijection by picking"
+        #         "one random category for each label."
+        #     )
+        #     pprint(bad_categories)
 
 
 __all__ = ["check_retrieval_dataframe_format"]

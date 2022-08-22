@@ -1,28 +1,26 @@
 # type: ignore
+import math
+
+import albumentations as albu
 import hydra
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-import torchvision.transforms as transforms
 from omegaconf import DictConfig
+from PIL import Image
+from torchvision import transforms
 
+from oml.interfaces.models import IExtractor
 from oml.lightning.entrypoints.train import pl_train
 from oml.registry.losses import LOSSES_REGISTRY
+from oml.registry.models import MODELS_REGISTRY
 from oml.registry.transforms import AUGS_REGISTRY
 
-AUGS_REGISTRY["broadface"] = transforms.Compose(
+AUGS_REGISTRY["broadface"] = albu.Compose(
     [
-        transforms.Resize((256, 256), interpolation=Image.LANCZOS),
-        transforms.RandomResizedCrop(
-            scale=(0.16, 1),
-            ratio=(0.75, 1.33),
-            size=224,
-            interpolation=Image.LANCZOS,
-        ),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        normalize,
+        albu.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), height=224, width=224),
+        albu.HorizontalFlip(),
     ]
 )
 
@@ -98,14 +96,14 @@ class ResNet50(nn.Module):
         if get_ha:
             return b1, b2, b3, b4, pool
 
-        return
+        return pool
 
 
-class LinearEmbedding(nn.Module):
-    def __init__(self, base, feature_size=512, embedding_size=128, l2norm_on_train=True):
+class LinearEmbedding(IExtractor):
+    def __init__(self, embedding_size, l2norm_on_train=True):
         super(LinearEmbedding, self).__init__()
-        self.base = base
-        self.linear = nn.Linear(feature_size, embedding_size)
+        self.base = ResNet50(pretrained=True)
+        self.linear = nn.Linear(ResNet50.output_size, embedding_size)
         self.l2norm_on_train = l2norm_on_train
 
     def forward(self, x):
@@ -119,18 +117,14 @@ class LinearEmbedding(nn.Module):
         embedding = F.normalize(embedding, dim=1, p=2)
         return embedding
 
-
-base_model = ResNet50(pretrained=True)
-
-model = LinearEmbedding(
-    base_model,
-    feature_size=cfg["criterion"]["args"]["in_features"],
-    embedding_size=opts.embedding_size,
-    l2norm_on_train=False,
-)
+    def feat_dim(self) -> int:
+        return self.linear.out_features
 
 
-@hydra.main(config_path="configs", config_name="train_inshop.yaml")
+MODELS_REGISTRY["resnet_broadface"] = LinearEmbedding
+
+
+@hydra.main(config_path="configs", config_name="train_arcface.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     pl_train(cfg)
 

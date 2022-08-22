@@ -76,7 +76,11 @@ def pl_train(cfg: TCfg) -> None:
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
     optimizer = get_optimizer_by_cfg(
-        cfg["optimizer"], params={"model": extractor.parameters(), "optimizer": criterion.parameters()}
+        cfg["optimizer"],
+        params=[  # type: ignore
+            {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
+            {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
+        ],
     )
 
     # unpack scheduler to the Lightning format
@@ -90,15 +94,14 @@ def pl_train(cfg: TCfg) -> None:
         scheduler_args = {"scheduler": None}
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
-    assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
+    # assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
     loader_train = DataLoader(
         dataset=train_dataset,
         sampler=sampler,
         num_workers=cfg["num_workers"],
-        batch_size=sampler.batch_size,
+        batch_size=cfg["bs_train"],
         drop_last=True,
-        shuffle=bool(sampler),
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
