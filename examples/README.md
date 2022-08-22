@@ -138,8 +138,7 @@ the same time. Then we will validate every item
  in the validation set using the "1 vs rest" approach (datasets of this kind are `CARS196` or `CUB`).
 
 Optional columns:
-* `category` - integer value indicates the category if your dataset have one.
-* `category_name` - name of the category.
+* `category` - category which groups sets of similar labels (like `dresses`, or `furniture`).
 * `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
 
 You can check the tables for the public datasets via the [link](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing).

@@ -10,6 +10,7 @@ from PIL import Image
 from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TAugs
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
@@ -31,6 +32,7 @@ class BaseDataset(Dataset):
         input_tensors_key: str = "input_tensors",
         labels_key: str = "labels",
         paths_key: str = "paths",
+        categories_key: Optional[str] = "categories",
         x1_key: str = "x1",
         x2_key: str = "x2",
         y1_key: str = "y1",
@@ -51,18 +53,22 @@ class BaseDataset(Dataset):
             input_tensors_key: Key to get input_tensors from batch
             labels_key: Key to get labels from batch
             paths_key: Key to get paths from batch
+            categories_key: Key to get categories from batch
             x1_key: Key to get x1 from batch
             x2_key: Key to get x2 from batch
             y1_key: Key to get y1 from batch
             y2_key: Key to get y2 from batch
 
         """
+        df = df.copy()
+
         assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
 
         self.input_tensors_key = input_tensors_key
         self.labels_key = labels_key
         self.paths_key = paths_key
+        self.categories_key = categories_key if ("category" in df.columns) else None
         self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
 
         if not all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2")):
@@ -111,7 +117,7 @@ class BaseDataset(Dataset):
         else:
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
-        return {
+        item = {
             self.input_tensors_key: image_tensor,
             self.labels_key: label,
             self.paths_key: row.path,
@@ -120,6 +126,11 @@ class BaseDataset(Dataset):
             self.x2_key: x2,
             self.y2_key: y2,
         }
+
+        if self.categories_key:
+            item[self.categories_key] = row.category
+
+        return item
 
     def __len__(self) -> int:
         return len(self.df)
@@ -187,6 +198,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         input_tensors_key: str = "input_tensors",
         labels_key: str = "labels",
         paths_key: str = "paths",
+        categories_key: str = "categories",
         x1_key: str = "x1",
         x2_key: str = "x2",
         y1_key: str = "y1",
@@ -205,6 +217,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
             input_tensors_key=input_tensors_key,
             labels_key=labels_key,
             paths_key=paths_key,
+            categories_key=categories_key,
             x1_key=x1_key,
             x2_key=x2_key,
             y1_key=y1_key,

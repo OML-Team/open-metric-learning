@@ -20,6 +20,7 @@ def calc_retrieval_metrics(
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
+    check_dataset_validity: bool = False,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -39,6 +40,9 @@ def calc_retrieval_metrics(
 
     if not any(top_k_args):
         raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
+
+    if check_dataset_validity:
+        validate_dataset(mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     for top_k_arg in top_k_args:
         if top_k_arg:
@@ -187,6 +191,10 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc.mean()
     else:
         return acc
+
+
+def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
+    assert (mask_gt & ~mask_to_ignore).any(1).all(), "There are queries without available correct answers in the gallery!"  # type: ignore
 
 
 def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:

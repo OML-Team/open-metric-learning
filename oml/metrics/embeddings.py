@@ -1,13 +1,12 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
-from torch import nonzero
 
-from oml.const import T_Str2Int_or_Int2Str
 from oml.functional.metrics import (
     TMetricsDict,
     calc_distance_matrix,
     calc_gt_mask,
+    calc_mask_to_ignore,
     calc_retrieval_metrics,
 )
 from oml.interfaces.metrics import IBasicMetric
@@ -31,8 +30,8 @@ class EmbeddingMetrics(IBasicMetric):
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         categories_key: Optional[str] = None,
-        categories_names_mapping: Optional[T_Str2Int_or_Int2Str] = None,
         postprocessor: Optional[IPostprocessor] = None,
+        check_dataset_validity: bool = True,
     ):
         """
         This class accumulates the information from the batches and embeddings produced by the model
@@ -51,15 +50,10 @@ class EmbeddingMetrics(IBasicMetric):
             precision_top_k: Values of k to compute Precision@k metrics
             map_top_k: Values of k to compute MAP@k metrics
             categories_key: Key to take the samples categories from the batches (if you have ones)
-            categories_names_mapping: The mapping from the categories to their names (if you have ones)
             postprocessor: IPostprocessor which applies some techniques like query reranking
+            check_dataset_validity: check if all queries have their galleries
 
         """
-        if (categories_names_mapping is not None) and (categories_key is None):
-            raise ValueError(
-                "You have not specified category key but specified the mapping for " "the categories at the same time."
-            )
-
         self.embeddings_key = embeddings_key
         self.labels_key = labels_key
         self.is_query_key = is_query_key
@@ -70,13 +64,13 @@ class EmbeddingMetrics(IBasicMetric):
         self.map_top_k = map_top_k
 
         self.categories_key = categories_key
-        self.categories_names_mapping = categories_names_mapping
         self.postprocessor = postprocessor
 
         self.distance_matrix = None
         self.mask_gt = None
         self.metrics = None
         self.mask_to_ignore = None
+        self.check_dataset_validity = check_dataset_validity
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -107,14 +101,11 @@ class EmbeddingMetrics(IBasicMetric):
             # we have no this functionality yet
             self.postprocessor.process()
 
-        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
-
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        ids_query = nonzero(is_query).squeeze()
-        ids_gallery = nonzero(is_gallery).squeeze()
-        self.mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
@@ -135,10 +126,11 @@ class EmbeddingMetrics(IBasicMetric):
         metrics: TMetricsDict_ByLabels = dict()
 
         # note, here we do micro averaging
-        metrics["OVERALL"] = calc_retrieval_metrics(
+        metrics[self.overall_categories_key] = calc_retrieval_metrics(
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
             mask_to_ignore=self.mask_to_ignore,
+            check_dataset_validity=self.check_dataset_validity,
             **args,  # type: ignore
         )
 
@@ -150,9 +142,6 @@ class EmbeddingMetrics(IBasicMetric):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
-                if self.categories_names_mapping is not None:
-                    category = self.categories_names_mapping[category]
-
                 metrics[category] = calc_retrieval_metrics(
                     distances=self.distance_matrix[mask],  # type: ignore
                     mask_gt=self.mask_gt[mask],  # type: ignore
@@ -163,15 +152,6 @@ class EmbeddingMetrics(IBasicMetric):
         self.metrics = metrics  # type: ignore
 
         return metrics
-
-    @property
-    def get_metrics(self) -> TMetricsDict:
-        if self.metrics is None:
-            raise ValueError(
-                f"Metrics have not been calculated." f"Make sure you've called {self.compute_metrics.__name__}"
-            )
-
-        return self.metrics
 
 
 __all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]
