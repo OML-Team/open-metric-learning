@@ -5,6 +5,7 @@ import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
+from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
@@ -54,6 +55,11 @@ def pl_train(cfg: TCfg) -> None:
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )
+
+    # todo
+    train_dataset.df["label"] = LabelEncoder().fit_transform(train_dataset.df["label"])
+    print(train_dataset.df["label"].max(), train_dataset.df["label"].min(), " labels interval")
+    print(train_dataset.df["label"].nunique(), " n_labels")
 
     if isinstance(train_augs, albu.Compose):
         augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
