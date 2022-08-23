@@ -15,7 +15,7 @@ from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TAugs
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, imread_cv2
+from oml.utils.images.images import TImReader, imread_cv2, imread_pillow
 
 
 class BaseDataset(Dataset):
@@ -26,7 +26,7 @@ class BaseDataset(Dataset):
         pad_ratio: float = 0.0,
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[TAugs] = None,
-        f_imread: TImReader = imread_cv2,
+        f_imread: TImReader = imread_pillow,
         cache_size: int = 100_000,
         input_tensors_key: str = "input_tensors",
         labels_key: str = "labels",
@@ -147,9 +147,8 @@ class BaseDataset(Dataset):
         # if isinstance(img, TImage):
         #     img = np.array(img)
 
-        # todo
         # img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)
-        img = cv2.resize(img, (self.im_size, self.im_size))
+        # img = cv2.resize(img, (self.im_size, self.im_size))
 
         return img
 
@@ -194,7 +193,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         pad_ratio: float = 0.0,
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
-        f_imread: TImReader = imread_cv2,
+        f_imread: TImReader = imread_pillow,
         cache_size: int = 100_000,
         input_tensors_key: str = "input_tensors",
         labels_key: str = "labels",

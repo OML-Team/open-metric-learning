@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
+import torchvision.transforms as t
 from omegaconf import DictConfig
 
 from oml.interfaces.models import IExtractor
@@ -16,16 +17,18 @@ from oml.registry.losses import LOSSES_REGISTRY
 from oml.registry.models import MODELS_REGISTRY
 from oml.registry.transforms import AUGS_REGISTRY
 
-AUGS_REGISTRY["broadface"] = albu.Compose(
+AUGS_REGISTRY["broadface"] = t.Compose(
     [
-        albu.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), height=224, width=224, always_apply=True),
-        albu.HorizontalFlip(),
+        t.Resize((256, 256), antialias=True),
+        t.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), size=224),
+        t.RandomHorizontalFlip(),
     ]
 )
 
-AUGS_REGISTRY["center_crop"] = albu.Compose(
+AUGS_REGISTRY["center_crop"] = t.Compose(
     [
-        albu.CenterCrop(height=224, width=224),
+        t.Resize((256, 256), antialias=True),
+        t.CenterCrop(size=224),
     ]
 )
 
@@ -111,8 +114,8 @@ class LinearEmbedding(IExtractor):
         self.linear = nn.Linear(ResNet50.output_size, embedding_size)
         self.l2norm_on_train = l2norm_on_train
 
-        ckpt = torch.load("/nydl/code/BroadFace/results2/best.pth", map_location="cpu")
-        self.load_state_dict(ckpt)
+        # ckpt = torch.load("/nydl/code/BroadFace/results2/best.pth", map_location="cpu")
+        # self.load_state_dict(ckpt)
 
     def forward(self, x):
         x = self.base(x)
@@ -134,7 +137,7 @@ MODELS_REGISTRY["resnet_broadface"] = LinearEmbedding
 
 @hydra.main(config_path="configs", config_name="train_arcface.yaml")
 def main_hydra(cfg: DictConfig) -> None:
-    pl_val(cfg)
+    pl_train(cfg)
 
 
 if __name__ == "__main__":

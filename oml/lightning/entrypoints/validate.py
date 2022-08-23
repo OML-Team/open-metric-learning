@@ -11,6 +11,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
+from oml.registry.transforms import get_augs
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -32,6 +33,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         pad_ratio_train=0,
         pad_ratio_val=0,
         train_transform=None,
+        test_transform=get_augs(cfg["test_transform"]) if cfg["test_transform"] else None,
         dataframe_name=cfg["dataframe_name"],
     )
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])

@@ -26,7 +26,7 @@ def get_augs(name: str, mean: Optional[TNormParam] = MEAN, std: Optional[TNormPa
         return albu.Compose([augs, get_normalisation_albu(mean=mean, std=std)])
 
     elif isinstance(augs, t.Compose):
-        return t.Compose([get_normalisation_torch(mean=mean, std=std), augs])
+        return t.Compose([augs, t.ToTensor(), t.Normalize(mean=mean, std=std)])
 
     else:
         return augs
