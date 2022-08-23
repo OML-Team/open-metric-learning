@@ -8,7 +8,7 @@ from omegaconf import DictConfig
 
 
 class PolicyDDP:
-    train_drop_last = False
+    train_drop_last = True
     train_shuffle = True
     val_drop_last = False
     val_shuffle = False

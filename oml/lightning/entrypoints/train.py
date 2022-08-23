@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
+from pprint import pprint
 
 import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
-from pytorch_lightning.plugins import DDPPlugin
+from pytorch_lightning.strategies import DDPStrategy
 from torch.utils.data import DataLoader
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
@@ -37,7 +38,7 @@ def pl_train(cfg: TCfg) -> None:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    print(cfg)
+    pprint(cfg)
 
     set_global_seed(cfg["seed"], cfg["num_workers"])
 
@@ -71,7 +72,7 @@ def pl_train(cfg: TCfg) -> None:
     if train_dataset.categories_key:
         sampler_runtime_args["label2category"] = dict(zip(train_dataset.df["label"], train_dataset.df["category"]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
-    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
+    batch_sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
@@ -92,10 +93,8 @@ def pl_train(cfg: TCfg) -> None:
 
     loader_train = DataLoader(
         dataset=train_dataset,
-        sampler=sampler,
+        batch_sampler=batch_sampler,
         num_workers=cfg["num_workers"],
-        batch_size=sampler.batch_size,
-        drop_last=True,
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
@@ -147,15 +146,20 @@ def pl_train(cfg: TCfg) -> None:
         enable_model_summary=True,
         num_nodes=1,
         gpus=cfg["gpus"],
-        strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
+        strategy=DDPStrategy(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
     )
 
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, **scheduler_args)
+    pl_model = RetrievalModule(model=extractor,
+                               criterion=criterion,
+                               optimizer=optimizer,
+                               loaders_train=loader_train,
+                               loaders_val=loaders_val,
+                               **scheduler_args)
 
-    trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+    trainer.fit(model=pl_model)
 
 
 __all__ = ["pl_train"]
