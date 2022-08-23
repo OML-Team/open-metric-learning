@@ -31,6 +31,6 @@ def test_readers(img_format: str, num_channels: int, no_compression: bool) -> No
     for image in [image_cv2_from_path, image_pil_from_path, image_cv2_from_bytes, image_pil_from_bytes]:
         assert image.shape == (*shape_hw, 3)
         if no_compression:
-            assert np.array_equal(image, dummy_image[:, :, :3])
+            assert np.array_equal(image, dummy_image[:, :, :3]), (image == dummy_image[:, :, :3]).mean()
         else:
-            assert np.array_equal(image, image_cv2_from_path)
+            assert np.array_equal(image, image_cv2_from_path), (image == image_cv2_from_path).mean()

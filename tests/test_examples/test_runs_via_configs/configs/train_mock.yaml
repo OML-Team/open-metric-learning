@@ -2,10 +2,11 @@ postfix: "deepfashion"
 
 seed: 42
 gpus: []
+precision: 32
 
-dataset_root: tmp  # we will replace it in runtime with the default dataset folder
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
-logs_root: logs  # we will replace it in runtime with the tmp folder
+logs_root: logs
 
 im_size_train: 32
 im_size_val: 32
@@ -28,7 +29,7 @@ criterion:
 
 defaults:
   - optimizer: sgd
-  - sampler: sequential_balance
+  - sampler: sequential_category_balance
 
 model:
   name: vit
@@ -38,14 +39,16 @@ model:
     use_multi_scale: False
     weights: null
 
-
-scheduler:
-  name: multi_step
-  args:
-    milestones:
-      - 1
-      - 2
-      - 3
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      milestones:
+        - 1
+        - 2
+        - 3
 
 bs_val: 2
 
@@ -53,6 +56,8 @@ metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [1, 5]
+
+log_only_main_category: True
 
 max_epochs: 2
 valid_period: 1

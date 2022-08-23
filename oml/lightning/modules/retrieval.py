@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional, Union
 
+import pytorch_lightning as pl
 import torch
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
@@ -11,18 +12,18 @@ from oml.lightning.modules.module_ddp import ModuleDDP
 
 class RetrievalModule(ModuleDDP):
     def __init__(
-            self,
-            model: IExtractor,
-            criterion: nn.Module,
-            optimizer: torch.optim.Optimizer,
-            loaders_train: Optional[TRAIN_DATALOADERS] = None,
-            loaders_val: Optional[EVAL_DATALOADERS] = None,
-            scheduler: Optional[_LRScheduler] = None,
-            scheduler_interval: str = "step",
-            scheduler_frequency: int = 1,
-            key_input: str = "input_tensors",
-            key_targets: str = "labels",
-            key_embeddings: str = "embeddings",
+        self,
+        model: IExtractor,
+        criterion: nn.Module,
+        optimizer: torch.optim.Optimizer,
+        loaders_train: Optional[TRAIN_DATALOADERS] = None,
+        loaders_val: Optional[EVAL_DATALOADERS] = None,
+        scheduler: Optional[_LRScheduler] = None,
+        scheduler_interval: str = "step",
+        scheduler_frequency: int = 1,
+        input_tensors_key: str = "input_tensors",
+        targets_key: str = "labels",
+        embeddings_key: str = "embeddings",
     ):
         super(RetrievalModule, self).__init__(loaders_train=loaders_train, loaders_val=loaders_val)
 
@@ -34,32 +35,32 @@ class RetrievalModule(ModuleDDP):
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
 
-        self.key_input = key_input
-        self.key_target = key_targets
-        self.key_embeddings = key_embeddings
+        self.input_tensors_key = input_tensors_key
+        self.targets_key = targets_key
+        self.embeddings_key = embeddings_key
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         embeddings = self.model(x)
         return embeddings
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int) -> torch.Tensor:
-        embeddings = self.model(batch[self.key_input])
+        embeddings = self.model(batch[self.input_tensors_key])
         bs = len(embeddings)
 
-        loss = self.criterion(embeddings, batch[self.key_target])
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True, sync_dist=True)
+        loss = self.criterion(embeddings, batch[self.targets_key])
+        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
-            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False, sync_dist=True)
+            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
         if self.scheduler is not None:
-            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False, sync_dist=True)
+            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
         return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
-        embeddings = self.model.extract(batch[self.key_input])
-        return {**batch, **{self.key_embeddings: embeddings}}
+        embeddings = self.model.extract(batch[self.input_tensors_key])
+        return {**batch, **{self.embeddings_key: embeddings}}
 
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:

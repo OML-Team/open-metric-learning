@@ -1,9 +1,11 @@
+from collections import defaultdict
 from functools import partial
 from typing import Any
 
 import pytest
 import torch
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.metrics.triplets import AccuracyOnTriplets
 from oml.utils.misc import one_hot
 
@@ -17,15 +19,12 @@ def perfect_case() -> Any:
         "categories": ["cat", "dog"],  # 1st triplet  # 2nd triplet
     }
 
-    categories_mapping = {"cat": 0, "dog": 1}
+    gt_metrics = defaultdict(dict)  # type: ignore
+    gt_metrics[OVERALL_CATEGORIES_KEY][AccuracyOnTriplets.metric_name] = 1
+    gt_metrics["cat"][AccuracyOnTriplets.metric_name] = 1
+    gt_metrics["dog"][AccuracyOnTriplets.metric_name] = 1
 
-    gt_metrics = {
-        f"{AccuracyOnTriplets.metric_name}/OVERALL": 1,
-        f"{AccuracyOnTriplets.metric_name}/0": 1,
-        f"{AccuracyOnTriplets.metric_name}/1": 1,
-    }
-
-    return [batch], gt_metrics, categories_mapping
+    return [batch], gt_metrics
 
 
 @pytest.fixture()
@@ -70,23 +69,18 @@ def some_case() -> Any:
         "categories": [0, 1],  # triplets #5 #6
     }
 
-    categories_mapping = {0: "cat", 1: "dog"}
+    gt_metrics = defaultdict(dict)  # type: ignore
+    gt_metrics[OVERALL_CATEGORIES_KEY][AccuracyOnTriplets.metric_name] = 1 / 2
+    gt_metrics[0][AccuracyOnTriplets.metric_name] = 1 / 2
+    gt_metrics[1][AccuracyOnTriplets.metric_name] = 1 / 2
 
-    gt_metrics = {
-        f"{AccuracyOnTriplets.metric_name}/OVERALL": 1 / 2,
-        f"{AccuracyOnTriplets.metric_name}/cat": 1 / 2,
-        f"{AccuracyOnTriplets.metric_name}/dog": 1 / 2,
-    }
-
-    return [batch1, batch2], gt_metrics, categories_mapping
+    return [batch1, batch2], gt_metrics
 
 
 def run_accuracy_on_triplets(case) -> None:  # type: ignore
-    batches, gt_metrics, categories_mapping = case
+    batches, gt_metrics = case
 
-    acc = AccuracyOnTriplets(
-        embeddings_key="embeddings", categories_key="categories", categories_names_mapping=categories_mapping
-    )
+    acc = AccuracyOnTriplets(embeddings_key="embeddings", categories_key="categories")
     acc.setup()
     for batch in batches:
         acc.update_data(batch)

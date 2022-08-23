@@ -33,8 +33,11 @@ OML is available in PyPI:
 pip install -U open-metric-learning
 ```
 
-You can also use docker:
+You can also pull the prepared image from DockerHub or build one by your own
 ```shell script
+docker pull omlteam/oml:gpu
+docker pull omlteam/oml:cpu
+
 make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
@@ -105,7 +108,7 @@ the combinations of samples only inside the current batch, thus, the memory bank
   "skirts", "jackets", "shorts" and so on (we name them `categories`).
   Note, we avoid using the term `class` to avoid misunderstanding.
 * `training epoch` - batch samplers which we use for combination-based losses usually have a length equal to
-<number of labels in training dataset> / <numbers of labels in one batch>. It means that we don't observe all of
+[number of labels in training dataset] / [numbers of labels in one batch]. It means that we don't observe all of
 the available training samples in one epoch (as opposed to vanilla classification),
 instead, we observe all of the available labels.
 </p>
@@ -173,7 +176,7 @@ experienced in Machine Learning or Python. You can find more details in the *exa
 * **Via Python**. The most flexible, but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
 In the *Minimal examples* section you can find fully working code snippets that train and validate the model
-on a tiny dataset (less than 1 Mb).
+on a tiny [dataset](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing) (less than 1 Mb).
 
 
 ## Minimal Python examples
