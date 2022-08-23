@@ -22,7 +22,9 @@ err_message_loaders_is_not_patched = \
     f"3) If you call 'trainer.{Trainer.fit.__name__}(...)' or 'trainer.{Trainer.validate.__name__}(...)' method with " \
     f"loaders as argument, PytorchLightning will ignore loaders from '{LightningModule.train_dataloader.__name__}' " \
     f"and '{LightningModule.val_dataloader.__name__}' methods. Please avoid substituting loaders to this functions, " \
-    f"instead use '{ModuleDDP.__name__}'\n"
+    f"instead use '{ModuleDDP.__name__}'\n" \
+    f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this " \
+    f"replacement in '{ModuleDDP.__name__}' constructor"
 
 
 class MetricValCallback(Callback):
