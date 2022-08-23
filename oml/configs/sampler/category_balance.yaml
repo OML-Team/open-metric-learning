@@ -1,0 +1,7 @@
+name: category_balance
+args:
+  n_labels: 2
+  n_instances: 2
+  n_categories: 1
+  resample_labels: False
+  weight_categories: True

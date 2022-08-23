@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.strategies import DDPStrategy
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
+from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg, PolicyDDP
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
@@ -72,7 +72,7 @@ def pl_train(cfg: TCfg) -> None:
     if train_dataset.categories_key:
         sampler_runtime_args["label2category"] = dict(zip(train_dataset.df["label"], train_dataset.df["category"]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
-    batch_sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
+    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
@@ -93,8 +93,10 @@ def pl_train(cfg: TCfg) -> None:
 
     loader_train = DataLoader(
         dataset=train_dataset,
-        batch_sampler=batch_sampler,
         num_workers=cfg["num_workers"],
+        sampler=sampler,
+        batch_size=sampler.batch_size,
+        drop_last=PolicyDDP.train_drop_last
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])

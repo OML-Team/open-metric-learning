@@ -3,12 +3,12 @@ from copy import deepcopy
 from typing import Dict, Iterator, List, Set, Union
 
 import numpy as np
-from torch.utils.data import Sampler, BatchSampler
+from torch.utils.data import Sampler
 
 from oml.utils.misc import smart_sample
 
 
-class DistinctCategoryBalanceBatchSampler(BatchSampler):
+class DistinctCategoryBalanceBatchSampler(Sampler):
     """
     Let C is a set of categories in dataset, L is a set of labels in dataset:
     - select n_categories for the 1st batch from C
