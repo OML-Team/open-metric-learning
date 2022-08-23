@@ -75,7 +75,7 @@ def pl_train(cfg: TCfg) -> None:
 
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     runtime_args = {"labels": train_dataset.get_labels(), "label2category": dict(zip(df["label"], df["category"]))}
-    sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
+    batch_sampler = get_sampler_by_cfg(cfg["sampler"], **runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
@@ -84,18 +84,11 @@ def pl_train(cfg: TCfg) -> None:
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
-    # print('LEN SEQ', len(sampler))
-    # batch_sampler = BatchSampler(sampler=sampler, drop_last=True, batch_size=sampler.batch_size)
-    # print('LEN BATCH', len(batch_sampler))
 
     loader_train = DataLoader(
         dataset=train_dataset,
-        batch_sampler=sampler,
-        # batch_sampler=batch_sampler,
+        batch_sampler=batch_sampler,
         num_workers=cfg["num_workers"],
-        # sampler=sampler,
-        # batch_size=sampler.batch_size
-        # batch_sampler=BatchSampler(sampler=sampler, drop_last=True, batch_size=sampler.batch_size)
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
@@ -151,15 +144,16 @@ def pl_train(cfg: TCfg) -> None:
         strategy=DDPStrategy(find_unused_parameters=False) if len(cfg["gpus"]) > 1 else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
-        limit_train_batches=2,
-        reload_dataloaders_every_n_epochs=1
+        # limit_train_batches=2,
     )
 
     pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, scheduler=scheduler,
-                               loaders_train=loader_train, loaders_val=loaders_val)
+                               loaders_train=loader_train, loaders_val=loaders_val
+                               )
     # trainer.validate(model=pl_model)
     # trainer.validate(model=pl_model, dataloaders=loaders_val)
     trainer.fit(model=pl_model)
+    # trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
 
 __all__ = ["pl_train"]

@@ -7,6 +7,13 @@ from typing import Any, Dict, Tuple, Union
 from omegaconf import DictConfig
 
 
+class PolicyDDP:
+    train_drop_last = False
+    train_shuffle = True
+    val_drop_last = False
+    val_shuffle = False
+
+
 def get_cache_folder() -> Path:
     if platform == "linux" or platform == "linux2":
         return Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "oml"

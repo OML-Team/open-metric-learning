@@ -1,11 +1,28 @@
 from typing import Any, Optional
 
 import pytorch_lightning as pl
-from pytorch_lightning import Callback
+from pytorch_lightning import Callback, LightningModule, Trainer
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
+from oml.const import PolicyDDP
 from oml.interfaces.metrics import IBasicMetric
+from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.utils.ddp import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.utils.misc import flatten_dict
+
+
+err_message_loaders_is_not_patched = \
+    "\nExperiment is runned in DDP mode, but some of dataloaders is not patched. Metric callback will be incorrect " \
+    "without patched loaders. Possible problems and solutions:\n" \
+    f"1) If you use custom module inherited from '{LightningModule.__name__}', please replace ancestor class with " \
+    f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n" \
+    f"2) If you implement your own '{LightningModule.train_dataloader.__name__}' or " \
+    f"'{LightningModule.val_dataloader.__name__}' methods for your module, you can add extra line of code for " \
+    f"patching loader with '{patch_dataloader_to_ddp.__name__}' function\n" \
+    f"3) If you call 'trainer.{Trainer.fit.__name__}(...)' or 'trainer.{Trainer.validate.__name__}(...)' method with " \
+    f"loaders as argument, PytorchLightning will ignore loaders from '{LightningModule.train_dataloader.__name__}' " \
+    f"and '{LightningModule.val_dataloader.__name__}' methods. Please avoid substituting loaders to this functions, " \
+    f"instead use '{ModuleDDP.__name__}'\n"
 
 
 class MetricValCallback(Callback):
@@ -29,14 +46,31 @@ class MetricValCallback(Callback):
         self._collected_samples = 0
         self._ready_to_accumulate = False
 
+        self._loaders_checked = False
+
+    def _check_loaders(self, trainer: "pl.Trainer"):
+        if not self._loaders_checked:
+            if trainer.world_size != 1:
+                if not check_loaders_is_patched(trainer.val_dataloaders):
+                    raise RuntimeError(err_message_loaders_is_not_patched)
+
+            self._loaders_checked = True
+
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
     def on_validation_batch_start(
-        self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
+            self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
                 len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
-                # We use padding in DDP mode, so we need to extend number of expected samples
-                len_dataset += len_dataset % trainer.world_size
+                if not PolicyDDP.val_drop_last:
+                    # If we use padding in DDP mode, we need to extend number of expected samples
+                    len_dataset += len_dataset % trainer.world_size
                 len_dataset = len_dataset // trainer.world_size
                 self._expected_samples = self.samples_in_getitem * len_dataset
                 self._collected_samples = 0
@@ -45,13 +79,13 @@ class MetricValCallback(Callback):
                 self._ready_to_accumulate = True
 
     def on_validation_batch_end(
-        self,
-        trainer: pl.Trainer,
-        pl_module: pl.LightningModule,
-        outputs: Optional[STEP_OUTPUT],
-        batch: Any,
-        batch_idx: int,
-        dataloader_idx: int,
+            self,
+            trainer: pl.Trainer,
+            pl_module: pl.LightningModule,
+            outputs: Optional[STEP_OUTPUT],
+            batch: Any,
+            batch_idx: int,
+            dataloader_idx: int,
     ) -> None:
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
@@ -73,7 +107,7 @@ class MetricValCallback(Callback):
             is_last_expected_batch = self._collected_samples == self._expected_samples
             if is_last_expected_batch:
                 # TODO: optimize to avoid duplication of metrics on all devices.
-                #  Note: if we calculate metric only on main device, we need to log metric for all devices,
+                #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
                 #  because they need this metric for checkpointing
                 self.metric.sync()
                 self.calc_and_log_metrics(pl_module)
