@@ -33,6 +33,8 @@ def calc_retrieval_metrics(
         precision_top_k: k values to calculate precision@k
         map_top_k: k values to calculate map@k
         reduce: if False return metrics for each query without averaging
+        check_dataset_validity: Check if we have answers for all of the queries
+
     Returns:
         Dictionary with metrics.
     """
@@ -73,9 +75,9 @@ def calc_retrieval_metrics(
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
-    cmc_top_k_clipped = clip_max(cmc_top_k, gallery_sz)
-    precision_top_k_clipped = clip_max(precision_top_k, gallery_sz)
-    map_top_k_clipped = clip_max(map_top_k, gallery_sz)
+    cmc_top_k_clipped = clip_max(cmc_top_k, max_el=gallery_sz)
+    precision_top_k_clipped = clip_max(precision_top_k, max_el=gallery_sz)
+    map_top_k_clipped = clip_max(map_top_k, max_el=gallery_sz)
 
     max_k = max([*cmc_top_k, *precision_top_k, *map_top_k])
     max_k = min(max_k, gallery_sz)

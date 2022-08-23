@@ -111,9 +111,8 @@ class LinearEmbedding(IExtractor):
         self.linear = nn.Linear(ResNet50.output_size, embedding_size)
         self.l2norm_on_train = l2norm_on_train
 
-        # todo
-        # ckpt = torch.load("/nydl/code/BroadFace/result/last.pth", map_location="cpu")
-        # self.load_state_dict(ckpt)
+        ckpt = torch.load("/nydl/code/BroadFace/results2/best.pth", map_location="cpu")
+        self.load_state_dict(ckpt)
 
     def forward(self, x):
         x = self.base(x)
