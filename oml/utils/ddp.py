@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional, Union, Iterator, Sequence
 
 import numpy as np
 import torch
-from torch.distributed import all_gather_object, get_rank, is_initialized, logging
+from torch.distributed import all_gather_object, get_rank, is_initialized, logging, get_world_size
 from torch.utils.data import Dataset, DistributedSampler, DataLoader, BatchSampler
 
 TGenericSampler = Union[Iterator[int], Iterator[List[int]]]
@@ -12,7 +12,7 @@ TGenericSampler = Union[Iterator[int], Iterator[List[int]]]
 
 class WarningDDP(UserWarning):
     def __init__(self, function_name: str):
-        self.message = f"You use {function_name} function, but default process group has not been initialized. " \
+        self.message = f"You use '{function_name}' function, but default process group has not been initialized. " \
                        "In this case for compatibility function doesn't modify your data. " \
                        "Please make sure to call init_process_group or ignore this warning if you want use this " \
                        "function without DDP"

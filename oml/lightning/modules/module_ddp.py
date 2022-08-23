@@ -18,10 +18,10 @@ class ModuleDDP(pl.LightningModule):
         self.loaders_val = loaders_val
 
     def train_dataloader(self) -> TRAIN_DATALOADERS:
-        return self._patch_loaders('train')
+        return self._patch_loaders('train') if self.loaders_train else super(ModuleDDP, self).train_dataloader()
 
     def val_dataloader(self) -> EVAL_DATALOADERS:
-        return self._patch_loaders('val')
+        return self._patch_loaders('val') if self.loaders_val else super(ModuleDDP, self).val_dataloader()
 
     def _patch_loaders(self, mode: str) -> EVAL_DATALOADERS:
         assert mode in ('train', 'val')
