@@ -10,10 +10,15 @@ from oml.utils.misc import dictconfig_to_dict
 def parse_runtime_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     cfg = dictconfig_to_dict(cfg.copy())
 
-    accelerator = cfg.get("accelerator", "gpu" if torch.cuda.is_available() else "cpu")
-    devices = cfg.get(
-        "devices", torch.cuda.device_count() if (torch.cuda.is_available() and accelerator == "gpu") else 1
-    )
+    # we want to replace possible null or no values in config for "accelerator" and "devices"
+    accelerator = cfg.get("accelerator")
+    if accelerator is None:
+        accelerator = "gpu" if torch.cuda.is_available() else "cpu"
+
+    devices = cfg.get("devices")
+    if devices is None:
+        devices = torch.cuda.device_count() if (torch.cuda.is_available() and accelerator == "gpu") else 1
+
     if isinstance(devices, (list, tuple)) and accelerator == "cpu":
         devices = len(devices)
 

@@ -2,14 +2,32 @@ import shutil
 import subprocess
 import warnings
 from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
+import pytest
+import torch
 import yaml  # type: ignore
+from omegaconf import OmegaConf
 
 from oml.const import PROJECT_ROOT
 
 warnings.filterwarnings("ignore")
 
 SCRIPTS_PATH = PROJECT_ROOT / "tests/test_examples/test_runs_via_configs/"
+
+
+TDevices = Union[int, List[int]]
+
+
+def accelerator_devices_pairs() -> List[Tuple[str, TDevices]]:  # type: ignore
+    pairs = [("cpu", 1), ("cpu", [0, 2])]
+
+    if torch.cuda.is_available():
+        pairs += [("gpu", 1)]
+        if torch.cuda.device_count() > 1:
+            pairs += [("gpu", [0, 1])]
+
+    return pairs  # type: ignore
 
 
 def rm_logs(cfg_name: Path) -> None:
@@ -20,15 +38,20 @@ def rm_logs(cfg_name: Path) -> None:
         shutil.rmtree(cfg["logs_root"])
 
 
-def run(file: str) -> None:
-    subprocess.run(["python", str(SCRIPTS_PATH / file)], check=True)
+def run(file: str, accelerator: str, devices: TDevices) -> None:
+    cmd = f"python {str(SCRIPTS_PATH / file)} ++accelerator='{accelerator}'"
+    if devices is not None:
+        cmd += f" ++devices='{devices}'"
+    subprocess.run(cmd, check=True, shell=True)
 
     rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
 
 
-def test_train() -> None:
-    run("train_mock.py")
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train(accelerator: str, devices: TDevices) -> None:
+    run("train_mock.py", accelerator, devices)
 
 
-def test_val() -> None:
-    run("val_mock.py")
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_val(accelerator: str, devices: TDevices) -> None:
+    run("val_mock.py", accelerator, devices)
