@@ -3,7 +3,7 @@ from pprint import pprint
 from typing import Any, Dict, Tuple
 
 import pytorch_lightning as pl
-from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
 from oml.const import TCfg
@@ -50,7 +50,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     trainer = pl.Trainer(
         gpus=cfg["gpus"],
         num_nodes=1,
-        strategy=DDPStrategy(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
+        strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
         replace_sampler_ddp=False,
         callbacks=[clb_metric],
         precision=cfg.get("precision", 32),
