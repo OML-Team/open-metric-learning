@@ -18,7 +18,7 @@ num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: sequential_balance
+  name: balance
   args:
     n_labels: 20
     n_instances: 10

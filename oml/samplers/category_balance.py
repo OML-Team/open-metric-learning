@@ -8,7 +8,7 @@ from torch.utils.data import Sampler
 from oml.utils.misc import smart_sample
 
 
-class CategoryBalanceBatchSampler(Sampler):
+class CategoryBalanceSampler(Sampler):
     """
     Let C is a set of categories in dataset, L is a set of labels in dataset:
     - select n_categories for the 1st batch from C
@@ -150,22 +150,4 @@ class CategoryBalanceBatchSampler(Sampler):
         return iter(epoch_indices)
 
 
-class SequentialCategoryBalanceSampler(CategoryBalanceBatchSampler):
-    """
-    Almost the same as
-    >>> CategoryBalanceBatchSampler
-    but indexes will be returned in a flattened way
-
-    """
-
-    def __iter__(self) -> Iterator[int]:  # type: ignore
-        ids_flatten = []
-        for ids in super().__iter__():
-            ids_flatten.extend(ids)
-        return iter(ids_flatten)
-
-    def __len__(self) -> int:
-        return self.batches_in_epoch * self._batch_size
-
-
-__all__ = ["CategoryBalanceBatchSampler", "SequentialCategoryBalanceSampler"]
+__all__ = ["CategoryBalanceSampler"]

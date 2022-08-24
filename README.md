@@ -17,7 +17,7 @@ Specifically, our framework provides modules for supervised training and retriev
  (like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
  The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
  Thus, during the training we:
-   1. Use `DataLoader` + `Sampler` to form batches (for example `SequentialBalanceSampler`)
+   1. Use `DataLoader` + `Sampler` to form batches (for example `BalanceSampler`)
    2. [Only for losses based on combinations] Use `Miner` to form effective pairs or triplets, including
    those which utilize a memory bank.
    3. Compute loss.
@@ -195,7 +195,7 @@ from oml.datasets.retrieval import DatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceBatchSampler
+from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root = "mock_dataset/"
@@ -206,7 +206,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = BalanceBatchSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
+sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
@@ -270,7 +270,7 @@ from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import SequentialBalanceSampler
+from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root =  "mock_dataset/"
@@ -283,8 +283,8 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = SequentialBalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
+batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
 val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)

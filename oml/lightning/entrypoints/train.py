@@ -94,9 +94,7 @@ def pl_train(cfg: TCfg) -> None:
     loader_train = DataLoader(
         dataset=train_dataset,
         num_workers=cfg["num_workers"],
-        sampler=sampler,
-        batch_size=sampler.batch_size,
-        drop_last=PolicyDDP.train_drop_last,
+        batch_sampler=sampler,
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])

@@ -2,28 +2,19 @@ from typing import Any, Dict
 
 from torch.utils.data.sampler import Sampler
 
-from oml.samplers.balance import BalanceBatchSampler, SequentialBalanceSampler
-from oml.samplers.category_balance import (
-    CategoryBalanceBatchSampler,
-    SequentialCategoryBalanceSampler,
-)
-from oml.samplers.distinct_category_balance import (
-    DistinctCategoryBalanceBatchSampler,
-    SequentialDistinctCategoryBalanceSampler,
-)
+from oml.samplers.balance import BalanceSampler
+from oml.samplers.category_balance import CategoryBalanceSampler
+from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 SAMPLERS_CATEGORIES_BASED = {
-    "sequential_category_balance": SequentialCategoryBalanceSampler,
-    "category_balance": CategoryBalanceBatchSampler,
-    "sequential_distinct_category_balance": SequentialDistinctCategoryBalanceSampler,
-    "distinct_category_balance": DistinctCategoryBalanceBatchSampler,
+    "category_balance": CategoryBalanceSampler,
+    "distinct_category_balance": DistinctCategoryBalanceSampler,
 }
 
 SAMPLERS_REGISTRY = {
     **SAMPLERS_CATEGORIES_BASED,  # type: ignore
-    "sequential_balance": SequentialBalanceSampler,
-    "balance": BalanceBatchSampler,
+    "balance": BalanceSampler,
 }
 
 

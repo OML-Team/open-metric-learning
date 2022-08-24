@@ -29,7 +29,7 @@ criterion:
 
 defaults:
   - optimizer: sgd
-  - sampler: sequential_category_balance
+  - sampler: category_balance
 
 model:
   name: vit

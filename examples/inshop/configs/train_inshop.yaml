@@ -19,7 +19,7 @@ num_workers: 20
 cache_size: 100000
 
 sampler:
-  name: sequential_category_balance
+  name: category_balance
   args:
     n_labels: 13
     n_instances: 6
