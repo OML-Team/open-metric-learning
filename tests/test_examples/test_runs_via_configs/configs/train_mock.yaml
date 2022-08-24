@@ -8,14 +8,14 @@ dataset_root: path_to_replace  # we will replace it in runtime with the default 
 dataframe_name: df.csv
 logs_root: logs
 
-im_size_train: 32
-im_size_val: 32
-im_pad_ratio_train: 0.0
-im_pad_ratio_val: 0.0
 num_workers: 0
 cache_size: 100
 
-augs: custom_augmentations
+transforms_train:
+  name: custom_augmentations
+  args: {}
+
+transforms_val: null
 
 criterion:
   name: triplet_with_miner

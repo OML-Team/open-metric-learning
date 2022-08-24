@@ -204,7 +204,7 @@ df_train, _ = download_mock_dataset(dataset_root)
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 sampler = BalanceBatchSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
@@ -235,7 +235,7 @@ _, df_val = download_mock_dataset(dataset_root)
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 calculator = EmbeddingMetrics()
@@ -281,13 +281,13 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 sampler = SequentialBalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
 
 # val
-val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics())
 

@@ -1,11 +1,11 @@
 import albumentations as albu
 import cv2
 
-from oml.const import PAD_COLOR
-from oml.transforms.images.albumentations.shared import TAugsList
+from oml.const import MEAN, PAD_COLOR, STD, TNormParam
+from oml.transforms.images.albumentations.shared import TTransformsList
 
 
-def get_spatials_weak() -> TAugsList:
+def get_spatials_weak() -> TTransformsList:
     spatial_augs = [
         albu.Perspective(scale=(0.06, 0.07), pad_mode=cv2.BORDER_CONSTANT, pad_val=PAD_COLOR, p=0.5),
         albu.Affine(
@@ -16,7 +16,7 @@ def get_spatials_weak() -> TAugsList:
     return spatial_augs
 
 
-def get_blurs_weak(blur_limit: int = 3) -> TAugsList:
+def get_blurs_weak(blur_limit: int = 3) -> TTransformsList:
     blur_augs = [
         albu.MotionBlur(blur_limit=blur_limit),
         albu.MedianBlur(blur_limit=blur_limit),
@@ -26,7 +26,7 @@ def get_blurs_weak(blur_limit: int = 3) -> TAugsList:
     return blur_augs
 
 
-def get_colors_level_weak() -> TAugsList:
+def get_colors_level_weak() -> TTransformsList:
     color_augs = [
         albu.ColorJitter(brightness=0.1, contrast=0.15, saturation=0.15, hue=0.15, p=0.5),
         albu.CLAHE(clip_limit=3, p=0.2),
@@ -36,7 +36,7 @@ def get_colors_level_weak() -> TAugsList:
     return color_augs
 
 
-def get_noises_weak() -> TAugsList:
+def get_noises_weak() -> TTransformsList:
     noise_augs = [
         albu.CoarseDropout(max_holes=3, max_height=10, max_width=10, fill_value=PAD_COLOR, p=0.3),
         albu.GaussNoise(p=0.7),
@@ -44,7 +44,7 @@ def get_noises_weak() -> TAugsList:
     return noise_augs
 
 
-def get_noise_channels_weak() -> TAugsList:
+def get_noise_channels_weak() -> TTransformsList:
     channels_noise_augs = [
         albu.ChannelDropout(p=0.1),
         albu.ToGray(p=0.7),
@@ -53,15 +53,19 @@ def get_noise_channels_weak() -> TAugsList:
     return channels_noise_augs
 
 
-def get_default_weak_albu() -> albu.Compose:
+def get_default_weak_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
     augs = albu.Compose(
         [
+            albu.LongestMaxSize(max_size=im_size),
+            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials_weak(), p=0.3),
             albu.OneOf(get_blurs_weak(), p=0.25),
             albu.OneOf(get_colors_level_weak(), p=0.4),
             albu.OneOf(get_noise_channels_weak(), p=0.1),
             albu.OneOf(get_noises_weak(), p=0.15),
+            albu.Normalize(mean=mean, std=std),
+            albu.pytorch.ToTensorV2(),
         ]
     )
     return augs

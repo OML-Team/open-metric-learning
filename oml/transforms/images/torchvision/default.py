@@ -1,23 +1,16 @@
-from torchvision.transforms import (
-    ColorJitter,
-    Compose,
-    GaussianBlur,
-    RandomAffine,
-    RandomErasing,
-    RandomGrayscale,
-    RandomHorizontalFlip,
-)
+import torchvision.transforms as t
+
+from oml.const import MEAN, STD, TNormParam
 
 
-def get_default_torch() -> Compose:
-    augs = Compose(
+def get_default_torch(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> t.Compose:
+    augs = t.Compose(
         [
-            RandomHorizontalFlip(),
-            RandomAffine(degrees=0),
-            GaussianBlur(kernel_size=3),
-            ColorJitter(),
-            RandomGrayscale(),
-            RandomErasing(),
+            t.Resize(size=im_size),
+            t.RandomHorizontalFlip(),
+            t.ColorJitter(),
+            t.ToTensor(),
+            t.Normalize(mean=mean, std=std),
         ]
     )
     return augs

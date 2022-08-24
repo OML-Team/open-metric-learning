@@ -11,10 +11,6 @@ dataset_root: data/Stanford_Online_Products/
 logs_root: logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size_train: 224
-im_size_val: 224
-im_pad_ratio_train: 0.0
-im_pad_ratio_val: 0.0
 num_workers: 20
 cache_size: 100000
 
@@ -37,7 +33,10 @@ metric_args:
 
 log_only_main_category: True
 
-augs: default_albu
+train_transform:
+  name: default_albu
+  args:
+    im_size: 224
 
 model:
   name: vit

@@ -6,7 +6,7 @@ from oml.registry.models import MODELS_REGISTRY
 from oml.registry.optimizers import OPTIMIZERS_REGISTRY
 from oml.registry.samplers import SAMPLERS_REGISTRY
 from oml.registry.schedulers import SCHEDULERS_REGISTRY
-from oml.registry.transforms import AUGS_REGISTRY
+from oml.registry.transforms import TRANSFORMS_REGISTRY
 
 
 def show_registry() -> None:
@@ -17,7 +17,7 @@ def show_registry() -> None:
         ("Optimizers", OPTIMIZERS_REGISTRY),
         ("Samplers", SAMPLERS_REGISTRY),
         ("Schedulers", SCHEDULERS_REGISTRY),
-        ("Augmentations", AUGS_REGISTRY),
+        ("Augmentations", TRANSFORMS_REGISTRY),
     ]:
         print(f"{name}: ")
 

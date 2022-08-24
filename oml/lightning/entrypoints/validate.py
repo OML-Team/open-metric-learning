@@ -11,6 +11,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
+from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -27,11 +28,8 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        im_size_train=cfg["im_size"],
-        im_size_val=cfg["im_size"],
-        pad_ratio_train=0,
-        pad_ratio_val=0,
         train_transform=None,
+        val_transform=get_transforms_by_cfg(cfg["transforms_val"]) if cfg["transforms_val"] else None,
         dataframe_name=cfg["dataframe_name"],
     )
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
@@ -41,7 +39,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     metrics_calc = EmbeddingMetrics(
         categories_key=valid_dataset.categories_key,
-        extra_keys=("paths", "x1", "x2", "y1", "y2"),
+        extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {})
     )
     clb_metric = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))

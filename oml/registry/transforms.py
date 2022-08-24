@@ -1,35 +1,30 @@
-from typing import Optional, Union
+from typing import Any, Dict, Union
 
 import albumentations as albu
 import torchvision.transforms as t
 
-from oml.const import MEAN, STD, TNormParam
 from oml.transforms.images.albumentations.default import get_default_albu
 from oml.transforms.images.albumentations.default_weak import get_default_weak_albu
-from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.transforms.images.torchvision.default import get_default_torch
-from oml.transforms.images.torchvision.shared import get_normalisation_torch
+from oml.utils.misc import TCfg, dictconfig_to_dict
 
-TAugs = Union[albu.Compose, t.Compose]
+TTransforms = Union[albu.Compose, t.Compose]
 
-AUGS_REGISTRY = {
-    "default_albu": get_default_albu(),
-    "default_weak_albu": get_default_weak_albu(),
-    "default_torch": get_default_torch(),
+TRANSFORMS_REGISTRY = {
+    "default_albu": get_default_albu,
+    "default_weak_albu": get_default_weak_albu,
+    "default_torch": get_default_torch,
 }
 
 
-def get_augs(name: str, mean: Optional[TNormParam] = MEAN, std: Optional[TNormParam] = STD) -> TAugs:
-    augs = AUGS_REGISTRY[name]
-
-    if isinstance(augs, albu.Compose):
-        return albu.Compose([augs, get_normalisation_albu(mean=mean, std=std)])
-
-    elif isinstance(augs, t.Compose):
-        return t.Compose([get_normalisation_torch(mean=mean, std=std), augs])
-
-    else:
-        return augs
+def get_transforms(name: str, **kwargs: Dict[str, Any]) -> TTransforms:
+    augs = TRANSFORMS_REGISTRY[name](**kwargs)  # type: ignore
+    return augs
 
 
-__all__ = ["TAugs", "AUGS_REGISTRY", "get_augs"]
+def get_transforms_by_cfg(cfg: TCfg) -> TTransforms:
+    cfg = dictconfig_to_dict(cfg)
+    return get_transforms(name=cfg["name"], **cfg["args"])
+
+
+__all__ = ["TTransforms", "TRANSFORMS_REGISTRY", "get_transforms", "get_transforms_by_cfg"]

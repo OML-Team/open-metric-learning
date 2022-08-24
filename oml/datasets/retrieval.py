@@ -12,10 +12,15 @@ from torch.utils.data import Dataset
 
 from oml.const import OVERALL_CATEGORIES_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
-from oml.registry.transforms import TAugs
+from oml.registry.transforms import TTransforms
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, imread_cv2
+from oml.utils.images.images import (
+    TImReader,
+    imread_cv2,
+    np_from_pil_if_needed,
+    pil_from_np_if_needed,
+)
 from oml.utils.images.images_resize import pad_resize
 
 
@@ -23,10 +28,8 @@ class BaseDataset(Dataset):
     def __init__(
         self,
         df: pd.DataFrame,
-        im_size: int,
-        pad_ratio: float = 0.0,
         dataset_root: Optional[Union[str, Path]] = None,
-        transform: Optional[TAugs] = None,
+        transform: Optional[TTransforms] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
         input_tensors_key: str = "input_tensors",
@@ -45,8 +48,6 @@ class BaseDataset(Dataset):
                   obligatory: "label" - id of the item,
                               "path" - to the image, absolute or relative from "dataset_root"
                   optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
-            im_size: Images will be resized to (image_size, image_size)
-            pad_ratio: Padding ratio
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             transform: Augmentations for the images, set None to skip it
             f_imread: Function to read the image
@@ -62,20 +63,19 @@ class BaseDataset(Dataset):
         """
         df = df.copy()
 
-        assert pad_ratio >= 0
         assert all(x in df.columns for x in ("label", "path"))
 
         self.input_tensors_key = input_tensors_key
         self.labels_key = labels_key
         self.paths_key = paths_key
         self.categories_key = categories_key if ("category" in df.columns) else None
-        self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
 
-        if not all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2")):
-            df["x_1"] = None
-            df["x_2"] = None
-            df["y_1"] = None
-            df["y_2"] = None
+        self.bboxes_exist = all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2"))
+        if self.bboxes_exist:
+            self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
+            print("Message")  # todo
+        else:
+            self.x1_key, self.x2_key, self.y1_key, self.y2_key = None, None, None, None
 
         if dataset_root is not None:
             dataset_root = Path(dataset_root)
@@ -84,8 +84,6 @@ class BaseDataset(Dataset):
             df["path"] = df["path"].astype(str)
 
         self.df = df
-        self.im_size = im_size
-        self.pad_ratio = pad_ratio
         self.transform = transform or get_normalisation_albu()
         self.f_imread = f_imread
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
@@ -97,38 +95,50 @@ class BaseDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         label = self.df.iloc[idx]["label"]
-        crop = self.read_image(idx)
-
-        if isinstance(self.transform, albu.Compose):
-            image_tensor = self.transform(image=crop)["image"]
-
-        elif isinstance(self.transform, torchvision.transforms.Compose):
-            if isinstance(crop, np.ndarray):  # depends on the reader we may have numpy or pil here
-                crop = Image.fromarray(crop)
-            image_tensor = self.transform(crop)
-
-        else:
-            image_tensor = self.transform(crop)
-
+        img = self.read_image(idx)
         row = self.df.iloc[idx]
 
-        if pd.isna(row.x_1):
-            x1, y1, x2, y2 = float("nan"), float("nan"), float("nan"), float("nan")
-        else:
+        if self.bboxes_exist:
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
+
+        if isinstance(self.transform, albu.Compose) and self.bboxes_exist:
+            img = np_from_pil_if_needed(img)
+            image_tensor = self.transform(image=img, bbox_params=[x1, y1, x2, y2])["image"]
+
+        elif isinstance(self.transform, albu.Compose) and not self.bboxes_exist:
+            img = np_from_pil_if_needed(img)
+            image_tensor = self.transform(image=img)["image"]
+
+        elif isinstance(self.transform, torchvision.transforms.Compose) and self.bboxes_exist:
+            img = img[y1:y2, x1:x2, :]
+            img = pil_from_np_if_needed(img)
+            image_tensor = self.transform(img)
+
+        elif isinstance(self.transform, torchvision.transforms.Compose) and not self.bboxes_exist:
+            img = pil_from_np_if_needed(img)
+            image_tensor = self.transform(img)
+
+        else:
+            image_tensor = self.transform(img)
 
         item = {
             self.input_tensors_key: image_tensor,
             self.labels_key: label,
             self.paths_key: row.path,
-            self.x1_key: x1,
-            self.y1_key: y1,
-            self.x2_key: x2,
-            self.y2_key: y2,
         }
 
         if self.categories_key:
             item[self.categories_key] = row.category
+
+        if self.bboxes_exist:
+            item.update(
+                {
+                    self.x1_key: x1,
+                    self.y1_key: y1,
+                    self.x2_key: x2,
+                    self.y2_key: y2,
+                }
+            )
 
         return item
 
@@ -138,19 +148,14 @@ class BaseDataset(Dataset):
     def read_image(self, idx: int) -> np.ndarray:
         img_bytes = self.read_bytes_image_cached(self.df.iloc[idx]["path"])
         img = self.f_imread(img_bytes)
-
-        row = self.df.iloc[idx]
-
-        if not pd.isna(row.x_1):
-            x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
-            img = img[y1:y2, x1:x2, :]
-
-        if isinstance(img, TImage):
-            img = np.array(img)
-
-        img = pad_resize(im=img, size=self.im_size, pad_ratio=self.pad_ratio)
-
         return img
+
+    @property
+    def bboxes_keys(self) -> Tuple[str, ...]:
+        if self.bboxes_exist:
+            return self.x1_key, self.y1_key, self.x2_key, self.y2_key
+        else:
+            return tuple()
 
 
 class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
@@ -189,8 +194,6 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     def __init__(
         self,
         df: pd.DataFrame,
-        im_size: int,
-        pad_ratio: float = 0.0,
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
@@ -208,10 +211,8 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
-            im_size=im_size,
             dataset_root=dataset_root,
             transform=transform,
-            pad_ratio=pad_ratio,
             f_imread=f_imread,
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
@@ -237,11 +238,8 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 def get_retrieval_datasets(
     dataset_root: Path,
-    im_size_train: int,
-    im_size_val: int,
-    pad_ratio_train: float,
-    pad_ratio_val: float,
     train_transform: Any,
+    val_transform: Any,
     dataframe_name: str,
     cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
@@ -253,8 +251,6 @@ def get_retrieval_datasets(
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,
-        im_size=im_size_train,
-        pad_ratio=pad_ratio_train,
         transform=train_transform,
         cache_size=cache_size,
     )
@@ -264,9 +260,7 @@ def get_retrieval_datasets(
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,
         dataset_root=dataset_root,
-        im_size=im_size_val,
-        pad_ratio=pad_ratio_val,
-        transform=None,
+        transform=val_transform,
         cache_size=cache_size,
     )
 

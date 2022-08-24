@@ -1,11 +1,12 @@
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
 
+transforms_val: null
+
 logs_root: logs
 
 gpus: []
 
-im_size: 32
 num_workers: 0
 
 bs_val: 2

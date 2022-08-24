@@ -3,10 +3,10 @@ dataframe_name: df.csv
 
 logs_root: logs/CARS196/
 
-im_size: 224
 bs_val: 256
 num_workers: 8
 
+transforms_val: null
 
 model:
   name: vit

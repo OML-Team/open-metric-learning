@@ -195,7 +195,7 @@ from torchvision.models import resnet18
 from oml.interfaces.models import IExtractor
 from oml.lightning.entrypoints.train import pl_train
 from oml.registry.models import MODELS_REGISTRY
-from oml.registry.transforms import AUGS_REGISTRY
+from oml.registry.transforms import TRANSFORMS_REGISTRY
 
 class CustomModel(IExtractor):
 
@@ -210,8 +210,15 @@ class CustomModel(IExtractor):
     def feat_dim(self):
         return self.resnet.fc.out_features
 
+def get_custom_augs() -> t.Compose:
+    return t.Compose([
+        t.RandomHorizontalFlip(),
+        t.RandomGrayscale(),
+        t.ToTensor(),
+        t.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
-AUGS_REGISTRY["custom_augmentations"] = t.Compose([t.RandomHorizontalFlip(), t.RandomGrayscale()])
+TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs
 MODELS_REGISTRY["custom_model"] = CustomModel
 
 
