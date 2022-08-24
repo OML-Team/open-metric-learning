@@ -11,8 +11,8 @@ from oml.utils.ddp import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.utils.misc import flatten_dict
 
 err_message_loaders_is_not_patched = (
-    "\nExperiment is runned in DDP mode, but some of dataloaders is not patched. Metric callback will be incorrect "
-    "without patched loaders. Possible problems and solutions:\n"
+    "\nExperiment is runned in DDP mode, but some of validation dataloaders is not patched. Metric callback will "
+    "be incorrect  without patched loaders. Possible problems and solutions:\n"
     f"1) If you use custom module inherited from '{LightningModule.__name__}', please replace ancestor class with "
     f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n"
     f"2) If you implement your own '{LightningModule.train_dataloader.__name__}' or "
