@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.strategies import DDPStrategy
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg, PolicyDDP
+from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, PolicyDDP, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
@@ -96,7 +96,7 @@ def pl_train(cfg: TCfg) -> None:
         num_workers=cfg["num_workers"],
         sampler=sampler,
         batch_size=sampler.batch_size,
-        drop_last=PolicyDDP.train_drop_last
+        drop_last=PolicyDDP.train_drop_last,
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
@@ -154,12 +154,14 @@ def pl_train(cfg: TCfg) -> None:
         precision=cfg.get("precision", 32),
     )
 
-    pl_model = RetrievalModule(model=extractor,
-                               criterion=criterion,
-                               optimizer=optimizer,
-                               loaders_train=loader_train,
-                               loaders_val=loaders_val,
-                               **scheduler_args)
+    pl_model = RetrievalModule(
+        model=extractor,
+        criterion=criterion,
+        optimizer=optimizer,
+        loaders_train=loader_train,
+        loaders_val=loaders_val,
+        **scheduler_args,
+    )
 
     trainer.fit(model=pl_model)
 

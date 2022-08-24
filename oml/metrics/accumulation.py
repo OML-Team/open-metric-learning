@@ -114,16 +114,15 @@ class Accumulator:
 
                 for k in storage.keys():
                     if isinstance(storage[k], (torch.Tensor, np.ndarray)):
-                        storage[k] = storage[k][:self.collected_samples, ...]
+                        storage[k] = storage[k][: self.collected_samples, ...]  # type: ignore
 
-                params = {'num_samples': [self.num_samples],
-                          'keys_to_accumulate': self.keys_to_accumulate}
+                params = {"num_samples": [self.num_samples], "keys_to_accumulate": self.keys_to_accumulate}
 
-                gathered_params = sync_dicts_ddp(params, world_size=world_size, device='cpu')
-                gathered_storage = sync_dicts_ddp(storage, world_size=world_size, device='cpu')
+                gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
+                gathered_storage = sync_dicts_ddp(storage, world_size=world_size, device="cpu")
 
-                synced_accum = Accumulator(list(set(gathered_params['keys_to_accumulate'])))
-                synced_accum.refresh(sum(gathered_params['num_samples']))
+                synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
+                synced_accum.refresh(sum(gathered_params["num_samples"]))
                 synced_accum.update_data(gathered_storage)
 
                 return synced_accum

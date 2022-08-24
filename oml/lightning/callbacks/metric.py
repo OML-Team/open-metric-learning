@@ -10,21 +10,21 @@ from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.ddp import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.utils.misc import flatten_dict
 
-
-err_message_loaders_is_not_patched = \
-    "\nExperiment is runned in DDP mode, but some of dataloaders is not patched. Metric callback will be incorrect " \
-    "without patched loaders. Possible problems and solutions:\n" \
-    f"1) If you use custom module inherited from '{LightningModule.__name__}', please replace ancestor class with " \
-    f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n" \
-    f"2) If you implement your own '{LightningModule.train_dataloader.__name__}' or " \
-    f"'{LightningModule.val_dataloader.__name__}' methods for your module, you can add extra line of code for " \
-    f"patching loader with '{patch_dataloader_to_ddp.__name__}' function\n" \
-    f"3) If you call 'trainer.{Trainer.fit.__name__}(...)' or 'trainer.{Trainer.validate.__name__}(...)' method with " \
-    f"loaders as argument, PytorchLightning will ignore loaders from '{LightningModule.train_dataloader.__name__}' " \
-    f"and '{LightningModule.val_dataloader.__name__}' methods. Please avoid substituting loaders to this functions, " \
-    f"instead use '{ModuleDDP.__name__}'\n" \
-    f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this " \
+err_message_loaders_is_not_patched = (
+    "\nExperiment is runned in DDP mode, but some of dataloaders is not patched. Metric callback will be incorrect "
+    "without patched loaders. Possible problems and solutions:\n"
+    f"1) If you use custom module inherited from '{LightningModule.__name__}', please replace ancestor class with "
+    f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n"
+    f"2) If you implement your own '{LightningModule.train_dataloader.__name__}' or "
+    f"'{LightningModule.val_dataloader.__name__}' methods for your module, you can add extra line of code for "
+    f"patching loader with '{patch_dataloader_to_ddp.__name__}' function\n"
+    f"3) If you call 'trainer.{Trainer.fit.__name__}(...)' or 'trainer.{Trainer.validate.__name__}(...)' method with "
+    f"loaders as argument, PytorchLightning will ignore loaders from '{LightningModule.train_dataloader.__name__}' "
+    f"and '{LightningModule.val_dataloader.__name__}' methods. Please avoid substituting loaders to this functions, "
+    f"instead use '{ModuleDDP.__name__}'\n"
+    f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
     f"replacement in '{ModuleDDP.__name__}' constructor"
+)
 
 
 class MetricValCallback(Callback):
@@ -57,7 +57,7 @@ class MetricValCallback(Callback):
 
         self._loaders_checked = False
 
-    def _check_loaders(self, trainer: "pl.Trainer"):
+    def _check_loaders(self, trainer: "pl.Trainer") -> None:
         if not self._loaders_checked:
             if trainer.world_size != 1:
                 if not check_loaders_is_patched(trainer.val_dataloaders):
@@ -72,7 +72,7 @@ class MetricValCallback(Callback):
         self._check_loaders(trainer)
 
     def on_validation_batch_start(
-            self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
@@ -88,13 +88,13 @@ class MetricValCallback(Callback):
                 self._ready_to_accumulate = True
 
     def on_validation_batch_end(
-            self,
-            trainer: pl.Trainer,
-            pl_module: pl.LightningModule,
-            outputs: Optional[STEP_OUTPUT],
-            batch: Any,
-            batch_idx: int,
-            dataloader_idx: int,
+        self,
+        trainer: pl.Trainer,
+        pl_module: pl.LightningModule,
+        outputs: Optional[STEP_OUTPUT],
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int,
     ) -> None:
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate

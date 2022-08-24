@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 from oml.functional.metrics import calculate_accuracy_on_triplets
 from oml.interfaces.metrics import IBasicMetric
