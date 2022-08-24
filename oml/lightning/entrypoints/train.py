@@ -5,7 +5,7 @@ from pprint import pprint
 import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
-from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, PolicyDDP, TCfg
@@ -148,7 +148,7 @@ def pl_train(cfg: TCfg) -> None:
         enable_model_summary=True,
         num_nodes=1,
         gpus=cfg["gpus"],
-        strategy=DDPStrategy(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
+        strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
