@@ -45,7 +45,7 @@ criterion:
   name: arcface
   args:
     in_features: ${emb_size}
-    out_features: 3997
+    out_features: 4000
     scale_factor: 64.0
     margin: 0.50
 

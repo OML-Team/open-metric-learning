@@ -137,6 +137,7 @@ MODELS_REGISTRY["resnet_broadface"] = LinearEmbedding
 
 @hydra.main(config_path="configs", config_name="train_arcface.yaml")
 def main_hydra(cfg: DictConfig) -> None:
+    # pl_val(cfg)
     pl_train(cfg)
 
 
