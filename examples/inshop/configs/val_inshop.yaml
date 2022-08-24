@@ -22,11 +22,9 @@ metric_args:
   map_top_k: [5]
   precision_top_k: [5]
 
+
 log_only_main_category: False
 
-gpus:
-  - 0
-  - 1
 
 hydra:
   searchpath:
