@@ -6,7 +6,10 @@ logs_root: logs/Stanford_Online_Products/
 bs_val: 512
 num_workers: 20
 
-transforms_val: null
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
 
 model:
   name: vit

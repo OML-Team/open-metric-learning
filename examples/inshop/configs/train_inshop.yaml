@@ -14,6 +14,16 @@ logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 num_workers: 20
 cache_size: 100000
 
+transforms_train:
+  name: augs_albu
+  args:
+    im_size: 224
+
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
+
 sampler:
   name: sequential_category_balance
   args:
@@ -32,13 +42,6 @@ metric_args:
   map_top_k: [5]
 
 log_only_main_category: True
-
-transforms_train:
-  name: default_albu
-  args:
-    im_size: 224
-
-transforms_val: null
 
 model:
   name: vit

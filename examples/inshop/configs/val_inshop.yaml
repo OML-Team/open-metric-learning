@@ -6,7 +6,10 @@ logs_root: /nydl/logs/DeepFashion_InShop/
 bs_val: 128
 num_workers: 20
 
-transforms_val: null
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
 
 model:
   name: vit
