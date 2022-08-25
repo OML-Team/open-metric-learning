@@ -14,7 +14,7 @@ cache_size: 100
 transforms_train:
   name: default_torch
   args:
-    im_size: 28
+    im_size: 32
 
 transforms_val: null
 

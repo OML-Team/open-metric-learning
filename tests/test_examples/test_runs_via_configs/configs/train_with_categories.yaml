@@ -14,7 +14,7 @@ cache_size: 0
 transforms_train:
   name: default_albu
   args:
-    im_size: 32
+    im_size: 64
 
 transforms_val: null
 

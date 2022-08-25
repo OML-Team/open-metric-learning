@@ -302,7 +302,7 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 
 ## Models zoo
-|                            model                            | cmc1  |         dataset          |                                      weights & config                                        | hash (the beginning) |
+|                            model                            | cmc1  |         dataset          |                                           weights                                            | hash (the beginning) |
 |:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
 | `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
 |  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing)   |        85cfa5        |
@@ -311,7 +311,7 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 
 Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
-However, you can also check link in `weights & config` column if you want to download weights manually or to reproduce the experiment.
+However, you can also check link in `weights` column if you want to download weights manually.
 
 For more details about the training process, please, visit *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).

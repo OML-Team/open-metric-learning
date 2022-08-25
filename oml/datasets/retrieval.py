@@ -89,20 +89,18 @@ class BaseDataset(Dataset):
         img = self.read_image(idx)
         row = self.df.iloc[idx]
 
-        if self.bboxes_exist:
+        im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
+
+        if (not self.bboxes_exist) or any(pd.isna(coord) for coord in [row.x_1, row.x_2, row.y_1, row.y_2]):
+            x1, y1, x2, y2 = 0, 0, im_w, im_h
+        else:
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
-        if isinstance(self.transform, albu.Compose) and self.bboxes_exist:
+        if isinstance(self.transform, albu.Compose):
             image_tensor = self.transform(image=img, bbox_params=[x1, y1, x2, y2])["image"]
 
-        elif isinstance(self.transform, albu.Compose) and not self.bboxes_exist:
-            image_tensor = self.transform(image=img)["image"]
-
-        elif isinstance(self.transform, torchvision.transforms.Compose) and self.bboxes_exist:
-            img = img[y1:y2, x1:x2, :]
-            image_tensor = self.transform(img)
-
-        elif isinstance(self.transform, torchvision.transforms.Compose) and not self.bboxes_exist:
+        elif isinstance(self.transform, torchvision.transforms.Compose):
+            img = img.crop((x1, y1, x2, y2))
             image_tensor = self.transform(img)
 
         else:
