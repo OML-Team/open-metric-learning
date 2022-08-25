@@ -42,16 +42,17 @@ class TriDataset(Dataset):
 
         """
         assert expand_ratio >= 0
-        assert isinstance(transforms, albu.Compose) or (transforms is None)
 
         self.triplets = triplets
 
         self.all_ims = set(chain(*triplets))
 
         self.im_root = im_root
-        self.transforms = transforms or get_normalisation_albu()
         self.expand_ratio = expand_ratio
         self.f_imread = f_imread
+
+        self.transforms = transforms or get_normalisation_albu()
+        assert isinstance(transforms, albu.Compose) or (transforms is None)
 
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
 
