@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.images.images import TImReader, imread_cv2
 from oml.utils.images.images_resize import pad_resize
 

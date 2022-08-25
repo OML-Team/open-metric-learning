@@ -9,8 +9,7 @@ import torchvision
 from torch.utils.data import Dataset
 
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
-from oml.registry.transforms import TTransforms
-from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.registry.transforms import TTransforms, get_transforms
 from oml.transforms.images.utils import get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images import TImReader, imread_cv2
@@ -20,8 +19,8 @@ class BaseDataset(Dataset):
     def __init__(
         self,
         df: pd.DataFrame,
-        dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[TTransforms] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
         input_tensors_key: str = "input_tensors",
@@ -41,8 +40,8 @@ class BaseDataset(Dataset):
                               "path" - to the image, absolute or relative from "dataset_root"
                   optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
                             "category" - category of the item
+            transform: Augmentations for the images
             dataset_root: Path to the images dir, set None if you provided the absolute paths
-            transform: Augmentations for the images, set None to skip it
             f_imread: Function to read the image
             input_tensors_key: Key to get input_tensors from batch
             labels_key: Key to get labels from batch
@@ -76,7 +75,7 @@ class BaseDataset(Dataset):
             df["path"] = df["path"].astype(str)
 
         self.df = df
-        self.transform = transform or get_normalisation_albu()
+        self.transform = transform if transform else get_transforms("norm_albu")
         self.f_imread = f_imread
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
 
@@ -223,8 +222,8 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 def get_retrieval_datasets(
     dataset_root: Path,
-    transform_train: Any,
-    transform_val: Any,
+    transforms_train: Any,
+    transforms_val: Any,
     dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
@@ -236,9 +235,9 @@ def get_retrieval_datasets(
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,
-        transform=transform_train,
+        transform=transforms_train,
         cache_size=cache_size,
-        f_imread=get_im_reader_for_transforms(transform_train),
+        f_imread=get_im_reader_for_transforms(transforms_train),
     )
 
     # val (query + gallery)
@@ -246,9 +245,9 @@ def get_retrieval_datasets(
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,
         dataset_root=dataset_root,
-        transform=transform_val,
+        transform=transforms_val,
         cache_size=cache_size,
-        f_imread=get_im_reader_for_transforms(transform_val),
+        f_imread=get_im_reader_for_transforms(transforms_val),
     )
 
     return train_dataset, valid_dataset

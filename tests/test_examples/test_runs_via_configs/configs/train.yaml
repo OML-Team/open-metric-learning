@@ -12,11 +12,13 @@ num_workers: 0
 cache_size: 10
 
 transforms_train:
-  name: default_torch
+  name: augs_torch
   args:
     im_size: 128
 
-transforms_val: null
+transforms_val:
+  name: norm_torch
+  args: {}
 
 criterion:
   name: triplet_with_miner

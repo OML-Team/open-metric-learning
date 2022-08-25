@@ -43,13 +43,13 @@ def pl_train(cfg: TCfg) -> None:
 
     cwd = Path.cwd()
 
-    transforms_train = get_transforms_by_cfg(cfg["transforms_train"]) if cfg["transforms_train"] else None
-    transforms_val = get_transforms_by_cfg(cfg["transforms_val"]) if cfg["transforms_val"] else None
+    transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
+    transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
 
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        transform_train=transforms_train,
-        transform_val=transforms_val,
+        transforms_train=transforms_train,
+        transforms_val=transforms_val,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )
@@ -100,7 +100,11 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(categories_key=valid_dataset.categories_key, **cfg.get("metric_args", {}))
+    metrics_calc = EmbeddingMetrics(
+        categories_key=valid_dataset.categories_key,
+        extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
+        **cfg.get("metric_args", {}),
+    )
 
     metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
     ckpt_clb = pl.callbacks.ModelCheckpoint(

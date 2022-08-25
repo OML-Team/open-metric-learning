@@ -1,8 +1,12 @@
+from typing import List, Union
+
 import albumentations as albu
 import cv2
+from albumentations.pytorch import ToTensorV2
 
 from oml.const import MEAN, PAD_COLOR, STD, TNormParam
-from oml.transforms.images.albumentations.shared import TTransformsList
+
+TTransformsList = List[Union[albu.ImageOnlyTransform, albu.DualTransform]]
 
 
 def get_spatials() -> TTransformsList:
@@ -63,7 +67,7 @@ def get_noise_channels() -> TTransformsList:
     return channels_noise_augs
 
 
-def get_default_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
+def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
     """
     Note, that OneOf consider probs of augmentations
     in the list as their weights (from docs):
@@ -89,4 +93,19 @@ def get_default_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = ST
     return augs
 
 
-__all__ = ["get_spatials", "get_blurs", "get_colors_level", "get_noises", "get_noise_channels", "get_default_albu"]
+def get_normalisation_albu(mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
+    return albu.Compose([albu.Normalize(mean=mean, std=std), ToTensorV2()])
+
+
+def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
+    return albu.Compose(
+        [
+            albu.LongestMaxSize(max_size=im_size),
+            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+            albu.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ]
+    )
+
+
+__all__ = ["get_augs_albu", "get_normalisation_albu", "get_normalisation_resize_albu"]
