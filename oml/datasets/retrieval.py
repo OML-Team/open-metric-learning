@@ -85,8 +85,10 @@ class BaseDataset(Dataset):
             return fin.read()
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        img = self.read_image(idx)
         row = self.df.iloc[idx]
+
+        img_bytes = self.read_bytes_image_cached(row.path)
+        img = self.f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
 
@@ -96,6 +98,7 @@ class BaseDataset(Dataset):
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
         if isinstance(self.transform, albu.Compose):
+            img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes with should move it to augs
             image_tensor = self.transform(image=img, bbox_params=[x1, y1, x2, y2])["image"]
 
         elif isinstance(self.transform, torchvision.transforms.Compose):
@@ -128,11 +131,6 @@ class BaseDataset(Dataset):
 
     def __len__(self) -> int:
         return len(self.df)
-
-    def read_image(self, idx: int) -> np.ndarray:
-        img_bytes = self.read_bytes_image_cached(self.df.iloc[idx]["path"])
-        img = self.f_imread(img_bytes)
-        return img
 
     @property
     def bboxes_keys(self) -> Tuple[str, ...]:
