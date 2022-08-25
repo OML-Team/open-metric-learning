@@ -6,22 +6,14 @@ import albumentations as albu
 import numpy as np
 import pandas as pd
 import torchvision
-from PIL import Image
-from PIL.Image import Image as TImage
 from torch.utils.data import Dataset
 
-from oml.const import OVERALL_CATEGORIES_KEY
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TTransforms
 from oml.transforms.images.albumentations.shared import get_normalisation_albu
+from oml.transforms.images.utils import get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import (
-    TImReader,
-    imread_cv2,
-    np_from_pil_if_needed,
-    pil_from_np_if_needed,
-)
-from oml.utils.images.images_resize import pad_resize
+from oml.utils.images.images import TImReader, imread_cv2
 
 
 class BaseDataset(Dataset):
@@ -48,6 +40,7 @@ class BaseDataset(Dataset):
                   obligatory: "label" - id of the item,
                               "path" - to the image, absolute or relative from "dataset_root"
                   optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
+                            "category" - category of the item
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             transform: Augmentations for the images, set None to skip it
             f_imread: Function to read the image
@@ -73,7 +66,6 @@ class BaseDataset(Dataset):
         self.bboxes_exist = all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2"))
         if self.bboxes_exist:
             self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
-            print("Message")  # todo
         else:
             self.x1_key, self.x2_key, self.y1_key, self.y2_key = None, None, None, None
 
@@ -94,7 +86,6 @@ class BaseDataset(Dataset):
             return fin.read()
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        label = self.df.iloc[idx]["label"]
         img = self.read_image(idx)
         row = self.df.iloc[idx]
 
@@ -102,20 +93,16 @@ class BaseDataset(Dataset):
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
         if isinstance(self.transform, albu.Compose) and self.bboxes_exist:
-            img = np_from_pil_if_needed(img)
             image_tensor = self.transform(image=img, bbox_params=[x1, y1, x2, y2])["image"]
 
         elif isinstance(self.transform, albu.Compose) and not self.bboxes_exist:
-            img = np_from_pil_if_needed(img)
             image_tensor = self.transform(image=img)["image"]
 
         elif isinstance(self.transform, torchvision.transforms.Compose) and self.bboxes_exist:
             img = img[y1:y2, x1:x2, :]
-            img = pil_from_np_if_needed(img)
             image_tensor = self.transform(img)
 
         elif isinstance(self.transform, torchvision.transforms.Compose) and not self.bboxes_exist:
-            img = pil_from_np_if_needed(img)
             image_tensor = self.transform(img)
 
         else:
@@ -123,7 +110,7 @@ class BaseDataset(Dataset):
 
         item = {
             self.input_tensors_key: image_tensor,
-            self.labels_key: label,
+            self.labels_key: row.label,
             self.paths_key: row.path,
         }
 
@@ -238,9 +225,9 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 def get_retrieval_datasets(
     dataset_root: Path,
-    train_transform: Any,
-    val_transform: Any,
-    dataframe_name: str,
+    transform_train: Any,
+    transform_val: Any,
+    dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
@@ -251,8 +238,9 @@ def get_retrieval_datasets(
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,
-        transform=train_transform,
+        transform=transform_train,
         cache_size=cache_size,
+        f_imread=get_im_reader_for_transforms(transform_train),
     )
 
     # val (query + gallery)
@@ -260,8 +248,9 @@ def get_retrieval_datasets(
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,
         dataset_root=dataset_root,
-        transform=val_transform,
+        transform=transform_val,
         cache_size=cache_size,
+        f_imread=get_im_reader_for_transforms(transform_val),
     )
 
     return train_dataset, valid_dataset

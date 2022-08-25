@@ -28,8 +28,8 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        train_transform=None,
-        val_transform=get_transforms_by_cfg(cfg["transforms_val"]) if cfg["transforms_val"] else None,
+        transform_train=None,
+        transform_val=get_transforms_by_cfg(cfg["transforms_val"]) if cfg["transforms_val"] else None,
         dataframe_name=cfg["dataframe_name"],
     )
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])

@@ -27,7 +27,9 @@ def run(file: str) -> None:
 
 
 def test_train() -> None:
-    run("train_mock.py")
+    run("train.py")
+    run("train_with_bboxes.py")
+    run("train_with_categories.py")
 
 
 def test_val() -> None:

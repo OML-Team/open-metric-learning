@@ -48,8 +48,8 @@ def pl_train(cfg: TCfg) -> None:
 
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        train_transform=train_transforms,
-        val_transform=val_transforms,
+        transform_train=train_transforms,
+        transform_val=val_transforms,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )

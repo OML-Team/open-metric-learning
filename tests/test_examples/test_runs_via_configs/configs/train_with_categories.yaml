@@ -5,15 +5,16 @@ gpus: []
 precision: 32
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df.csv
+dataframe_name: df_with_category.csv
 logs_root: logs
 
 num_workers: 0
-cache_size: 100
+cache_size: 0
 
 transforms_train:
-  name: custom_augmentations
-  args: {}
+  name: default_albu
+  args:
+    im_size: 32
 
 transforms_val: null
 
@@ -24,11 +25,11 @@ criterion:
     reduction: mean
     need_logs: True
     miner:
-      name: all_triplets
+      name: hard_triplets
       args: {}
 
 defaults:
-  - optimizer: sgd
+  - optimizer: adam
   - sampler: sequential_category_balance
 
 model:
@@ -39,23 +40,12 @@ model:
     use_multi_scale: False
     weights: null
 
-scheduling:
-  scheduler_interval: epoch
-  scheduler_frequency: 1
-  scheduler:
-    name: multi_step
-    args:
-      milestones:
-        - 1
-        - 2
-        - 3
+scheduling: null
 
 bs_val: 2
 
 metric_args:
   cmc_top_k: [1, 5]
-  map_top_k: [5]
-  precision_top_k: [1, 5]
 
 log_only_main_category: True
 

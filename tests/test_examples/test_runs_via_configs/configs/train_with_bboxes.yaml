@@ -1,0 +1,68 @@
+postfix: "deepfashion"
+
+seed: 42
+gpus: []
+precision: 32
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_bboxes.csv
+logs_root: logs
+
+num_workers: 0
+cache_size: 100
+
+transforms_train:
+  name: default_torch
+  args:
+    im_size: 28
+
+transforms_val: null
+
+criterion:
+  name: triplet_with_miner
+  args:
+    margin: null
+    reduction: mean
+    need_logs: True
+    miner:
+      name: triplets_with_memory
+      args:
+        bank_size_in_batches: 50
+        tri_expand_k: 3
+
+defaults:
+  - optimizer: adam
+  - sampler: sequential_balance
+
+model:
+  name: resnet
+  args:
+    arch: resnet50
+    gem_p: 7.0
+    remove_fc: True
+    normalise_features: False
+    weights: resnet50_moco_v2
+    strict_load: False
+
+scheduling: null
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+
+log_only_main_category: True
+
+max_epochs: 2
+valid_period: 2
+
+neptune_project: null
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs
