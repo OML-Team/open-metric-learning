@@ -29,10 +29,12 @@ metric_args:
 
 log_only_main_category: True
 
-train_transform:
+transforms_train:
   name: default_albu
   args:
     im_size: 224
+
+transforms_val: null
 
 model:
   name: vit

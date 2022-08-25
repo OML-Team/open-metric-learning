@@ -1,9 +1,9 @@
-dataset_root: data/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df_fixed_val.csv
 
-logs_root: logs/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 
-bs_val: 512
+bs_val: 128
 num_workers: 20
 
 transforms_val: null

@@ -43,20 +43,20 @@ def pl_train(cfg: TCfg) -> None:
 
     cwd = Path.cwd()
 
-    train_transforms = get_transforms_by_cfg(cfg["transforms_train"]) if cfg["transforms_train"] else None
-    val_transforms = get_transforms_by_cfg(cfg["transforms_val"]) if cfg["transforms_val"] else None
+    transforms_train = get_transforms_by_cfg(cfg["transforms_train"]) if cfg["transforms_train"] else None
+    transforms_val = get_transforms_by_cfg(cfg["transforms_val"]) if cfg["transforms_val"] else None
 
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        transform_train=train_transforms,
-        transform_val=val_transforms,
+        transform_train=transforms_train,
+        transform_val=transforms_val,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )
 
-    if isinstance(train_transforms, albu.Compose):
+    if isinstance(transforms_train, albu.Compose):
         augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
-        albu.save(filepath=augs_file, transform=train_transforms, data_format="yaml")
+        albu.save(filepath=augs_file, transform=transforms_train, data_format="yaml")
     else:
         augs_file = None
 
