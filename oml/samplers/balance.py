@@ -2,12 +2,12 @@ from collections import Counter
 from typing import Any, Dict, Iterator, List, Union
 
 import numpy as np
-from torch.utils.data.sampler import Sampler
 
+from oml.interfaces.samplers import IBatchSampler
 from oml.utils.misc import smart_sample
 
 
-class BalanceSampler(Sampler):
+class BalanceSampler(IBatchSampler):
     """
     This kind of sampler can be used for both metric learning and
     classification task.
