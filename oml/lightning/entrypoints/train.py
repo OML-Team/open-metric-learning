@@ -102,7 +102,11 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(categories_key=valid_dataset.categories_key, **cfg.get("metric_args", {}))
+    metrics_calc = EmbeddingMetrics(
+        categories_key=valid_dataset.categories_key,
+        extra_keys=("paths", "x1", "x2", "y1", "y2"),
+        **cfg.get("metric_args", {}),
+    )
 
     image_logging_clb = ImageLoggingCallback(metric=metrics_calc)
     metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
