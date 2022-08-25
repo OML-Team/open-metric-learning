@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import cv2
 import matplotlib.pyplot as plt
@@ -118,7 +118,12 @@ class RetrievalVisualizer:
             gallery_bboxes=gallery_bboxes,
         )
 
-    def visualise(self, query_idx: int, top_k: int, skip_no_errors: bool = False) -> None:
+    def visualise(
+        self,
+        query_idx: int,
+        top_k: int,
+        skip_no_errors: bool = False,
+    ) -> Optional[plt.Figure]:
         """
         Visualize the predictions for the query with the index <query_idx>.
 
@@ -132,11 +137,11 @@ class RetrievalVisualizer:
 
         if skip_no_errors and torch.all(self.mask_gt[query_idx, ids]):
             print(f"No errors for {query_idx}")
-            return
+            return None
 
         n_gt = self.mask_gt[query_idx].sum()
         ngt_show = 2
-        plt.figure(figsize=(30, 15))
+        fig = plt.figure(figsize=(30, 15))
 
         plt.subplot(1, top_k + 1 + ngt_show, 1)
 
@@ -166,6 +171,7 @@ class RetrievalVisualizer:
             plt.axis("off")
 
         plt.show()
+        return fig
 
     @staticmethod
     def get_img_with_bbox(im_name: str, bbox: torch.Tensor, color: TColor) -> np.ndarray:

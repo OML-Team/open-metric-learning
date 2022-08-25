@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
+import torch
 
 from oml.functional.metrics import (
     TMetricsDict,
@@ -32,6 +33,7 @@ class EmbeddingMetrics(IBasicMetric):
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         check_dataset_validity: bool = True,
+        save_non_reduced: bool = True,
     ):
         """
         This class accumulates the information from the batches and embeddings produced by the model
@@ -70,7 +72,9 @@ class EmbeddingMetrics(IBasicMetric):
         self.mask_gt = None
         self.metrics = None
         self.mask_to_ignore = None
+
         self.check_dataset_validity = check_dataset_validity
+        self.save_non_reduced = save_non_reduced
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -107,6 +111,16 @@ class EmbeddingMetrics(IBasicMetric):
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
+    def _reduce_dfs(self, d: Any) -> Dict[str, Any]:
+        if isinstance(d, (torch.Tensor, np.ndarray)):
+            return d.mean()
+
+        dd = {}
+        for k, v in d.items():
+            dd[k] = self._reduce_dfs(v)
+
+        return dd
+
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
             raise ValueError(
@@ -131,6 +145,7 @@ class EmbeddingMetrics(IBasicMetric):
             mask_gt=self.mask_gt,
             mask_to_ignore=self.mask_to_ignore,
             check_dataset_validity=self.check_dataset_validity,
+            reduce=False,
             **args,  # type: ignore
         )
 
@@ -146,10 +161,14 @@ class EmbeddingMetrics(IBasicMetric):
                     distances=self.distance_matrix[mask],  # type: ignore
                     mask_gt=self.mask_gt[mask],  # type: ignore
                     mask_to_ignore=self.mask_to_ignore[mask],  # type: ignore
+                    reduce=False,
                     **args,  # type: ignore
                 )
 
-        self.metrics = metrics  # type: ignore
+        if self.save_non_reduced:
+            self.metrics_unreduced = metrics
+
+        self.metrics = self._reduce_dfs(metrics)  # type: ignore
 
         return metrics
 

@@ -11,6 +11,7 @@ from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
+from oml.lightning.callbacks.image import ImageLoggingCallback
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -103,6 +104,7 @@ def pl_train(cfg: TCfg) -> None:
 
     metrics_calc = EmbeddingMetrics(categories_key=valid_dataset.categories_key, **cfg.get("metric_args", {}))
 
+    image_logging_clb = ImageLoggingCallback(metric=metrics_calc)
     metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
@@ -149,7 +151,7 @@ def pl_train(cfg: TCfg) -> None:
         num_nodes=1,
         gpus=cfg["gpus"],
         strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
-        callbacks=[metrics_clb, ckpt_clb],
+        callbacks=[metrics_clb, image_logging_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
     )
