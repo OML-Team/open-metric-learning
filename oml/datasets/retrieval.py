@@ -99,7 +99,7 @@ class BaseDataset(Dataset):
 
         if isinstance(self.transform, albu.Compose):
             img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes with should move it to augs
-            image_tensor = self.transform(image=img, bbox_params=[x1, y1, x2, y2])["image"]
+            image_tensor = self.transform(image=img)["image"]
 
         elif isinstance(self.transform, torchvision.transforms.Compose):
             img = img.crop((x1, y1, x2, y2))
