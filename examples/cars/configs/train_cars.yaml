@@ -6,8 +6,8 @@ gpus:
   - 0
 
 dataframe_name: df.csv
-dataset_root: data/CARS196/
-logs_root: logs/CARS196/
+dataset_root: /nydl/data/CARS196/
+logs_root: /nydl/logs/CARS196/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -31,7 +31,7 @@ sampler:
 
 bs_val: 512
 max_epochs: 10000
-valid_period: 10
+valid_period: 2
 
 metric_args:
   cmc_top_k: [1]

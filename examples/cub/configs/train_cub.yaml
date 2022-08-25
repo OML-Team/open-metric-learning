@@ -6,8 +6,8 @@ gpus:
   - 0
 
 dataframe_name: df.csv
-dataset_root: data/CUB_200_2011/
-logs_root: logs/CUB_200_2011/
+dataset_root: /nydl/data/CUB_200_2011/
+logs_root: /ntdl/logs/CUB_200_2011/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
