@@ -4,7 +4,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch.utils.data import DataLoader
 
-from oml.const import PolicyDDP
 from oml.utils.ddp import patch_dataloader_to_ddp
 
 
