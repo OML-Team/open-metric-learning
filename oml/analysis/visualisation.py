@@ -104,7 +104,15 @@ class RetrievalVisualizer:
         query_labels = emb.acc.storage[emb.labels_key][is_query]  # type: ignore
         gallery_labels = emb.acc.storage[emb.labels_key][is_gallery]  # type: ignore
 
-        bboxes = list(zip(emb.acc.storage["x1"], emb.acc.storage["y1"], emb.acc.storage["x2"], emb.acc.storage["y2"]))
+        fake_coord = np.array([float("nan")] * len(is_query))
+        bboxes = list(
+            zip(
+                emb.acc.storage.get("x1", fake_coord),
+                emb.acc.storage.get("y1", fake_coord),
+                emb.acc.storage.get("x2", fake_coord),
+                emb.acc.storage.get("y2", fake_coord),
+            )
+        )
 
         query_bboxes = torch.tensor(bboxes)[is_query]
         gallery_bboxes = torch.tensor(bboxes)[is_gallery]
