@@ -49,6 +49,7 @@ def imread_pillow(im_src: Union[Path, str, bytes]) -> TPILImage:
 
 
 __all__ = [
+    "TImage",
     "TImReader",
     "tensor_to_numpy_image",
     "imread_cv2",

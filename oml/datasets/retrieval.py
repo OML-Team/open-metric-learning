@@ -43,6 +43,7 @@ class BaseDataset(Dataset):
             transform: Augmentations for the images
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             f_imread: Function to read the image
+            cache_size: Size of the dataset's cache
             input_tensors_key: Key to get input_tensors from batch
             labels_key: Key to get labels from batch
             paths_key: Key to get paths from batch
