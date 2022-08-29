@@ -98,7 +98,7 @@ class BaseDataset(Dataset):
             x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
 
         if isinstance(self.transform, albu.Compose):
-            img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes with should move it to augs
+            img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes we should move it to augs
             image_tensor = self.transform(image=img)["image"]
 
         elif isinstance(self.transform, torchvision.transforms.Compose):

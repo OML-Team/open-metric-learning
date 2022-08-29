@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -23,10 +22,16 @@ def test_transforms(aug_name: Optional[str]) -> None:
     f_imread = get_im_reader_for_transforms(transforms)
 
     df = pd.read_csv(MOCK_DATASET_PATH / "df.csv")
-    df["path"] = df["path"].apply(Path)
 
     dataset = DatasetWithLabels(df=df, dataset_root=MOCK_DATASET_PATH, transform=transforms, f_imread=f_imread)
 
     _ = dataset[0]
 
+    assert True
+
+
+def test_default_transforms() -> None:
+    df = pd.read_csv(MOCK_DATASET_PATH / "df.csv")
+    dataset = DatasetWithLabels(df=df, dataset_root=MOCK_DATASET_PATH, transform=None)
+    _ = dataset[0]
     assert True
