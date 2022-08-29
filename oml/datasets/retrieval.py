@@ -79,6 +79,9 @@ class BaseDataset(Dataset):
         self.f_imread = f_imread
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
 
+        available_augs_types = (albu.Compose, torchvision.transforms.Compose)
+        assert isinstance(self.transform, available_augs_types), f"Type of transforms must be in {available_augs_types}"
+
     @staticmethod
     def _read_bytes_image(path: Union[Path, str]) -> bytes:
         with open(str(path), "rb") as fin:
@@ -100,12 +103,9 @@ class BaseDataset(Dataset):
         if isinstance(self.transform, albu.Compose):
             img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes we should move it to augs
             image_tensor = self.transform(image=img)["image"]
-
-        elif isinstance(self.transform, torchvision.transforms.Compose):
-            img = img.crop((x1, y1, x2, y2))
-            image_tensor = self.transform(img)
-
         else:
+            # torchvision.transforms
+            img = img.crop((x1, y1, x2, y2))
             image_tensor = self.transform(img)
 
         item = {

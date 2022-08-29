@@ -1,4 +1,5 @@
 import logging
+import warnings
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
@@ -41,6 +42,8 @@ class TriDataset(Dataset):
 
         """
         assert expand_ratio >= 0
+
+        warnings.warn("For now we do not keep this dataset up to date. Use it carefully.")
 
         self.triplets = triplets
 

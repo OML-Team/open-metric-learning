@@ -87,7 +87,7 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
             albu.OneOf(get_noise_channels(), p=0.2),
             albu.OneOf(get_noises(), p=0.25),
             albu.Normalize(mean=mean, std=std),
-            albu.pytorch.ToTensorV2(),
+            ToTensorV2(),
         ]
     )
     return augs
