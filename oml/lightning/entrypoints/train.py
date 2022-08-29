@@ -89,6 +89,15 @@ def pl_train(cfg: TCfg) -> None:
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
+    pl_model = RetrievalModule(
+        model=extractor,
+        criterion=criterion,
+        optimizer=optimizer,
+        input_tensors_key=train_dataset.input_tensors_key,
+        labels_key=train_dataset.labels_key,
+        **scheduler_args,
+    )
+
     loader_train = DataLoader(
         dataset=train_dataset,
         sampler=sampler,
@@ -101,7 +110,11 @@ def pl_train(cfg: TCfg) -> None:
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     metrics_calc = EmbeddingMetrics(
+        embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
+        labels_key=valid_dataset.labels_key,
+        is_query_key=valid_dataset.is_query_key,
+        is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {}),
     )
@@ -156,8 +169,6 @@ def pl_train(cfg: TCfg) -> None:
         logger=logger,
         precision=cfg.get("precision", 32),
     )
-
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, **scheduler_args)
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 

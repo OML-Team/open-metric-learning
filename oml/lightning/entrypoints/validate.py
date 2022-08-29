@@ -35,10 +35,21 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    pl_model = RetrievalModule(model=extractor, criterion=None, optimizer=None, scheduler=None)
+    pl_model = RetrievalModule(
+        model=extractor,
+        criterion=None,
+        optimizer=None,
+        scheduler=None,
+        input_tensors_key=valid_dataset.input_tensors_key,
+        labels_key=valid_dataset.labels_key,
+    )
 
     metrics_calc = EmbeddingMetrics(
+        embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
+        labels_key=valid_dataset.labels_key,
+        is_query_key=valid_dataset.is_query_key,
+        is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {})
     )

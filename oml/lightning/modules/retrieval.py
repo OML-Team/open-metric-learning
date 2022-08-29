@@ -18,7 +18,7 @@ class RetrievalModule(pl.LightningModule):
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
         input_tensors_key: str = "input_tensors",
-        targets_key: str = "labels",
+        labels_key: str = "labels",
         embeddings_key: str = "embeddings",
     ):
         super(RetrievalModule, self).__init__()
@@ -32,7 +32,7 @@ class RetrievalModule(pl.LightningModule):
         self.scheduler_frequency = scheduler_frequency
 
         self.input_tensors_key = input_tensors_key
-        self.targets_key = targets_key
+        self.labels_key = labels_key
         self.embeddings_key = embeddings_key
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -43,7 +43,7 @@ class RetrievalModule(pl.LightningModule):
         embeddings = self.model(batch[self.input_tensors_key])
         bs = len(embeddings)
 
-        loss = self.criterion(embeddings, batch[self.targets_key])
+        loss = self.criterion(embeddings, batch[self.labels_key])
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
