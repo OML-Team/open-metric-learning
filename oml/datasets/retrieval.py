@@ -222,6 +222,8 @@ def get_retrieval_datasets(
     dataset_root: Path,
     transforms_train: Any,
     transforms_val: Any,
+    f_imread_train: Optional[TImReader] = None,
+    f_imread_val: Optional[TImReader] = None,
     dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
@@ -235,7 +237,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         transform=transforms_train,
         cache_size=cache_size,
-        f_imread=get_im_reader_for_transforms(transforms_train),
+        f_imread=f_imread_train or get_im_reader_for_transforms(transforms_train),
     )
 
     # val (query + gallery)
@@ -245,7 +247,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         transform=transforms_val,
         cache_size=cache_size,
-        f_imread=get_im_reader_for_transforms(transforms_val),
+        f_imread=f_imread_val or get_im_reader_for_transforms(transforms_val),
     )
 
     return train_dataset, valid_dataset

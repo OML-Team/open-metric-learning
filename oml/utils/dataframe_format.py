@@ -12,7 +12,7 @@ BBOXES_FIELDS = ["x_1", "x_2", "y_1", "y_2"]
 
 
 def check_retrieval_dataframe_format(
-    df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ",", verbose: bool = False
+    df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ",", verbose: bool = True
 ) -> None:
     """
     Function checks if the data is in the correct format.
@@ -21,6 +21,7 @@ def check_retrieval_dataframe_format(
         df: Path to .csv file or pandas DataFrame
         dataset_root: Path to the dataset root
         sep: Separator used in .csv
+        verbose: Set True if you want to see warnings
 
     """
     if isinstance(df, (Path, str)):

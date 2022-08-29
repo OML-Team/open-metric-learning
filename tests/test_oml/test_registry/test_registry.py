@@ -47,17 +47,16 @@ def get_opt() -> Optimizer:
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
     for obj_name in registry.keys():
-        with open(CONFIGS_PATH / folder_name / f"{obj_name}.yaml", "r") as f:
-            cfg = dictconfig_to_dict(OmegaConf.load(f))
-            args = cfg["args"]
+        cfg = dictconfig_to_dict(OmegaConf.load(CONFIGS_PATH / folder_name / f"{obj_name}.yaml"))
+        args = cfg["args"]
 
-            # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
-            if (folder_name == "scheduler") and (obj_name == "lambda" or obj_name == "multiplicative"):
-                args["lr_lambda"] = lambda epoch: 0.9
+        # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
+        if (folder_name == "scheduler") and (obj_name == "lambda" or obj_name == "multiplicative"):
+            args["lr_lambda"] = lambda epoch: 0.9
 
-            if runtime_args is not None:
-                args = dict(**args, **runtime_args)
+        if runtime_args is not None:
+            args = dict(**args, **runtime_args)
 
-            factory_fun(cfg["name"], **args)
+        factory_fun(cfg["name"], **args)
 
     assert True
