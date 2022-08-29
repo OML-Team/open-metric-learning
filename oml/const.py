@@ -44,3 +44,15 @@ MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
 
 OVERALL_CATEGORIES_KEY = "OVERALL"
+
+INPUT_TENSORS_KEY = "input_tensors"
+LABELS_KEY = "labels"
+IS_QUERY_KEY = "is_query"
+IS_GALLERY_KEY = "is_gallery"
+EMBEDDINGS_KEY = "embeddings"
+CATEGORIES_KEY = "categories"
+PATHS_KEY = "paths"
+X1_KEY = "x1"
+X2_KEY = "x2"
+Y1_KEY = "y1"
+Y2_KEY = "y2"

@@ -8,6 +8,18 @@ import pandas as pd
 import torchvision
 from torch.utils.data import Dataset
 
+from oml.const import (
+    CATEGORIES_KEY,
+    INPUT_TENSORS_KEY,
+    IS_GALLERY_KEY,
+    IS_QUERY_KEY,
+    LABELS_KEY,
+    PATHS_KEY,
+    X1_KEY,
+    X2_KEY,
+    Y1_KEY,
+    Y2_KEY,
+)
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TTransforms, get_transforms
 from oml.transforms.images.utils import get_im_reader_for_transforms
@@ -23,14 +35,14 @@ class BaseDataset(Dataset):
         dataset_root: Optional[Union[str, Path]] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
-        input_tensors_key: str = "input_tensors",
-        labels_key: str = "labels",
-        paths_key: str = "paths",
-        categories_key: Optional[str] = "categories",
-        x1_key: str = "x1",
-        x2_key: str = "x2",
-        y1_key: str = "y1",
-        y2_key: str = "y2",
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        paths_key: str = PATHS_KEY,
+        categories_key: Optional[str] = CATEGORIES_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
     ):
         """
 
@@ -181,16 +193,16 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
-        input_tensors_key: str = "input_tensors",
-        labels_key: str = "labels",
-        paths_key: str = "paths",
-        categories_key: str = "categories",
-        x1_key: str = "x1",
-        x2_key: str = "x2",
-        y1_key: str = "y1",
-        y2_key: str = "y2",
-        is_query_key: str = "is_query",
-        is_gallery_key: str = "is_gallery",
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        paths_key: str = PATHS_KEY,
+        categories_key: str = CATEGORIES_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,

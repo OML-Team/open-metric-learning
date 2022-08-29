@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import _LRScheduler
 
+from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.models import IExtractor
 
 
@@ -17,9 +18,9 @@ class RetrievalModule(pl.LightningModule):
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
-        input_tensors_key: str = "input_tensors",
-        labels_key: str = "labels",
-        embeddings_key: str = "embeddings",
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        embeddings_key: str = EMBEDDINGS_KEY,
     ):
         super(RetrievalModule, self).__init__()
 

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Any, Dict, Optional
 
+from oml.const import EMBEDDINGS_KEY
 from oml.functional.metrics import calculate_accuracy_on_triplets
 from oml.interfaces.metrics import IBasicMetric
 from oml.utils.misc_torch import OnlineAvgDict
@@ -9,7 +10,7 @@ from oml.utils.misc_torch import OnlineAvgDict
 class AccuracyOnTriplets(IBasicMetric):
     metric_name = "accuracy_on_triplets"
 
-    def __init__(self, embeddings_key: str = "embeddings", categories_key: Optional[str] = None):
+    def __init__(self, embeddings_key: str = EMBEDDINGS_KEY, categories_key: Optional[str] = None):
         """
 
         Args:
