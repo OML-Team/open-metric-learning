@@ -47,7 +47,11 @@ model:
     weights: resnet50_moco_v2
     strict_load: False
 
-scheduling: null
+scheduling:
+  name: reduce_on_plateau
+  args:
+    factor: 0.75
+    patience: 1
 
 bs_val: 2
 

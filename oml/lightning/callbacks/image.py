@@ -42,6 +42,8 @@ class ImageLoggingCallback(Callback):
                 continue
             for n, idx in enumerate(np.argsort(metric_values)[: self.top_k_per_metric]):
                 fig = visualizer.visualise(query_idx=idx, top_k=self.top_k_in_row)
+                if not fig:
+                    continue
                 log_str = f"{self.folder}/epoch_{pl_module.current_epoch}/#{n + 1} worst by {metric_name}"
                 if isinstance(pl_module.logger, NeptuneLogger):
                     pl_module.logger.experiment[log_str].log(File.as_image(fig))

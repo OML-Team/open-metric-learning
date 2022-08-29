@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple
 
+import albumentations as albu
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -159,6 +160,7 @@ class RetrievalVisualizer:
         plt.subplot(1, top_k + 1 + ngt_show, 1)
 
         img = self.get_img_with_bbox(self.query_paths[query_idx], self.query_bboxes[query_idx], BLUE)
+        img = albu.functional.pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0)
         if self.verbose:
             print("Q  ", self.query_paths[query_idx])
         plt.imshow(img)
@@ -171,6 +173,7 @@ class RetrievalVisualizer:
                 print("G", i, self.gallery_paths[idx])
             plt.subplot(1, top_k + ngt_show + 1, i + 2)
             img = self.get_img_with_bbox(self.gallery_paths[idx], self.gallery_bboxes[idx], color)
+            img = albu.functional.pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0)
 
             plt.title(f"{i} - {round(self.dist_matrix[query_idx, idx].item(), 3)}")
             plt.imshow(img)
@@ -181,6 +184,7 @@ class RetrievalVisualizer:
         for i, gt_idx in enumerate(gt_ids):
             plt.subplot(1, top_k + ngt_show + 1, i + top_k + 2)
             img = self.get_img_with_bbox(self.gallery_paths[gt_idx], self.gallery_bboxes[gt_idx], GRAY)
+            img = albu.functional.pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0)
             plt.title("GT " + str(round(self.dist_matrix[query_idx, gt_idx].item(), 3)))
             plt.imshow(img)
             plt.axis("off")

@@ -1,7 +1,6 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
-import torch
 
 from oml.functional.metrics import (
     TMetricsDict,
@@ -9,6 +8,7 @@ from oml.functional.metrics import (
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
+    reduce_retrieval_metrics,
 )
 from oml.interfaces.metrics import IBasicMetric
 from oml.interfaces.post_processor import IPostprocessor
@@ -111,16 +111,6 @@ class EmbeddingMetrics(IBasicMetric):
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
-    def _reduce_dfs(self, d: Any) -> Dict[str, Any]:
-        if isinstance(d, (torch.Tensor, np.ndarray)):
-            return d.mean()
-
-        dd = {}
-        for k, v in d.items():
-            dd[k] = self._reduce_dfs(v)
-
-        return dd
-
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
             raise ValueError(
@@ -168,7 +158,7 @@ class EmbeddingMetrics(IBasicMetric):
         if self.save_non_reduced:
             self.metrics_unreduced = metrics
 
-        self.metrics = self._reduce_dfs(metrics)  # type: ignore
+        self.metrics = reduce_retrieval_metrics(metrics)  # type: ignore
 
         return self.metrics
 
