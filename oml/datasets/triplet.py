@@ -1,4 +1,5 @@
 import logging
+import warnings
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
@@ -10,8 +11,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.images.images import TImReader, imread_cv2
-from oml.utils.images.images_resize import pad_resize
 
 TPath = Union[Path, str]
 TTriplet = Tuple[TPath, TPath, TPath]
@@ -24,8 +25,6 @@ class TriDataset(Dataset):
         triplets: List[TTriplet],
         im_root: Path,
         transforms: albu.Compose,
-        image_size: int,
-        pad_ratio: float,
         expand_ratio: float,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 50_000,
@@ -36,7 +35,6 @@ class TriDataset(Dataset):
             triplets: List of triplets
             im_root: Images directory
             transforms: Image transforms
-            image_size: Images will be resized to (image_size, image_size)
             expand_ratio: Set expand_ratio > 0 to generate additional triplets.
                           We keep positive pairs, but generale negative ones randomly.
                           After this procedure you dataset's length will increased (1 + expand_ratio) times
@@ -44,18 +42,19 @@ class TriDataset(Dataset):
 
         """
         assert expand_ratio >= 0
-        assert pad_ratio >= 0
+
+        warnings.warn("For now we do not keep this dataset up to date. Use it carefully.")
 
         self.triplets = triplets
 
         self.all_ims = set(chain(*triplets))
 
         self.im_root = im_root
-        self.transforms = transforms
-        self.image_size = image_size
-        self.pad_ratio = pad_ratio
         self.expand_ratio = expand_ratio
         self.f_imread = f_imread
+
+        self.transforms = transforms or get_normalisation_albu()
+        assert isinstance(transforms, albu.Compose) or (transforms is None)
 
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
 
@@ -69,7 +68,6 @@ class TriDataset(Dataset):
     def get_image(self, path: Union[Path, str]) -> np.ndarray:
         image_bytes = self.read_bytes_image_cached(path)
         image = self.f_imread(image_bytes)
-        image = pad_resize(im=image, size=self.image_size, pad_ratio=self.pad_ratio)
         return image
 
     def __len__(self) -> int:

@@ -139,7 +139,8 @@ the same time. Then we will validate every item
 
 Optional columns:
 * `category` - category which groups sets of similar labels (like `dresses`, or `furniture`).
-* `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`)
+* `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`).
+If only part of your images has bounding boxes, just fill the corresponding row with empty values.
 
 You can check the tables for the public datasets via the [link](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing).
 
@@ -177,11 +178,14 @@ Your `config.yaml` and `train.py` may look like this:
 ```yaml
 ...
 
-augs: custom_augmentations
+augs:
+  name: custom_augmentations
+  args: {}
 
 model:
   name: custom_model
-  args: {}
+  args:
+    pretrained: True
 
 ...
 ```
@@ -195,13 +199,13 @@ from torchvision.models import resnet18
 from oml.interfaces.models import IExtractor
 from oml.lightning.entrypoints.train import pl_train
 from oml.registry.models import MODELS_REGISTRY
-from oml.registry.transforms import AUGS_REGISTRY
+from oml.registry.transforms import TRANSFORMS_REGISTRY
 
 class CustomModel(IExtractor):
 
-    def __init__(self):
+    def __init__(self, pretrained):
         super().__init__()
-        self.resnet = resnet18()
+        self.resnet = resnet18(pretrained=pretrained)
 
     def forward(self, x):
         self.resnet(x)
@@ -210,8 +214,15 @@ class CustomModel(IExtractor):
     def feat_dim(self):
         return self.resnet.fc.out_features
 
+def get_custom_augs() -> t.Compose:
+    return t.Compose([
+        t.RandomHorizontalFlip(),
+        t.RandomGrayscale(),
+        t.ToTensor(),
+        t.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
-AUGS_REGISTRY["custom_augmentations"] = t.Compose([t.RandomHorizontalFlip(), t.RandomGrayscale()])
+TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs
 MODELS_REGISTRY["custom_model"] = CustomModel
 
 

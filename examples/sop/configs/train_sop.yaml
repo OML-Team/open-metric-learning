@@ -11,12 +11,18 @@ dataset_root: data/Stanford_Online_Products/
 logs_root: logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-im_size_train: 224
-im_size_val: 224
-im_pad_ratio_train: 0.0
-im_pad_ratio_val: 0.0
 num_workers: 20
 cache_size: 100000
+
+transforms_train:
+  name: augs_albu
+  args:
+    im_size: 224
+
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
 
 sampler:
   name: sequential_category_balance
@@ -36,8 +42,6 @@ metric_args:
   map_top_k: [5]
 
 log_only_main_category: True
-
-augs: default_albu
 
 model:
   name: vit

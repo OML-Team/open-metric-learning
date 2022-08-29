@@ -4,11 +4,13 @@ from typing import Callable, Union
 
 import cv2
 import numpy as np
+import PIL
 import torch
 from PIL import Image
-from PIL.Image import Image as TImage
+from PIL.Image import Image as TPILImage
 
-TImReader = Callable[[Union[Path, str, bytes]], Union[np.ndarray, TImage]]
+TImage = Union[PIL.Image.Image, np.ndarray]
+TImReader = Callable[[Union[Path, str, bytes]], TImage]
 
 
 def tensor_to_numpy_image(img: torch.Tensor) -> np.ndarray:
@@ -36,7 +38,7 @@ def imread_cv2(im_src: Union[Path, str, bytes]) -> np.ndarray:
     return cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
 
 
-def imread_pillow(im_src: Union[Path, str, bytes]) -> TImage:
+def imread_pillow(im_src: Union[Path, str, bytes]) -> TPILImage:
     if isinstance(im_src, (Path, str)):
         image = Image.open(im_src)
     elif isinstance(im_src, bytes):
@@ -46,4 +48,10 @@ def imread_pillow(im_src: Union[Path, str, bytes]) -> TImage:
     return image.convert("RGB")
 
 
-__all__ = ["TImReader", "tensor_to_numpy_image", "imread_cv2", "imread_pillow"]
+__all__ = [
+    "TImage",
+    "TImReader",
+    "tensor_to_numpy_image",
+    "imread_cv2",
+    "imread_pillow",
+]

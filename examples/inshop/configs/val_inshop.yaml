@@ -3,10 +3,13 @@ dataframe_name: df_fixed_val.csv
 
 logs_root: logs/DeepFashion_InShop/
 
-im_size: 224
-bs_val: 512
+bs_val: 128
 num_workers: 20
 
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
 
 model:
   name: vit
@@ -22,7 +25,7 @@ metric_args:
   map_top_k: [5]
   precision_top_k: [5]
 
-log_only_main_category: False
+log_only_main_category: True
 
 gpus:
   - 0

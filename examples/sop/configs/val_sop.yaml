@@ -3,10 +3,13 @@ dataframe_name: df.csv
 
 logs_root: logs/Stanford_Online_Products/
 
-im_size: 224
 bs_val: 512
 num_workers: 20
 
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
 
 model:
   name: vit

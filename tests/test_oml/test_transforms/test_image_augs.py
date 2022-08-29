@@ -1,27 +1,30 @@
-from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 import pandas as pd
 import pytest
+from omegaconf import OmegaConf
 
-from oml.const import MOCK_DATASET_PATH
+from oml.const import CONFIGS_PATH, MOCK_DATASET_PATH
 from oml.datasets.retrieval import DatasetWithLabels
-from oml.registry.transforms import AUGS_REGISTRY, get_augs
-from oml.utils.images.images import imread_cv2, imread_pillow
+from oml.registry.transforms import TRANSFORMS_REGISTRY, get_transforms_by_cfg
+from oml.transforms.images.utils import get_im_reader_for_transforms
 
 
-@pytest.mark.parametrize("aug_name", [None, *list(AUGS_REGISTRY.keys())])
-@pytest.mark.parametrize("f_imread", [imread_cv2, imread_pillow])
-def test_transforms(aug_name: Optional[str], f_imread: Any) -> None:
-    transforms = get_augs(name=aug_name) if aug_name is not None else None
-
+@pytest.mark.parametrize("aug_name", list(TRANSFORMS_REGISTRY.keys()))
+def test_transforms(aug_name: Optional[str]) -> None:
     df = pd.read_csv(MOCK_DATASET_PATH / "df.csv")
-    df["path"] = df["path"].apply(Path)
+    transforms = get_transforms_by_cfg(OmegaConf.load(CONFIGS_PATH / "transforms" / f"{aug_name}.yaml"))
+    f_imread = get_im_reader_for_transforms(transforms)
 
-    dataset = DatasetWithLabels(
-        df=df, im_size=32, pad_ratio=0, dataset_root=MOCK_DATASET_PATH, transform=transforms, f_imread=f_imread
-    )
+    dataset = DatasetWithLabels(df=df, dataset_root=MOCK_DATASET_PATH, transform=transforms, f_imread=f_imread)
 
     _ = dataset[0]
 
+    assert True
+
+
+def test_default_transforms() -> None:
+    df = pd.read_csv(MOCK_DATASET_PATH / "df.csv")
+    dataset = DatasetWithLabels(df=df, dataset_root=MOCK_DATASET_PATH, transform=None)
+    _ = dataset[0]
     assert True
