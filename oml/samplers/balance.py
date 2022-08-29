@@ -50,7 +50,6 @@ class BalanceSampler(IBatchSampler):
 
     def __init__(self, labels: Union[List[int], np.ndarray], n_labels: int, n_instances: int, **kwargs: Dict[str, Any]):
         """Sampler initialisation."""
-        super().__init__(self)
         unq_labels = set(labels)
 
         assert isinstance(n_labels, int) and isinstance(n_instances, int)

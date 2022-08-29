@@ -26,17 +26,9 @@ class ModuleDDP(pl.LightningModule):
 
     def _patch_loaders(self, mode: str) -> EVAL_DATALOADERS:
         assert mode in ("train", "val")
-
-        if mode == "train":
-            loaders = self.loaders_train
-            drop_last = PolicyDDP.train_drop_last
-            shuffle = PolicyDDP.train_shuffle
-        else:
-            loaders = self.loaders_val
-            drop_last = PolicyDDP.val_drop_last
-            shuffle = PolicyDDP.val_shuffle
+        loaders = self.loaders_train if mode == "train" else self.loaders_val
 
         if isinstance(loaders, DataLoader):
-            return patch_dataloader_to_ddp(loaders, drop_last=drop_last, shuffle=shuffle)
+            return patch_dataloader_to_ddp(loaders)
         else:
-            return [patch_dataloader_to_ddp(loader, drop_last=drop_last, shuffle=shuffle) for loader in loaders]
+            return [patch_dataloader_to_ddp(loader) for loader in loaders]

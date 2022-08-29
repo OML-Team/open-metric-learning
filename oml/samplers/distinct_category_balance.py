@@ -49,7 +49,6 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
             n_instances: Number of samples to sample for each label in batch
             epoch_size: Number of batches in epoch
         """
-        super().__init__(self)
         unique_labels = set(labels)
         unique_categories = set(label2category.values())
         category2labels = {

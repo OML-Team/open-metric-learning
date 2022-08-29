@@ -8,6 +8,16 @@ from oml.utils.misc import dictconfig_to_dict
 
 
 def parse_runtime_params_from_config(cfg: TCfg) -> Dict[str, Any]:
+    """
+    Function parses cfg and based on it prepares DDP parameters for PytorchLightning Trainer module.
+    There are two parameters 'accelerator' and 'devices' you can configure. If one of the parameters or both of them
+    are not specified, the best option based on your hardware will be automatically prepared for you.
+
+    Posible options for 'accelerator' are 'cpu' and 'gpu'.
+    You can select specific gpus using list 'devices=[0, 2]' or specify the number of gpus by `devices=3`.
+    Experiment might be launched in DDP with 'cpu' accelerator. In this case, 'devices' (integer value or len of list)
+    interpreted as number of processes.
+    """
     cfg = dictconfig_to_dict(cfg.copy())
 
     # we want to replace possible null or no values in config for "accelerator" and "devices"

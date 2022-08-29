@@ -1,13 +1,22 @@
 import itertools
 import warnings
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import torch
 from torch.distributed import all_gather_object, is_initialized, logging
-from torch.utils.data import BatchSampler, DataLoader, Dataset, DistributedSampler
+from torch.utils.data import (
+    BatchSampler,
+    DataLoader,
+    Dataset,
+    DistributedSampler,
+    RandomSampler,
+    Sampler,
+)
 
-TGenericSampler = Union[Iterator[int], Iterator[List[int]]]
+from oml.interfaces.samplers import IBatchSampler
+
+TAllSamplers = Union[BatchSampler, Sampler, IBatchSampler]
 
 
 class WarningDDP(UserWarning):
@@ -63,7 +72,7 @@ def sync_dicts_ddp(
     NOTE: Function under the hood pickles all object, convert bytes to tensor, then unpickle after syncing.
     With nccl (default) DDP backend intermediate tensors are stored on CUDA.
     """
-    if world_size > 1 and is_initialized():
+    if world_size >= 1 and is_initialized():
         gathered: List[Optional[Dict[str, Any]]] = [None for _ in range(world_size)]
         all_gather_object(gathered, outputs_from_device, group=torch.distributed.group.WORLD)
         return merge_list_of_dicts(gathered, device)
@@ -74,7 +83,7 @@ def sync_dicts_ddp(
 
 
 class _Sampler2Dataset(Dataset):
-    def __init__(self, sampler: TGenericSampler):
+    def __init__(self, sampler: TAllSamplers):
         self.sampler = sampler
         self.sampler_readed = None
 
@@ -89,7 +98,7 @@ class _Sampler2Dataset(Dataset):
 
 
 class DDPSamplerWrapper(DistributedSampler):
-    def __init__(self, sampler: TGenericSampler, shuffle: bool = True, drop_last: bool = False):
+    def __init__(self, sampler: TAllSamplers, shuffle: bool = True, drop_last: bool = False):
         super().__init__(dataset=_Sampler2Dataset(sampler), shuffle=shuffle, drop_last=drop_last)
         """
         Default DistributedSampler allows us to built sampler for dataset in DDP mode. Usually we can easily replace
@@ -123,43 +132,56 @@ class DDPSamplerWrapper(DistributedSampler):
         )
         self.set_epoch(self.shift_per_epoch)
 
-    def __iter__(self) -> TGenericSampler:
+    def __iter__(self) -> TAllSamplers:
         self._reload()
 
         for sampler_idx in super().__iter__():
             yield self.dataset[sampler_idx]
 
 
-def patch_dataloader_to_ddp(loader: DataLoader, drop_last: bool, shuffle: bool) -> DataLoader:
+def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
     """
-    Function inspects loader and modifies sampler for working in DDP mode. Behaviour with and without DDP may be
-    slightly different due to drop_last option. For more details, see DDPSamplerWrapper docs.
+    Function inspects loader and modifies sampler for working in DDP mode.
+
+    Note:
+        We ALWAYS use padding of samples (number of batches or number of samples per epoch) in order to use same amount
+        of data for each device in DDP, so behaviour with and without DDP may be slightly different (e.g. metrics).
     """
     if is_initialized():
+        kwargs_loader = {
+            "collate_fn": loader.collate_fn,
+            "persistent_workers": loader.persistent_workers,
+            "pin_memory": loader.pin_memory,
+            "worker_init_fn": loader.worker_init_fn,
+            "prefetch_factor": loader.prefetch_factor,
+            "multiprocessing_context": loader.multiprocessing_context,
+            "pin_memory_device": loader.pin_memory_device,
+        }
+
         # If you don't spectify batch_sampler, PyTorch automatically creates default BatchSampler. In this case we
         # need convert to DDP only sampler (your custom sampler / default SequentialSampler or RandomSampler, which
         # PyTorch creates if sampler=None). We don't use `isinstance(...)` for `if` statement because we need exactly
         # class BatchSampler, ignoring any inheritance
         if type(loader.batch_sampler) is BatchSampler:
-            ddp_sampler = DDPSamplerWrapper(sampler=loader.sampler, shuffle=shuffle, drop_last=drop_last)
+            shuffle = True if isinstance(loader.sampler, RandomSampler) else False
+            ddp_sampler = DDPSamplerWrapper(sampler=loader.sampler, shuffle=shuffle, drop_last=False)
             patched_loader = DataLoader(
                 dataset=loader.dataset,
                 sampler=ddp_sampler,
                 batch_size=loader.batch_size,
                 num_workers=loader.num_workers,
+                drop_last=loader.drop_last,
+                **kwargs_loader,
             )
             sampler_info = f"'{loader.sampler.__class__.__name__}' sampler"
         else:
-            ddp_sampler = DDPSamplerWrapper(sampler=loader.batch_sampler, shuffle=shuffle, drop_last=drop_last)
+            ddp_sampler = DDPSamplerWrapper(sampler=loader.batch_sampler, shuffle=True, drop_last=False)
             patched_loader = DataLoader(
-                dataset=loader.dataset, batch_sampler=ddp_sampler, num_workers=loader.num_workers
+                dataset=loader.dataset, batch_sampler=ddp_sampler, num_workers=loader.num_workers, **kwargs_loader
             )
             sampler_info = f"'{loader.batch_sampler.__class__.__name__}' batch sampler"
 
-        logging.info(
-            f"DataLoader with {sampler_info} is updated to DDP mode "
-            f"with drop_last={drop_last} and shuffle={shuffle} parameters"
-        )
+        logging.info(f"DataLoader with {sampler_info} is updated to DDP mode")
         return patched_loader
     else:
         warnings.warn(patch_dataloader_to_ddp.__name__, WarningDDP)

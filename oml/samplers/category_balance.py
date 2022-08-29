@@ -49,7 +49,6 @@ class CategoryBalanceSampler(IBatchSampler):
             weight_categories: If True sample categories for each batch with weights proportional to the number of
                 unique labels in the categories
         """
-        super().__init__(self)
         unique_labels = set(labels)
         unique_categories = set(label2category.values())
         category2labels = {

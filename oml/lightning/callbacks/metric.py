@@ -1,10 +1,10 @@
+from math import ceil
 from typing import Any, Optional
 
 import pytorch_lightning as pl
 from pytorch_lightning import Callback, LightningModule, Trainer
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
-from oml.const import PolicyDDP
 from oml.interfaces.metrics import IBasicMetric
 from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.ddp import check_loaders_is_patched, patch_dataloader_to_ddp
@@ -77,10 +77,9 @@ class MetricValCallback(Callback):
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
                 len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
-                if not PolicyDDP.val_drop_last:
-                    # If we use padding in DDP mode, we need to extend number of expected samples
-                    len_dataset += len_dataset % trainer.world_size
-                len_dataset = len_dataset // trainer.world_size
+                if trainer.world_size > 1:
+                    len_dataset = ceil(len_dataset / trainer.world_size)
+
                 self._expected_samples = self.samples_in_getitem * len_dataset
                 self._collected_samples = 0
 
