@@ -170,7 +170,7 @@ class EmbeddingMetrics(IBasicMetric):
 
         self.metrics = self._reduce_dfs(metrics)  # type: ignore
 
-        return metrics
+        return self.metrics
 
 
 __all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]
