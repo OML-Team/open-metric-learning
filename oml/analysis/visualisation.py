@@ -49,6 +49,7 @@ class RetrievalVisualizer:
         mask_gt: torch.Tensor,
         query_bboxes: torch.Tensor,
         gallery_bboxes: torch.Tensor,
+        verbose: bool = True,
     ):
         """
         This class allows you to visualize the searching results for the desired queries and
@@ -80,8 +81,10 @@ class RetrievalVisualizer:
         self.query_bboxes = query_bboxes
         self.gallery_bboxes = gallery_bboxes
 
+        self.verbose = verbose
+
     @classmethod
-    def from_embeddings_metric(cls, emb: EmbeddingMetrics) -> "RetrievalVisualizer":
+    def from_embeddings_metric(cls, emb: EmbeddingMetrics, verbose: bool = True) -> "RetrievalVisualizer":
         """
         In some cases, you may prefer to instantiate Visualizer from
         >>> EmbeddingMetrics
@@ -116,6 +119,7 @@ class RetrievalVisualizer:
             mask_gt=emb.mask_gt,
             query_bboxes=query_bboxes,
             gallery_bboxes=gallery_bboxes,
+            verbose=verbose,
         )
 
     def visualise(
@@ -136,7 +140,8 @@ class RetrievalVisualizer:
         ids = torch.argsort(self.dist_matrix[query_idx])[:top_k]
 
         if skip_no_errors and torch.all(self.mask_gt[query_idx, ids]):
-            print(f"No errors for {query_idx}")
+            if self.verbose:
+                print(f"No errors for {query_idx}")
             return None
 
         n_gt = self.mask_gt[query_idx].sum()
@@ -146,14 +151,16 @@ class RetrievalVisualizer:
         plt.subplot(1, top_k + 1 + ngt_show, 1)
 
         img = self.get_img_with_bbox(self.query_paths[query_idx], self.query_bboxes[query_idx], BLUE)
-        print("Q  ", self.query_paths[query_idx])
+        if self.verbose:
+            print("Q  ", self.query_paths[query_idx])
         plt.imshow(img)
         plt.title(f"Query, #gt = {n_gt}")
         plt.axis("off")
 
         for i, idx in enumerate(ids):
             color = GREEN if self.mask_gt[query_idx, idx] else RED
-            print("G", i, self.gallery_paths[idx])
+            if self.verbose:
+                print("G", i, self.gallery_paths[idx])
             plt.subplot(1, top_k + ngt_show + 1, i + 2)
             img = self.get_img_with_bbox(self.gallery_paths[idx], self.gallery_bboxes[idx], color)
 

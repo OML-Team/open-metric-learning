@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import pytorch_lightning as pl
 from neptune.new.types import File
@@ -18,6 +20,7 @@ class ImageLoggingCallback(Callback):
         top_k_in_row: int = 5,
         folder: str = "image_logs",
         log_overall_only: bool = True,
+        metrics_to_ignore: Tuple[str] = ("cmc",),
     ) -> None:
         super().__init__()
         self.metric = metric
@@ -26,11 +29,15 @@ class ImageLoggingCallback(Callback):
         self.top_k_in_row = top_k_in_row
         self.folder = folder
         self.log_overall_only = log_overall_only
+        self.metrics_to_ignore = metrics_to_ignore
 
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        visualizer = RetrievalVisualizer.from_embeddings_metric(self.metric)
+        visualizer = RetrievalVisualizer.from_embeddings_metric(self.metric, verbose=False)
 
         for metric_name, metric_values in flatten_dict(self.metric.metrics_unreduced, sep="_").items():  # type: ignore
+            for ignore in self.metrics_to_ignore:
+                if ignore in metric_name:
+                    continue
             if self.log_overall_only and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
                 continue
             for n, idx in enumerate(np.argsort(metric_values)[: self.top_k_per_metric]):
