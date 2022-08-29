@@ -117,7 +117,7 @@ def build_inshop_df(
         df=df, ratio_th=bboxes_aspect_ratio_to_fix, fix_train=fix_train_bboxes, fix_val=fix_val_bboxes
     )
 
-    df["category"] = df_part["path"].apply(lambda x: f"{x.parent.parent.parent.name}/{x.parent.parent.name}")
+    df["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
     df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category"]]
 

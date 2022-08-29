@@ -204,7 +204,7 @@ df_train, _ = download_mock_dataset(dataset_root)
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 sampler = BalanceBatchSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
@@ -235,7 +235,7 @@ _, df_val = download_mock_dataset(dataset_root)
 
 model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 calculator = EmbeddingMetrics()
@@ -281,13 +281,13 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train, im_size=32, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 sampler = SequentialBalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
 
 # val
-val_dataset = DatasetQueryGallery(df_val, im_size=32, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics())
 
@@ -302,16 +302,16 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 
 ## Models zoo
-|                            model                            | cmc1  |         dataset          |                                      weights & config                                        | hash (the beginning) |
+|                            model                            | cmc1  |         dataset          |                                           weights                                            | hash (the beginning) |
 |:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
 | `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
-|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing)   |        85cfa5        |
+|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing) |        85cfa5        |
 |  `VitExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) |        9f1e59        |
 |  `VitExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) |        e82633        |
 
 
 Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.
-However, you can also check link in `weights & config` column if you want to download weights manually or to reproduce the experiment.
+However, you can also check link in `weights` column if you want to download weights manually.
 
 For more details about the training process, please, visit *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
