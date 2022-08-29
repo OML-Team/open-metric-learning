@@ -1,7 +1,7 @@
-dataset_root: /nydl/data/CUB_200_2011/
+dataset_root: data/CUB_200_2011/
 dataframe_name: df.csv
 
-logs_root: /nydl/logs/CUB_200_2011/
+logs_root: logs/CUB_200_2011/
 
 bs_val: 256
 num_workers: 8

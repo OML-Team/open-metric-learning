@@ -1,7 +1,7 @@
-dataset_root: /nydl/data/CARS196/
+dataset_root: data/CARS196/
 dataframe_name: df.csv
 
-logs_root: /nydl/logs/CARS196/
+logs_root: logs/CARS196/
 
 bs_val: 256
 num_workers: 8

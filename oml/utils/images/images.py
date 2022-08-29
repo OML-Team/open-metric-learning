@@ -48,25 +48,9 @@ def imread_pillow(im_src: Union[Path, str, bytes]) -> TPILImage:
     return image.convert("RGB")
 
 
-def pil_from_np_if_needed(img: TImage) -> TPILImage:
-    if isinstance(img, np.ndarray):
-        img = Image.fromarray(img)
-
-    return img
-
-
-def np_from_pil_if_needed(img: TImage) -> np.ndarray:
-    if isinstance(img, TPILImage):
-        img = np.array(img)
-
-    return img
-
-
 __all__ = [
     "TImReader",
     "tensor_to_numpy_image",
     "imread_cv2",
     "imread_pillow",
-    "pil_from_np_if_needed",
-    "np_from_pil_if_needed",
 ]
