@@ -65,7 +65,7 @@ class MetricValCallback(Callback):
             if self._collected_samples > self._expected_samples:
                 self._raise_computation_error()
 
-            # For non-additive metrics (like f1) we usually accumulate some infortmation during the epoch, then we
+            # For non-additive metrics (like f1) we usually accumulate some information during the epoch, then we
             # calculate final score `on_validation_epoch_end`. The problem here is that `on_validation_epoch_end`
             # lightning logger doesn't know dataloader_idx and logs metrics in incorrect way if num_dataloaders > 1.
             # To avoid the problem we calculate metrics `on_validation_batch_end` for the last batch in the loader.

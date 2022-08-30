@@ -7,7 +7,13 @@ from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
+from oml.const import (
+    CATEGORIES_COLUMN,
+    LABELS_COLUMN,
+    OVERALL_CATEGORIES_KEY,
+    PROJECT_ROOT,
+    TCfg,
+)
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
@@ -68,7 +74,8 @@ def pl_train(cfg: TCfg) -> None:
 
     sampler_runtime_args = {"labels": train_dataset.get_labels()}
     if train_dataset.categories_key:
-        sampler_runtime_args["label2category"] = dict(zip(train_dataset.df["label"], train_dataset.df["category"]))
+        df = train_dataset.df
+        sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
@@ -89,6 +96,15 @@ def pl_train(cfg: TCfg) -> None:
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
+    pl_model = RetrievalModule(
+        model=extractor,
+        criterion=criterion,
+        optimizer=optimizer,
+        input_tensors_key=train_dataset.input_tensors_key,
+        labels_key=train_dataset.labels_key,
+        **scheduler_args,
+    )
+
     loader_train = DataLoader(
         dataset=train_dataset,
         sampler=sampler,
@@ -101,7 +117,11 @@ def pl_train(cfg: TCfg) -> None:
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     metrics_calc = EmbeddingMetrics(
+        embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
+        labels_key=valid_dataset.labels_key,
+        is_query_key=valid_dataset.is_query_key,
+        is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {}),
     )
@@ -156,8 +176,6 @@ def pl_train(cfg: TCfg) -> None:
         logger=logger,
         precision=cfg.get("precision", 32),
     )
-
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, **scheduler_args)
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 

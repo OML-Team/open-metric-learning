@@ -6,8 +6,19 @@ from typing import List
 import imagesize
 import numpy as np
 import pandas as pd
-from sklearn import preprocessing
 
+from oml.const import (
+    CATEGORIES_COLUMN,
+    IS_GALLERY_COLUMN,
+    IS_QUERY_COLUMN,
+    LABELS_COLUMN,
+    PATHS_COLUMN,
+    SPLIT_COLUMN,
+    X1_COLUMN,
+    X2_COLUMN,
+    Y1_COLUMN,
+    Y2_COLUMN,
+)
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images_resize import inverse_karesize_bboxes
 
@@ -142,6 +153,22 @@ def build_inshop_df(
     print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
+
+    df = df.rename(
+        columns={
+            "label": LABELS_COLUMN,
+            "path": PATHS_COLUMN,
+            "split": SPLIT_COLUMN,
+            "is_query": IS_QUERY_COLUMN,
+            "is_gallery": IS_GALLERY_COLUMN,
+            "x_1": X1_COLUMN,
+            "x_2": X2_COLUMN,
+            "y_1": Y1_COLUMN,
+            "y_2": Y2_COLUMN,
+            "category": CATEGORIES_COLUMN,
+        }
+    )
+
     return df.reset_index(drop=True)
 
 

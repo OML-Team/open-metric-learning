@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
+from oml.const import EMBEDDINGS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, LABELS_KEY
 from oml.functional.metrics import (
     TMetricsDict,
     calc_distance_matrix,
@@ -21,10 +22,10 @@ class EmbeddingMetrics(IBasicMetric):
 
     def __init__(
         self,
-        embeddings_key: str = "embeddings",
-        labels_key: str = "labels",
-        is_query_key: str = "is_query",
-        is_gallery_key: str = "is_gallery",
+        embeddings_key: str = EMBEDDINGS_KEY,
+        labels_key: str = LABELS_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
         extra_keys: Tuple[str, ...] = (),
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
