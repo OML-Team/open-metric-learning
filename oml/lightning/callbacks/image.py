@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Iterable
 
 import numpy as np
 import pytorch_lightning as pl
@@ -20,7 +20,7 @@ class ImageLoggingCallback(Callback):
         top_k_in_row: int = 5,
         folder: str = "image_logs",
         log_overall_only: bool = True,
-        metrics_to_ignore: Tuple[str] = ("cmc",),
+        metrics_to_ignore: Iterable[str] = ("cmc",),
     ) -> None:
         super().__init__()
         self.metric = metric
@@ -35,9 +35,8 @@ class ImageLoggingCallback(Callback):
         visualizer = RetrievalVisualizer.from_embeddings_metric(self.metric, verbose=False)
 
         for metric_name, metric_values in flatten_dict(self.metric.metrics_unreduced, sep="_").items():  # type: ignore
-            for ignore in self.metrics_to_ignore:
-                if ignore in metric_name:
-                    continue
+            if any([ignore in metric_name for ignore in self.metrics_to_ignore]):
+                continue
             if self.log_overall_only and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
                 continue
             for n, idx in enumerate(np.argsort(metric_values)[: self.top_k_per_metric]):
