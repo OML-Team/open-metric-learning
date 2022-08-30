@@ -1,0 +1,3 @@
+name: norm_resize_albu
+args:
+  im_size: 224

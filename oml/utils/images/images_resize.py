@@ -1,45 +1,13 @@
 from functools import partial
 from typing import List, Tuple, Union
 
-import albumentations as albu
 import cv2
 import numpy as np
 import torch
 
-from oml.const import PAD_COLOR
-
 SizeHW = Tuple[int, int]  # Size of images in (height, width) order
 BboxesType = Union[torch.Tensor, np.ndarray]  # in format Nx4: [[left_1, top_1, right_1, bottom_1], ...]
 ImageType = Union[torch.Tensor, np.ndarray]  # ndarray shapes: HxW, HxWxC. tensor shapes : HxW, CxHxW, BxCxHxW
-
-
-def pad_resize(im: np.ndarray, size: int, pad_ratio: float) -> np.ndarray:
-    """
-
-    Args:
-        im: Input image
-        size: Size of the output image
-        pad_ratio: Size of the borders in an output image.
-          Note, borders will appear even for squared images.
-          This value is measured in terms of the part of the original image.
-
-    Returns:
-        Output image with borders
-
-    """
-    assert pad_ratio >= 0
-
-    return albu.Compose(
-        [
-            albu.LongestMaxSize(max_size=int((1 - pad_ratio) * size)),
-            albu.PadIfNeeded(
-                min_height=size,
-                min_width=size,
-                border_mode=cv2.BORDER_CONSTANT,
-                value=PAD_COLOR,
-            ),
-        ]
-    )(image=im)["image"]
 
 
 def karesize_image(image: ImageType, new_hw: SizeHW) -> ImageType:
@@ -235,7 +203,6 @@ def resize_ndarray(array: np.ndarray, new_size_hw: SizeHW) -> np.ndarray:
 
 
 __all__ = [
-    "pad_resize",
     "karesize_image",
     "inverse_karesize_image",
     "karesize_bboxes",

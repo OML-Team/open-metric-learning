@@ -19,7 +19,7 @@ from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import get_augs
+from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
@@ -43,21 +43,20 @@ def pl_train(cfg: TCfg) -> None:
 
     cwd = Path.cwd()
 
-    train_augs = get_augs(cfg["augs"]) if cfg["augs"] is not None else None
+    transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
+    transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
+
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
-        im_size_train=cfg["im_size_train"],
-        im_size_val=cfg["im_size_val"],
-        pad_ratio_train=cfg["im_pad_ratio_train"],
-        pad_ratio_val=cfg["im_pad_ratio_val"],
-        train_transform=train_augs,
+        transforms_train=transforms_train,
+        transforms_val=transforms_val,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
     )
 
-    if isinstance(train_augs, albu.Compose):
+    if isinstance(transforms_train, albu.Compose):
         augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
-        albu.save(filepath=augs_file, transform=train_augs, data_format="yaml")
+        albu.save(filepath=augs_file, transform=transforms_train, data_format="yaml")
     else:
         augs_file = None
 
@@ -97,11 +96,16 @@ def pl_train(cfg: TCfg) -> None:
         num_workers=cfg["num_workers"],
         batch_size=sampler.batch_size,
         drop_last=True,
+        shuffle=not bool(sampler),
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(categories_key=valid_dataset.categories_key, **cfg.get("metric_args", {}))
+    metrics_calc = EmbeddingMetrics(
+        categories_key=valid_dataset.categories_key,
+        extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
+        **cfg.get("metric_args", {}),
+    )
 
     metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
     ckpt_clb = pl.callbacks.ModelCheckpoint(

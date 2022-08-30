@@ -17,6 +17,7 @@ from oml.registry.optimizers import (
 )
 from oml.registry.samplers import SAMPLERS_REGISTRY, get_sampler
 from oml.registry.schedulers import SCHEDULERS_REGISTRY, get_scheduler
+from oml.registry.transforms import TRANSFORMS_REGISTRY, get_transforms
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -41,21 +42,21 @@ def get_opt() -> Optimizer:
         ("optimizer", OPTIMIZERS_REGISTRY, get_optimizer, {"params": get_params()}),
         ("sampler", SAMPLERS_REGISTRY, get_sampler, get_sampler_kwargs_runtime()),
         ("scheduler", SCHEDULERS_REGISTRY, get_scheduler, {"optimizer": get_opt()}),
+        ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
     ],
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
     for obj_name in registry.keys():
-        with open(CONFIGS_PATH / folder_name / f"{obj_name}.yaml", "r") as f:
-            cfg = dictconfig_to_dict(OmegaConf.load(f))
-            args = cfg["args"]
+        cfg = dictconfig_to_dict(OmegaConf.load(CONFIGS_PATH / folder_name / f"{obj_name}.yaml"))
+        args = cfg["args"]
 
-            # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
-            if (folder_name == "scheduler") and (obj_name == "lambda" or obj_name == "multiplicative"):
-                args["lr_lambda"] = lambda epoch: 0.9
+        # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
+        if (folder_name == "scheduler") and (obj_name == "lambda" or obj_name == "multiplicative"):
+            args["lr_lambda"] = lambda epoch: 0.9
 
-            if runtime_args is not None:
-                args = dict(**args, **runtime_args)
+        if runtime_args is not None:
+            args = dict(**args, **runtime_args)
 
-            factory_fun(cfg["name"], **args)
+        factory_fun(cfg["name"], **args)
 
     assert True

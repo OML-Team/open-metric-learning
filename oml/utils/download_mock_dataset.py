@@ -44,7 +44,7 @@ def main() -> None:
     download_mock_dataset(dataset_root=args.dataset_root)
 
 
-__all__ = ["download_mock_dataset"]
+__all__ = ["download_mock_dataset", "check_mock_dataset_exists"]
 
 if __name__ == "__main__":
     main()
