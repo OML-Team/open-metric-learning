@@ -169,22 +169,21 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 ## Get started
 The design of OML assumes that you may train your model in 2 different ways:
 
-* **Via Configs**. The best option is if your dataset and pipeline are standard enough or if you are not
+### Via Configs
+The best option is if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
-* **Via Python**. The most flexible, but knowledge-requiring approach.
+### Via Python
+The most flexible, but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
 In the *Minimal examples* section you can find fully working code snippets that train and validate the model
 on a tiny [dataset](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing) (less than 1 Mb).
 
 
-## Minimal Python examples
 <details>
-<summary>Using pure PyTorch</summary>
+<summary>Vanilla PyTorch: Training</summary>
 <p>
-
-**Training**
 
 [comment]:vanilla-train-start
 ```python
@@ -217,8 +216,13 @@ for batch in tqdm(train_loader):
     optimizer.zero_grad()
 ```
 [comment]:vanilla-train-end
+</p>
+</details>
 
-**Validation**
+
+<details>
+<summary>Vanilla PyTorch: Validation</summary>
+<p>
 
 [comment]:vanilla-validation-start
 ```python
@@ -253,10 +257,8 @@ metrics = calculator.compute_metrics()
 </details>
 
 <details>
-<summary>Using PyTorch Lightning</summary>
+<summary>PyTorch Lightning: Training + Validation</summary>
 <p>
-
-**Training + Validation**
 
 [comment]:lightning-start
 ```python
