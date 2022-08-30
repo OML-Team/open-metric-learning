@@ -59,7 +59,7 @@ class MetricValCallback(Callback):
 
     def _check_loaders(self, trainer: "pl.Trainer") -> None:
         if not self._loaders_checked:
-            if trainer.world_size != 1:
+            if trainer.world_size > 1:
                 if not check_loaders_is_patched(trainer.val_dataloaders):
                     raise RuntimeError(err_message_loaders_is_not_patched)
 

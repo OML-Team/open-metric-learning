@@ -15,7 +15,7 @@ def init_ddp(rank: int, world_size: int) -> None:
     set_global_seed(1)
 
 
-def func_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...]) -> None:  # type: ignore
+def func_in_ddp(world_size: int, fn: Callable, *args: Tuple[Any, ...]) -> None:  # type: ignore
     if world_size == 0:
         return fn(0, world_size, *args)
     spawn(fn, args=(world_size, *args), nprocs=world_size, join=True)
