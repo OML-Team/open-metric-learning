@@ -58,10 +58,10 @@ class BaseDataset(Dataset):
 
         Args:
             df: Table with the following columns:
-                  obligatory: "label" - id of the item,
-                              "path" - to the image, absolute or relative from "dataset_root"
-                  optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
-                            "category" - category of the item
+                  obligatory:
+                  >>> LABELS_COLUMN, PATH_COLUMN
+                  optional:
+                  >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORY_COLUMN
             transform: Augmentations for the images
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             f_imread: Function to read the image
