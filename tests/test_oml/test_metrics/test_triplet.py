@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 import torch
 
-from oml.const import OVERALL_CATEGORIES_KEY
+from oml.const import CATEGORIES_KEY, EMBEDDINGS_KEY, OVERALL_CATEGORIES_KEY
 from oml.metrics.triplets import AccuracyOnTriplets
 from oml.utils.misc import one_hot
 
@@ -15,8 +15,8 @@ oh = partial(one_hot, dim=8)
 @pytest.fixture()
 def perfect_case() -> Any:
     batch = {
-        "embeddings": torch.stack([oh(0), oh(0), oh(1), oh(1), oh(1), oh(0)]),  # 1st and 2nd triplet
-        "categories": ["cat", "dog"],  # 1st triplet  # 2nd triplet
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(0), oh(1), oh(1), oh(1), oh(0)]),  # 1st and 2nd triplet
+        CATEGORIES_KEY: ["cat", "dog"],  # 1st triplet  # 2nd triplet
     }
 
     gt_metrics = defaultdict(dict)  # type: ignore
@@ -30,7 +30,7 @@ def perfect_case() -> Any:
 @pytest.fixture()
 def some_case() -> Any:
     batch1 = {
-        "embeddings": torch.stack(
+        EMBEDDINGS_KEY: torch.stack(
             [
                 # triplet #1 - error
                 oh(0),
@@ -50,11 +50,11 @@ def some_case() -> Any:
                 oh(2),
             ]
         ),
-        "categories": [0, 1, 1, 1],  # triplets #1 #2 #3 #4
+        CATEGORIES_KEY: [0, 1, 1, 1],  # triplets #1 #2 #3 #4
     }
 
     batch2 = {
-        "embeddings": torch.stack(
+        EMBEDDINGS_KEY: torch.stack(
             [
                 # triplet #5 - correct
                 oh(0),
@@ -66,7 +66,7 @@ def some_case() -> Any:
                 oh(1),
             ]
         ),
-        "categories": [0, 1],  # triplets #5 #6
+        CATEGORIES_KEY: [0, 1],  # triplets #5 #6
     }
 
     gt_metrics = defaultdict(dict)  # type: ignore
@@ -80,7 +80,7 @@ def some_case() -> Any:
 def run_accuracy_on_triplets(case) -> None:  # type: ignore
     batches, gt_metrics = case
 
-    acc = AccuracyOnTriplets(embeddings_key="embeddings", categories_key="categories")
+    acc = AccuracyOnTriplets(embeddings_key=EMBEDDINGS_KEY, categories_key=CATEGORIES_KEY)
     acc.setup()
     for batch in batches:
         acc.update_data(batch)

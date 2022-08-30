@@ -9,6 +9,13 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 
+from oml.const import (
+    EMBEDDINGS_KEY,
+    INPUT_TENSORS_KEY,
+    IS_GALLERY_KEY,
+    IS_QUERY_KEY,
+    LABELS_KEY,
+)
 from oml.datasets.triplet import TItem, tri_collate
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossPlain, TripletLossWithMiner
@@ -24,7 +31,7 @@ class DummyTripletDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, 3, self.im_size, self.im_size))
-        return {"input_tensors": input_tensors}
+        return {INPUT_TENSORS_KEY: input_tensors}
 
     def __len__(self) -> int:
         return self.num_triplets
@@ -38,7 +45,7 @@ class DummyRetrievalDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
         label = torch.tensor(self.labels[idx]).long()
-        return {"input_tensors": input_tensors, "labels": label, "is_query": True, "is_gallery": True}
+        return {INPUT_TENSORS_KEY: input_tensors, LABELS_KEY: label, IS_QUERY_KEY: True, IS_GALLERY_KEY: True}
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -55,8 +62,8 @@ class DummyCommonModule(pl.LightningModule):
         return Adam(self.model.parameters(), lr=1e-4)
 
     def validation_step(self, batch: TItem, batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
-        embeddings = self.model(batch["input_tensors"])
-        return {**batch, **{"embeddings": embeddings.detach().cpu()}}
+        embeddings = self.model(batch[INPUT_TENSORS_KEY])
+        return {**batch, **{EMBEDDINGS_KEY: embeddings.detach().cpu()}}
 
 
 class DummyTripletModule(DummyCommonModule):
@@ -65,7 +72,7 @@ class DummyTripletModule(DummyCommonModule):
         self.criterion = TripletLossPlain(margin=None)
 
     def training_step(self, batch_multidataloader: List[TItem], batch_idx: int) -> torch.Tensor:
-        embeddings = torch.cat([self.model(batch["input_tensors"]) for batch in batch_multidataloader])
+        embeddings = torch.cat([self.model(batch[INPUT_TENSORS_KEY]) for batch in batch_multidataloader])
         loss = self.criterion(embeddings)
         return loss
 
@@ -76,8 +83,8 @@ class DummyRetrievalModule(DummyCommonModule):
         self.criterion = TripletLossWithMiner(margin=None, need_logs=True)
 
     def training_step(self, batch_multidataloader: List[TItem], batch_idx: int) -> torch.Tensor:
-        embeddings = torch.cat([self.model(batch["input_tensors"]) for batch in batch_multidataloader])
-        labels = torch.cat([batch["labels"] for batch in batch_multidataloader])
+        embeddings = torch.cat([self.model(batch[INPUT_TENSORS_KEY]) for batch in batch_multidataloader])
+        labels = torch.cat([batch[LABELS_KEY] for batch in batch_multidataloader])
         loss = self.criterion(embeddings, labels)
         return loss
 
@@ -110,17 +117,17 @@ def create_retrieval_dataloader(
 
 
 def create_triplet_callback(loader_idx: int, samples_in_getitem: int) -> MetricValCallback:
-    metric = AccuracyOnTriplets(embeddings_key="embeddings")
+    metric = AccuracyOnTriplets(embeddings_key=EMBEDDINGS_KEY)
     metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
     return metric_callback
 
 
 def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> MetricValCallback:
     metric = EmbeddingMetrics(
-        embeddings_key="embeddings",
-        labels_key="labels",
-        is_query_key="is_query",
-        is_gallery_key="is_gallery",
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
     )
     metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
     return metric_callback

@@ -6,7 +6,14 @@ from typing import Any
 import pytest
 import torch
 
-from oml.const import OVERALL_CATEGORIES_KEY
+from oml.const import (
+    CATEGORIES_KEY,
+    EMBEDDINGS_KEY,
+    IS_GALLERY_KEY,
+    IS_QUERY_KEY,
+    LABELS_KEY,
+    OVERALL_CATEGORIES_KEY,
+)
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
 
@@ -34,19 +41,19 @@ def perfect_case() -> Any:
     """
 
     batch1 = {
-        "embeddings": torch.stack([oh(0), oh(1), oh(1)]),
-        "labels": torch.tensor([0, 1, 1]),
-        "is_query": torch.tensor([True, True, True]),
-        "is_gallery": torch.tensor([False, False, False]),
-        "categories": ["cat", "dog", "dog"],
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([True, True, True]),
+        IS_GALLERY_KEY: torch.tensor([False, False, False]),
+        CATEGORIES_KEY: ["cat", "dog", "dog"],
     }
 
     batch2 = {
-        "embeddings": torch.stack([oh(0), oh(1), oh(1)]),
-        "labels": torch.tensor([0, 1, 1]),
-        "is_query": torch.tensor([False, False, False]),
-        "is_gallery": torch.tensor([True, True, True]),
-        "categories": ["cat", "dog", "dog"],
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([False, False, False]),
+        IS_GALLERY_KEY: torch.tensor([True, True, True]),
+        CATEGORIES_KEY: ["cat", "dog", "dog"],
     }
 
     k = 1
@@ -61,19 +68,19 @@ def perfect_case() -> Any:
 @pytest.fixture()
 def imperfect_case() -> Any:
     batch1 = {
-        "embeddings": torch.stack([oh(0), oh(1), oh(3)]),  # 3d embedding pretends to be an error
-        "labels": torch.tensor([0, 1, 1]),
-        "is_query": torch.tensor([True, True, True]),
-        "is_gallery": torch.tensor([False, False, False]),
-        "categories": torch.tensor([10, 20, 20]),
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(3)]),  # 3d embedding pretends to be an error
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([True, True, True]),
+        IS_GALLERY_KEY: torch.tensor([False, False, False]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
 
     batch2 = {
-        "embeddings": torch.stack([oh(0), oh(1), oh(1)]),
-        "labels": torch.tensor([0, 1, 1]),
-        "is_query": torch.tensor([False, False, False]),
-        "is_gallery": torch.tensor([True, True, True]),
-        "categories": torch.tensor([10, 20, 20]),
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([False, False, False]),
+        IS_GALLERY_KEY: torch.tensor([True, True, True]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
 
     k = 1
@@ -88,19 +95,19 @@ def imperfect_case() -> Any:
 @pytest.fixture()
 def worst_case() -> Any:
     batch1 = {
-        "embeddings": torch.stack([oh(1), oh(0), oh(0)]),  # 3d embedding pretends to be an error
-        "labels": torch.tensor([0, 1, 1]),
-        "is_query": torch.tensor([True, True, True]),
-        "is_gallery": torch.tensor([False, False, False]),
-        "categories": torch.tensor([10, 20, 20]),
+        EMBEDDINGS_KEY: torch.stack([oh(1), oh(0), oh(0)]),  # 3d embedding pretends to be an error
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([True, True, True]),
+        IS_GALLERY_KEY: torch.tensor([False, False, False]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
 
     batch2 = {
-        "embeddings": torch.stack([oh(0), oh(1), oh(1)]),
-        "labels": torch.tensor([0, 1, 1]),
-        "is_query": torch.tensor([False, False, False]),
-        "is_gallery": torch.tensor([True, True, True]),
-        "categories": torch.tensor([10, 20, 20]),
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([False, False, False]),
+        IS_GALLERY_KEY: torch.tensor([True, True, True]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
 
     k = 1
@@ -117,13 +124,13 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
 
     top_k = (k,)
 
-    num_samples = len(batch1["labels"]) + len(batch2["labels"])
+    num_samples = len(batch1[LABELS_KEY]) + len(batch2[LABELS_KEY])
     calc = EmbeddingMetrics(
-        embeddings_key="embeddings",
-        labels_key="labels",
-        is_query_key="is_query",
-        is_gallery_key="is_gallery",
-        categories_key="categories",
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
+        categories_key=CATEGORIES_KEY,
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
@@ -152,18 +159,18 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
     top_k = (k1,)
 
     calc = EmbeddingMetrics(
-        embeddings_key="embeddings",
-        labels_key="labels",
-        is_query_key="is_query",
-        is_gallery_key="is_gallery",
-        categories_key="categories",
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
+        categories_key=CATEGORIES_KEY,
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
-        num_samples = len(batch_a["labels"]) + len(batch_b["labels"])
+        num_samples = len(batch_a[LABELS_KEY]) + len(batch_b[LABELS_KEY])
         calc.setup(num_samples=num_samples)
         calc.update_data(batch_a)
         calc.update_data(batch_b)
