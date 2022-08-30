@@ -258,7 +258,7 @@ metrics = calculator.compute_metrics()
 </details>
 
 <details>
-<summary>Training + Validation [PyTorch Lightning]</summary>
+<summary>Training + Validation [Lightning]</summary>
 <p>
 
 [comment]:lightning-start
