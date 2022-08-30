@@ -126,9 +126,10 @@ def pl_train(cfg: TCfg) -> None:
             tags=list(cfg["tags"]) + [cfg["postfix"]] + [cwd.name],
             log_model_checkpoints=False,
         )
-        # log hyper params and augs config
+        # log hyper params and files
         dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
         logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
+        logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
         if augs_file is not None:
             logger.run["augs_cfg"].upload(augs_file)
         # log source code
