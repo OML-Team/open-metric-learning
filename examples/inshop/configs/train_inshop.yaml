@@ -5,8 +5,8 @@ precision: 32
 gpus: [0, 1]
 
 dataframe_name: df_fixed_train_fixed_val.csv
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/DeepFashion_InShop/
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
