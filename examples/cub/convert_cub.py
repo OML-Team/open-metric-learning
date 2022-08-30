@@ -60,34 +60,36 @@ def build_cub_df(dataset_root: Path) -> pd.DataFrame:
 
     df = ft.reduce(lambda left, right: pd.merge(left, right, on="image_id"), [images, bbs, class_labels, split])
 
-    df[X1_COLUMN] = df["x"].apply(int)  # left
-    df[X2_COLUMN] = (df["x"] + df["width"]).apply(int)  # right
-    df[Y2_COLUMN] = (df["y"] + df["height"]).apply(int)  # bot
-    df[Y1_COLUMN] = df["y"].apply(int)  # top
-    df[PATH_COLUMN] = df["image_name"].apply(lambda x: dataset_root / "images" / x)
+    df["x_1"] = df["x"].apply(int)  # left
+    df["x_2"] = (df["x"] + df["width"]).apply(int)  # right
+    df["y_2"] = (df["y"] + df["height"]).apply(int)  # bot
+    df["y_1"] = df["y"].apply(int)  # top
+    df["path"] = df["image_name"].apply(lambda x: dataset_root / "images" / x)
 
-    df[SPLIT_COLUMN] = "train"
-    df[SPLIT_COLUMN][df["is_training_image"] == 0] = "validation"
+    df["split"] = "train"
+    df["split"][df["is_training_image"] == 0] = "validation"
 
-    df[IS_QUERY_COLUMN] = None
-    df[IS_GALLERY_COLUMN] = None
-    df[IS_QUERY_COLUMN][df[SPLIT_COLUMN] == "validation"] = True
-    df[IS_GALLERY_COLUMN][df[SPLIT_COLUMN] == "validation"] = True
+    df["is_query"] = None
+    df["is_gallery"] = None
+    df["is_query"][df["split"] == "validation"] = True
+    df["is_gallery"][df["split"] == "validation"] = True
 
-    df = df.rename(columns={"class_id": LABELS_COLUMN})
-    df = df[
-        [
-            LABELS_COLUMN,
-            PATH_COLUMN,
-            SPLIT_COLUMN,
-            IS_QUERY_COLUMN,
-            IS_GALLERY_COLUMN,
-            X1_COLUMN,
-            X2_COLUMN,
-            Y1_COLUMN,
-            Y2_COLUMN,
-        ]
-    ]
+    df = df.rename(columns={"class_id": "label"})
+    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
+
+    df = df.rename(
+        columns={
+            "label": LABELS_COLUMN,
+            "path": PATH_COLUMN,
+            "split": SPLIT_COLUMN,
+            "is_query": IS_QUERY_COLUMN,
+            "is_gallery": IS_GALLERY_COLUMN,
+            "x_1": X1_COLUMN,
+            "x_2": X2_COLUMN,
+            "y_1": Y1_COLUMN,
+            "y_2": Y2_COLUMN,
+        }
+    )
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df

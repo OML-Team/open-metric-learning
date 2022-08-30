@@ -7,8 +7,13 @@ from oml.const import (
     CATEGORY_COLUMN,
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
+    LABELS_COLUMN,
     PATH_COLUMN,
     SPLIT_COLUMN,
+    X1_COLUMN,
+    X2_COLUMN,
+    Y1_COLUMN,
+    Y2_COLUMN,
 )
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 
@@ -35,19 +40,35 @@ def build_sop_df(dataset_root: Path) -> pd.DataFrame:
     train_data = train_data.rename(columns=col_map)
     test_data = test_data.rename(columns=col_map)
 
-    train_data[SPLIT_COLUMN] = "train"
-    test_data[SPLIT_COLUMN] = "validation"
-    train_data[IS_QUERY_COLUMN] = None
-    train_data[IS_GALLERY_COLUMN] = None
+    train_data["split"] = "train"
+    test_data["split"] = "validation"
+    train_data["is_query"] = None
+    train_data["is_gallery"] = None
 
-    test_data[IS_QUERY_COLUMN] = True
-    test_data[IS_GALLERY_COLUMN] = True
+    test_data["is_query"] = True
+    test_data["is_gallery"] = True
 
     df = pd.concat((train_data, test_data))
-    df[PATH_COLUMN] = df[PATH_COLUMN].apply(lambda x: dataset_root / x)
-    df[CATEGORY_COLUMN] = df[PATH_COLUMN].apply(lambda x: x.parent.name)
+    df["path"] = df["path"].apply(lambda x: dataset_root / x)
+    df["category"] = df["path"].apply(lambda x: x.parent.name)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
+
+    df = df.rename(
+        columns={
+            "label": LABELS_COLUMN,
+            "path": PATH_COLUMN,
+            "split": SPLIT_COLUMN,
+            "is_query": IS_QUERY_COLUMN,
+            "is_gallery": IS_GALLERY_COLUMN,
+            "x_1": X1_COLUMN,
+            "x_2": X2_COLUMN,
+            "y_1": Y1_COLUMN,
+            "y_2": Y2_COLUMN,
+            "category": CATEGORY_COLUMN,
+        }
+    )
+
     return df
 
 

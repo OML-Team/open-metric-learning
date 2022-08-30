@@ -30,30 +30,30 @@ def parse_file_row(row: pd.Series) -> List[str]:
 
 
 def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float, fix_train: bool, fix_val: bool) -> pd.DataFrame:
-    df["ar"] = (df[Y2_COLUMN] - df[Y1_COLUMN]) / (df[X2_COLUMN] - df[X1_COLUMN])
+    df["ar"] = (df["y_2"] - df["y_1"]) / (df["x_2"] - df["x_1"])
 
     if fix_train and fix_val:
         mask_bad = df["ar"] > ratio_th
     elif fix_train and (not fix_val):
-        mask_bad = (df["ar"] > ratio_th) & (df[SPLIT_COLUMN] == "train")
+        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "train")
     elif (not fix_train) and fix_val:
-        mask_bad = (df["ar"] > ratio_th) & (df[SPLIT_COLUMN] == "validation")
+        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "validation")
     else:
         return df
 
     print(f"We will fix {mask_bad.sum()} bboxes")
 
-    df["x_center"] = ((df[X1_COLUMN] + df[X2_COLUMN]) // 2).astype(int)
-    df["half_h"] = (df[Y2_COLUMN] - df[Y1_COLUMN]).astype(int) // 2
+    df["x_center"] = ((df["x_1"] + df["x_2"]) // 2).astype(int)
+    df["half_h"] = (df["y_2"] - df["y_1"]).astype(int) // 2
 
-    df[X1_COLUMN][mask_bad] = np.clip(df["x_center"][mask_bad] - df["half_h"], a_min=0, a_max=100_000)
-    df[X2_COLUMN][mask_bad] = df["x_center"][mask_bad] + df["half_h"]
+    df["x_1"][mask_bad] = np.clip(df["x_center"][mask_bad] - df["half_h"], a_min=0, a_max=100_000)
+    df["x_2"][mask_bad] = df["x_center"][mask_bad] + df["half_h"]
 
     return df
 
 
 def convert_bbox(row: pd.Series) -> List[int]:
-    bbox = int(row[X1_COLUMN]), int(row[Y1_COLUMN]), int(row[X2_COLUMN]), int(row[Y2_COLUMN])
+    bbox = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
     img_hw = (row.h, row.w)
     bbox = inverse_karesize_bboxes(np.array(bbox)[np.newaxis, ...], BASE_SIZE_INSHOP, img_hw)[0, :]
     bbox[0] = np.clip(bbox[0], 0, img_hw[1])
@@ -96,14 +96,14 @@ def build_inshop_df(
 
     df_part = txt_to_df(list_eval_partition)
 
-    df_part[PATH_COLUMN] = df_part["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
+    df_part["path"] = df_part["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
 
     df_bbox = txt_to_df(list_bbox_inshop)
 
     df = df_part.merge(df_bbox, on="image_name", how="inner")
     df.reset_index(inplace=True, drop=True)
 
-    df[LABELS_COLUMN] = df["item_id"].apply(lambda x: int(x[3:]))
+    df["label"] = df["item_id"].apply(lambda x: int(x[3:]))
 
     df["hw"] = df["path"].apply(lambda x: imagesize.get(str(x))[::-1])
     df["h"] = df["hw"].apply(lambda x: x[0])
@@ -111,51 +111,36 @@ def build_inshop_df(
     del df["hw"]
 
     bboxes = list(zip(*df.apply(convert_bbox, axis=1)))
-    for i, name in zip([0, 1, 2, 3], [X1_COLUMN, Y1_COLUMN, X2_COLUMN, Y2_COLUMN]):
+    for i, name in zip([0, 1, 2, 3], ["x_1", "y_1", "x_2", "y_2"]):
         df[name] = bboxes[i]
 
-    df[SPLIT_COLUMN] = "validation"
-    df[SPLIT_COLUMN][df["evaluation_status"] == "train"] = "train"
+    df["split"] = "validation"
+    df["split"][df["evaluation_status"] == "train"] = "train"
 
-    df[IS_QUERY_COLUMN] = False
-    df[IS_GALLERY_COLUMN] = False
-    df[IS_QUERY_COLUMN] = df["evaluation_status"] == "query"
-    df[IS_GALLERY_COLUMN] = df["evaluation_status"] == "gallery"
-    df[IS_QUERY_COLUMN][df[SPLIT_COLUMN] == "train"] = None
-    df[IS_GALLERY_COLUMN][df[SPLIT_COLUMN] == "train"] = None
+    df["is_query"] = False
+    df["is_gallery"] = False
+    df["is_query"] = df["evaluation_status"] == "query"
+    df["is_gallery"] = df["evaluation_status"] == "gallery"
+    df["is_query"][df["split"] == "train"] = None
+    df["is_gallery"][df["split"] == "train"] = None
 
     df = expand_squeezed_bboxes(
         df=df, ratio_th=bboxes_aspect_ratio_to_fix, fix_train=fix_train_bboxes, fix_val=fix_val_bboxes
     )
 
-    df[CATEGORY_COLUMN] = df_part[PATH_COLUMN].apply(lambda x: x.parent.parent.name)
+    df["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
-    df = df[
-        [
-            LABELS_COLUMN,
-            PATH_COLUMN,
-            SPLIT_COLUMN,
-            IS_QUERY_COLUMN,
-            IS_GALLERY_COLUMN,
-            X1_COLUMN,
-            X2_COLUMN,
-            Y1_COLUMN,
-            Y2_COLUMN,
-            CATEGORY_COLUMN,
-        ]
-    ]
+    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category"]]
 
     # check stat
-    assert df[PATH_COLUMN].nunique() == len(df) == 52712
-    assert df[LABELS_COLUMN].nunique() == 7982
-    assert set(df[LABELS_COLUMN].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
+    assert df["path"].nunique() == len(df) == 52712
+    assert df["label"].nunique() == 7982
+    assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
 
     # rm bad bboxes
     thr_bbox_size = 10
     mask_bad_bboxes = df.apply(
-        lambda row: (row[X2_COLUMN] - row[X1_COLUMN]) < thr_bbox_size
-        or (row[Y2_COLUMN] - row[Y1_COLUMN]) < thr_bbox_size,
-        axis=1,
+        lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
     )
     df = df[~mask_bad_bboxes]
     df.reset_index(drop=True, inplace=True)
@@ -168,6 +153,22 @@ def build_inshop_df(
     print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
+
+    df = df.rename(
+        columns={
+            "label": LABELS_COLUMN,
+            "path": PATH_COLUMN,
+            "split": SPLIT_COLUMN,
+            "is_query": IS_QUERY_COLUMN,
+            "is_gallery": IS_GALLERY_COLUMN,
+            "x_1": X1_COLUMN,
+            "x_2": X2_COLUMN,
+            "y_1": Y1_COLUMN,
+            "y_2": Y2_COLUMN,
+            "category": CATEGORY_COLUMN,
+        }
+    )
+
     return df.reset_index(drop=True)
 
 

@@ -53,29 +53,31 @@ def build_cars196_df(dataset_root: Path) -> pd.DataFrame:
     train_annots = construct_df(train_annots, meta=meta, path_to_imgs="cars_train", root=dataset_root)
     test_annots = io.loadmat(str(cars_test_annos_withlabels))
     test_annots = construct_df(test_annots, meta=meta, path_to_imgs="cars_test", root=dataset_root)
-    train_annots[IS_QUERY_COLUMN] = None
-    train_annots[IS_GALLERY_COLUMN] = None
+    train_annots["is_query"] = None
+    train_annots["is_gallery"] = None
 
-    test_annots[IS_QUERY_COLUMN] = True
-    test_annots[IS_GALLERY_COLUMN] = True
+    test_annots["is_query"] = True
+    test_annots["is_gallery"] = True
 
-    train_annots[SPLIT_COLUMN] = "train"
-    test_annots[SPLIT_COLUMN] = "validation"
+    train_annots["split"] = "train"
+    test_annots["split"] = "validation"
 
     df = pd.concat((train_annots, test_annots))
-    df = df[
-        [
-            LABELS_COLUMN,
-            PATH_COLUMN,
-            SPLIT_COLUMN,
-            IS_QUERY_COLUMN,
-            IS_GALLERY_COLUMN,
-            X1_COLUMN,
-            X2_COLUMN,
-            Y1_COLUMN,
-            Y2_COLUMN,
-        ]
-    ]
+    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
+
+    df = df.rename(
+        columns={
+            "label": LABELS_COLUMN,
+            "path": PATH_COLUMN,
+            "split": SPLIT_COLUMN,
+            "is_query": IS_QUERY_COLUMN,
+            "is_gallery": IS_GALLERY_COLUMN,
+            "x_1": X1_COLUMN,
+            "x_2": X2_COLUMN,
+            "y_1": Y1_COLUMN,
+            "y_2": Y2_COLUMN,
+        }
+    )
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df
