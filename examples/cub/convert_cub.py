@@ -9,7 +9,7 @@ from oml.const import (
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
     LABELS_COLUMN,
-    PATH_COLUMN,
+    PATHS_COLUMN,
     SPLIT_COLUMN,
     X1_COLUMN,
     X2_COLUMN,
@@ -80,7 +80,7 @@ def build_cub_df(dataset_root: Path) -> pd.DataFrame:
     df = df.rename(
         columns={
             "label": LABELS_COLUMN,
-            "path": PATH_COLUMN,
+            "path": PATHS_COLUMN,
             "split": SPLIT_COLUMN,
             "is_query": IS_QUERY_COLUMN,
             "is_gallery": IS_GALLERY_COLUMN,

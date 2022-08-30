@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 
 from oml.const import (
-    CATEGORY_COLUMN,
+    CATEGORIES_COLUMN,
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
     LABELS_COLUMN,
-    PATH_COLUMN,
+    PATHS_COLUMN,
     SPLIT_COLUMN,
     X1_COLUMN,
     X2_COLUMN,
@@ -157,7 +157,7 @@ def build_inshop_df(
     df = df.rename(
         columns={
             "label": LABELS_COLUMN,
-            "path": PATH_COLUMN,
+            "path": PATHS_COLUMN,
             "split": SPLIT_COLUMN,
             "is_query": IS_QUERY_COLUMN,
             "is_gallery": IS_GALLERY_COLUMN,
@@ -165,7 +165,7 @@ def build_inshop_df(
             "x_2": X2_COLUMN,
             "y_1": Y1_COLUMN,
             "y_2": Y2_COLUMN,
-            "category": CATEGORY_COLUMN,
+            "category": CATEGORIES_COLUMN,
         }
     )
 

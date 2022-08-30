@@ -9,8 +9,8 @@ import torchvision
 from torch.utils.data import Dataset
 
 from oml.const import (
+    CATEGORIES_COLUMN,
     CATEGORIES_KEY,
-    CATEGORY_COLUMN,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
     IS_GALLERY_KEY,
@@ -18,7 +18,7 @@ from oml.const import (
     IS_QUERY_KEY,
     LABELS_COLUMN,
     LABELS_KEY,
-    PATH_COLUMN,
+    PATHS_COLUMN,
     PATHS_KEY,
     SPLIT_COLUMN,
     X1_COLUMN,
@@ -59,9 +59,9 @@ class BaseDataset(Dataset):
         Args:
             df: Table with the following columns:
                   obligatory:
-                  >>> LABELS_COLUMN, PATH_COLUMN
+                  >>> LABELS_COLUMN, PATHS_COLUMN
                   optional:
-                  >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORY_COLUMN
+                  >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORIES_COLUMN
             transform: Augmentations for the images
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             f_imread: Function to read the image
@@ -78,12 +78,12 @@ class BaseDataset(Dataset):
         """
         df = df.copy()
 
-        assert all(x in df.columns for x in (LABELS_COLUMN, PATH_COLUMN))
+        assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
 
         self.input_tensors_key = input_tensors_key
         self.labels_key = labels_key
         self.paths_key = paths_key
-        self.categories_key = categories_key if (CATEGORY_COLUMN in df.columns) else None
+        self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
 
         self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
         if self.bboxes_exist:
@@ -93,9 +93,9 @@ class BaseDataset(Dataset):
 
         if dataset_root is not None:
             dataset_root = Path(dataset_root)
-            df[PATH_COLUMN] = df[PATH_COLUMN].apply(lambda x: str(dataset_root / x))
+            df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: str(dataset_root / x))
         else:
-            df[PATH_COLUMN] = df[PATH_COLUMN].astype(str)
+            df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
 
         self.df = df
         self.transform = transform if transform else get_transforms("norm_albu")
@@ -113,7 +113,7 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         row = self.df.iloc[idx]
 
-        img_bytes = self.read_bytes_image_cached(row[PATH_COLUMN])
+        img_bytes = self.read_bytes_image_cached(row[PATHS_COLUMN])
         img = self.f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
@@ -136,11 +136,11 @@ class BaseDataset(Dataset):
         item = {
             self.input_tensors_key: image_tensor,
             self.labels_key: row[LABELS_COLUMN],
-            self.paths_key: row[PATH_COLUMN],
+            self.paths_key: row[PATHS_COLUMN],
         }
 
         if self.categories_key:
-            item[self.categories_key] = row[CATEGORY_COLUMN]
+            item[self.categories_key] = row[CATEGORIES_COLUMN]
 
         if self.bboxes_exist:
             item.update(

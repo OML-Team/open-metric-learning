@@ -9,12 +9,12 @@ import pandas as pd
 
 from oml.const import (
     BBOXES_COLUMNS,
-    CATEGORY_COLUMN,
+    CATEGORIES_COLUMN,
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
     LABELS_COLUMN,
     OBLIGATORY_COLUMNS,
-    PATH_COLUMN,
+    PATHS_COLUMN,
     SPLIT_COLUMN,
     X1_COLUMN,
     X2_COLUMN,
@@ -65,7 +65,7 @@ def check_retrieval_dataframe_format(
     if dataset_root is None:
         dataset_root = Path("")
 
-    assert all(df[PATH_COLUMN].apply(lambda x: (dataset_root / x).exists()).to_list())
+    assert all(df[PATHS_COLUMN].apply(lambda x: (dataset_root / x).exists()).to_list())
 
     # check bboxes if exist
     if set(BBOXES_COLUMNS).intersection(set(list(df.columns))):
@@ -88,10 +88,10 @@ def check_retrieval_dataframe_format(
         for coord in BBOXES_COLUMNS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 
-    if CATEGORY_COLUMN in df.columns:
+    if CATEGORIES_COLUMN in df.columns:
         label_to_category = defaultdict(set)
         for _, row in df.iterrows():
-            label_to_category[row[LABELS_COLUMN]].add(row[CATEGORY_COLUMN])
+            label_to_category[row[LABELS_COLUMN]].add(row[CATEGORIES_COLUMN])
 
         bad_categories = {k: v for k, v in label_to_category.items() if len(v) > 1}
 
