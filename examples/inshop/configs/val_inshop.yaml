@@ -33,4 +33,4 @@ gpus:
 
 hydra:
   searchpath:
-    - file://../../configs
+   - pkg://oml.configs

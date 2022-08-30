@@ -7,6 +7,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
+from oml.const import INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.datasets import IDatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.cross_batch import TripletMinerWithMemory
@@ -23,7 +24,7 @@ class DummyDataset(IDatasetWithLabels):
         shuffle(self.labels)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {"input_tensors": torch.tensor(self.labels[idx]), "labels": self.labels[idx]}
+        return {INPUT_TENSORS_KEY: torch.tensor(self.labels[idx]), LABELS_KEY: self.labels[idx]}
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -76,10 +77,10 @@ def test_train_with_mining(
     criterion = TripletLossWithMiner(margin=margin, miner=miner, need_logs=False)
 
     for i, batch in enumerate(loader):
-        assert len(batch["labels"]) == n_labels * n_instances
+        assert len(batch[LABELS_KEY]) == n_labels * n_instances
 
-        embeddings = model(batch["input_tensors"])
-        loss = criterion(embeddings, batch["labels"])
+        embeddings = model(batch[INPUT_TENSORS_KEY])
+        loss = criterion(embeddings, batch[LABELS_KEY])
 
         if isinstance(miner, TripletMinerWithMemory) and (i < miner.bank_size_in_batches):
             # we cannot guarantee any values of loss due to impact of memory bank initialisation

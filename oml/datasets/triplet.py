@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from oml.const import INPUT_TENSORS_KEY
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.images.images import TImReader, imread_cv2
 
@@ -89,13 +90,13 @@ class TriDataset(Dataset):
         tensors = tuple(map(lambda x: self.transforms(image=x)["image"], images))
 
         tri_ids = (f"{idx}_a", f"{idx}_p", f"{idx}_n")
-        return {"input_tensors": tensors, "tri_ids": tri_ids, "images": images}
+        return {INPUT_TENSORS_KEY: tensors, "tri_ids": tri_ids, "images": images}
 
 
 def tri_collate(items: List[TItem]) -> Dict[str, Any]:
     batch = dict()
 
-    for key in ("input_tensors",):
+    for key in (INPUT_TENSORS_KEY,):
         batch[key] = torch.stack(list(chain(*[item[key] for item in items])))
 
     for key in ("tri_ids", "images"):

@@ -8,6 +8,28 @@ import pandas as pd
 import torchvision
 from torch.utils.data import Dataset
 
+from oml.const import (
+    CATEGORIES_COLUMN,
+    CATEGORIES_KEY,
+    INPUT_TENSORS_KEY,
+    IS_GALLERY_COLUMN,
+    IS_GALLERY_KEY,
+    IS_QUERY_COLUMN,
+    IS_QUERY_KEY,
+    LABELS_COLUMN,
+    LABELS_KEY,
+    PATHS_COLUMN,
+    PATHS_KEY,
+    SPLIT_COLUMN,
+    X1_COLUMN,
+    X1_KEY,
+    X2_COLUMN,
+    X2_KEY,
+    Y1_COLUMN,
+    Y1_KEY,
+    Y2_COLUMN,
+    Y2_KEY,
+)
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import TTransforms, get_transforms
 from oml.transforms.images.utils import get_im_reader_for_transforms
@@ -23,23 +45,23 @@ class BaseDataset(Dataset):
         dataset_root: Optional[Union[str, Path]] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
-        input_tensors_key: str = "input_tensors",
-        labels_key: str = "labels",
-        paths_key: str = "paths",
-        categories_key: Optional[str] = "categories",
-        x1_key: str = "x1",
-        x2_key: str = "x2",
-        y1_key: str = "y1",
-        y2_key: str = "y2",
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        paths_key: str = PATHS_KEY,
+        categories_key: Optional[str] = CATEGORIES_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
     ):
         """
 
         Args:
             df: Table with the following columns:
-                  obligatory: "label" - id of the item,
-                              "path" - to the image, absolute or relative from "dataset_root"
-                  optional: "x_1", "x_2", "y_1", "y_2" (left, right, top, bot)
-                            "category" - category of the item
+                  obligatory:
+                  >>> LABELS_COLUMN, PATHS_COLUMN
+                  optional:
+                  >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORIES_COLUMN
             transform: Augmentations for the images
             dataset_root: Path to the images dir, set None if you provided the absolute paths
             f_imread: Function to read the image
@@ -56,14 +78,14 @@ class BaseDataset(Dataset):
         """
         df = df.copy()
 
-        assert all(x in df.columns for x in ("label", "path"))
+        assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
 
         self.input_tensors_key = input_tensors_key
         self.labels_key = labels_key
         self.paths_key = paths_key
-        self.categories_key = categories_key if ("category" in df.columns) else None
+        self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
 
-        self.bboxes_exist = all(coord in df.columns for coord in ("x_1", "x_2", "y_1", "y_2"))
+        self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
         if self.bboxes_exist:
             self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
         else:
@@ -71,9 +93,9 @@ class BaseDataset(Dataset):
 
         if dataset_root is not None:
             dataset_root = Path(dataset_root)
-            df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
+            df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: str(dataset_root / x))
         else:
-            df["path"] = df["path"].astype(str)
+            df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
 
         self.df = df
         self.transform = transform if transform else get_transforms("norm_albu")
@@ -91,15 +113,17 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         row = self.df.iloc[idx]
 
-        img_bytes = self.read_bytes_image_cached(row.path)
+        img_bytes = self.read_bytes_image_cached(row[PATHS_COLUMN])
         img = self.f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
 
-        if (not self.bboxes_exist) or any(pd.isna(coord) for coord in [row.x_1, row.x_2, row.y_1, row.y_2]):
+        if (not self.bboxes_exist) or any(
+            pd.isna(coord) for coord in [row[X1_COLUMN], row[X2_COLUMN], row[Y1_COLUMN], row[Y2_COLUMN]]
+        ):
             x1, y1, x2, y2 = 0, 0, im_w, im_h
         else:
-            x1, y1, x2, y2 = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
+            x1, y1, x2, y2 = int(row[X1_COLUMN]), int(row[Y1_COLUMN]), int(row[X2_COLUMN]), int(row[Y2_COLUMN])
 
         if isinstance(self.transform, albu.Compose):
             img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes we should move it to augs
@@ -111,12 +135,12 @@ class BaseDataset(Dataset):
 
         item = {
             self.input_tensors_key: image_tensor,
-            self.labels_key: row.label,
-            self.paths_key: row.path,
+            self.labels_key: row[LABELS_COLUMN],
+            self.paths_key: row[PATHS_COLUMN],
         }
 
         if self.categories_key:
-            item[self.categories_key] = row.category
+            item[self.categories_key] = row[CATEGORIES_COLUMN]
 
         if self.bboxes_exist:
             item.update(
@@ -153,7 +177,7 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
     """
 
     def get_labels(self) -> np.ndarray:
-        return np.array(self.df["label"].tolist())
+        return np.array(self.df[LABELS_COLUMN].tolist())
 
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
@@ -181,16 +205,16 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
-        input_tensors_key: str = "input_tensors",
-        labels_key: str = "labels",
-        paths_key: str = "paths",
-        categories_key: str = "categories",
-        x1_key: str = "x1",
-        x2_key: str = "x2",
-        y1_key: str = "y1",
-        y2_key: str = "y2",
-        is_query_key: str = "is_query",
-        is_gallery_key: str = "is_gallery",
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        paths_key: str = PATHS_KEY,
+        categories_key: str = CATEGORIES_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
@@ -207,15 +231,15 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
             y1_key=y1_key,
             y2_key=y2_key,
         )
-        assert all(x in df.columns for x in ("is_query", "is_gallery"))
+        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN))
 
         self.is_query_key = is_query_key
         self.is_gallery_key = is_gallery_key
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = super().__getitem__(idx)
-        item[self.is_query_key] = bool(self.df.iloc[idx]["is_query"])
-        item[self.is_gallery_key] = bool(self.df.iloc[idx]["is_gallery"])
+        item[self.is_query_key] = bool(self.df.iloc[idx][IS_QUERY_COLUMN])
+        item[self.is_gallery_key] = bool(self.df.iloc[idx][IS_GALLERY_COLUMN])
         return item
 
 
@@ -232,7 +256,7 @@ def get_retrieval_datasets(
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
     # train
-    df_train = df[df["split"] == "train"].reset_index(drop=True)
+    df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,
@@ -242,7 +266,7 @@ def get_retrieval_datasets(
     )
 
     # val (query + gallery)
-    df_query_gallery = df[df["split"] == "validation"].reset_index(drop=True)
+    df_query_gallery = df[df[SPLIT_COLUMN] == "validation"].reset_index(drop=True)
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,
         dataset_root=dataset_root,
