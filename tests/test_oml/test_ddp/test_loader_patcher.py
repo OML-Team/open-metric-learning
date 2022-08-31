@@ -3,14 +3,31 @@ from itertools import chain
 from math import ceil
 from pprint import pprint
 from random import randint
+from typing import Callable, Tuple, Any
 
 import pytest
+from torch.distributed import init_process_group
+from torch.multiprocessing import spawn
 from torch.utils.data import DataLoader
 
+from oml.const import TMP_PATH
 from oml.samplers.balance import BalanceSampler
 from oml.utils.ddp import patch_dataloader_to_ddp, sync_dicts_ddp
+from oml.utils.misc import set_global_seed
 
-from .utils import func_in_ddp, init_ddp
+
+def init_ddp(rank: int, world_size: int) -> None:
+    if world_size == 0:
+        pass
+    else:
+        init_process_group("gloo", rank=rank, world_size=world_size, init_method=f"file://{TMP_PATH / 'ddp'}")
+    set_global_seed(1)
+
+
+def func_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> None:  # type: ignore
+    if world_size == 0:
+        return fn(0, world_size, *args)
+    spawn(fn, args=(world_size, *args), nprocs=world_size, join=True)
 
 
 @pytest.mark.parametrize("n_labels_sampler", [2, 5])
