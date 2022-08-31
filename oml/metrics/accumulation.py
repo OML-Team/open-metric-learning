@@ -103,6 +103,9 @@ class Accumulator:
         return self.num_samples == self.collected_samples
 
     def sync(self) -> "Accumulator":
+        if not self.is_storage_full():
+            raise ValueError("Only full storages could be synced")
+
         if not is_initialized():
             return self
         else:
@@ -110,16 +113,10 @@ class Accumulator:
             if world_size == 1:
                 return self
             else:
-                storage = self._storage
-
-                for k in storage.keys():
-                    if isinstance(storage[k], (torch.Tensor, np.ndarray)):
-                        storage[k] = storage[k][: self.collected_samples, ...]  # type: ignore
-
                 params = {"num_samples": [self.num_samples], "keys_to_accumulate": self.keys_to_accumulate}
 
                 gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
-                gathered_storage = sync_dicts_ddp(storage, world_size=world_size, device="cpu")
+                gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
 
                 synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
                 synced_accum.refresh(sum(gathered_params["num_samples"]))

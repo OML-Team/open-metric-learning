@@ -50,7 +50,7 @@ class IBasicMetric(ABC):
         """
         Method aggregate data in DDP mode before metric calculations
         """
-        pass
+        raise NotImplementedError()
 
 
 __all__ = ["IBasicMetric"]

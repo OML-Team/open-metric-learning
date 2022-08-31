@@ -2,7 +2,7 @@ from math import ceil
 from typing import Any, Optional
 
 import pytorch_lightning as pl
-from pytorch_lightning import Callback, LightningModule, Trainer
+from pytorch_lightning import Callback
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
 from oml.interfaces.metrics import IBasicMetric
@@ -13,15 +13,13 @@ from oml.utils.misc import flatten_dict
 err_message_loaders_is_not_patched = (
     "\nExperiment is runned in DDP mode, but some of validation dataloaders is not patched. Metric callback will "
     "be incorrect  without patched loaders. Possible problems and solutions:\n"
-    f"1) If you use custom module inherited from '{LightningModule.__name__}', please replace ancestor class with "
+    f"1) If you use custom module inherited from 'pl.LightningModule', please replace ancestor class with "
     f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n"
-    f"2) If you implement your own '{LightningModule.train_dataloader.__name__}' or "
-    f"'{LightningModule.val_dataloader.__name__}' methods for your module, you can add extra line of code for "
-    f"patching loader with '{patch_dataloader_to_ddp.__name__}' function\n"
-    f"3) If you call 'trainer.{Trainer.fit.__name__}(...)' or 'trainer.{Trainer.validate.__name__}(...)' method with "
-    f"loaders as argument, PytorchLightning will ignore loaders from '{LightningModule.train_dataloader.__name__}' "
-    f"and '{LightningModule.val_dataloader.__name__}' methods. Please avoid substituting loaders to this functions, "
-    f"instead use '{ModuleDDP.__name__}'\n"
+    f"2) If you implement your own 'train_dataloader' or 'val_dataloader' methods for your module, you can add "
+    f"extra line of code for patching loader with '{patch_dataloader_to_ddp.__name__}' function\n"
+    f"3) If you call 'trainer.fit(...)' or 'trainer.validate(...)' method with loaders as argument, PytorchLightning "
+    f"will ignore loaders from 'train_dataloader' and 'val_dataloader' methods. Please avoid substituting loaders to "
+    f"this functions, instead use '{ModuleDDP.__name__}'\n"
     f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
     f"replacement in '{ModuleDDP.__name__}' constructor"
 )
@@ -55,15 +53,11 @@ class MetricValCallback(Callback):
         self._collected_samples = 0
         self._ready_to_accumulate = False
 
-        self._loaders_checked = False
-
-    def _check_loaders(self, trainer: "pl.Trainer") -> None:
-        if not self._loaders_checked:
-            if trainer.world_size > 1:
-                if not check_loaders_is_patched(trainer.val_dataloaders):
-                    raise RuntimeError(err_message_loaders_is_not_patched)
-
-            self._loaders_checked = True
+    @staticmethod
+    def _check_loaders(trainer: "pl.Trainer") -> None:
+        if trainer.world_size > 1:
+            if not check_loaders_is_patched(trainer.val_dataloaders):
+                raise RuntimeError(err_message_loaders_is_not_patched)
 
     def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self._check_loaders(trainer)
@@ -78,6 +72,7 @@ class MetricValCallback(Callback):
             if not self._ready_to_accumulate:
                 len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
                 if trainer.world_size > 1:
+                    # we use padding in DDP and sequential sampler for validation
                     len_dataset = ceil(len_dataset / trainer.world_size)
 
                 self._expected_samples = self.samples_in_getitem * len_dataset

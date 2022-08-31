@@ -98,23 +98,30 @@ class _Sampler2Dataset(Dataset):
 
 
 class DDPSamplerWrapper(DistributedSampler):
-    def __init__(self, sampler: TAllSamplers, shuffle: bool = True, drop_last: bool = False):
-        super().__init__(dataset=_Sampler2Dataset(sampler), shuffle=shuffle, drop_last=drop_last)
+    def __init__(
+        self, sampler: TAllSamplers, shuffle_samples_between_gpus: bool = True, pad_data_to_num_gpus: bool = True
+    ):
+        super().__init__(
+            dataset=_Sampler2Dataset(sampler), shuffle=shuffle_samples_between_gpus, drop_last=not pad_data_to_num_gpus
+        )
         """
         Default DistributedSampler allows us to built sampler for dataset in DDP mode. Usually we can easily replace
-        default SequentialSampler (when shuffle=False) and RandomSampler (when shuffle=True) with DistributedSampler.
-        But for custom sampler we need extra wrapper. With this class we mimic any samplers to dataset and use indices
-        of sampler splitted for each divices. Using this distributed indices we can prepare batch of data.
+        default SequentialSampler (when DataLoader(shuffle=False, ...)) and RandomSampler
+        (when DataLoader(shuffle=True, ...)) with DistributedSampler. But for custom sampler we need extra wrapper.
+        With this class we mimic any samplers to dataset and use indices of sampler splitted for each divices.
+        Using this distributed indices we can prepare batch of data.
 
         When using DDP we should manage behaviour with last batch, because each device should have the same ammount of
         data
 
         Args:
             sampler: sequential or batch sampler
-            drop_last: When using DDP we should manage behaviour with last batch, because each device should have the
-            same ammount of data. If the sampler length is not evenly divisible by the number of devices, we must
-            duplicate part of the data (drop_last=False), or discard part of the data (drop_last=True).
-            shuffle: allow shuffle indices of sampler
+            pad_data_to_num_gpus: When using DDP we should manage behaviour with last batch, because each device should
+                have the same ammount of data. If the sampler length is not evenly divisible by the number of devices,
+                we must duplicate part of the data (pad_data_to_num_gpus=True), or discard part of the
+                data (pad_data_to_num_gpus=False).
+            shuffle_samples_between_gpus: shuffle available indices between feeding to gpu. Note, that shuffle
+            inside gpu after feeding will be used according behaviour of sampler.
 
         Note: Wrapper also can be used with default SequentialSampler and RandomSampler, not only custom.
         """
@@ -127,9 +134,7 @@ class DDPSamplerWrapper(DistributedSampler):
         We need to reinstantiate wrapper in order to update available indices from sampler for new epoch
         """
         self.shift_per_epoch += 1
-        DistributedSampler.__init__(
-            self, dataset=_Sampler2Dataset(self.sampler), shuffle=self.shuffle, drop_last=self.drop_last
-        )
+        super().__init__(dataset=_Sampler2Dataset(self.sampler), shuffle=self.shuffle, drop_last=self.drop_last)
         self.set_epoch(self.shift_per_epoch)
 
     def __iter__(self) -> TAllSamplers:
@@ -156,6 +161,7 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
             "prefetch_factor": loader.prefetch_factor,
             "multiprocessing_context": loader.multiprocessing_context,
             "pin_memory_device": loader.pin_memory_device,
+            "num_workers": loader.num_workers,
         }
 
         # If you don't spectify batch_sampler, PyTorch automatically creates default BatchSampler. In this case we
@@ -164,21 +170,22 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
         # class BatchSampler, ignoring any inheritance
         if type(loader.batch_sampler) is BatchSampler:
             shuffle = True if isinstance(loader.sampler, RandomSampler) else False
-            ddp_sampler = DDPSamplerWrapper(sampler=loader.sampler, shuffle=shuffle, drop_last=False)
+            ddp_sampler = DDPSamplerWrapper(
+                sampler=loader.sampler, shuffle_samples_between_gpus=shuffle, pad_data_to_num_gpus=True
+            )
             patched_loader = DataLoader(
                 dataset=loader.dataset,
                 sampler=ddp_sampler,
                 batch_size=loader.batch_size,
-                num_workers=loader.num_workers,
                 drop_last=loader.drop_last,
                 **kwargs_loader,
             )
             sampler_info = f"'{loader.sampler.__class__.__name__}' sampler"
         else:
-            ddp_sampler = DDPSamplerWrapper(sampler=loader.batch_sampler, shuffle=True, drop_last=False)
-            patched_loader = DataLoader(
-                dataset=loader.dataset, batch_sampler=ddp_sampler, num_workers=loader.num_workers, **kwargs_loader
+            ddp_sampler = DDPSamplerWrapper(
+                sampler=loader.batch_sampler, shuffle_samples_between_gpus=True, pad_data_to_num_gpus=True
             )
+            patched_loader = DataLoader(dataset=loader.dataset, batch_sampler=ddp_sampler, **kwargs_loader)
             sampler_info = f"'{loader.batch_sampler.__class__.__name__}' batch sampler"
 
         logging.info(f"DataLoader with {sampler_info} is updated to DDP mode")
