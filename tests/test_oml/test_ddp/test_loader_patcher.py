@@ -1,9 +1,7 @@
-from collections import defaultdict
 from itertools import chain
 from math import ceil
-from pprint import pprint
 from random import randint
-from typing import Callable, Tuple, Any
+from typing import Any, Callable, Tuple
 
 import pytest
 from torch.distributed import init_process_group
