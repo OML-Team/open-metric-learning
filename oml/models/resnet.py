@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
@@ -122,7 +123,7 @@ class ResnetExtractor(IExtractor):
     @property
     def feat_dim(self) -> int:
         if isinstance(self.model.fc, torch.nn.Identity):
-            return self.last_conv_channels
+            return self.last_conv_channels  # TODO: just use self.model.fc.in_features of previous fc?
         elif isinstance(self.model.fc, torch.nn.Linear):
             return self.model.fc.out_features
         else:
@@ -132,10 +133,86 @@ class ResnetExtractor(IExtractor):
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
         model_device = str(list(self.model.parameters())[0].device)
         image_tensor = get_normalisation_albu()(image=image)["image"].to(model_device)
-        cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=not (model_device == "cpu"))
+        cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=model_device != "cpu")
         gray_image = cam(image_tensor.unsqueeze(0), "gradcam", None)
         img_with_grads = show_cam_on_image(image / 255, gray_image)
         return img_with_grads
+
+
+# class ResNetWithLinearExtractor(ResnetExtractor):
+#     def __init__(
+#         self,
+#         weights: Optional[Union[Path, str]],
+#         arch: str,
+#         normalise_features: bool,
+#         gem_p: Optional[float],
+#         remove_fc: bool,
+#         feature_size: int = 128,
+#         strict_load: bool = True
+#     ):
+#         super().__init__(weights, arch, normalise_features, gem_p, remove_fc, strict_load)
+#         self.linear = nn.Linear(super().feat_dim, feature_size)
+
+#     def forward(self, x):
+#         return self.linear(super().forward(x))
+
+#     @property
+#     def feat_dim(self) -> int:
+#         return self.linear.out_features
+
+
+class ResNet50(nn.Module):
+    def __init__(self):
+        super(ResNet50, self).__init__()
+        pretrained = resnet50(weights="DEFAULT")
+
+        for module_name in [
+            "conv1",
+            "bn1",
+            "relu",
+            "maxpool",
+            "layer1",
+            "layer2",
+            "layer3",
+            "layer4",
+            "avgpool",
+        ]:
+            self.add_module(module_name, getattr(pretrained, module_name))
+
+    def forward(self, x, get_ha=False):
+        x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
+        b1 = self.layer1(x)
+        b2 = self.layer2(b1)
+        b3 = self.layer3(b2)
+        b4 = self.layer4(b3)
+        pool = self.avgpool(b4)
+
+        if get_ha:
+            return b1, b2, b3, b4, pool
+
+        return pool
+
+
+class LinearEmbedding(IExtractor):
+    def __init__(self, embedding_size=128):
+        super(LinearEmbedding, self).__init__()
+        self.base = ResNet50()
+        self.linear = nn.Linear(2048, embedding_size)
+
+    def forward(self, x):
+        x = self.base(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear(x)
+
+        if self.training:
+            return x
+
+        x = F.normalize(x, dim=1, p=2)
+        return x
+
+    @property
+    def feat_dim(self) -> int:
+        return self.linear.out_features
 
 
 def load_moco_model(path_to_model: Path) -> nn.Module:
@@ -148,6 +225,41 @@ def load_moco_model(path_to_model: Path) -> nn.Module:
     Returns:
         Model
 
+    """
+    checkpoint = torch.load(path_to_model, map_location="cpu")
+
+    state_dict = checkpoint["state_dict"]
+    for k in list(state_dict.keys()):
+        # retain only encoder_q up to before the embedding layer
+        if k.startswith("module.encoder_q"):
+            state_dict[k[len("module.encoder_q.") :]] = state_dict[k]
+        del state_dict[k]
+
+    model = resnet50(num_classes=128)  # output size in moco v2
+
+    if "fc.2.weight" in state_dict.keys():
+        print("MOCO V2 architecture was detected!")
+        model.fc = nn.Sequential(
+            nn.Linear(model.fc.weight.shape[1], model.fc.weight.shape[1]),
+            nn.ReLU(),
+            model.fc,
+        )
+    else:
+        print("MOCO V1 architecture will be used")
+
+    model.load_state_dict(state_dict)
+
+    return model
+
+
+def load_moco_model(path_to_model: Path) -> nn.Module:
+    """
+    Args:
+        path_to_model: Path to model trained using original
+           code from MoCo repository:
+           https://github.com/facebookresearch/moco
+    Returns:
+        Model
     """
     checkpoint = torch.load(path_to_model, map_location="cpu")
 

@@ -58,6 +58,7 @@ def pl_train(cfg: TCfg) -> None:
         transforms_val=transforms_val,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
+        verbose=cfg.get("show_dataset_warnings", True),
     )
 
     if isinstance(transforms_train, albu.Compose):
@@ -73,15 +74,26 @@ def pl_train(cfg: TCfg) -> None:
         )
 
     sampler_runtime_args = {"labels": train_dataset.get_labels()}
+    label2category = None
+    df = train_dataset.df
     if train_dataset.categories_key:
-        df = train_dataset.df
-        sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
+        label2category = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
+        sampler_runtime_args["label2category"] = label2category
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    criterion = get_criterion_by_cfg(cfg["criterion"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
+    criterion = get_criterion_by_cfg(
+        cfg["criterion"],
+        in_features=extractor.feat_dim,
+        num_classes=df[LABELS_COLUMN].nunique(),
+        label2category=label2category,
+    )
+    optimizable_parameters = [
+        {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
+        {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
+    ]
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=optimizable_parameters)  # type: ignore
 
     # unpack scheduler to the Lightning format
     if cfg["scheduling"]:
@@ -94,7 +106,8 @@ def pl_train(cfg: TCfg) -> None:
         scheduler_args = {"scheduler": None}
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
-    assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
+    # nah, it really shouldn't
+    # assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
     pl_model = RetrievalModule(
         model=extractor,
@@ -109,9 +122,9 @@ def pl_train(cfg: TCfg) -> None:
         dataset=train_dataset,
         sampler=sampler,
         num_workers=cfg["num_workers"],
-        batch_size=sampler.batch_size,
+        batch_size=getattr(sampler, "batch_size", cfg["bs_train"]),
         drop_last=True,
-        shuffle=not bool(sampler),
+        shuffle=not sampler,
     )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])

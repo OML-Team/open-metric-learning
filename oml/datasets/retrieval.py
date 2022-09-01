@@ -251,12 +251,15 @@ def get_retrieval_datasets(
     f_imread_val: Optional[TImReader] = None,
     dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
+    verbose: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
-    check_retrieval_dataframe_format(df, dataset_root=dataset_root)
+    check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
 
     # train
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
+    mapper = {l: i for i, l in enumerate(df_train[LABELS_COLUMN].unique())}
+    df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,

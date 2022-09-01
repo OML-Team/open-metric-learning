@@ -25,4 +25,32 @@ def get_normalisation_resize_torch(im_size: int, mean: TNormParam = MEAN, std: T
     return Compose([t.Resize(size=(im_size, im_size), antialias=True), ToTensor(), Normalize(mean=mean, std=std)])
 
 
+def get_arcface_train_transforms(im_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD) -> Compose:
+    return t.Compose(
+        [
+            t.Resize((256, 256), interpolation=t.InterpolationMode.LANCZOS),
+            t.RandomResizedCrop(
+                scale=(0.16, 1),
+                ratio=(0.75, 1.33),
+                size=im_size,
+                interpolation=t.InterpolationMode.LANCZOS,
+            ),
+            t.RandomHorizontalFlip(),
+            t.ToTensor(),
+            Normalize(mean=mean, std=std),
+        ]
+    )
+
+
+def get_arcface_test_transforms(im_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD) -> Compose:
+    return t.Compose(
+        [
+            t.Resize((256, 256), interpolation=t.InterpolationMode.LANCZOS),
+            t.CenterCrop(im_size),
+            t.ToTensor(),
+            Normalize(mean=mean, std=std),
+        ]
+    )
+
+
 __all__ = ["get_augs_torch", "get_normalisation_torch", "get_normalisation_resize_torch"]

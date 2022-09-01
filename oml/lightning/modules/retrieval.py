@@ -6,6 +6,7 @@ from torch import nn
 from torch.optim.lr_scheduler import _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
+from oml.interfaces.criterions import ICriterion
 from oml.interfaces.models import IExtractor
 
 
@@ -13,7 +14,7 @@ class RetrievalModule(pl.LightningModule):
     def __init__(
         self,
         model: IExtractor,
-        criterion: nn.Module,
+        criterion: ICriterion,
         optimizer: torch.optim.Optimizer,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
@@ -45,7 +46,8 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         loss = self.criterion(embeddings, batch[self.labels_key])
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        loss_name = (getattr(self.criterion, "crit_name", "") + " loss").strip()
+        self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
             self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)

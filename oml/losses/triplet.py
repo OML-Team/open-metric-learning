@@ -2,9 +2,8 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from torch import Tensor
-from torch.nn import Module
 
-from oml.interfaces.criterions import ITripletLossWithMiner
+from oml.interfaces.criterions import ICriterion, ITripletLossWithMiner
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbatch_all_tri import AllTripletsMiner
@@ -13,7 +12,7 @@ from oml.utils.misc_torch import elementwise_dist
 TLogs = Dict[str, float]
 
 
-class TripletLoss(Module):
+class TripletLoss(ICriterion):
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
 
@@ -105,7 +104,7 @@ def get_tri_ids_in_plain(n: int) -> Tuple[List[int], List[int], List[int]]:
     return anchor_ii, positive_ii, negative_ii
 
 
-class TripletLossPlain(Module):
+class TripletLossPlain(ICriterion):
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
         The same as TripletLoss, but works with anchor, positive and negative
@@ -152,7 +151,7 @@ class TripletLossPlain(Module):
         return self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
 
 
-class TripletLossWithMiner(ITripletLossWithMiner):
+class TripletLossWithMiner(ITripletLossWithMiner, ICriterion):
     """
     This class combines in-batch mining of triplets and
     computing of TripletLoss.
