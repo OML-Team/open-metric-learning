@@ -98,8 +98,14 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
 
     augs = albu.Compose(
         [
-            # albu.Compose([Crop(), albu.Resize(height=im_size, width=im_size)]),
-            RandomSizedBBoxSafeCropPatched(im_size),
+            albu.Compose(
+                [
+                    Crop(),
+                    albu.LongestMaxSize(max_size=im_size),
+                    albu.PadIfNeeded(im_size, im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+                ]
+            ),
+            # RandomSizedBBoxSafeCropPatched(im_size),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
