@@ -18,7 +18,7 @@ from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.entrypoints.utils import parse_runtime_params_from_config
+from oml.lightning.entrypoints.parser import parse_runtime_params_from_config
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
@@ -80,7 +80,7 @@ def pl_train(cfg: TCfg) -> None:
         df = train_dataset.df
         sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
-    batch_sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
+    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
@@ -108,11 +108,21 @@ def pl_train(cfg: TCfg) -> None:
         **scheduler_args,
     )
 
-    loader_train = DataLoader(
-        dataset=train_dataset,
-        batch_sampler=batch_sampler,
-        num_workers=cfg["num_workers"],
-    )
+    if sampler is None:
+        loader_train = DataLoader(
+            dataset=train_dataset,
+            sampler=sampler,
+            num_workers=cfg["num_workers"],
+            batch_size=cfg["bs_train"],
+            drop_last=True,
+            shuffle=True,
+        )
+    else:
+        loader_train = DataLoader(
+            dataset=train_dataset,
+            batch_sampler=sampler,
+            num_workers=cfg["num_workers"],
+        )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 

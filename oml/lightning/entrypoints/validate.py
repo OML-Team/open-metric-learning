@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.entrypoints.utils import parse_runtime_params_from_config
+from oml.lightning.entrypoints.parser import parse_runtime_params_from_config
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg

@@ -19,7 +19,7 @@ def parse_runtime_params_from_config(cfg: TCfg) -> Dict[str, Any]:
 
     TODO: now DDP works in wrong way. We temporarily force to specify 'devices=1'
     """
-    cfg = dictconfig_to_dict(cfg.copy())
+    cfg = dictconfig_to_dict(cfg)
 
     # we want to replace possible null or no values in config for "accelerator" and "devices"
     accelerator = cfg.get("accelerator")
