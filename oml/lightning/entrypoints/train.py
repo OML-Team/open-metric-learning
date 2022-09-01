@@ -89,6 +89,7 @@ def pl_train(cfg: TCfg) -> None:
             "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
             "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
             "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
+            "scheduler_monitor_metric": cfg["scheduling"].get("monitor_metric", None),
         }
     else:
         scheduler_args = {"scheduler": None}

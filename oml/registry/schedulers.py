@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
@@ -15,6 +15,12 @@ from torch.optim.lr_scheduler import (
 
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
+
+class ReduceLROnPlateauPatch(ReduceLROnPlateau):
+    def get_last_lr(self) -> List[float]:
+        return [group["lr"] for group in self.optimizer.param_groups]
+
+
 SCHEDULERS_REGISTRY = {
     "lambda": LambdaLR,
     "multiplicative": MultiplicativeLR,
@@ -24,6 +30,7 @@ SCHEDULERS_REGISTRY = {
     "cosine_annealing": CosineAnnealingLR,
     "cyclic": CyclicLR,
     "one_cycle": OneCycleLR,
+    "reduce_on_plateau": ReduceLROnPlateauPatch,
 }
 
 
