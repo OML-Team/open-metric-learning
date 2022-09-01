@@ -85,4 +85,4 @@ hydra:
   run:
     dir: ${hydra_dir}
   searchpath:
-    - file://../../configs
+   - pkg://oml.configs

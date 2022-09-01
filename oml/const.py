@@ -43,4 +43,31 @@ TNormParam = Tuple[float, float, float]
 MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
 
+# Required dataset format:
+LABELS_COLUMN = "label"
+PATHS_COLUMN = "path"
+SPLIT_COLUMN = "split"
+IS_QUERY_COLUMN = "is_query"
+IS_GALLERY_COLUMN = "is_gallery"
+CATEGORIES_COLUMN = "category"
+X1_COLUMN = "x_1"
+X2_COLUMN = "x_2"
+Y1_COLUMN = "y_1"
+Y2_COLUMN = "y_2"
+
+OBLIGATORY_COLUMNS = [LABELS_COLUMN, PATHS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
+BBOXES_COLUMNS = [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]
+
+# Keys for interactions among our classes (datasets, metrics and so on)
 OVERALL_CATEGORIES_KEY = "OVERALL"
+INPUT_TENSORS_KEY = "input_tensors"
+LABELS_KEY = "labels"
+IS_QUERY_KEY = "is_query"
+IS_GALLERY_KEY = "is_gallery"
+EMBEDDINGS_KEY = "embeddings"
+CATEGORIES_KEY = "categories"
+PATHS_KEY = "paths"
+X1_KEY = "x1"
+X2_KEY = "x2"
+Y1_KEY = "y1"
+Y2_KEY = "y2"

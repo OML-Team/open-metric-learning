@@ -6,7 +6,14 @@ import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY
+from oml.const import (
+    EMBEDDINGS_KEY,
+    INPUT_TENSORS_KEY,
+    IS_GALLERY_KEY,
+    IS_QUERY_KEY,
+    LABELS_KEY,
+    OVERALL_CATEGORIES_KEY,
+)
 from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
 from tests.test_integrations.utils import IdealClusterEncoder
@@ -53,10 +60,10 @@ class DummyQGDataset(IDatasetQueryGallery):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         return {
-            "labels": self.labels[idx],
-            "input_tensors": self.input_tensors[idx],
-            "is_query": self.query_mask[idx],
-            "is_gallery": self.gallery_mask[idx],
+            LABELS_KEY: self.labels[idx],
+            INPUT_TENSORS_KEY: self.input_tensors[idx],
+            IS_QUERY_KEY: self.query_mask[idx],
+            IS_GALLERY_KEY: self.gallery_mask[idx],
         }
 
     def __len__(self) -> int:
@@ -87,8 +94,8 @@ def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, 
     model = IdealClusterEncoder()
 
     for batch in loader:
-        output = model(batch["input_tensors"])
-        batch["embeddings"] = output
+        output = model(batch[INPUT_TENSORS_KEY])
+        batch[EMBEDDINGS_KEY] = output
         calc.update_data(data_dict=batch)
 
     metrics = calc.compute_metrics()
