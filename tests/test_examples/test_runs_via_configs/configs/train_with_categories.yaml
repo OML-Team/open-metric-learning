@@ -34,7 +34,7 @@ criterion:
 
 defaults:
   - optimizer: adam
-  - sampler: sequential_category_balance
+  - sampler: category_balance
 
 model:
   name: vit

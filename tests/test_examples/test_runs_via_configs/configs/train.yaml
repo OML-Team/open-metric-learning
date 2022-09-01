@@ -34,7 +34,7 @@ criterion:
 
 defaults:
   - optimizer: sgd
-  - sampler: sequential_balance
+  - sampler: balance
 
 model:
   name: vit
