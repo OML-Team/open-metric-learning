@@ -3,17 +3,16 @@ from pprint import pprint
 from typing import Any, Dict, Tuple
 
 import pytorch_lightning as pl
-from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.entrypoints.parser import parse_runtime_params_from_config
+from oml.lightning.entrypoints.parser import parse_engine_params_from_config
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
-from oml.registry.transforms import get_transforms, get_transforms_by_cfg
+from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -26,7 +25,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    trainer_engine_params = parse_runtime_params_from_config(cfg)
+    trainer_engine_params = parse_engine_params_from_config(cfg)
 
     pprint(cfg)
 

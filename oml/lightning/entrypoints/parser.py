@@ -7,17 +7,17 @@ from oml.const import TCfg
 from oml.utils.misc import dictconfig_to_dict
 
 
-def parse_runtime_params_from_config(cfg: TCfg) -> Dict[str, Any]:
+def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     """
-    Function parses cfg and based on it prepares DDP parameters for PytorchLightning Trainer module.
+    The function parses config and based on it prepares DDP parameters for PytorchLightning Trainer module.
     There are two parameters 'accelerator' and 'devices' you can configure. If one of the parameters or both of them
     are not specified, the best option based on your hardware will be automatically prepared for you.
-    Posible options for 'accelerator' are 'cpu' and 'gpu'.
-    You can select specific gpus using list 'devices=[0, 2]' or specify the number of gpus by `devices=3`.
-    Experiment might be launched in DDP with 'cpu' accelerator. In this case, 'devices' (integer value or len of list)
-    interpreted as number of processes.
+    Possible options for 'accelerator' are 'cpu' and 'gpu'.
+    You can select specific GPUs using the list 'devices=[0, 2]' or specify the number of GPUs by `devices=3`.
+    An experiment might be launched in DDP with the 'cpu' accelerator. In this case, 'devices' (integer value or
+    length of list) interpreted as a number of processes.
 
-    TODO: now DDP works in wrong way. We temporarily force to specify 'devices=1'
+    TODO: now DDP works in the wrong way. We temporarily force to specify 'devices=1'
     """
     cfg = dictconfig_to_dict(cfg)
 
@@ -38,8 +38,7 @@ def parse_runtime_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     else:
         strategy = None
 
-    # TODO: we will remove it after merging PR with proper DDP
-    if not (strategy is None):
+    if strategy:
         raise RuntimeError("Now DDP works in wrong way. Please, specifiy explicitly 'devices=1' in your config")
 
     return {

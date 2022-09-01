@@ -18,7 +18,7 @@ from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.entrypoints.parser import parse_runtime_params_from_config
+from oml.lightning.entrypoints.parser import parse_engine_params_from_config
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
@@ -44,7 +44,7 @@ def pl_train(cfg: TCfg) -> None:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    trainer_engine_params = parse_runtime_params_from_config(cfg)
+    trainer_engine_params = parse_engine_params_from_config(cfg)
 
     pprint(cfg)
 
@@ -111,7 +111,6 @@ def pl_train(cfg: TCfg) -> None:
     if sampler is None:
         loader_train = DataLoader(
             dataset=train_dataset,
-            sampler=sampler,
             num_workers=cfg["num_workers"],
             batch_size=cfg["bs_train"],
             drop_last=True,
