@@ -1,3 +1,6 @@
+accelerator: gpu
+devices: 1
+
 dataset_root: data/DeepFashion_InShop/
 dataframe_name: df_fixed_val.csv
 

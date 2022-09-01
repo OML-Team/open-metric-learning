@@ -1,4 +1,5 @@
 from pathlib import Path
+from pprint import pprint
 from typing import Any, Dict, Tuple
 
 import pytorch_lightning as pl
@@ -8,6 +9,7 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning.entrypoints.utils import parse_runtime_params_from_config
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
@@ -24,7 +26,9 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    print(cfg)
+    trainer_engine_params = parse_runtime_params_from_config(cfg)
+
+    pprint(cfg)
 
     _, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
@@ -55,14 +59,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     )
     clb_metric = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
 
-    trainer = pl.Trainer(
-        gpus=cfg["gpus"],
-        num_nodes=1,
-        strategy=DDPPlugin(find_unused_parameters=False) if cfg["gpus"] else None,
-        replace_sampler_ddp=False,
-        callbacks=[clb_metric],
-        precision=cfg.get("precision", 32),
-    )
+    trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)
 
     logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
 

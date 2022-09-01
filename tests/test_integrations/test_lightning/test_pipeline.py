@@ -21,7 +21,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossPlain, TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.metrics.triplets import AccuracyOnTriplets
-from oml.samplers.balance import SequentialBalanceSampler
+from oml.samplers.balance import BalanceSampler
 
 
 class DummyTripletDataset(Dataset):
@@ -106,12 +106,11 @@ def create_retrieval_dataloader(
 
     dataset = DummyRetrievalDataset(labels=labels, im_size=im_size)
 
-    sampler_retrieval = SequentialBalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
+    sampler_retrieval = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
     train_retrieval_loader = DataLoader(
         dataset=dataset,
-        sampler=sampler_retrieval,
+        batch_sampler=sampler_retrieval,
         num_workers=num_workers,
-        batch_size=sampler_retrieval.batch_size,
     )
     return train_retrieval_loader
 
