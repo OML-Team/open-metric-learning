@@ -16,8 +16,6 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     You can select specific GPUs using the list 'devices=[0, 2]' or specify the number of GPUs by `devices=3`.
     An experiment might be launched in DDP with the 'cpu' accelerator. In this case, 'devices' (integer value or
     length of list) interpreted as a number of processes.
-
-    TODO: now DDP works in the wrong way. We temporarily force to specify 'devices=1'
     """
     cfg = dictconfig_to_dict(cfg)
 
@@ -38,9 +36,6 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     else:
         strategy = None
 
-    if strategy:
-        raise RuntimeError("Now DDP works in wrong way. Please, specifiy explicitly 'devices=1' in your config")
-
     return {
         "devices": devices,
         "strategy": strategy,
@@ -48,3 +43,9 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
         "gpus": None,
         "replace_sampler_ddp": False,
     }
+
+
+def raise_error_if_ddp(cfg: TCfg) -> None:
+    # TODO: now DDP works in the wrong way. We temporarily force to specify 'devices=1'
+    if cfg["strategy"]:
+        raise RuntimeError("Now DDP works in wrong way. Please, specifiy explicitly 'devices=1' in your config")

@@ -8,7 +8,10 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.entrypoints.parser import parse_engine_params_from_config
+from oml.lightning.entrypoints.parser import (
+    parse_engine_params_from_config,
+    raise_error_if_ddp,
+)
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
@@ -26,6 +29,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
     cfg = dictconfig_to_dict(cfg)
     trainer_engine_params = parse_engine_params_from_config(cfg)
+    raise_error_if_ddp(trainer_engine_params)
 
     pprint(cfg)
 
