@@ -1,7 +1,8 @@
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 import albumentations as albu
 import cv2
+import numpy as np
 from albumentations.pytorch import ToTensorV2
 
 from oml.const import MEAN, PAD_COLOR, STD, TNormParam
@@ -67,6 +68,24 @@ def get_noise_channels() -> TTransformsList:
     return channels_noise_augs
 
 
+class Crop:
+    def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
+        x1, y1, x2, y2 = kwargs["crop"]
+        return {"image": image[x1:x2, y1:y2, :]}  # type: ignore
+
+
+class RandomSizedBBoxSafeCropPatched:
+    def __init__(self, size: int, erosion_rate: float = 0.0):
+        self.transform = albu.Compose(
+            [albu.RandomSizedBBoxSafeCrop(width=size, height=size, erosion_rate=erosion_rate)],
+            bbox_params=albu.BboxParams(format="pascal_voc", label_fields=["category_ids"]),
+        )
+
+    def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
+        output = self.transform(image=image, bboxes=[kwargs["crop"]], category_ids=[1])
+        return {"image": output["image"]}
+
+
 def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
     """
     Note, that OneOf consider probs of augmentations
@@ -76,10 +95,11 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
     probabilities will be normalized to one 1, so in
     this case transforms probabilities works as weights.
     """
+
     augs = albu.Compose(
         [
-            albu.LongestMaxSize(max_size=im_size),
-            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+            # albu.Compose([Crop(), albu.Resize(height=im_size, width=im_size)]),
+            RandomSizedBBoxSafeCropPatched(im_size),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
@@ -88,7 +108,7 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
             albu.OneOf(get_noises(), p=0.25),
             albu.Normalize(mean=mean, std=std),
             ToTensorV2(),
-        ]
+        ],
     )
     return augs
 

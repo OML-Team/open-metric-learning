@@ -121,13 +121,12 @@ class BaseDataset(Dataset):
         if (not self.bboxes_exist) or any(
             pd.isna(coord) for coord in [row[X1_COLUMN], row[X2_COLUMN], row[Y1_COLUMN], row[Y2_COLUMN]]
         ):
-            x1, y1, x2, y2 = 0, 0, im_w, im_h
+            x1, y1, x2, y2 = 0, 0, im_w - 1, im_h - 1
         else:
             x1, y1, x2, y2 = int(row[X1_COLUMN]), int(row[Y1_COLUMN]), int(row[X2_COLUMN]), int(row[Y2_COLUMN])
 
         if isinstance(self.transform, albu.Compose):
-            img = img[y1:y2, x1:x2, :]  # todo: since albu may handle bboxes we should move it to augs
-            image_tensor = self.transform(image=img)["image"]
+            image_tensor = self.transform(image=img, crop=[x1, y1, x2, y2])["image"]
         else:
             # torchvision.transforms
             img = img.crop((x1, y1, x2, y2))
