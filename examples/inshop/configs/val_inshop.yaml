@@ -1,5 +1,8 @@
-dataset_root: /nydl/data/DeepFashion_InShop/
-dataframe_name: df_wo_boxes.csv
+accelerator: gpu
+devices: 1
+
+dataset_root: data/DeepFashion_InShop/
+dataframe_name: df_fixed_val.csv
 
 logs_root: logs/DeepFashion_InShop/
 
@@ -7,14 +10,17 @@ bs_val: 128
 num_workers: 20
 
 transforms_val:
-  name: arcface_test_torch
+  name: norm_resize_albu
   args:
     im_size: 224
 
 model:
-  name: arcface
+  name: vit
   args:
-    embedding_size: 128
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_inshop
 
 
 metric_args:
@@ -24,8 +30,10 @@ metric_args:
 
 log_only_main_category: True
 
-gpus: [0]
+gpus:
+  - 0
+  - 1
 
 hydra:
   searchpath:
-    - file://../../configs
+   - pkg://oml.configs
