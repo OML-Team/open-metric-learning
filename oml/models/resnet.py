@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 
 import numpy as np
 import torch
@@ -156,7 +156,7 @@ class ResNetWithLinearExtractor(ResnetExtractor):
         super().__init__(weights, arch, normalise_features, gem_p, remove_fc, strict_load)
         self.linear = nn.Linear(super().feat_dim, feature_size)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(super().forward(x))
 
     @property
@@ -165,8 +165,8 @@ class ResNetWithLinearExtractor(ResnetExtractor):
 
 
 class ResNet50(nn.Module):
-    def __init__(self):
-        super(ResNet50, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
         pretrained = resnet50(pretrained=True)
 
         for module_name in [
@@ -182,7 +182,7 @@ class ResNet50(nn.Module):
         ]:
             self.add_module(module_name, getattr(pretrained, module_name))
 
-    def forward(self, x, get_ha=False):
+    def forward(self, x: torch.Tensor, get_ha: bool = False) -> Union[torch.Tensor, Iterable[torch.Tensor]]:
         x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
         b1 = self.layer1(x)
         b2 = self.layer2(b1)
@@ -197,12 +197,12 @@ class ResNet50(nn.Module):
 
 
 class LinearEmbedding(IExtractor):
-    def __init__(self, embedding_size=128):
+    def __init__(self, embedding_size: int = 128):
         super(LinearEmbedding, self).__init__()
         self.base = ResNet50()
         self.linear = nn.Linear(2048, embedding_size)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.base(x)
         x = x.view(x.size(0), -1)
         x = self.linear(x)
@@ -228,41 +228,6 @@ def load_moco_model(path_to_model: Path) -> nn.Module:
     Returns:
         Model
 
-    """
-    checkpoint = torch.load(path_to_model, map_location="cpu")
-
-    state_dict = checkpoint["state_dict"]
-    for k in list(state_dict.keys()):
-        # retain only encoder_q up to before the embedding layer
-        if k.startswith("module.encoder_q"):
-            state_dict[k[len("module.encoder_q.") :]] = state_dict[k]
-        del state_dict[k]
-
-    model = resnet50(num_classes=128)  # output size in moco v2
-
-    if "fc.2.weight" in state_dict.keys():
-        print("MOCO V2 architecture was detected!")
-        model.fc = nn.Sequential(
-            nn.Linear(model.fc.weight.shape[1], model.fc.weight.shape[1]),
-            nn.ReLU(),
-            model.fc,
-        )
-    else:
-        print("MOCO V1 architecture will be used")
-
-    model.load_state_dict(state_dict)
-
-    return model
-
-
-def load_moco_model(path_to_model: Path) -> nn.Module:
-    """
-    Args:
-        path_to_model: Path to model trained using original
-           code from MoCo repository:
-           https://github.com/facebookresearch/moco
-    Returns:
-        Model
     """
     checkpoint = torch.load(path_to_model, map_location="cpu")
 
