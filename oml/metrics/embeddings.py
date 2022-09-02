@@ -10,7 +10,7 @@ from oml.functional.metrics import (
     calc_mask_to_ignore,
     calc_retrieval_metrics,
 )
-from oml.interfaces.metrics import IBasicMetric
+from oml.interfaces.metrics import IBasicMetric, IBasicMetricDDP
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 
@@ -155,4 +155,9 @@ class EmbeddingMetrics(IBasicMetric):
         return metrics
 
 
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]
+class EmbeddingMetricsDDP(EmbeddingMetrics, IBasicMetricDDP):
+    def sync(self) -> None:
+        self.acc = self.acc.sync()
+
+
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "EmbeddingMetricsDDP"]

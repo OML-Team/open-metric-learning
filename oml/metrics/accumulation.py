@@ -2,6 +2,10 @@ from typing import Any, Dict, List, Sequence, Union
 
 import numpy as np
 import torch
+from torch.cuda import is_initialized
+from torch.distributed import get_world_size
+
+from oml.utils.ddp import sync_dicts_ddp
 
 TStorage = Dict[str, Union[torch.Tensor, np.ndarray, List[Any]]]
 
@@ -98,6 +102,28 @@ class Accumulator:
 
     def is_storage_full(self) -> bool:
         return self.num_samples == self.collected_samples
+
+    def sync(self) -> "Accumulator":
+        if not self.is_storage_full():
+            raise ValueError("Only full storages could be synced")
+
+        if not is_initialized():
+            return self
+        else:
+            world_size = get_world_size()
+            if world_size == 1:
+                return self
+            else:
+                params = {"num_samples": [self.num_samples], "keys_to_accumulate": self.keys_to_accumulate}
+
+                gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
+                gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
+
+                synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
+                synced_accum.refresh(sum(gathered_params["num_samples"]))
+                synced_accum.update_data(gathered_storage)
+
+                return synced_accum
 
 
 __all__ = ["TStorage", "Accumulator"]
