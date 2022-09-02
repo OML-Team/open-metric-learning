@@ -73,6 +73,8 @@ class BalanceSampler(IBatchSampler):
         labels = np.array(labels)
         self.lbl2idx = {label: np.arange(len(labels))[labels == label].tolist() for label in set(labels)}
 
+        self._batches_in_epoch = int(np.ceil(self._labels_per_epoch / self._n_labels))
+
     @property
     def batch_size(self) -> int:
         """
@@ -89,7 +91,7 @@ class BalanceSampler(IBatchSampler):
             Number of batches in an epoch
 
         """
-        return int(np.ceil(self._labels_per_epoch / self._n_labels))
+        return self._batches_in_epoch
 
     def __len__(self) -> int:
         return self.batches_in_epoch
