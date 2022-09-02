@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from pprint import pprint
 
 import albumentations as albu
 import pytorch_lightning as pl
@@ -43,7 +44,7 @@ def pl_train(cfg: TCfg) -> None:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    print(cfg)
+    pprint(cfg)
 
     set_global_seed(cfg["seed"], cfg["num_workers"])
 
@@ -59,6 +60,8 @@ def pl_train(cfg: TCfg) -> None:
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
         verbose=cfg.get("show_dataset_warnings", True),
+        map_categories=cfg.get("map_categories", False),
+        map_labels=cfg.get("map_labels", False),
     )
 
     if isinstance(transforms_train, albu.Compose):

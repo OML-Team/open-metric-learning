@@ -1,14 +1,20 @@
 from typing import Any, Dict
 
 from oml.interfaces.models import IExtractor
-from oml.models.resnet import LinearEmbedding, ResnetExtractor
-from oml.models.vit.vit import ViTExtractor
+from oml.models.resnet import (
+    LinearEmbedding,
+    ResnetExtractor,
+    ResNetWithLinearExtractor,
+)
+from oml.models.vit.vit import ViTExtractor, ViTWithLinearExtractor
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 MODELS_REGISTRY = {
     "resnet": ResnetExtractor,
     "arcface": LinearEmbedding,
+    "better_arcface": ResNetWithLinearExtractor,
     "vit": ViTExtractor,
+    "vit_with_projection": ViTWithLinearExtractor,
 }
 
 

@@ -11,7 +11,7 @@ logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 100000
+cache_size: 0
 
 transforms_train:
   name: arcface_train_torch
@@ -36,11 +36,27 @@ metric_args:
 
 log_only_main_category: True
 
-model:
-  name: arcface
-  args:
-    embedding_size: 128
+# model:
+#   name: better_arcface
+#   args:
+#     arch: resnet50
+#     weights: imagenet_v1
+#     feature_size: 256
+#     remove_fc: True
+#     gem_p: 2
+#     normalise_features: False
 
+model:
+  name: vit_with_projection
+  args:
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
+    feature_size: 128
+
+map_labels: True
+# map_categories: True
 criterion:
   name: arcface
   args:
@@ -76,6 +92,7 @@ tags:
   - deepfashion
   - arcface_fix2
   - classification_only
+  - label_smoothing
 
 hydra:
   run:

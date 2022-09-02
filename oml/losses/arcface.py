@@ -34,6 +34,7 @@ class ArcFaceLoss(ICriterion):
         self.label2category = {} if label_smoothing is None else torch.arange(num_classes).apply_(label2category.get)
         self.label_smoothing = label_smoothing
         self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
+        nn.init.xavier_uniform_(self.weight)
         self.rescale = s
         self.m = m
         self.cos_m = np.cos(m)
@@ -55,7 +56,6 @@ class ArcFaceLoss(ICriterion):
         logit = torch.where(ohe.bool(), cos_w_margin, cos) * self.rescale
 
         if self.label_smoothing:
-            raise NotImplementedError("Have to be checked!!")
             if self.label2category.device.type != self.weight.device.type:
                 self.label2category = self.label2category.to(self.weight.device)
             ohe = ohe.float()

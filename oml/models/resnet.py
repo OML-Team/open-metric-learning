@@ -87,6 +87,9 @@ class ResnetExtractor(IExtractor):
         elif isinstance(weights, str) and weights.lower() == "default":
             state_dict = factory_fun(weights="DEFAULT").state_dict()
 
+        elif isinstance(weights, str) and weights.lower() == "imagenet_v1":
+            state_dict = factory_fun(weights="IMAGENET1K_V1").state_dict()
+
         elif weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
             path_to_ckpt = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
@@ -139,32 +142,32 @@ class ResnetExtractor(IExtractor):
         return img_with_grads
 
 
-# class ResNetWithLinearExtractor(ResnetExtractor):
-#     def __init__(
-#         self,
-#         weights: Optional[Union[Path, str]],
-#         arch: str,
-#         normalise_features: bool,
-#         gem_p: Optional[float],
-#         remove_fc: bool,
-#         feature_size: int = 128,
-#         strict_load: bool = True
-#     ):
-#         super().__init__(weights, arch, normalise_features, gem_p, remove_fc, strict_load)
-#         self.linear = nn.Linear(super().feat_dim, feature_size)
+class ResNetWithLinearExtractor(ResnetExtractor):
+    def __init__(
+        self,
+        weights: Optional[Union[Path, str]],
+        arch: str,
+        normalise_features: bool,
+        gem_p: Optional[float],
+        remove_fc: bool,
+        feature_size: int = 128,
+        strict_load: bool = True,
+    ):
+        super().__init__(weights, arch, normalise_features, gem_p, remove_fc, strict_load)
+        self.linear = nn.Linear(super().feat_dim, feature_size)
 
-#     def forward(self, x):
-#         return self.linear(super().forward(x))
+    def forward(self, x):
+        return self.linear(super().forward(x))
 
-#     @property
-#     def feat_dim(self) -> int:
-#         return self.linear.out_features
+    @property
+    def feat_dim(self) -> int:
+        return self.linear.out_features
 
 
 class ResNet50(nn.Module):
     def __init__(self):
         super(ResNet50, self).__init__()
-        pretrained = resnet50(weights="DEFAULT")
+        pretrained = resnet50(pretrained=True)
 
         for module_name in [
             "conv1",
