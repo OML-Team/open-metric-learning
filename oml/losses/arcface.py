@@ -1,10 +1,11 @@
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torchvision.ops import MLP
 
 from oml.interfaces.criterions import ICriterion
 
@@ -64,3 +65,22 @@ class ArcFaceLoss(ICriterion):
             y = torch.where(mask_l2c, self.label_smoothing / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
 
         return self.criterion(logit, y)
+
+
+class ArcFaceLossWithMLP(ArcFaceLoss):
+    def __init__(
+        self,
+        in_features: int,
+        num_classes: int,
+        mlp_features: List[int],
+        criterion: Optional[nn.Module] = None,
+        label2category: Optional[Dict[str, Any]] = None,
+        label_smoothing: Optional[float] = None,
+        m: float = 0.5,
+        s: float = 64,
+    ):
+        super().__init__(mlp_features[-1], num_classes, criterion, label2category, label_smoothing, m, s)
+        self.mlp = MLP(in_features, mlp_features)
+
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return super().forward(self.mlp(x), y)
