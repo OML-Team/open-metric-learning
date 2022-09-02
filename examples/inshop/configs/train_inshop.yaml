@@ -37,7 +37,7 @@ metric_args:
 log_only_main_category: True
 
 # model:
-#   name: better_arcface
+#   name: resnet_with_projection
 #   args:
 #     arch: resnet50
 #     weights: imagenet_v1

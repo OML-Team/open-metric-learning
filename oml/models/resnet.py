@@ -147,9 +147,9 @@ class ResNetWithLinearExtractor(ResnetExtractor):
         self,
         weights: Optional[Union[Path, str]],
         arch: str,
-        normalise_features: bool,
-        gem_p: Optional[float],
-        remove_fc: bool,
+        normalise_features: bool = False,
+        gem_p: Optional[float] = None,
+        remove_fc: bool = True,
         feature_size: int = 128,
         strict_load: bool = True,
     ):
@@ -158,60 +158,6 @@ class ResNetWithLinearExtractor(ResnetExtractor):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(super().forward(x))
-
-    @property
-    def feat_dim(self) -> int:
-        return self.linear.out_features
-
-
-class ResNet50(nn.Module):
-    def __init__(self) -> None:
-        super().__init__()
-        pretrained = resnet50(pretrained=True)
-
-        for module_name in [
-            "conv1",
-            "bn1",
-            "relu",
-            "maxpool",
-            "layer1",
-            "layer2",
-            "layer3",
-            "layer4",
-            "avgpool",
-        ]:
-            self.add_module(module_name, getattr(pretrained, module_name))
-
-    def forward(self, x: torch.Tensor, get_ha: bool = False) -> Union[torch.Tensor, Iterable[torch.Tensor]]:
-        x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
-        b1 = self.layer1(x)
-        b2 = self.layer2(b1)
-        b3 = self.layer3(b2)
-        b4 = self.layer4(b3)
-        pool = self.avgpool(b4)
-
-        if get_ha:
-            return b1, b2, b3, b4, pool
-
-        return pool
-
-
-class LinearEmbedding(IExtractor):
-    def __init__(self, embedding_size: int = 128):
-        super(LinearEmbedding, self).__init__()
-        self.base = ResNet50()
-        self.linear = nn.Linear(2048, embedding_size)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.base(x)
-        x = x.view(x.size(0), -1)
-        x = self.linear(x)
-
-        if self.training:
-            return x
-
-        x = F.normalize(x, dim=1, p=2)
-        return x
 
     @property
     def feat_dim(self) -> int:
