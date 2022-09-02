@@ -1,3 +1,6 @@
+accelerator: gpu
+devices: 1
+
 dataset_root: data/CARS196/
 dataframe_name: df.csv
 
