@@ -3,7 +3,7 @@ postfix: metric_learning
 seed: 42
 precision: 32
 accelerator: gpu
-devices: 1
+devices: [1]
 
 dataframe_name: df_fixed_train_fixed_val.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
@@ -14,7 +14,7 @@ num_workers: 20
 cache_size: 100000
 
 transforms_train:
-  name: augs_albu
+  name: inshop_augs_albu
   args:
     im_size: 224
 

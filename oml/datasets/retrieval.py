@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from oml.const import (
     CATEGORIES_COLUMN,
     CATEGORIES_KEY,
+    CROP_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
     IS_GALLERY_KEY,
@@ -126,7 +127,7 @@ class BaseDataset(Dataset):
             x1, y1, x2, y2 = int(row[X1_COLUMN]), int(row[Y1_COLUMN]), int(row[X2_COLUMN]), int(row[Y2_COLUMN])
 
         if isinstance(self.transform, albu.Compose):
-            image_tensor = self.transform(image=img, crop=[x1, y1, x2, y2])["image"]
+            image_tensor = self.transform(image=img, **{CROP_KEY: [x1, y1, x2, y2]})["image"]
         else:
             # torchvision.transforms
             img = img.crop((x1, y1, x2, y2))

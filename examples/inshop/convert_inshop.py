@@ -84,7 +84,7 @@ def txt_to_df(fpath: Path) -> pd.DataFrame:
 
 
 def build_inshop_df(
-    dataset_root: Path, bboxes_aspect_ratio_to_fix: float, fix_train_bboxes: bool, fix_val_bboxes: bool
+    dataset_root: Path, bboxes_aspect_ratio_to_fix: float, fix_train_bboxes: bool, fix_val_bboxes: bool, no_bboxes: bool
 ) -> pd.DataFrame:
     dataset_root = Path(dataset_root)
 
@@ -130,21 +130,26 @@ def build_inshop_df(
 
     df["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
-    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2", "category"]]
+    cols_to_pick = ["label", "path", "split", "is_query", "is_gallery"]
+    need_bboxes = not no_bboxes
+    if need_bboxes:
+        cols_to_pick.extend(["x_1", "x_2", "y_1", "y_2"])
+    df = df[cols_to_pick]
 
     # check stat
     assert df["path"].nunique() == len(df) == 52712
     assert df["label"].nunique() == 7982
     assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
 
-    # rm bad bboxes
-    thr_bbox_size = 10
-    mask_bad_bboxes = df.apply(
-        lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
-    )
-    df = df[~mask_bad_bboxes]
-    df.reset_index(drop=True, inplace=True)
-    print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
+    if need_bboxes:
+        # rm bad bboxes
+        thr_bbox_size = 10
+        mask_bad_bboxes = df.apply(
+            lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
+        )
+        df = df[~mask_bad_bboxes]
+        df.reset_index(drop=True, inplace=True)
+        print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
 
     # rm bad labels
     mask_non_single_images = df.groupby("label").label.transform("count") > 1
@@ -175,6 +180,7 @@ def build_inshop_df(
 def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("--dataset_root", type=Path)
+    parser.add_argument("--no_bboxes", action="store_true")
     parser.add_argument("--fix_train_bboxes", action="store_true")
     parser.add_argument("--fix_val_bboxes", action="store_true")
     parser.add_argument("--bboxes_aspect_ratio_to_fix", type=float, default=2.5)
@@ -184,20 +190,30 @@ def get_argparser() -> ArgumentParser:
 def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
+
+    if args.no_bboxes:
+        assert (not args.fix_train_bboxes) and (not args.fix_val_bboxes)
+
+    if args.fix_train_bboxes or args.fix_val_bboxes:
+        assert not args.no_bboxes
+
     df = build_inshop_df(
         dataset_root=args.dataset_root,
         bboxes_aspect_ratio_to_fix=args.bboxes_aspect_ratio_to_fix,
         fix_train_bboxes=args.fix_train_bboxes,
         fix_val_bboxes=args.fix_val_bboxes,
+        no_bboxes=args.no_bboxes,
     )
 
-    save_name = "df"
+    fname = "df"
     if args.fix_train_bboxes:
-        save_name += "_fixed_train"
+        fname += "_fixed_train"
     if args.fix_val_bboxes:
-        save_name += "_fixed_val"
+        fname += "_fixed_val"
+    if args.no_bboxes:
+        fname += "_no_bboxes"
 
-    df.to_csv(args.dataset_root / f"{save_name}.csv", index=None)
+    df.to_csv(args.dataset_root / f"{fname}.csv", index=None)
 
     print("DeepFashion Inshop dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")

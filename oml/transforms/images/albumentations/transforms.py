@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from albumentations.pytorch import ToTensorV2
 
-from oml.const import MEAN, PAD_COLOR, STD, TNormParam
+from oml.const import CROP_KEY, MEAN, PAD_COLOR, STD, TNormParam
 
 TTransformsList = List[Union[albu.ImageOnlyTransform, albu.DualTransform]]
 
@@ -69,46 +69,45 @@ def get_noise_channels() -> TTransformsList:
 
 
 class Crop:
+    def __init__(self, crop_key: str = CROP_KEY):
+        self.crop_key = crop_key
+
     def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
-        x1, y1, x2, y2 = kwargs["crop"]
+        x1, y1, x2, y2 = kwargs[self.crop_key]
         return {"image": image[y1:y2, x1:x2, :]}  # type: ignore
 
     def _to_dict(self) -> Dict[str, Any]:
-        return {"crop": "crop"}
+        return {"crop_key": self.crop_key}
 
 
 class RandomSizedBBoxSafeCropPatched:
-    def __init__(self, size: int, erosion_rate: float = 0.0):
+    """
+    The only difference is from using the original albu.RandomSizedBBoxSafeCrop is that
+    we do not pass any box information after cropping which allows us to avoid limitations
+    in using further augmentations.
+    """
+
+    def __init__(self, size: int, erosion_rate: float, crop_key: str = CROP_KEY):
+        self.crop_key = crop_key
         self.transform = albu.Compose(
             [albu.RandomSizedBBoxSafeCrop(width=size, height=size, erosion_rate=erosion_rate)],
             bbox_params=albu.BboxParams(format="pascal_voc", label_fields=["category_ids"]),
         )
 
     def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
-        output = self.transform(image=image, bboxes=[kwargs["crop"]], category_ids=[1])
+        output = self.transform(image=image, bboxes=[kwargs[self.crop_key]], category_ids=[1])
         return {"image": output["image"]}
+
+    def _to_dict(self) -> Dict[str, Any]:
+        return {**self.transform._to_dict(), **{"crop_key": self.crop_key}}
 
 
 def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
-    """
-    Note, that OneOf consider probs of augmentations
-    in the list as their weights (from docs):
-    Select one of transforms to apply. Selected transform
-    will be called with force_apply=True. Transforms
-    probabilities will be normalized to one 1, so in
-    this case transforms probabilities works as weights.
-    """
-
     augs = albu.Compose(
         [
-            # RandomSizedBBoxSafeCropPatched(im_size),
-            albu.Compose(
-                [
-                    Crop(),
-                    albu.LongestMaxSize(max_size=im_size),
-                    albu.PadIfNeeded(im_size, im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
-                ]
-            ),
+            Crop(),
+            albu.LongestMaxSize(max_size=im_size),
+            albu.PadIfNeeded(im_size, im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
@@ -138,4 +137,14 @@ def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TN
     )
 
 
-__all__ = ["get_augs_albu", "get_normalisation_albu", "get_normalisation_resize_albu"]
+__all__ = [
+    "get_augs_albu",
+    "get_normalisation_albu",
+    "get_normalisation_resize_albu",
+    "get_spatials",
+    "get_blurs",
+    "get_colors_level",
+    "get_noise_channels",
+    "get_noises",
+    "RandomSizedBBoxSafeCropPatched",
+]

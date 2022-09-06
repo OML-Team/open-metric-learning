@@ -1,7 +1,6 @@
 import warnings
 from collections import defaultdict
 from pathlib import Path
-from pprint import pprint
 from typing import Optional, Union
 
 import numpy as np
@@ -101,7 +100,7 @@ def check_retrieval_dataframe_format(
                 "During the training and validation we will force it to be bijection by picking"
                 "one random category for each label."
             )
-            pprint(bad_categories)
+            print(bad_categories)
 
 
 __all__ = ["check_retrieval_dataframe_format"]
