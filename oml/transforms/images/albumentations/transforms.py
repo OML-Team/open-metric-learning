@@ -95,7 +95,8 @@ class RandomSizedBBoxSafeCropPatched:
         )
 
     def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
-        output = self.transform(image=image, bboxes=[kwargs[self.crop_key]], category_ids=[1])
+        x1, y1, x2, y2 = kwargs[self.crop_key]
+        output = self.transform(image=image, bboxes=[[x1, y1, x2, y2]], category_ids=[1])
         return {"image": output["image"]}
 
     def _to_dict(self) -> Dict[str, Any]:

@@ -96,11 +96,12 @@ def check_retrieval_dataframe_format(
 
         if bad_categories and verbose:
             warnings.warn(
-                "Note! You mapping between categories and labels is not bijection!"
-                "During the training and validation we will force it to be bijection by picking"
-                "one random category for each label."
+                f"Note! You mapping between categories and labels is not bijection!"
+                f"During the training and validation we will force it to be bijection by picking"
+                f"one random category for each label."
+                f"\n"
+                f"{bad_categories}"
             )
-            print(bad_categories)
 
 
 __all__ = ["check_retrieval_dataframe_format"]

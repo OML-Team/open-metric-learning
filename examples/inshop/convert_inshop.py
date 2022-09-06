@@ -29,29 +29,6 @@ def parse_file_row(row: pd.Series) -> List[str]:
     return list(filter(lambda x: x != "", row.replace("\n", "").split(" ")))
 
 
-def expand_squeezed_bboxes(df: pd.DataFrame, ratio_th: float, fix_train: bool, fix_val: bool) -> pd.DataFrame:
-    df["ar"] = (df["y_2"] - df["y_1"]) / (df["x_2"] - df["x_1"])
-
-    if fix_train and fix_val:
-        mask_bad = df["ar"] > ratio_th
-    elif fix_train and (not fix_val):
-        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "train")
-    elif (not fix_train) and fix_val:
-        mask_bad = (df["ar"] > ratio_th) & (df["split"] == "validation")
-    else:
-        return df
-
-    print(f"We will fix {mask_bad.sum()} bboxes")
-
-    df["x_center"] = ((df["x_1"] + df["x_2"]) // 2).astype(int)
-    df["half_h"] = (df["y_2"] - df["y_1"]).astype(int) // 2
-
-    df["x_1"][mask_bad] = np.clip(df["x_center"][mask_bad] - df["half_h"], a_min=0, a_max=100_000)
-    df["x_2"][mask_bad] = df["x_center"][mask_bad] + df["half_h"]
-
-    return df
-
-
 def convert_bbox(row: pd.Series) -> List[int]:
     bbox = int(row.x_1), int(row.y_1), int(row.x_2), int(row.y_2)
     img_hw = (row.h, row.w)
@@ -83,9 +60,7 @@ def txt_to_df(fpath: Path) -> pd.DataFrame:
     return df
 
 
-def build_inshop_df(
-    dataset_root: Path, bboxes_aspect_ratio_to_fix: float, fix_train_bboxes: bool, fix_val_bboxes: bool, no_bboxes: bool
-) -> pd.DataFrame:
+def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     dataset_root = Path(dataset_root)
 
     list_eval_partition = dataset_root / "list_eval_partition.txt"
@@ -124,13 +99,9 @@ def build_inshop_df(
     df["is_query"][df["split"] == "train"] = None
     df["is_gallery"][df["split"] == "train"] = None
 
-    df = expand_squeezed_bboxes(
-        df=df, ratio_th=bboxes_aspect_ratio_to_fix, fix_train=fix_train_bboxes, fix_val=fix_val_bboxes
-    )
-
     df["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
-    cols_to_pick = ["label", "path", "split", "is_query", "is_gallery"]
+    cols_to_pick = ["label", "path", "split", "is_query", "is_gallery", "category"]
     need_bboxes = not no_bboxes
     if need_bboxes:
         cols_to_pick.extend(["x_1", "x_2", "y_1", "y_2"])
@@ -181,9 +152,6 @@ def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("--dataset_root", type=Path)
     parser.add_argument("--no_bboxes", action="store_true")
-    parser.add_argument("--fix_train_bboxes", action="store_true")
-    parser.add_argument("--fix_val_bboxes", action="store_true")
-    parser.add_argument("--bboxes_aspect_ratio_to_fix", type=float, default=2.5)
     return parser
 
 
@@ -191,28 +159,12 @@ def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
 
-    if args.no_bboxes:
-        assert (not args.fix_train_bboxes) and (not args.fix_val_bboxes)
-
-    if args.fix_train_bboxes or args.fix_val_bboxes:
-        assert not args.no_bboxes
-
     df = build_inshop_df(
         dataset_root=args.dataset_root,
-        bboxes_aspect_ratio_to_fix=args.bboxes_aspect_ratio_to_fix,
-        fix_train_bboxes=args.fix_train_bboxes,
-        fix_val_bboxes=args.fix_val_bboxes,
         no_bboxes=args.no_bboxes,
     )
 
-    fname = "df"
-    if args.fix_train_bboxes:
-        fname += "_fixed_train"
-    if args.fix_val_bboxes:
-        fname += "_fixed_val"
-    if args.no_bboxes:
-        fname += "_no_bboxes"
-
+    fname = "df_no_bboxes" if args.no_bboxes else "df"
     df.to_csv(args.dataset_root / f"{fname}.csv", index=None)
 
     print("DeepFashion Inshop dataset preparation completed.")

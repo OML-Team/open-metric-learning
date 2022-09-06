@@ -3,9 +3,9 @@ postfix: metric_learning
 seed: 42
 precision: 32
 accelerator: gpu
-devices: [1]
+devices: [0]
 
-dataframe_name: df_fixed_train_fixed_val.csv
+dataframe_name: df_no_bboxes.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
@@ -14,7 +14,7 @@ num_workers: 20
 cache_size: 100000
 
 transforms_train:
-  name: inshop_augs_albu
+  name: augs_albu
   args:
     im_size: 224
 
@@ -80,6 +80,7 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
+  - no_bboxes
 
 hydra:
   run:
