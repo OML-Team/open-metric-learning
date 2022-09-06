@@ -71,7 +71,7 @@ def get_noise_channels() -> TTransformsList:
 class Crop:
     def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
         x1, y1, x2, y2 = kwargs["crop"]
-        return {"image": image[x1:x2, y1:y2, :]}  # type: ignore
+        return {"image": image[y1:y2, x1:x2, :]}  # type: ignore
 
     def _to_dict(self) -> Dict[str, Any]:
         return {"crop": "crop"}
@@ -129,6 +129,7 @@ def get_normalisation_albu(mean: TNormParam = MEAN, std: TNormParam = STD) -> al
 def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
     return albu.Compose(
         [
+            Crop(),
             albu.LongestMaxSize(max_size=im_size),
             albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
             albu.Normalize(mean=mean, std=std),
