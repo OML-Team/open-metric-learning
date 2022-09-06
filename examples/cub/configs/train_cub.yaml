@@ -2,8 +2,8 @@ postfix: metric_learning
 
 seed: 42
 precision: 32
-gpus:
-  - 0
+accelerator: gpu
+devices: 1
 
 dataframe_name: df.csv
 dataset_root: data/CUB_200_2011/
@@ -24,7 +24,7 @@ transforms_val:
     im_size: 224
 
 sampler:
-  name: sequential_balance
+  name: balance
   args:
     n_labels: 8
     n_instances: 4
@@ -62,7 +62,7 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 1e-5  # if you provide scheduler this parameter will be ignored
+    lr: 2e-5  # if you provide scheduler this parameter will be ignored
 
 scheduling: null
 

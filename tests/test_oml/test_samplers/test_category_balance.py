@@ -7,14 +7,8 @@ from typing import Any, Dict, List, Set, Tuple, Union
 
 import pytest
 
-from oml.samplers.category_balance import (
-    CategoryBalanceBatchSampler,
-    SequentialCategoryBalanceSampler,
-)
-from oml.samplers.distinct_category_balance import (
-    DistinctCategoryBalanceBatchSampler,
-    SequentialDistinctCategoryBalanceSampler,
-)
+from oml.samplers.category_balance import CategoryBalanceSampler
+from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
 from oml.utils.misc import set_global_seed
 
 TLabalesMappingCLI = List[Tuple[List[int], Dict[int, int], int, int, int]]
@@ -91,7 +85,7 @@ def input_for_category_balance_batch_sampler() -> TLabalesMappingCLI:
 
 
 def check_category_balance_batch_sampler_epoch(
-    sampler: Union[CategoryBalanceBatchSampler, DistinctCategoryBalanceBatchSampler],
+    sampler: Union[CategoryBalanceSampler, DistinctCategoryBalanceSampler],
     labels: List[int],
     label2category: Dict[int, int],
     n_categories: int,
@@ -152,8 +146,8 @@ def check_category_balance_batch_sampler_epoch(
 @pytest.mark.parametrize(
     "sampler_class,sampler_kwargs",
     (
-        (CategoryBalanceBatchSampler, {"resample_labels": False}),
-        (DistinctCategoryBalanceBatchSampler, {"epoch_size": 20}),
+        (CategoryBalanceSampler, {"resample_labels": False}),
+        (DistinctCategoryBalanceSampler, {"epoch_size": 20}),
     ),
 )
 def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwargs: Dict[str, Any]) -> None:
@@ -196,7 +190,7 @@ def test_category_balance_batch_sampler(
     """
     fixture = request.getfixturevalue(fixture_name)
     for labels, label2category, n_categories, n_labels, n_instances in fixture:
-        sampler = CategoryBalanceBatchSampler(
+        sampler = CategoryBalanceSampler(
             labels=labels,
             label2category=label2category,
             resample_labels=resample_labels,
@@ -226,7 +220,7 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
         input_for_category_balance_batch_sampler: Tuple of labels, label2category, n_categories, n_labels, n_instances)
     """
     for labels, label2category, n_categories, n_labels, n_instances in input_for_category_balance_batch_sampler:
-        sampler = CategoryBalanceBatchSampler(
+        sampler = CategoryBalanceSampler(
             labels=labels,
             label2category=label2category,  # type: ignore
             resample_labels=True,
@@ -267,7 +261,7 @@ def test_distinct_category_balance_batch_sampler(
     """
     fixture = request.getfixturevalue(fixture_name)
     for labels, label2category, n_categories, n_labels, n_instances in fixture:
-        sampler = DistinctCategoryBalanceBatchSampler(
+        sampler = DistinctCategoryBalanceSampler(
             labels=labels,
             label2category=label2category,
             epoch_size=epoch_size,
@@ -291,7 +285,7 @@ def test_distinct_category_balance_batch_sampler(
 
 @pytest.mark.parametrize(
     "sampler_constructor",
-    [SequentialCategoryBalanceSampler, partial(DistinctCategoryBalanceBatchSampler, epoch_size=50)],
+    [CategoryBalanceSampler, partial(DistinctCategoryBalanceSampler, epoch_size=50)],
 )
 def test_categories_as_strings(sampler_constructor) -> None:  # type: ignore
     labels, label2category, n_categories, n_labels, n_instances = generate_valid_categories_labels(

@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
+from pprint import pprint
 
 import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
-from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
 from oml.const import (
@@ -18,6 +18,10 @@ from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning.entrypoints.parser import (
+    parse_engine_params_from_config,
+    raise_error_if_ddp,
+)
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
@@ -43,7 +47,10 @@ def pl_train(cfg: TCfg) -> None:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    print(cfg)
+    trainer_engine_params = parse_engine_params_from_config(cfg)
+    raise_error_if_ddp(trainer_engine_params)
+
+    pprint(cfg)
 
     set_global_seed(cfg["seed"], cfg["num_workers"])
 
@@ -84,11 +91,12 @@ def pl_train(cfg: TCfg) -> None:
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
 
     # unpack scheduler to the Lightning format
-    if cfg["scheduling"]:
+    if cfg.get("scheduling"):
         scheduler_args = {
             "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
             "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
             "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
+            "scheduler_monitor_metric": cfg["scheduling"].get("monitor_metric", None),
         }
     else:
         scheduler_args = {"scheduler": None}
@@ -105,14 +113,20 @@ def pl_train(cfg: TCfg) -> None:
         **scheduler_args,
     )
 
-    loader_train = DataLoader(
-        dataset=train_dataset,
-        sampler=sampler,
-        num_workers=cfg["num_workers"],
-        batch_size=sampler.batch_size,
-        drop_last=True,
-        shuffle=not bool(sampler),
-    )
+    if sampler is None:
+        loader_train = DataLoader(
+            dataset=train_dataset,
+            num_workers=cfg["num_workers"],
+            batch_size=cfg["bs_train"],
+            drop_last=True,
+            shuffle=True,
+        )
+    else:
+        loader_train = DataLoader(
+            dataset=train_dataset,
+            batch_sampler=sampler,
+            num_workers=cfg["num_workers"],
+        )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
@@ -163,19 +177,16 @@ def pl_train(cfg: TCfg) -> None:
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],
-        replace_sampler_ddp=False,
         num_sanity_val_steps=0,
         check_val_every_n_epoch=cfg["valid_period"],
         default_root_dir=cwd,
         enable_checkpointing=True,
         enable_progress_bar=True,
         enable_model_summary=True,
-        num_nodes=1,
-        gpus=cfg["gpus"],
-        strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
+        **trainer_engine_params,
     )
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)

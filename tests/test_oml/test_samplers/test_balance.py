@@ -5,7 +5,7 @@ from typing import List, Set, Tuple
 
 import pytest
 
-from oml.samplers.balance import BalanceBatchSampler
+from oml.samplers.balance import BalanceSampler
 
 TLabelsPK = List[Tuple[List[int], int, int]]
 
@@ -67,7 +67,7 @@ def input_for_balance_batch_sampler() -> TLabelsPK:
 
 
 def check_balance_batch_sampler_epoch(
-    sampler: BalanceBatchSampler, labels: List[int], n_labels: int, n_instances: int
+    sampler: BalanceSampler, labels: List[int], n_labels: int, n_instances: int
 ) -> None:
     """
     Args:
@@ -125,5 +125,5 @@ def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabelsPK) -> No
 
     """
     for labels, n_labels, n_instances in input_for_balance_batch_sampler:
-        sampler = BalanceBatchSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
+        sampler = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
         check_balance_batch_sampler_epoch(sampler=sampler, labels=labels, n_labels=n_labels, n_instances=n_instances)

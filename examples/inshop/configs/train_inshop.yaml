@@ -2,8 +2,8 @@ postfix: metric_learning
 
 seed: 42
 precision: 32
-gpus:
-  - 0
+accelerator: gpu
+devices: 1
 
 dataframe_name: df_fixed_train_fixed_val.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
@@ -24,7 +24,7 @@ transforms_val:
     im_size: 224
 
 sampler:
-  name: sequential_category_balance
+  name: category_balance
   args:
     n_labels: 13
     n_instances: 6

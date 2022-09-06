@@ -5,7 +5,7 @@ import torch
 from torch import Tensor, tensor
 
 from oml.miners.cross_batch import TripletMinerWithMemory
-from oml.samplers.balance import BalanceBatchSampler
+from oml.samplers.balance import BalanceSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
 
@@ -29,7 +29,7 @@ def test_mining_with_memory(
     feat_dim = 2 * n_cls
 
     labels = get_labels(n_cls=n_cls, sz=cls_sz)
-    sampler = BalanceBatchSampler(labels=labels.tolist(), n_labels=n_labels, n_instances=n_instances)
+    sampler = BalanceSampler(labels=labels.tolist(), n_labels=n_labels, n_instances=n_instances)
 
     miner = TripletMinerWithMemory(bank_size_in_batches=bank_sz, tri_expand_k=bank_k)
 

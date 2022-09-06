@@ -3,12 +3,12 @@ from copy import deepcopy
 from typing import Dict, Iterator, List, Set, Union
 
 import numpy as np
-from torch.utils.data import Sampler
 
+from oml.interfaces.samplers import IBatchSampler
 from oml.utils.misc import smart_sample
 
 
-class DistinctCategoryBalanceBatchSampler(Sampler):
+class DistinctCategoryBalanceSampler(IBatchSampler):
     """
     Let C is a set of categories in dataset, L is a set of labels in dataset:
     - select n_categories for the 1st batch from C
@@ -49,7 +49,6 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
             n_instances: Number of samples to sample for each label in batch
             epoch_size: Number of batches in epoch
         """
-        super().__init__(self)
         unique_labels = set(labels)
         unique_categories = set(label2category.values())
         category2labels = {
@@ -153,21 +152,4 @@ class DistinctCategoryBalanceBatchSampler(Sampler):
         return iter(epoch_indices)
 
 
-class SequentialDistinctCategoryBalanceSampler(DistinctCategoryBalanceBatchSampler):
-    """
-    Almost the same as
-    >>> DistinctCategoryBalanceBatchSampler
-    but indexes will be returned in a flattened way
-    """
-
-    def __iter__(self) -> Iterator[int]:  # type: ignore
-        ids_flatten = []
-        for ids in super().__iter__():
-            ids_flatten.extend(ids)
-        return iter(ids_flatten)
-
-    def __len__(self) -> int:
-        return self.batches_in_epoch * self.batch_size
-
-
-__all__ = ["DistinctCategoryBalanceBatchSampler", "SequentialDistinctCategoryBalanceSampler"]
+__all__ = ["DistinctCategoryBalanceSampler"]
