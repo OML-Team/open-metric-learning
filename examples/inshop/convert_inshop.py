@@ -102,8 +102,7 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     df["category"] = df_part["path"].apply(lambda x: x.parent.parent.name)
 
     cols_to_pick = ["label", "path", "split", "is_query", "is_gallery", "category"]
-    need_bboxes = not no_bboxes
-    if need_bboxes:
+    if not no_bboxes:
         cols_to_pick.extend(["x_1", "x_2", "y_1", "y_2"])
     df = df[cols_to_pick]
 
@@ -111,16 +110,6 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     assert df["path"].nunique() == len(df) == 52712
     assert df["label"].nunique() == 7982
     assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
-
-    if need_bboxes:
-        # rm bad bboxes
-        thr_bbox_size = 10
-        mask_bad_bboxes = df.apply(
-            lambda row: (row["x_2"] - row["x_1"]) < thr_bbox_size or (row["y_2"] - row["y_1"]) < thr_bbox_size, axis=1
-        )
-        df = df[~mask_bad_bboxes]
-        df.reset_index(drop=True, inplace=True)
-        print(f"Dropped {mask_bad_bboxes.sum()} images with bad bboxes")
 
     # rm bad labels
     mask_non_single_images = df.groupby("label").label.transform("count") > 1

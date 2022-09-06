@@ -108,7 +108,7 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
         [
             Crop(),
             albu.LongestMaxSize(max_size=im_size),
-            albu.PadIfNeeded(im_size, im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
