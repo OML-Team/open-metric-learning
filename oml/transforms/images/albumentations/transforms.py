@@ -123,7 +123,7 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
 
 
 def get_normalisation_albu(mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
-    return albu.Compose([albu.Normalize(mean=mean, std=std), ToTensorV2()])
+    return albu.Compose([Crop(), albu.Normalize(mean=mean, std=std), ToTensorV2()])
 
 
 def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:

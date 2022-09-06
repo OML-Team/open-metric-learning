@@ -3,9 +3,9 @@ postfix: metric_learning
 seed: 42
 precision: 32
 accelerator: gpu
-devices: [0]
+devices: [1]
 
-dataframe_name: df_no_bboxes.csv
+dataframe_name: df.csv
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
@@ -80,7 +80,6 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
-  - no_bboxes
 
 hydra:
   run:
