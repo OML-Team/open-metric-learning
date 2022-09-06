@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# 1. M=0.5, S=48, BS = 256
+python train_inshop.py \
+seed=42 \
+max_epochs=60 \
+criterion.args.m=0.5 \
+criterion.args.s=48 \
+bs_train=256 \
+optimizer.args.lr=7e-5 \
+gpus=[1]
+
+# 2. M=0.3, S=64, BS = 256
+python train_inshop.py \
+seed=42 \
+max_epochs=60 \
+criterion.args.m=0.3 \
+criterion.args.s=64 \
+bs_train=256 \
+optimizer.args.lr=7e-5 \
+gpus=[1]
+
+# 3. M=0.55, S=48, BS = 256
+python train_inshop.py \
+seed=42 \
+max_epochs=60 \
+criterion.args.m=0.55 \
+criterion.args.s=48 \
+bs_train=256 \
+optimizer.args.lr=7e-5 \
+gpus=[1]
+

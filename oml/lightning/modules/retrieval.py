@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Union
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.criterions import ICriterion
@@ -22,6 +22,7 @@ class RetrievalModule(pl.LightningModule):
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
         embeddings_key: str = EMBEDDINGS_KEY,
+        scheduler_monitor_metric: Optional[str] = None,
     ):
         super(RetrievalModule, self).__init__()
 
@@ -29,6 +30,7 @@ class RetrievalModule(pl.LightningModule):
         self.criterion = criterion
         self.optimizer = optimizer
 
+        self.monitor_metric = scheduler_monitor_metric
         self.scheduler = scheduler
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
@@ -70,6 +72,8 @@ class RetrievalModule(pl.LightningModule):
                 "interval": self.scheduler_interval,
                 "frequency": self.scheduler_frequency,
             }
+            if isinstance(self.scheduler, ReduceLROnPlateau):
+                scheduler["monitor"] = self.monitor_metric
             return [self.optimizer], [scheduler]
 
     def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:

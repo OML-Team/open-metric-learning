@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from oml.const import INPUT_TENSORS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, LABELS_KEY
-from oml.samplers.balance import BalanceBatchSampler  # noqa
+from oml.samplers.balance import BalanceSampler  # noqa
 
 
 class IDatasetWithLabels(Dataset, ABC):
@@ -13,7 +13,7 @@ class IDatasetWithLabels(Dataset, ABC):
     Dataset with get_labels() method.
     As an example, it can be useful to initialise Sampler.
     For instance,
-    >>> BalanceBatchSampler
+    >>> BalanceSampler
     """
 
     def __getitem__(self, item: int) -> Dict[str, Any]:

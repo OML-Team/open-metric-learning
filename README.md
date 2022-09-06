@@ -17,7 +17,7 @@ Specifically, our framework provides modules for supervised training and retriev
  (like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
  The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
  Thus, during the training we:
-   1. Use `DataLoader` + `Sampler` to form batches (for example `SequentialBalanceSampler`)
+   1. Use `DataLoader` + `Sampler` to form batches (for example `BalanceSampler`)
    2. [Only for losses based on combinations] Use `Miner` to form effective pairs or triplets, including
    those which utilize a memory bank.
    3. Compute loss.
@@ -166,25 +166,22 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </details>
 
 
-## Get started
-The design of OML assumes that you may train your model in 2 different ways:
+## Get started using Config API
+Using configs is the best option if your dataset and pipeline are standard enough or if you are not
+experienced in Machine Learning or Python. You can find more details in the
+[examples](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
-* **Via Configs**. The best option is if your dataset and pipeline are standard enough or if you are not
-experienced in Machine Learning or Python. You can find more details in the *examples* submodule and it's
-[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
-
-* **Via Python**. The most flexible, but knowledge-requiring approach.
+## Get started using Python
+The most flexible, but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
-In the *Minimal examples* section you can find fully working code snippets that train and validate the model
-on a tiny [dataset](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing) (less than 1 Mb).
+You can start with fully working code snippets below that train and validate the model
+on a tiny dataset of
+[figures](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing).
 
 
-## Minimal Python examples
 <details>
-<summary>Using pure PyTorch</summary>
+<summary>Training</summary>
 <p>
-
-**Training**
 
 [comment]:vanilla-train-start
 ```python
@@ -195,7 +192,7 @@ from oml.datasets.retrieval import DatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceBatchSampler
+from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root = "mock_dataset/"
@@ -206,7 +203,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = BalanceBatchSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
+sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
@@ -217,8 +214,13 @@ for batch in tqdm(train_loader):
     optimizer.zero_grad()
 ```
 [comment]:vanilla-train-end
+</p>
+</details>
 
-**Validation**
+
+<details>
+<summary>Validation</summary>
+<p>
 
 [comment]:vanilla-validation-start
 ```python
@@ -253,10 +255,8 @@ metrics = calculator.compute_metrics()
 </details>
 
 <details>
-<summary>Using PyTorch Lightning</summary>
+<summary>Training + Validation [Lightning]</summary>
 <p>
-
-**Training + Validation**
 
 [comment]:lightning-start
 ```python
@@ -270,7 +270,7 @@ from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import SequentialBalanceSampler
+from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root =  "mock_dataset/"
@@ -283,8 +283,8 @@ model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-sampler = SequentialBalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = torch.utils.data.DataLoader(train_dataset, sampler=sampler, batch_size=2 * 3)
+batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
@@ -302,12 +302,12 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 
 ## Models zoo
-|                            model                            | cmc1  |         dataset          |                                           weights                                            | hash (the beginning) |
-|:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
-| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) |        384ead        |
-|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing) |        85cfa5        |
-|  `VitExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) |        9f1e59        |
-|  `VitExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) |        e82633        |
+|                            model                            | cmc1  |         dataset          |                                           weights                                            |                                           configs                                            | hash (the beginning) |
+|:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
+| `VitExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.925 |    DeepFashion Inshop    | [link](https://drive.google.com/drive/folders/1vypEph09rSwKD7iydI4YYZqwZLrdVJPW?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/inshop/configs)   |        384ead        |
+|  `VitExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/sop/configs)      |        85cfa5        |
+|  `VitExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     |        9f1e59        |
+|  `VitExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      |        e82633        |
 
 
 Note, if you pass one of the special keys to the constructor we will download the pretrained checkpoint for you automatically.

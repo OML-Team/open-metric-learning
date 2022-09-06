@@ -1,3 +1,6 @@
+accelerator: cpu
+devices: 1
+
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
 

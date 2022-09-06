@@ -1,0 +1,4 @@
+name: reduce_on_plateau
+args:
+  factor: 0.75
+  patience: 1
