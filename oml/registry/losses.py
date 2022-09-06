@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 from torch import nn
 
-from oml.losses.arcface import ArcFaceLoss
+from oml.losses.arcface import ArcFaceLoss, ArcFaceLossWithMLP
 from oml.losses.triplet import TripletLoss, TripletLossPlain, TripletLossWithMiner
 from oml.registry.miners import get_miner_by_cfg
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -13,6 +13,7 @@ LOSSES_REGISTRY = {
     "triplet_with_miner": TripletLossWithMiner,
     "arcface": ArcFaceLoss,
     "arc_face": ArcFaceLoss,
+    "mlp_arcface": ArcFaceLossWithMLP,
 }
 
 
@@ -34,7 +35,7 @@ def get_criterion_by_cfg(
     cfg = dictconfig_to_dict(cfg)
     cfg.setdefault("args", {})
 
-    if cfg["name"] == "arcface":
+    if "arcface" in cfg["name"]:
         cfg["args"]["in_features"] = in_features
         cfg["args"]["num_classes"] = num_classes
         if "label_smoothing" in cfg["args"]:

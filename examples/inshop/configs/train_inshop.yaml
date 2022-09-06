@@ -2,9 +2,9 @@ postfix: metric_learning
 
 seed: 42
 precision: 32
-gpus: [1]
+gpus: [0]
 
-dataframe_name: df_wo_boxes.csv
+dataframe_name: df_fixed_train_fixed_val.csv
 show_dataset_warnings: False
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
@@ -14,19 +14,19 @@ num_workers: 20
 cache_size: 0
 
 transforms_train:
-  name: arcface_train_torch
+  name: augs_albu
   args:
     im_size: 224
 
 transforms_val:
-  name: arcface_test_torch
+  name: norm_resize_albu
   args:
     im_size: 224
 
 sampler: null
-bs_train: 128
+bs_train: 256
 
-bs_val: 128
+bs_val: 256
 max_epochs: 10000
 valid_period: 1
 
@@ -47,13 +47,14 @@ log_only_main_category: True
 #     normalise_features: False
 
 model:
-  name: vit_with_projection
+  name: vit
+  # name: vit_with_projection
   args:
     normalise_features: False
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    feature_size: 128
+    # feature_size: 256
 
 map_labels: True
 # map_categories: True
@@ -61,13 +62,15 @@ criterion:
   name: arcface
   args:
     label_smoothing: null
-    m: 0.5
+    m: 0.4
     s: 64
+    # mlp_features: [512, 256]
 
 optimizer:
   name: adam
   args:
-    lr: 1e-4  # if you provide scheduler this parameter will be ignored
+    # this lr was choosed due to heuristic batch_size * N -> lr * sqrt(N)
+    lr: 7e-5 # if you provide scheduler this parameter will be ignored
     weight_decay: 1e-5
 
 scheduling:
@@ -76,8 +79,8 @@ scheduling:
   scheduler:
     name: multi_step
     args:
-      milestones: [40, 60, 80]
-      gamma: 0.2
+      milestones: [20, 40, 60]
+      gamma: 0.5
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
@@ -92,7 +95,6 @@ tags:
   - deepfashion
   - arcface_fix2
   - classification_only
-  - label_smoothing
 
 hydra:
   run:
