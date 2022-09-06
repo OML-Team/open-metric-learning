@@ -142,3 +142,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Network file system cache
+.nfs*

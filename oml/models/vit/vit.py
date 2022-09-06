@@ -124,7 +124,7 @@ class ViTWithLinearExtractor(ViTExtractor):
         super().__init__(weights, arch, normalise_features, use_multi_scale, strict_load)
         self.linear = nn.Linear(super().feat_dim, feature_size)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(super().forward(x))
 
     @property

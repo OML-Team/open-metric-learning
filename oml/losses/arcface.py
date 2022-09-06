@@ -16,7 +16,7 @@ class ArcFaceLoss(ICriterion):
         in_features: int,
         num_classes: int,
         criterion: Optional[nn.Module] = None,
-        label2category: Optional[Dict[str, Any]] = None,
+        label2category: Optional[Dict[Any, Any]] = None,
         label_smoothing: Optional[float] = None,
         m: float = 0.5,
         s: float = 64,
@@ -29,6 +29,9 @@ class ArcFaceLoss(ICriterion):
             assert (
                 label_smoothing is None or label2category is not None
             ), "You have to provide label2category to use label smoothing in arcface!"
+        assert (
+            label_smoothing is None or label_smoothing > 0 and label_smoothing < 1
+        ), f"Choose another label_smoothing parametrization, got {label_smoothing}"
 
         self.criterion = criterion if criterion is not None else nn.CrossEntropyLoss()
         self.num_classes = num_classes

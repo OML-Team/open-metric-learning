@@ -12,7 +12,6 @@ LOSSES_REGISTRY = {
     "triplet_plain": TripletLossPlain,
     "triplet_with_miner": TripletLossWithMiner,
     "arcface": ArcFaceLoss,
-    "arc_face": ArcFaceLoss,
     "mlp_arcface": ArcFaceLossWithMLP,
 }
 
