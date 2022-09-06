@@ -73,6 +73,9 @@ class Crop:
         x1, y1, x2, y2 = kwargs["crop"]
         return {"image": image[x1:x2, y1:y2, :]}  # type: ignore
 
+    def _to_dict(self) -> Dict[str, Any]:
+        return {"crop": "crop"}
+
 
 class RandomSizedBBoxSafeCropPatched:
     def __init__(self, size: int, erosion_rate: float = 0.0):
@@ -98,6 +101,7 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
 
     augs = albu.Compose(
         [
+            # RandomSizedBBoxSafeCropPatched(im_size),
             albu.Compose(
                 [
                     Crop(),
@@ -105,7 +109,6 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
                     albu.PadIfNeeded(im_size, im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
                 ]
             ),
-            # RandomSizedBBoxSafeCropPatched(im_size),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
