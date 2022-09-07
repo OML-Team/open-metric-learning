@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 1
 
 dataframe_name: df.csv
-dataset_root: data/CUB_200_2011/
-logs_root: logs/CUB_200_2011/
+dataset_root: /nydl/data/CUB_200_2011/
+logs_root: /nydl/logs/CUB_200_2011/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -62,7 +62,7 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 2e-5  # if you provide scheduler this parameter will be ignored
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
 scheduling: null
 

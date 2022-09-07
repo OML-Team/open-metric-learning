@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 1
 
 dataframe_name: df.csv
-dataset_root: data/Stanford_Online_Products/
-logs_root: logs/Stanford_Online_Products/
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
