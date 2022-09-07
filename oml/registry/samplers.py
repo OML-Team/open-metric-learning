@@ -1,30 +1,27 @@
 from typing import Any, Dict
 
-from torch.utils.data.sampler import Sampler
-
-from oml.samplers.balance import SequentialBalanceSampler
-from oml.samplers.category_balance import SequentialCategoryBalanceSampler
-from oml.samplers.distinct_category_balance import (
-    SequentialDistinctCategoryBalanceSampler,
-)
+from oml.interfaces.samplers import IBatchSampler
+from oml.samplers.balance import BalanceSampler
+from oml.samplers.category_balance import CategoryBalanceSampler
+from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 SAMPLERS_CATEGORIES_BASED = {
-    "sequential_category_balance": SequentialCategoryBalanceSampler,
-    "sequential_distinct_category_balance": SequentialDistinctCategoryBalanceSampler,
+    "category_balance": CategoryBalanceSampler,
+    "distinct_category_balance": DistinctCategoryBalanceSampler,
 }
 
 SAMPLERS_REGISTRY = {
     **SAMPLERS_CATEGORIES_BASED,  # type: ignore
-    "sequential_balance": SequentialBalanceSampler,
+    "balance": BalanceSampler,
 }
 
 
-def get_sampler(name: str, **kwargs: Dict[str, Any]) -> Sampler:
+def get_sampler(name: str, **kwargs: Dict[str, Any]) -> IBatchSampler:
     return SAMPLERS_REGISTRY[name](**kwargs)  # type: ignore
 
 
-def get_sampler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> Sampler:
+def get_sampler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> IBatchSampler:
     cfg = dictconfig_to_dict(cfg)
     cfg["args"].update(kwargs_runtime)
     return get_sampler(name=cfg["name"], **cfg["args"])

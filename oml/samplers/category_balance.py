@@ -3,12 +3,12 @@ from collections import Counter
 from typing import Dict, Iterator, List, Union
 
 import numpy as np
-from torch.utils.data import Sampler
 
+from oml.interfaces.samplers import IBatchSampler
 from oml.utils.misc import smart_sample
 
 
-class CategoryBalanceBatchSampler(Sampler):
+class CategoryBalanceSampler(IBatchSampler):
     """
     Let C is a set of categories in dataset, L is a set of labels in dataset:
     - select n_categories for the 1st batch from C
@@ -49,7 +49,6 @@ class CategoryBalanceBatchSampler(Sampler):
             weight_categories: If True sample categories for each batch with weights proportional to the number of
                 unique labels in the categories
         """
-        super().__init__(self)
         unique_labels = set(labels)
         unique_categories = set(label2category.values())
         category2labels = {
@@ -150,22 +149,4 @@ class CategoryBalanceBatchSampler(Sampler):
         return iter(epoch_indices)
 
 
-class SequentialCategoryBalanceSampler(CategoryBalanceBatchSampler):
-    """
-    Almost the same as
-    >>> CategoryBalanceBatchSampler
-    but indexes will be returned in a flattened way
-
-    """
-
-    def __iter__(self) -> Iterator[int]:  # type: ignore
-        ids_flatten = []
-        for ids in super().__iter__():
-            ids_flatten.extend(ids)
-        return iter(ids_flatten)
-
-    def __len__(self) -> int:
-        return self.batches_in_epoch * self._batch_size
-
-
-__all__ = ["CategoryBalanceBatchSampler", "SequentialCategoryBalanceSampler"]
+__all__ = ["CategoryBalanceSampler"]

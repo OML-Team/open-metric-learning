@@ -1,4 +1,4 @@
-name: sequential_distinct_category_balance
+name: distinct_category_balance
 args:
   n_labels: 2
   n_instances: 2

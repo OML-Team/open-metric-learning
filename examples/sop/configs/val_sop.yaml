@@ -1,3 +1,6 @@
+accelerator: gpu
+devices: 1
+
 dataset_root: data/Stanford_Online_Products/
 dataframe_name: df.csv
 
@@ -31,4 +34,4 @@ gpus:
 
 hydra:
   searchpath:
-    - file://../../configs
+   - pkg://oml.configs

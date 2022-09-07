@@ -1,17 +1,27 @@
 import os
 from pathlib import Path
+from pprint import pprint
 
 import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
-from pytorch_lightning.plugins import DDPPlugin
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
+from oml.const import (
+    CATEGORIES_COLUMN,
+    LABELS_COLUMN,
+    OVERALL_CATEGORIES_KEY,
+    PROJECT_ROOT,
+    TCfg,
+)
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning.entrypoints.parser import (
+    parse_engine_params_from_config,
+    raise_error_if_ddp,
+)
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
@@ -37,7 +47,10 @@ def pl_train(cfg: TCfg) -> None:
 
     """
     cfg = dictconfig_to_dict(cfg)
-    print(cfg)
+    trainer_engine_params = parse_engine_params_from_config(cfg)
+    raise_error_if_ddp(trainer_engine_params)
+
+    pprint(cfg)
 
     set_global_seed(cfg["seed"], cfg["num_workers"])
 
@@ -68,7 +81,8 @@ def pl_train(cfg: TCfg) -> None:
 
     sampler_runtime_args = {"labels": train_dataset.get_labels()}
     if train_dataset.categories_key:
-        sampler_runtime_args["label2category"] = dict(zip(train_dataset.df["label"], train_dataset.df["category"]))
+        df = train_dataset.df
+        sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
@@ -77,7 +91,7 @@ def pl_train(cfg: TCfg) -> None:
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
 
     # unpack scheduler to the Lightning format
-    if cfg["scheduling"]:
+    if cfg.get("scheduling"):
         scheduler_args = {
             "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
             "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
@@ -90,19 +104,38 @@ def pl_train(cfg: TCfg) -> None:
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
-    loader_train = DataLoader(
-        dataset=train_dataset,
-        sampler=sampler,
-        num_workers=cfg["num_workers"],
-        batch_size=sampler.batch_size,
-        drop_last=True,
-        shuffle=not bool(sampler),
+    pl_model = RetrievalModule(
+        model=extractor,
+        criterion=criterion,
+        optimizer=optimizer,
+        input_tensors_key=train_dataset.input_tensors_key,
+        labels_key=train_dataset.labels_key,
+        **scheduler_args,
     )
+
+    if sampler is None:
+        loader_train = DataLoader(
+            dataset=train_dataset,
+            num_workers=cfg["num_workers"],
+            batch_size=cfg["bs_train"],
+            drop_last=True,
+            shuffle=True,
+        )
+    else:
+        loader_train = DataLoader(
+            dataset=train_dataset,
+            batch_sampler=sampler,
+            num_workers=cfg["num_workers"],
+        )
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     metrics_calc = EmbeddingMetrics(
+        embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
+        labels_key=valid_dataset.labels_key,
+        is_query_key=valid_dataset.is_query_key,
+        is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {}),
     )
@@ -127,9 +160,10 @@ def pl_train(cfg: TCfg) -> None:
             tags=list(cfg["tags"]) + [cfg["postfix"]] + [cwd.name],
             log_model_checkpoints=False,
         )
-        # log hyper params and augs config
+        # log hyper params and files
         dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
         logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
+        logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
         if augs_file is not None:
             logger.run["augs_cfg"].upload(augs_file)
         # log source code
@@ -143,22 +177,17 @@ def pl_train(cfg: TCfg) -> None:
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],
-        replace_sampler_ddp=False,
         num_sanity_val_steps=0,
         check_val_every_n_epoch=cfg["valid_period"],
         default_root_dir=cwd,
         enable_checkpointing=True,
         enable_progress_bar=True,
         enable_model_summary=True,
-        num_nodes=1,
-        gpus=cfg["gpus"],
-        strategy=DDPPlugin(find_unused_parameters=False) if (cfg["gpus"] and len(cfg["gpus"]) > 1) else None,
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
+        **trainer_engine_params,
     )
-
-    pl_model = RetrievalModule(model=extractor, criterion=criterion, optimizer=optimizer, **scheduler_args)
 
     trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 

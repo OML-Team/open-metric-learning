@@ -1,3 +1,6 @@
+accelerator: gpu
+devices: 1
+
 dataset_root: data/CUB_200_2011/
 dataframe_name: df.csv
 
@@ -32,4 +35,4 @@ gpus:
 
 hydra:
   searchpath:
-    - file://../../configs
+   - pkg://oml.configs

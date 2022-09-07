@@ -7,11 +7,12 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
+from oml.const import INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.datasets import IDatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.registry.miners import get_miner
-from oml.samplers.balance import BalanceBatchSampler, SequentialBalanceSampler
+from oml.samplers.balance import BalanceSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
 
@@ -23,7 +24,7 @@ class DummyDataset(IDatasetWithLabels):
         shuffle(self.labels)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {"input_tensors": torch.tensor(self.labels[idx]), "labels": self.labels[idx]}
+        return {INPUT_TENSORS_KEY: torch.tensor(self.labels[idx]), LABELS_KEY: self.labels[idx]}
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -32,7 +33,6 @@ class DummyDataset(IDatasetWithLabels):
         return np.array(self.labels)
 
 
-@pytest.mark.parametrize("sampler_constructor", [BalanceBatchSampler, SequentialBalanceSampler])
 @pytest.mark.parametrize(
     "miner_name,miner_params",
     [
@@ -45,7 +45,6 @@ class DummyDataset(IDatasetWithLabels):
 @pytest.mark.parametrize("margin", [None, 0.5])
 @pytest.mark.parametrize("n_labels,n_instances", [(2, 2), (5, 6)])
 def test_train_with_mining(
-    sampler_constructor: Any,
     miner_name: str,
     miner_params: Dict[str, Any],
     margin: Optional[float],
@@ -58,28 +57,19 @@ def test_train_with_mining(
 
     model = IdealOneHotModel(emb_dim=n_labels_total + randint(1, 5))
 
-    if sampler_constructor == BalanceBatchSampler:
-        loader = DataLoader(
-            dataset=dataset,
-            batch_sampler=sampler_constructor(labels=dataset.get_labels(), n_labels=n_labels, n_instances=n_instances),
-        )
-    elif sampler_constructor == SequentialBalanceSampler:
-        loader = DataLoader(
-            dataset=dataset,
-            sampler=sampler_constructor(labels=dataset.get_labels(), n_labels=n_labels, n_instances=n_instances),
-            batch_size=n_labels * n_instances,
-        )
-    else:
-        raise ValueError(f"Unexpected sampler: {sampler_constructor}.")
+    loader = DataLoader(
+        dataset=dataset,
+        batch_sampler=BalanceSampler(labels=dataset.get_labels(), n_labels=n_labels, n_instances=n_instances),
+    )
 
     miner = get_miner(miner_name, **miner_params)
     criterion = TripletLossWithMiner(margin=margin, miner=miner, need_logs=False)
 
     for i, batch in enumerate(loader):
-        assert len(batch["labels"]) == n_labels * n_instances
+        assert len(batch[LABELS_KEY]) == n_labels * n_instances
 
-        embeddings = model(batch["input_tensors"])
-        loss = criterion(embeddings, batch["labels"])
+        embeddings = model(batch[INPUT_TENSORS_KEY])
+        loss = criterion(embeddings, batch[LABELS_KEY])
 
         if isinstance(miner, TripletMinerWithMemory) and (i < miner.bank_size_in_batches):
             # we cannot guarantee any values of loss due to impact of memory bank initialisation

@@ -7,8 +7,20 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
-REQUIRED_FIELDS = ["label", "path", "split", "is_query", "is_gallery"]
-BBOXES_FIELDS = ["x_1", "x_2", "y_1", "y_2"]
+from oml.const import (
+    BBOXES_COLUMNS,
+    CATEGORIES_COLUMN,
+    IS_GALLERY_COLUMN,
+    IS_QUERY_COLUMN,
+    LABELS_COLUMN,
+    OBLIGATORY_COLUMNS,
+    PATHS_COLUMN,
+    SPLIT_COLUMN,
+    X1_COLUMN,
+    X2_COLUMN,
+    Y1_COLUMN,
+    Y2_COLUMN,
+)
 
 
 def check_retrieval_dataframe_format(
@@ -27,39 +39,39 @@ def check_retrieval_dataframe_format(
     if isinstance(df, (Path, str)):
         df = pd.read_csv(df, sep=sep, index_col=None)
 
-    assert all(x in df.columns for x in REQUIRED_FIELDS), df.columns
+    assert all(x in df.columns for x in OBLIGATORY_COLUMNS), df.columns
 
-    assert set(df["split"]) == {"train", "validation"}, set(df["split"])
+    assert set(df[SPLIT_COLUMN]) == {"train", "validation"}, set(df[SPLIT_COLUMN])
 
-    mask_train = df["split"] == "train"
-    assert pd.isna(df["is_query"][mask_train].unique()[0]), df["is_query"][mask_train].unique()
-    assert pd.isna(df["is_gallery"][mask_train].unique()[0]), df["is_gallery"][mask_train].unique()
+    mask_train = df[SPLIT_COLUMN] == "train"
+    assert pd.isna(df[IS_QUERY_COLUMN][mask_train].unique()[0]), df[IS_QUERY_COLUMN][mask_train].unique()
+    assert pd.isna(df[IS_GALLERY_COLUMN][mask_train].unique()[0]), df[IS_GALLERY_COLUMN][mask_train].unique()
 
     val_mask = ~mask_train
 
-    for split_field in ["is_query", "is_gallery"]:
+    for split_field in [IS_QUERY_COLUMN, IS_GALLERY_COLUMN]:
         unq_values = set(df[split_field][val_mask])
         assert unq_values in [{False}, {True}, {False, True}]
 
-    assert df["label"].dtypes == int
+    assert df[LABELS_COLUMN].dtypes == int
 
-    assert all(((df["is_query"][val_mask].astype(bool)) | df["is_gallery"][val_mask].astype(bool)).to_list())
+    assert all(((df[IS_QUERY_COLUMN][val_mask].astype(bool)) | df[IS_GALLERY_COLUMN][val_mask].astype(bool)).to_list())
 
     # we explicitly put ==True here because of Nones
-    labels_query = set(df["label"][df["is_query"] == True])  # noqa
-    labels_gallery = set(df["label"][df["is_gallery"] == True])  # noqa
+    labels_query = set(df[LABELS_COLUMN][df[IS_QUERY_COLUMN] == True])  # noqa
+    labels_gallery = set(df[LABELS_COLUMN][df[IS_GALLERY_COLUMN] == True])  # noqa
     assert labels_query.intersection(labels_gallery) == labels_query
 
     if dataset_root is None:
         dataset_root = Path("")
 
-    assert all(df["path"].apply(lambda x: (dataset_root / x).exists()).to_list())
+    assert all(df[PATHS_COLUMN].apply(lambda x: (dataset_root / x).exists()).to_list())
 
     # check bboxes if exist
-    if set(BBOXES_FIELDS).intersection(set(list(df.columns))):
-        assert all(x in df.columns for x in BBOXES_FIELDS), df.columns
+    if set(BBOXES_COLUMNS).intersection(set(list(df.columns))):
+        assert all(x in df.columns for x in BBOXES_COLUMNS), df.columns
 
-        bboxes_columns = df[BBOXES_FIELDS]
+        bboxes_columns = df[BBOXES_COLUMNS]
 
         # here we check that for one example bounding box consists of four None (no bounding box) or have 4
         # integers as corners (checking that we don't use float indexes for the array)
@@ -70,16 +82,16 @@ def check_retrieval_dataframe_format(
             )
         )
 
-        bboxes_df = df[~(df["x_1"].isna())]
-        assert all((bboxes_df["x_1"] < bboxes_df["x_2"]).to_list())
-        assert all((bboxes_df["y_1"] < bboxes_df["y_2"]).to_list())
-        for coord in BBOXES_FIELDS:
+        bboxes_df = df[~(df[X1_COLUMN].isna())]
+        assert all((bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]).to_list())
+        assert all((bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]).to_list())
+        for coord in BBOXES_COLUMNS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 
-    if "category" in df.columns:
+    if CATEGORIES_COLUMN in df.columns:
         label_to_category = defaultdict(set)
         for _, row in df.iterrows():
-            label_to_category[row.label].add(row.category)
+            label_to_category[row[LABELS_COLUMN]].add(row[CATEGORIES_COLUMN])
 
         bad_categories = {k: v for k, v in label_to_category.items() if len(v) > 1}
 

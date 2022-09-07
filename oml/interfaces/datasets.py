@@ -4,7 +4,8 @@ from typing import Any, Dict
 import numpy as np
 from torch.utils.data import Dataset
 
-from oml.samplers.balance import BalanceBatchSampler  # noqa
+from oml.const import INPUT_TENSORS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, LABELS_KEY
+from oml.samplers.balance import BalanceSampler  # noqa
 
 
 class IDatasetWithLabels(Dataset, ABC):
@@ -12,7 +13,7 @@ class IDatasetWithLabels(Dataset, ABC):
     Dataset with get_labels() method.
     As an example, it can be useful to initialise Sampler.
     For instance,
-    >>> BalanceBatchSampler
+    >>> BalanceSampler
     """
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
@@ -23,7 +24,8 @@ class IDatasetWithLabels(Dataset, ABC):
 
         Returns:
             Dict with the following keys:
-              "input_tensors", "labels"
+            >>> INPUT_TENSORS_KEY
+            >>> LABELS_KEY
         """
         raise NotImplementedError()
 
@@ -50,7 +52,11 @@ class IDatasetQueryGallery(Dataset, ABC):
 
         Returns:
             Dict with the following keys:
-              'input_tensors', 'labels', 'is_query', 'is_gallery'
+            >>> INPUT_TENSORS_KEY
+            >>> LABELS_KEY
+            >>> IS_QUERY_KEY
+            >>> IS_GALLERY_KEY
+
         """
         raise NotImplementedError()
 

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+from oml.const import PATHS_KEY, X1_KEY, X2_KEY, Y1_KEY, Y2_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.images.images import imread_cv2
 
@@ -100,8 +101,8 @@ class RetrievalVisualizer:
         is_query = emb.acc.storage[emb.is_query_key]
         is_gallery = emb.acc.storage[emb.is_gallery_key]
 
-        query_paths = np.array(emb.acc.storage["paths"])[is_query]
-        gallery_paths = np.array(emb.acc.storage["paths"])[is_gallery]
+        query_paths = np.array(emb.acc.storage[PATHS_KEY])[is_query]
+        gallery_paths = np.array(emb.acc.storage[PATHS_KEY])[is_gallery]
 
         query_labels = emb.acc.storage[emb.labels_key][is_query]  # type: ignore
         gallery_labels = emb.acc.storage[emb.labels_key][is_gallery]  # type: ignore

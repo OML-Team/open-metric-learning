@@ -6,6 +6,17 @@ import numpy as np
 import pandas as pd
 from scipy import io
 
+from oml.const import (
+    IS_GALLERY_COLUMN,
+    IS_QUERY_COLUMN,
+    LABELS_COLUMN,
+    PATHS_COLUMN,
+    SPLIT_COLUMN,
+    X1_COLUMN,
+    X2_COLUMN,
+    Y1_COLUMN,
+    Y2_COLUMN,
+)
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 
 
@@ -53,6 +64,20 @@ def build_cars196_df(dataset_root: Path) -> pd.DataFrame:
 
     df = pd.concat((train_annots, test_annots))
     df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
+
+    df = df.rename(
+        columns={
+            "label": LABELS_COLUMN,
+            "path": PATHS_COLUMN,
+            "split": SPLIT_COLUMN,
+            "is_query": IS_QUERY_COLUMN,
+            "is_gallery": IS_GALLERY_COLUMN,
+            "x_1": X1_COLUMN,
+            "x_2": X2_COLUMN,
+            "y_1": Y1_COLUMN,
+            "y_2": Y2_COLUMN,
+        }
+    )
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
     return df

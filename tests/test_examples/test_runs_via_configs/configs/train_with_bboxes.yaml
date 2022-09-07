@@ -3,6 +3,8 @@ postfix: "deepfashion"
 seed: 42
 gpus: []
 precision: 32
+accelerator: cpu
+devices: 1
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df_with_bboxes.csv
@@ -35,7 +37,7 @@ criterion:
 
 defaults:
   - optimizer: adam
-  - sampler: sequential_balance
+  - sampler: balance
 
 model:
   name: resnet
@@ -48,10 +50,15 @@ model:
     strict_load: False
 
 scheduling:
-  name: reduce_on_plateau
-  args:
-    factor: 0.75
-    patience: 1
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  monitor_metric: loss_epoch
+  scheduler:
+    name: reduce_on_plateau
+    args:
+      mode: min
+      factor: 0.75
+      patience: 1
 
 bs_val: 2
 
