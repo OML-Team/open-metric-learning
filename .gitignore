@@ -142,7 +142,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-# logs and data symlinks
-examples/*/logs
-examples/*/data
