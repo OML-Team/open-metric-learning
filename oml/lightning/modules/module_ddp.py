@@ -13,7 +13,7 @@ class ModuleDDP(pl.LightningModule):
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
         loaders_val: Optional[EVAL_DATALOADERS] = None,
     ):
-        super().__init__()
+        pl.LightningModule.__init__(self)
         self.loaders_train = loaders_train
         self.loaders_val = loaders_val
 

@@ -258,7 +258,6 @@ def get_retrieval_datasets(
 
     # train
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
-    df_train = df_train[df_train["label"].isin(list(df_train["label"].unique())[:40])]
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,
@@ -269,7 +268,6 @@ def get_retrieval_datasets(
 
     # val (query + gallery)
     df_query_gallery = df[df[SPLIT_COLUMN] == "validation"].reset_index(drop=True)
-    df_query_gallery = df_query_gallery[df_query_gallery["label"].isin(list(df_query_gallery["label"].unique())[:40])]
     valid_dataset = DatasetQueryGallery(
         df=df_query_gallery,
         dataset_root=dataset_root,

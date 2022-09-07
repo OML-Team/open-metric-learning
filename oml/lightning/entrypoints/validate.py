@@ -7,10 +7,10 @@ from torch.utils.data import DataLoader
 
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.entrypoints.parser import parse_engine_params_from_config
-from oml.lightning.modules.retrieval import RetrievalModule
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
+from oml.lightning.entrypoints.parser import parse_engine_params_from_config, check_is_ddp_config
+from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
+from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
@@ -26,6 +26,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
     cfg = dictconfig_to_dict(cfg)
     trainer_engine_params = parse_engine_params_from_config(cfg)
+    is_ddp = check_is_ddp_config(trainer_engine_params)
 
     pprint(cfg)
 
@@ -38,16 +39,26 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    pl_model = RetrievalModule(
+
+    module_kwargs = {}
+    if is_ddp:
+        module_kwargs["loaders_val"] = loader_val
+        module_constructor = RetrievalModuleDDP
+    else:
+        module_constructor = RetrievalModule
+
+    pl_model = module_constructor(
         model=extractor,
         criterion=None,
         optimizer=None,
         scheduler=None,
         input_tensors_key=valid_dataset.input_tensors_key,
         labels_key=valid_dataset.labels_key,
+        **module_kwargs
     )
 
-    metrics_calc = EmbeddingMetrics(
+    metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
+    metrics_calc = metrics_constructor(
         embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
         labels_key=valid_dataset.labels_key,
@@ -56,11 +67,15 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {})
     )
-    clb_metric = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
+    metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
+    clb_metric = metrics_clb_constructor(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
 
     trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)
 
-    logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
+    if is_ddp:
+        logs = trainer.validate(verbose=True, model=pl_model)
+    else:
+        logs = trainer.validate(dataloaders=loader_val, verbose=True, model=pl_model)
 
     return trainer, logs
 

@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
 from pprint import pprint
+from typing import List
 
 import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from oml.const import (
@@ -16,11 +18,13 @@ from oml.const import (
 )
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
+from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import parse_engine_params_from_config, check_is_ddp_config
 from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
+from oml.registry import MINERS_REGISTRY
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
@@ -31,8 +35,31 @@ from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
     load_dotenv,
-    set_global_seed,
+    set_global_seed, find_value_ids,
 )
+import numpy as np
+
+
+class FirstLabelMiner(InBatchTripletsMiner):
+    def _sample(self, features: Tensor, labels: List[int]) -> TTripletsIds:
+        ids_all = set(range(len(labels)))
+
+        ids_anchor, ids_pos, ids_neg = [], [], []
+
+        for i_anch, label in enumerate(labels):
+            ids_label = set(find_value_ids(it=labels, value=label))
+
+            ids_pos_cur = np.array(sorted(ids_label - {i_anch}), int)
+            ids_neg_cur = np.array(sorted(ids_all - ids_label), int)
+
+            ids_anchor.append(i_anch)
+            ids_pos.append(ids_pos_cur[0])
+            ids_neg.append(ids_neg_cur[0])
+
+        return ids_anchor, ids_pos, ids_neg
+
+
+MINERS_REGISTRY['first_label'] = FirstLabelMiner
 
 
 def pl_train(cfg: TCfg) -> None:
@@ -118,53 +145,21 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    # if is_ddp:
-    #     pl_model = RetrievalModuleDDP(
-    #         loaders_train=loader_train,
-    #         loaders_val=loaders_val,
-    #         model=extractor,
-    #         criterion=criterion,
-    #         optimizer=optimizer,
-    #         input_tensors_key=train_dataset.input_tensors_key,
-    #         labels_key=train_dataset.labels_key,
-    #         **scheduler_kwargs,
-    #     )
-    # else:
-    #     pl_model = RetrievalModule(
-    #         model=extractor,
-    #         criterion=criterion,
-    #         optimizer=optimizer,
-    #         input_tensors_key=train_dataset.input_tensors_key,
-    #         labels_key=train_dataset.labels_key,
-    #         **scheduler_kwargs,
-    #     )
+    module_kwargs = scheduler_kwargs
+    if is_ddp:
+        module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
+        module_constructor = RetrievalModuleDDP
+    else:
+        module_constructor = RetrievalModule
 
-    pl_model = RetrievalModule(
-        loaders_train=loader_train,
-        loaders_val=loaders_val,
+    pl_model = module_constructor(
         model=extractor,
         criterion=criterion,
         optimizer=optimizer,
         input_tensors_key=train_dataset.input_tensors_key,
         labels_key=train_dataset.labels_key,
-        **scheduler_kwargs,
+        **module_kwargs,
     )
-
-    # module_kwargs = scheduler_kwargs
-    # if is_ddp:
-    #     module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
-    #     module_constructor = RetrievalModuleDDP
-    # else:
-    #     module_constructor = RetrievalModule
-    #
-    # pl_model = module_constructor(
-    #     model=extractor,
-    #     criterion=criterion,
-    #     optimizer=optimizer,
-    #     input_tensors_key=train_dataset.input_tensors_key,
-    #     labels_key=train_dataset.labels_key,
-    #     **module_kwargs,
-    # )
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
@@ -224,11 +219,11 @@ def pl_train(cfg: TCfg) -> None:
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
+        sync_batchnorm=True,
         **trainer_engine_params,
     )
 
     if is_ddp:
-        # trainer.validate(model=pl_model)
         trainer.fit(model=pl_model)
     else:
         trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
