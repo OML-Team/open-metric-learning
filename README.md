@@ -317,9 +317,10 @@ However, you may also do it manually by the link in `weights` column.
 [comment]:checkpoint-start
 ```python
 import oml
+from oml.models.vit.vit import ViTExtractor
 
 # We are downloading vits16 pretrained on CARS dataset:
-model = oml.models.vit.vit.ViTExtractor(weights="vits16_cars", arch="vits16", normalise_features=False)
+model = ViTExtractor(weights="vits16_cars", arch="vits16", normalise_features=False)
 
 # You can also check other available pretrained models...
 print(list(ViTExtractor.pretrained_models.keys()))
