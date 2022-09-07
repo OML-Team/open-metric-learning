@@ -48,7 +48,7 @@ def pl_train(cfg: TCfg) -> None:
     """
     cfg = dictconfig_to_dict(cfg)
     trainer_engine_params = parse_engine_params_from_config(cfg)
-    # raise_error_if_ddp(trainer_engine_params)
+    raise_error_if_ddp(trainer_engine_params)
 
     pprint(cfg)
 

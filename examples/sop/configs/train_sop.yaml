@@ -3,7 +3,7 @@ postfix: metric_learning
 seed: 42
 precision: 32
 accelerator: gpu
-devices: [0, 1]
+devices: [0]
 
 dataframe_name: df.csv
 dataset_root: /nydl/data/Stanford_Online_Products/
@@ -64,7 +64,7 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 1e-5  # if you provide scheduler this parameter will be ignored
+    lr: 2e-5  # if you provide scheduler this parameter will be ignored
 
 scheduling: null
 

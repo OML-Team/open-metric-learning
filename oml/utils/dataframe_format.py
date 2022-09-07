@@ -82,8 +82,10 @@ def check_retrieval_dataframe_format(
         )
 
         bboxes_df = df[~(df[X1_COLUMN].isna())]
-        assert all((bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]).to_list())
-        assert all((bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]).to_list())
+        mask_good_x1_x2 = bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]
+        mask_good_y1_y2 = bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]
+        assert all(mask_good_x1_x2.to_list()), (~mask_good_x1_x2).sum()
+        assert all(mask_good_y1_y2.to_list()), (~mask_good_y1_y2).sum()
         for coord in BBOXES_COLUMNS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 
