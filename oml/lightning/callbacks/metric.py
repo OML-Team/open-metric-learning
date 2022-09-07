@@ -18,7 +18,6 @@ class MetricValCallback(Callback):
     ):
         """
         It's a wrapper which allows to use IBasicMetric with PyTorch Lightning.
-
         Args:
             metric: metric
             loader_idx: loader idx
