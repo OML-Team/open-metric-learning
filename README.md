@@ -301,6 +301,13 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 </p>
 </details>
 
+Please, check out our registry to see all of the available models, batch samplers, losses, miners, optimizers, transforms, and lr schedulers.
+You can manually inspect `oml.registry` or `oml.configs` or use the function:
+```python
+from oml.registry import show_registry
+show_registry()
+```
+
 ## Models zoo
 |                            model                            | cmc1  |         dataset          |                                           weights                                            |                                           configs                                            | hash (the beginning) |
 |:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
