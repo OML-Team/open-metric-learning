@@ -3,11 +3,11 @@ postfix: metric_learning
 seed: 42
 precision: 32
 accelerator: gpu
-devices: 1
+devices: [0, 1]
 
 dataframe_name: df.csv
-dataset_root: data/Stanford_Online_Products/
-logs_root: logs/Stanford_Online_Products/
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -64,7 +64,7 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 2e-5  # if you provide scheduler this parameter will be ignored
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
 scheduling: null
 

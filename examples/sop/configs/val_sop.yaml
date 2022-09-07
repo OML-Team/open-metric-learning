@@ -28,10 +28,6 @@ metric_args:
 
 log_only_main_category: False
 
-gpus:
-  - 0
-  - 1
-
 hydra:
   searchpath:
    - pkg://oml.configs

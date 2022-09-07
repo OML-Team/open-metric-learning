@@ -1,10 +1,10 @@
 accelerator: gpu
 devices: 1
 
-dataset_root: data/DeepFashion_InShop/
-dataframe_name: df_fixed_val.csv
+dataset_root: /nydl/data/DeepFashion_InShop/
+dataframe_name: df.csv
 
-logs_root: logs/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 
 bs_val: 128
 num_workers: 20
@@ -29,10 +29,6 @@ metric_args:
   precision_top_k: [5]
 
 log_only_main_category: True
-
-gpus:
-  - 0
-  - 1
 
 hydra:
   searchpath:
