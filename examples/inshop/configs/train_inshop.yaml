@@ -67,7 +67,7 @@ optimizer:
     lr: 2e-5
 
 
-scheduling: null  # if you provide scheduler this parameter will be ignored
+scheduling: null
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in

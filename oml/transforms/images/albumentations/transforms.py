@@ -91,12 +91,12 @@ class RandomSizedBBoxSafeCropPatched:
         self.crop_key = crop_key
         self.transform = albu.Compose(
             [albu.RandomSizedBBoxSafeCrop(width=size, height=size, erosion_rate=erosion_rate)],
-            bbox_params=albu.BboxParams(format="pascal_voc", label_fields=["category_ids"]),
+            bbox_params=albu.BboxParams(format="pascal_voc", label_fields=["label_field"]),
         )
 
     def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
         x1, y1, x2, y2 = kwargs[self.crop_key]
-        output = self.transform(image=image, bboxes=[[x1, y1, x2, y2]], category_ids=[1])
+        output = self.transform(image=image, bboxes=[[x1, y1, x2, y2]], label_field=[1])
         return {"image": output["image"]}
 
     def _to_dict(self) -> Dict[str, Any]:
