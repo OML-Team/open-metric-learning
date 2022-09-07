@@ -44,6 +44,8 @@ TNormParam = Tuple[float, float, float]
 MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
 
+CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
+
 # Required dataset format:
 LABELS_COLUMN = "label"
 PATHS_COLUMN = "path"
