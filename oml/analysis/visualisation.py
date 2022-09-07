@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from oml.const import PATHS_KEY, X1_KEY, X2_KEY, Y1_KEY, Y2_KEY
+from oml.const import PAD_COLOR, PATHS_KEY, X1_KEY, X2_KEY, Y1_KEY, Y2_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.images.images import imread_cv2
 
@@ -38,6 +38,10 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     im_ret = cv2.rectangle(im_ret, (x1, y1), (x2, y2), thickness=5, color=color)
 
     return im_ret
+
+
+def square_pad(img: np.ndarray) -> np.ndarray:
+    return albu.functional.pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=PAD_COLOR)
 
 
 class RetrievalVisualizer:
@@ -110,10 +114,10 @@ class RetrievalVisualizer:
         fake_coord = np.array([float("nan")] * len(is_query))
         bboxes = list(
             zip(
-                emb.acc.storage.get("x1", fake_coord),
-                emb.acc.storage.get("y1", fake_coord),
-                emb.acc.storage.get("x2", fake_coord),
-                emb.acc.storage.get("y2", fake_coord),
+                emb.acc.storage.get(X1_KEY, fake_coord),
+                emb.acc.storage.get(Y1_KEY, fake_coord),
+                emb.acc.storage.get(X2_KEY, fake_coord),
+                emb.acc.storage.get(Y2_KEY, fake_coord),
             )
         )
 
@@ -162,7 +166,7 @@ class RetrievalVisualizer:
         plt.subplot(1, top_k + 1 + ngt_show, 1)
 
         img = self.get_img_with_bbox(self.query_paths[query_idx], self.query_bboxes[query_idx], BLUE)
-        img = albu.functional.pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=WHITE)
+        img = square_pad(img)
         if self.verbose:
             print("Q  ", self.query_paths[query_idx])
         plt.imshow(img)
@@ -175,9 +179,7 @@ class RetrievalVisualizer:
                 print("G", i, self.gallery_paths[idx])
             plt.subplot(1, top_k + ngt_show + 1, i + 2)
             img = self.get_img_with_bbox(self.gallery_paths[idx], self.gallery_bboxes[idx], color)
-            img = albu.functional.pad(
-                img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=WHITE
-            )
+            img = square_pad(img)
             plt.title(f"{i} - {round(self.dist_matrix[query_idx, idx].item(), 3)}")
             plt.imshow(img)
             plt.axis("off")
@@ -187,9 +189,7 @@ class RetrievalVisualizer:
         for i, gt_idx in enumerate(gt_ids):
             plt.subplot(1, top_k + ngt_show + 1, i + top_k + 2)
             img = self.get_img_with_bbox(self.gallery_paths[gt_idx], self.gallery_bboxes[gt_idx], GRAY)
-            img = albu.functional.pad(
-                img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=WHITE
-            )
+            img = square_pad(img)
             plt.title("GT " + str(round(self.dist_matrix[query_idx, gt_idx].item(), 3)))
             plt.imshow(img)
             plt.axis("off")
