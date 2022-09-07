@@ -72,5 +72,3 @@ X1_KEY = "x1"
 X2_KEY = "x2"
 Y1_KEY = "y1"
 Y2_KEY = "y2"
-
-# Mock dataset files
