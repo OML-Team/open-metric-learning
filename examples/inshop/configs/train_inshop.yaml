@@ -5,7 +5,7 @@ precision: 32
 accelerator: gpu
 devices: 1
 
-dataframe_name: df_fixed_train_fixed_val.csv
+dataframe_name: df.csv
 dataset_root: data/DeepFashion_InShop/
 logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
@@ -64,7 +64,8 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 2e-5  # if you provide scheduler this parameter will be ignored
+    lr: 2e-5
+
 
 scheduling: null
 

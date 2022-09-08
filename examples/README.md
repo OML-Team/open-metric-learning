@@ -142,7 +142,15 @@ Optional columns:
 * `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`).
 If only part of your images has bounding boxes, just fill the corresponding row with empty values.
 
-You can check the tables for the public datasets via the [link](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing).
+[Here](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing)
+are the tables examples for the public datasets. You can also use helper to check if your dataset
+is in the right format:
+```python
+import pandas as pd
+from oml.utils.dataframe_format import check_retrieval_dataframe_format
+
+check_retrieval_dataframe_format(df=pd.read_csv("/path/to/your/table.csv"), dataset_root="/path/to/your/datasets/root/")
+```
 
 
 ## How to work with a config?

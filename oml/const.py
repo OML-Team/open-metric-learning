@@ -33,6 +33,7 @@ MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
 MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
+MOCK_DATASET_FILES = "df.csv", "df_with_bboxes.csv", "df_with_category.csv"
 
 PAD_COLOR = (255, 255, 255)
 
@@ -42,6 +43,8 @@ TCfg = Union[Dict[str, Any], DictConfig]
 TNormParam = Tuple[float, float, float]
 MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
+
+CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 
 # Required dataset format:
 LABELS_COLUMN = "label"
