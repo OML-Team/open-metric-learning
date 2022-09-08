@@ -1,14 +1,13 @@
 import os
 import random
-import re
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple
 
 import dotenv
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from oml.const import DOTENV_PATH, OVERALL_CATEGORIES_KEY, TCfg
+from oml.const import DOTENV_PATH, TCfg
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
