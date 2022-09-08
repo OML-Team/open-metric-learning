@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
+from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
@@ -85,11 +85,11 @@ class RetrievalModule(pl.LightningModule):
 
 class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
     def __init__(
-            self,
-            loaders_train: Optional[TRAIN_DATALOADERS] = None,
-            loaders_val: Optional[EVAL_DATALOADERS] = None,
-            *args: Any,
-            **kwargs: Any
+        self,
+        loaders_train: Optional[TRAIN_DATALOADERS] = None,
+        loaders_val: Optional[EVAL_DATALOADERS] = None,
+        *args: Any,
+        **kwargs: Any
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
         RetrievalModule.__init__(self, *args, **kwargs)

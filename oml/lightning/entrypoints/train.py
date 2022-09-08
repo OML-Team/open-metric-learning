@@ -1,12 +1,10 @@
 import os
 from pathlib import Path
 from pprint import pprint
-from typing import List
 
 import albumentations as albu
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
-from torch import Tensor
 from torch.utils.data import DataLoader
 
 from oml.const import (
@@ -18,13 +16,14 @@ from oml.const import (
 )
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
-from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.entrypoints.parser import parse_engine_params_from_config, check_is_ddp_config
+from oml.lightning.entrypoints.parser import (
+    check_is_config_for_ddp,
+    parse_engine_params_from_config,
+)
 from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
-from oml.registry import MINERS_REGISTRY
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
@@ -35,31 +34,8 @@ from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
     load_dotenv,
-    set_global_seed, find_value_ids,
+    set_global_seed,
 )
-import numpy as np
-
-
-class FirstLabelMiner(InBatchTripletsMiner):
-    def _sample(self, features: Tensor, labels: List[int]) -> TTripletsIds:
-        ids_all = set(range(len(labels)))
-
-        ids_anchor, ids_pos, ids_neg = [], [], []
-
-        for i_anch, label in enumerate(labels):
-            ids_label = set(find_value_ids(it=labels, value=label))
-
-            ids_pos_cur = np.array(sorted(ids_label - {i_anch}), int)
-            ids_neg_cur = np.array(sorted(ids_all - ids_label), int)
-
-            ids_anchor.append(i_anch)
-            ids_pos.append(ids_pos_cur[0])
-            ids_neg.append(ids_neg_cur[0])
-
-        return ids_anchor, ids_pos, ids_neg
-
-
-MINERS_REGISTRY['first_label'] = FirstLabelMiner
 
 
 def pl_train(cfg: TCfg) -> None:
@@ -72,7 +48,7 @@ def pl_train(cfg: TCfg) -> None:
     """
     cfg = dictconfig_to_dict(cfg)
     trainer_engine_params = parse_engine_params_from_config(cfg)
-    is_ddp = check_is_ddp_config(trainer_engine_params)
+    is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
     pprint(cfg)
 
@@ -150,7 +126,7 @@ def pl_train(cfg: TCfg) -> None:
         module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
         module_constructor = RetrievalModuleDDP
     else:
-        module_constructor = RetrievalModule
+        module_constructor = RetrievalModule  # type: ignore
 
     pl_model = module_constructor(
         model=extractor,
@@ -173,7 +149,9 @@ def pl_train(cfg: TCfg) -> None:
     )
 
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
-    metrics_clb = metrics_clb_constructor(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
+    metrics_clb = metrics_clb_constructor(
+        metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True)
+    )
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
         monitor=f"{OVERALL_CATEGORIES_KEY}/cmc/1",

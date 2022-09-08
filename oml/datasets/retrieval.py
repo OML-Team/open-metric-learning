@@ -134,7 +134,6 @@ class BaseDataset(Dataset):
             image_tensor = self.transform(img)
 
         item = {
-            "idx": idx,
             self.input_tensors_key: image_tensor,
             self.labels_key: row[LABELS_COLUMN],
             self.paths_key: row[PATHS_COLUMN],

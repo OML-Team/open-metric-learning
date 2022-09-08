@@ -32,7 +32,7 @@ def func_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> No
 @pytest.mark.parametrize("n_instances_sampler", [2, 5])
 @pytest.mark.parametrize("n_labels_dataset", [100, 85])
 @pytest.mark.parametrize("world_size", [1, 2, 3])
-def test_patching_balance_batch_sampler(
+def test_patching_balance_sampler(
     world_size: int, n_labels_dataset: int, n_labels_sampler: int, n_instances_sampler: int
 ) -> None:
     args = (n_labels_dataset, n_labels_sampler, n_instances_sampler)

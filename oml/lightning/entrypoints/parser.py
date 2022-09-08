@@ -45,5 +45,5 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     }
 
 
-def check_is_ddp_config(cfg: TCfg) -> bool:
+def check_is_config_for_ddp(cfg: TCfg) -> bool:
     return bool(cfg["strategy"])

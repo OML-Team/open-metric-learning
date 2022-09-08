@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import torch
-from torch.distributed import all_gather_object, is_initialized, logging
+from torch.distributed import all_gather_object, get_world_size, logging
 from torch.utils.data import (
     BatchSampler,
     DataLoader,
@@ -71,7 +71,7 @@ def sync_dicts_ddp(
     NOTE: Function under the hood pickles all object, convert bytes to tensor, then unpickle after syncing.
     With nccl (default) DDP backend intermediate tensors are stored on CUDA.
     """
-    if world_size >= 1 and is_initialized():
+    if world_size >= 1 and is_ddp():
         gathered: List[Optional[Dict[str, Any]]] = [None for _ in range(world_size)]
         all_gather_object(gathered, outputs_from_device, group=torch.distributed.group.WORLD)
         return merge_list_of_dicts(gathered, device)
@@ -147,7 +147,7 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
         We ALWAYS use padding of samples (number of batches or number of samples per epoch) in order to use same amount
         of data for each device in DDP, so behaviour with and without DDP may be slightly different (e.g. metrics).
     """
-    if is_initialized():
+    if is_ddp():
         kwargs_loader = {
             "collate_fn": loader.collate_fn,
             "persistent_workers": loader.persistent_workers,
@@ -198,3 +198,11 @@ def check_loaders_is_patched(loaders: Union[DataLoader, Sequence[DataLoader]]) -
             return False
 
     return True
+
+
+def is_ddp() -> bool:
+    try:
+        get_world_size()
+        return True
+    except:
+        return False

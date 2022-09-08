@@ -135,11 +135,8 @@ class MetricValCallbackDDP(MetricValCallback):
         # TODO: optimize to avoid duplication of metrics on all devices.
         #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
         #  because they need this metric for checkpointing
-        before = self.metric.acc.storage['embeddings'].shape
         self.metric.sync()
-        after = self.metric.acc.storage['embeddings'].shape
-        print('VAL', [before, after])
-        return super(MetricValCallbackDDP, self).calc_and_log_metrics(pl_module=pl_module)
+        return super().calc_and_log_metrics(pl_module=pl_module)
 
     @staticmethod
     def _check_loaders(trainer: "pl.Trainer") -> None:

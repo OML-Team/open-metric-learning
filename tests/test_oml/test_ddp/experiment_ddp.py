@@ -10,7 +10,7 @@ from pytorch_lightning.utilities.types import (
     TRAIN_DATALOADERS,
 )
 from torch import nn
-from torch.optim import SGD
+from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset, SequentialSampler
 
 from oml.const import TMP_PATH
@@ -29,9 +29,9 @@ We check the following:
 1) Train and Val loaders are splitted into several part. These parts have no overlapping except several samples (for
 validation with default {SequentialSampler}) or several batches (for training with {BalanceSampler}) which is neccesary
 for padding according the number of devices.
-2) Metrics with different number of devices are very similar. For this purposes we save metrics after each epoch
-and compare them later. We use high learning rate to be sure that weights of model and outputs during validation between
-different epochs are different.
+2) Metrics with different number of devices are very similar. For this purposes we save metrics and compare them later.
+Note that only the final metric should be similar.
+
 Our dummy data is presented by GT labels and PRED labels with some errors. Amount of errors are the same for each
 runnings.
 """
@@ -110,7 +110,7 @@ class DummyModule(ModuleDDP):
         assert len(output_batches_synced) - len(set(output_batches_synced)) <= max_num_not_unique_batches
 
     def configure_optimizers(self) -> Any:
-        return SGD(params=self.parameters(), lr=5e-2, momentum=0)
+        return Adam(params=self.parameters(), lr=1e-3)
 
 
 class MetricValCallbackWithSaving(MetricValCallbackDDP):
@@ -118,9 +118,7 @@ class MetricValCallbackWithSaving(MetricValCallbackDDP):
     We add saving of metrics for later comparison
     """
 
-    save_path_pattern = str(
-        TMP_PATH / "devices_{devices}_batch_size_{batch_size}_num_labels_{num_labels}_epoch_{epoch}.pth"
-    )
+    save_path_pattern = str(TMP_PATH / "devices_{devices}_batch_size_{batch_size}_num_labels_{num_labels}.pth")
 
     def __init__(self, devices: int, batch_size: int, num_labels: int, *args: Any, **kwargs: Any):
         super(MetricValCallbackWithSaving, self).__init__(*args, **kwargs)
@@ -131,7 +129,7 @@ class MetricValCallbackWithSaving(MetricValCallbackDDP):
     def on_validation_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         ret = super().on_validation_epoch_end(trainer, pl_module)
         save_path = self.save_path_pattern.format(
-            devices=self.devices, batch_size=self.batch_size, num_labels=self.num_labels, epoch=trainer.current_epoch
+            devices=self.devices, batch_size=self.batch_size, num_labels=self.num_labels
         )
         torch.save(self.metric.metrics, save_path)  # type: ignore
         return ret

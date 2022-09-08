@@ -8,7 +8,10 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.retrieval import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.entrypoints.parser import parse_engine_params_from_config, check_is_ddp_config
+from oml.lightning.entrypoints.parser import (
+    check_is_config_for_ddp,
+    parse_engine_params_from_config,
+)
 from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.models import get_extractor_by_cfg
@@ -26,7 +29,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
     cfg = dictconfig_to_dict(cfg)
     trainer_engine_params = parse_engine_params_from_config(cfg)
-    is_ddp = check_is_ddp_config(trainer_engine_params)
+    is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
     pprint(cfg)
 
@@ -45,7 +48,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         module_kwargs["loaders_val"] = loader_val
         module_constructor = RetrievalModuleDDP
     else:
-        module_constructor = RetrievalModule
+        module_constructor = RetrievalModule  # type: ignore
 
     pl_model = module_constructor(
         model=extractor,
@@ -68,7 +71,9 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         **cfg.get("metric_args", {})
     )
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
-    clb_metric = metrics_clb_constructor(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
+    clb_metric = metrics_clb_constructor(
+        metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True)
+    )
 
     trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)
 

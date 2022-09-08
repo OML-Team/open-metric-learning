@@ -20,7 +20,7 @@ exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/experiment_ddp.py"
 )
 @pytest.mark.parametrize("batch_size", [10, 19])
 @pytest.mark.parametrize("max_epochs", [3])
-@pytest.mark.parametrize("num_labels,atol", [(200, 1e-2), (1000, 3e-3)])
+@pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-3)])
 def test_metrics_is_similar_in_ddp(
     devices: Tuple[int, ...], num_labels: int, atol: float, batch_size: int, max_epochs: int
 ) -> None:
@@ -41,15 +41,14 @@ def test_metrics_is_similar_in_ddp(
         cmd = f"python {exp_file} " + params
         subprocess.run(cmd, check=True, shell=True)
 
-        for epoch in range(max_epochs):
-            metrics_path = MetricValCallbackWithSaving.save_path_pattern.format(
-                devices=num_devices, batch_size=batch_size, num_labels=num_labels, epoch=epoch
-            )
-            metrics = torch.load(metrics_path)[OVERALL_CATEGORIES_KEY]
-            # Path(metrics_path).unlink(missing_ok=True)
-            for metric_name, topk2value in metrics.items():
-                for top_k, value in topk2value.items():
-                    metric_topk2values[f"{metric_name}_{top_k}_epoch_{epoch}"].append(value)
+        metrics_path = MetricValCallbackWithSaving.save_path_pattern.format(
+            devices=num_devices, batch_size=batch_size, num_labels=num_labels
+        )
+        metrics = torch.load(metrics_path)[OVERALL_CATEGORIES_KEY]
+        Path(metrics_path).unlink(missing_ok=True)
+        for metric_name, topk2value in metrics.items():
+            for top_k, value in topk2value.items():
+                metric_topk2values[f"{metric_name}_{top_k}"].append(value)
 
     compare_metrics(metric_topk2values, atol)
 
