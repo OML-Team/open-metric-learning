@@ -29,7 +29,7 @@ class ViTExtractor(IExtractor):
         "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
         "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
         # our pretrained checkpoints
-        "vits16_inshop": ("1Fjf9SlhIgXi-YBf-39BWfd16rsha0qYZ", "384ead", "vits16_inshop.ckpt"),
+        "vits16_inshop": ("1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste", "e1017d", "vits16_inshop.ckpt"),
         "vits16_sop": ("1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt", "85cfa5", "vits16_sop.ckpt"),
         "vits16_cub": ("1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G", "e82633", "vits16_cub.ckpt"),
         "vits16_cars": ("1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg", "9f1e59", "vits16_cars.ckpt"),
