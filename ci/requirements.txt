@@ -2,7 +2,6 @@ albumentations==1.0.3
 gdown==4.5.1
 grad-cam==1.3.7
 hydra-core==1.2.0
-imagesize==1.4.1
 jupyter==1.0.0
 matplotlib==3.5.2
 numpy==1.22.3

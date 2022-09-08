@@ -82,8 +82,12 @@ def check_retrieval_dataframe_format(
         )
 
         bboxes_df = df[~(df[X1_COLUMN].isna())]
-        assert all((bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]).to_list())
-        assert all((bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]).to_list())
+        mask_good_x1_x2 = bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]
+        mask_good_y1_y2 = bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]
+        n_bad_x1_x2 = (~mask_good_x1_x2).sum()
+        n_bad_y1_y2 = (~mask_good_y1_y2).sum()
+        assert not n_bad_x1_x2, f"Number of bad x1/x2 pairs {n_bad_x1_x2}"
+        assert not n_bad_y1_y2, f"Number of bad y1/y2 pairs {n_bad_y1_y2}"
         for coord in BBOXES_COLUMNS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 

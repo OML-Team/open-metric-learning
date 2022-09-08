@@ -1,7 +1,7 @@
 postfix: "deepfashion"
 
 seed: 42
-gpus: []
+
 precision: 32
 accelerator: cpu
 devices: 1
