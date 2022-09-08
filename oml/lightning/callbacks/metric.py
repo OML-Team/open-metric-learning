@@ -95,34 +95,37 @@ class MetricValCallback(Callback):
             if is_last_expected_batch:
                 self.calc_and_log_metrics(pl_module)
 
+    def _log_images(self, pl_module: pl.LightningDataModule) -> None:
+        if not isinstance(self.metric, EmbeddingMetrics):
+            return
+        visualizer = RetrievalVisualizer.from_embeddings_metric(self.metric, verbose=False)  # type: ignore
+        for metric_name, metric_values in flatten_dict(self.metric.metrics_unreduced, sep="_").items():  # type: ignore
+            if any([ignore in metric_name for ignore in self.image_metrics_to_ignore]):
+                continue
+            if self.log_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
+                continue
+            for n, idx in enumerate(np.argsort(metric_values)[: self.image_top_k_per_metric]):
+                fig = visualizer.visualise(query_idx=idx, top_k=self.image_top_k_in_row)
+                if not fig:
+                    continue
+                log_str = f"{self.image_folder}/epoch_{pl_module.current_epoch}/#{n + 1} worst by {metric_name}"
+                if isinstance(pl_module.logger, NeptuneLogger):
+                    pl_module.logger.experiment[log_str].log(File.as_image(fig))
+                elif isinstance(pl_module.logger, TensorBoardLogger):
+                    fig.canvas.draw()
+                    data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+                    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                    pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
+                else:
+                    raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
+
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._ready_to_accumulate = False
         if self._collected_samples != self._expected_samples:
             self._raise_computation_error()
 
         if self.save_image_logs:
-            if not isinstance(self.metric, EmbeddingMetrics):
-                return
-            visualizer = RetrievalVisualizer.from_embeddings_metric(self.metric, verbose=False)  # type: ignore
-            for metric_name, metric_values in flatten_dict(self.metric.metrics_unreduced, sep="_").items():  # type: ignore
-                if any([ignore in metric_name for ignore in self.image_metrics_to_ignore]):
-                    continue
-                if self.log_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
-                    continue
-                for n, idx in enumerate(np.argsort(metric_values)[: self.image_top_k_per_metric]):
-                    fig = visualizer.visualise(query_idx=idx, top_k=self.image_top_k_in_row)
-                    if not fig:
-                        continue
-                    log_str = f"{self.image_folder}/epoch_{pl_module.current_epoch}/#{n + 1} worst by {metric_name}"
-                    if isinstance(pl_module.logger, NeptuneLogger):
-                        pl_module.logger.experiment[log_str].log(File.as_image(fig))
-                    elif isinstance(pl_module.logger, TensorBoardLogger):
-                        fig.canvas.draw()
-                        data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-                        data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                        pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
-                    else:
-                        raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
+            self._log_images(pl_module=pl_module)
 
     def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
         metrics = self.metric.compute_metrics()
