@@ -7,7 +7,8 @@ import pytest
 import torch
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT
-from tests.test_oml.test_ddp.experiment_ddp import MetricValCallbackWithSaving
+
+from .experiment_ddp import MetricValCallbackWithSaving
 
 exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/experiment_ddp.py"
 
