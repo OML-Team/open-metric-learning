@@ -33,7 +33,6 @@ from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
-    get_monitor_and_update_cfg,
     load_dotenv,
     set_global_seed,
 )
@@ -133,9 +132,7 @@ def pl_train(cfg: TCfg) -> None:
 
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
-        monitor=get_monitor_and_update_cfg(
-            cfg=cfg
-        ),  # should be called before EmbeddingMetrics because it may create metric in metric_args
+        monitor=cfg.get("metric_args", {}).get("metric_for_checkpointing", f"{OVERALL_CATEGORIES_KEY}/cmc/1"),
         mode="max",
         save_top_k=1,
         verbose=True,

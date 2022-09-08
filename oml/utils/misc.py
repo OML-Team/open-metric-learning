@@ -112,20 +112,6 @@ def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     return tuple(min(x, max_el) for x in arr)
 
 
-def get_monitor_and_update_cfg(cfg: TCfg) -> str:
-    metric_args = cfg.setdefault("metric_args", {})
-    metric_for_ckpt = metric_args.get("metric_for_checkpointing", f"{OVERALL_CATEGORIES_KEY}/cmc/1")
-
-    metric_name, metric_topk = re.findall(r"([a-zA-Z]+)/(\d+)", metric_for_ckpt)[-1]
-    metric_topk = int(metric_topk)
-
-    metric_topk_list = cfg["metric_args"].setdefault(f"{metric_name}_top_k", [])
-    if metric_topk not in metric_topk_list:
-        cfg["metric_args"][f"{metric_name}_top_k"].append(metric_topk)
-
-    return metric_for_ckpt
-
-
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -135,5 +121,4 @@ __all__ = [
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",
-    "get_monitor_and_update_cfg",
 ]
