@@ -1,13 +1,12 @@
 postfix: "deepfashion"
 
 seed: 42
-gpus: []
 precision: 32
 accelerator: cpu
 devices: 1
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df.csv
+dataframe_name: df_full.csv
 logs_root: logs
 
 num_workers: 0
@@ -19,8 +18,9 @@ transforms_train:
     im_size: 128
 
 transforms_val:
-  name: norm_torch
-  args: {}
+  name: norm_resize_torch
+  args:
+    im_size: 130
 
 criterion:
   name: triplet_with_miner

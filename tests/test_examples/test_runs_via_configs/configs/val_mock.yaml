@@ -2,15 +2,14 @@ accelerator: cpu
 devices: 1
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df.csv
+dataframe_name: df_full.csv
 
 transforms_val:
-  name: norm_torch
-  args: {}
+  name: norm_resize_torch
+  args:
+    im_size: 48
 
 logs_root: logs
-
-gpus: []
 
 num_workers: 0
 
