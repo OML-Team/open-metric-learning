@@ -18,7 +18,7 @@ class MetricValCallback(Callback):
     def __init__(
         self,
         metric: IBasicMetric,
-        save_image_logs: bool = True,
+        save_image_logs: bool = False,
         log_only_main_category: bool = True,
         loader_idx: int = 0,
         samples_in_getitem: int = 1,
