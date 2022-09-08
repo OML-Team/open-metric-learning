@@ -2,12 +2,13 @@
 
 # -- Project information
 
-from oml import __version__
+from pathlib import Path
+
+with open(Path.cwd().parent.parent / "oml" / "__init__.py", "r") as f:
+    version = f.read().split('"')[-2]
 
 project = "Open Metric Learning"
 author = "Shabanov Aleksei"
-
-version = __version__
 
 # -- General configuration
 
