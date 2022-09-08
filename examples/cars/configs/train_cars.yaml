@@ -62,7 +62,7 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 2e-5  # if you provide scheduler this parameter will be ignored
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
 
 scheduling: null
