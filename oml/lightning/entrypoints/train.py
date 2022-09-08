@@ -33,6 +33,7 @@ from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
+    get_monitor_and_update_cfg,
     load_dotenv,
     set_global_seed,
 )
@@ -130,6 +131,16 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
+    ckpt_clb = pl.callbacks.ModelCheckpoint(
+        dirpath=Path.cwd() / "checkpoints",
+        monitor=get_monitor_and_update_cfg(
+            cfg=cfg
+        ),  # should be called before EmbeddingMetrics because it may create metric in metric_args
+        mode="max",
+        save_top_k=1,
+        verbose=True,
+        filename="best",
+    )
     metrics_calc = EmbeddingMetrics(
         embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
@@ -139,16 +150,7 @@ def pl_train(cfg: TCfg) -> None:
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {}),
     )
-
     metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
-    ckpt_clb = pl.callbacks.ModelCheckpoint(
-        dirpath=Path.cwd() / "checkpoints",
-        monitor=f"{OVERALL_CATEGORIES_KEY}/cmc/1",
-        mode="max",
-        save_top_k=1,
-        verbose=True,
-        filename="best",
-    )
 
     # Here we try to load NEPTUNE_API_TOKEN from .env file
     # You can also set it up via `export NEPTUNE_API_TOKEN=...`
