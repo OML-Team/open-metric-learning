@@ -53,16 +53,6 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
         assert file.is_file(), f"File {file} does not exist."
 
     df = txt_to_df(list_eval_partition)
-    df["path"] = df["image_name"].apply(lambda x: Path(dataset_root) / x)
-
-    need_bboxes = not no_bboxes
-    if need_bboxes:
-        df_bbox = txt_to_df(list_bbox_inshop)
-        for name in ["x_1", "y_1", "x_2", "y_2"]:
-            df_bbox[name] = df_bbox[name].astype(int)
-
-        df = df.merge(df_bbox, on="image_name", how="inner")
-        df.reset_index(inplace=True, drop=True)
 
     df["label"] = df["item_id"].apply(lambda x: int(x[3:]))
 
@@ -76,11 +66,24 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     df["is_query"][df["split"] == "train"] = None
     df["is_gallery"][df["split"] == "train"] = None
 
+    cols_to_pick = ["label", "path", "split", "is_query", "is_gallery", "category"]
+
+    if no_bboxes:
+        df["path"] = df["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
+
+    else:
+        bbox_cols = ["x_1", "x_2", "y_1", "y_2"]
+        cols_to_pick.extend(bbox_cols)
+        df_bbox = txt_to_df(list_bbox_inshop)
+        for name in bbox_cols:
+            df_bbox[name] = df_bbox[name].astype(int)
+
+        df = df.merge(df_bbox, on="image_name", how="inner")
+        df.reset_index(inplace=True, drop=True)
+        df["path"] = df["image_name"].apply(lambda x: Path(dataset_root) / x)
+
     df["category"] = df["path"].apply(lambda x: x.parent.parent.name)
 
-    cols_to_pick = ["label", "path", "split", "is_query", "is_gallery", "category"]
-    if need_bboxes:
-        cols_to_pick.extend(["x_1", "x_2", "y_1", "y_2"])
     df = df[cols_to_pick]
 
     # check stat
