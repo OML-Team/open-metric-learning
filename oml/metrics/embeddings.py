@@ -266,7 +266,6 @@ class EmbeddingMetrics(IBasicMetric):
                 plt.axis("off")
 
         fig.tight_layout()
-        plt.show()
         return fig
 
 

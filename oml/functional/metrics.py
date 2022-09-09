@@ -114,11 +114,11 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:  # type: ig
     if isinstance(metrics_to_reduce, (float, int)):
         return metrics_to_reduce
 
-    d = {}
+    output = {}
     for k, v in metrics_to_reduce.items():
-        d[k] = reduce_metrics(v)  # type: ignore
+        output[k] = reduce_metrics(v)  # type: ignore
 
-    return d  # type: ignore
+    return output  # type: ignore
 
 
 def apply_mask_to_ignore(
