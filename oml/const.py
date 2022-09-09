@@ -2,6 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 from sys import platform
+from tkinter.tix import IMAGE
 from typing import Any, Dict, Tuple, Union
 
 from omegaconf import DictConfig
@@ -32,9 +33,18 @@ MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
+LOG_IMAGE_FOLDER = "image_logs"
+LOG_TOPK_ROWS_PER_METRIC = 5
+LOG_TOPK_IMAGES_PER_ROW = 5
+
 MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
 MOCK_DATASET_FILES = "df.csv", "df_with_bboxes.csv", "df_with_category.csv"
 
+TColor = Tuple[int, int, int]
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+GRAY = (120, 120, 120)
 PAD_COLOR = (255, 255, 255)
 
 TCfg = Union[Dict[str, Any], DictConfig]

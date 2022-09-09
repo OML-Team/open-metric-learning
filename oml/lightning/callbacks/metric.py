@@ -7,8 +7,12 @@ from pytorch_lightning import Callback
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
-from oml.analysis.visualisation import RetrievalVisualizer
-from oml.const import OVERALL_CATEGORIES_KEY
+from oml.const import (
+    LOG_IMAGE_FOLDER,
+    LOG_TOPK_IMAGES_PER_ROW,
+    LOG_TOPK_ROWS_PER_METRIC,
+    OVERALL_CATEGORIES_KEY,
+)
 from oml.interfaces.metrics import IBasicMetric
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import flatten_dict
@@ -22,9 +26,6 @@ class MetricValCallback(Callback):
         log_only_main_category: bool = True,
         loader_idx: int = 0,
         samples_in_getitem: int = 1,
-        image_top_k_per_metric: int = 3,
-        image_top_k_in_row: int = 5,
-        image_folder: str = "image_logs",
         image_metrics_to_ignore: Iterable[str] = ("cmc",),
     ):
         """
@@ -49,9 +50,6 @@ class MetricValCallback(Callback):
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem
 
-        self.image_top_k_per_metric = image_top_k_per_metric
-        self.image_top_k_in_row = image_top_k_in_row
-        self.image_folder = image_folder
         self.image_metrics_to_ignore = image_metrics_to_ignore
 
         self._expected_samples = 0
@@ -98,34 +96,31 @@ class MetricValCallback(Callback):
     def _log_images(self, pl_module: pl.LightningDataModule) -> None:
         if not isinstance(self.metric, EmbeddingMetrics):
             return
-        visualizer = RetrievalVisualizer.from_embeddings_metric(self.metric, verbose=False)  # type: ignore
-        for metric_name, metric_values in flatten_dict(self.metric.metrics_unreduced, sep="_").items():  # type: ignore
+
+        for metric_name in flatten_dict(self.metric.metrics):  # type: ignore
             if any([ignore in metric_name for ignore in self.image_metrics_to_ignore]):
                 continue
             if self.log_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
                 continue
-            for n, idx in enumerate(np.argsort(metric_values)[: self.image_top_k_per_metric]):
-                fig = visualizer.visualise(query_idx=idx, top_k=self.image_top_k_in_row)
-                if not fig:
-                    continue
-                log_str = f"{self.image_folder}/epoch_{pl_module.current_epoch}/#{n + 1} worst by {metric_name}"
-                if isinstance(pl_module.logger, NeptuneLogger):
-                    pl_module.logger.experiment[log_str].log(File.as_image(fig))
-                elif isinstance(pl_module.logger, TensorBoardLogger):
-                    fig.canvas.draw()
-                    data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-                    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                    pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
-                else:
-                    raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
+            fig = self.metric.get_plot_for_worst_queries(
+                metric_name=metric_name, topk_queries=LOG_TOPK_ROWS_PER_METRIC, topk_instances=LOG_TOPK_IMAGES_PER_ROW
+            )
+            metric_name_for_logging = metric_name.replace("/", "_")
+            log_str = f"{LOG_IMAGE_FOLDER}/epoch_{pl_module.current_epoch}/top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name_for_logging}"
+            if isinstance(pl_module.logger, NeptuneLogger):
+                pl_module.logger.experiment[log_str].log(File.as_image(fig))
+            elif isinstance(pl_module.logger, TensorBoardLogger):
+                fig.canvas.draw()
+                data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+                data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
+            else:
+                raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._ready_to_accumulate = False
         if self._collected_samples != self._expected_samples:
             self._raise_computation_error()
-
-        if self.save_image_logs:
-            self._log_images(pl_module=pl_module)
 
     def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
         metrics = self.metric.compute_metrics()
@@ -133,8 +128,11 @@ class MetricValCallback(Callback):
         if self.log_only_main_category:
             metrics = {self.metric.overall_categories_key: metrics[self.metric.overall_categories_key]}
 
-        metrics = flatten_dict(metrics, sep="/")  # to-do: don't need
+        metrics = flatten_dict(metrics)
         pl_module.log_dict(metrics, rank_zero_only=True, add_dataloader_idx=True)
+
+        if self.save_image_logs:
+            self._log_images(pl_module=pl_module)
 
     def _raise_computation_error(self) -> Exception:
         raise ValueError(

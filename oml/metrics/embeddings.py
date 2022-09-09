@@ -1,19 +1,38 @@
-from typing import Any, Dict, Optional, Tuple, Union
+from tabnanny import verbose
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
-from oml.const import EMBEDDINGS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, LABELS_KEY
+from oml.const import (
+    BLUE,
+    EMBEDDINGS_KEY,
+    GRAY,
+    GREEN,
+    IS_GALLERY_KEY,
+    IS_QUERY_KEY,
+    LABELS_KEY,
+    PATHS_KEY,
+    RED,
+    X1_KEY,
+    X2_KEY,
+    Y1_KEY,
+    Y2_KEY,
+)
 from oml.functional.metrics import (
     TMetricsDict,
     calc_distance_matrix,
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
-    reduce_retrieval_metrics,
+    reduce_metrics,
 )
 from oml.interfaces.metrics import IBasicMetric
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
+from oml.utils.images.images import get_img_with_bbox, square_pad
+from oml.utils.misc import flatten_dict
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -34,7 +53,6 @@ class EmbeddingMetrics(IBasicMetric):
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         check_dataset_validity: bool = True,
-        save_non_reduced: bool = True,
     ):
         """
         This class accumulates the information from the batches and embeddings produced by the model
@@ -75,7 +93,6 @@ class EmbeddingMetrics(IBasicMetric):
         self.mask_to_ignore = None
 
         self.check_dataset_validity = check_dataset_validity
-        self.save_non_reduced = save_non_reduced
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -156,12 +173,101 @@ class EmbeddingMetrics(IBasicMetric):
                     **args,  # type: ignore
                 )
 
-        if self.save_non_reduced:
-            self.metrics_unreduced = metrics
-
-        self.metrics = reduce_retrieval_metrics(metrics)  # type: ignore
+        self.metrics_unreduced = metrics
+        self.metrics = reduce_metrics(metrics)  # type: ignore
 
         return self.metrics
+
+    def get_worst_queries_ids(self, metric_name: str, topk: int) -> List[int]:
+        metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
+        return np.argsort(metric_values)[:topk].tolist()
+
+    def get_plot_for_worst_queries(
+        self, metric_name: str, topk_queries: int, topk_instances: int, verbose: bool = False
+    ) -> plt.Figure:
+        query_ids = self.get_worst_queries_ids(metric_name=metric_name, topk=topk_queries)
+        return self.get_plot_for_queries(query_ids=query_ids, top_k=topk_instances, verbose=verbose)
+
+    def get_plot_for_queries(
+        self,
+        query_ids: List[int],
+        top_k: int,
+        verbose: bool = True,
+    ) -> plt.Figure:
+        """
+        Visualize the predictions for the query with the indicies <query_ids>.
+
+        Args:
+            query_ids: Index of the query
+            top_k: Amount of the predictions to show
+            verbose: wether to show image paths or not
+
+        """
+        assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
+
+        dist_matrix_with_inf = torch.clone(self.distance_matrix)
+        dist_matrix_with_inf[self.mask_to_ignore] = float("inf")
+
+        is_query = self.acc.storage[self.is_query_key]
+        is_gallery = self.acc.storage[self.is_gallery_key]
+
+        query_paths = np.array(self.acc.storage[PATHS_KEY])[is_query]
+        gallery_paths = np.array(self.acc.storage[PATHS_KEY])[is_gallery]
+
+        fake_coord = np.array([float("nan")] * len(is_query))
+        bboxes = list(
+            zip(
+                self.acc.storage.get(X1_KEY, fake_coord),
+                self.acc.storage.get(Y1_KEY, fake_coord),
+                self.acc.storage.get(X2_KEY, fake_coord),
+                self.acc.storage.get(Y2_KEY, fake_coord),
+            )
+        )
+
+        query_bboxes = torch.tensor(bboxes)[is_query]
+        gallery_bboxes = torch.tensor(bboxes)[is_gallery]
+
+        fig = plt.figure(figsize=(30, 30 / (top_k + 2 + 1) * len(query_ids)))
+        for j, query_idx in enumerate(query_ids):
+            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:top_k]
+
+            n_gt = self.mask_gt[query_idx].sum()  # type: ignore
+            ngt_show = 2
+
+            plt.subplot(len(query_ids), top_k + 1 + ngt_show, j * (top_k + 1 + ngt_show) + 1)
+
+            img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
+            img = square_pad(img)
+            if verbose:
+                print("Q  ", query_paths[query_idx])
+            plt.imshow(img)
+            plt.title(f"Query, #gt = {n_gt}")
+            plt.axis("off")
+
+            for i, idx in enumerate(ids):
+                color = GREEN if self.mask_gt[query_idx, idx] else RED  # type: ignore
+                if verbose:
+                    print("G", i, gallery_paths[idx])
+                plt.subplot(len(query_ids), top_k + ngt_show + 1, j * (top_k + 1 + ngt_show) + i + 2)
+                img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
+                img = square_pad(img)
+                plt.title(f"{i} - {round(dist_matrix_with_inf[query_idx, idx].item(), 3)}")
+                plt.imshow(img)
+                plt.axis("off")
+
+            gt_ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:ngt_show]  # type: ignore
+
+            for i, gt_idx in enumerate(gt_ids):
+                plt.subplot(len(query_ids), top_k + ngt_show + 1, j * (top_k + 1 + ngt_show) + i + top_k + 2)
+                img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
+                img = square_pad(img)
+                plt.title("GT " + str(round(dist_matrix_with_inf[query_idx, gt_idx].item(), 3)))
+                plt.imshow(img)
+                plt.axis("off")
+
+        fig.tight_layout()
+        plt.show()
+        return fig
 
 
 __all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]

@@ -103,20 +103,20 @@ def calc_retrieval_metrics(
         metrics["map"][k_map_show] = mean_ap
 
     if reduce:
-        metrics = reduce_retrieval_metrics(metrics)
+        metrics = reduce_metrics(metrics)
 
     return metrics
 
 
-def reduce_retrieval_metrics(unreduced_metrics: TMetricsDict) -> TMetricsDict:  # type: ignore
-    if isinstance(unreduced_metrics, torch.Tensor):
-        return unreduced_metrics.mean()
-    elif isinstance(unreduced_metrics, float):
-        return unreduced_metrics
+def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:  # type: ignore
+    if isinstance(metrics_to_reduce, torch.Tensor):
+        return metrics_to_reduce.mean()
+    if isinstance(metrics_to_reduce, float):
+        return metrics_to_reduce
 
     d = {}
-    for k, v in unreduced_metrics.items():
-        d[k] = reduce_retrieval_metrics(v)  # type: ignore
+    for k, v in metrics_to_reduce.items():
+        d[k] = reduce_metrics(v)  # type: ignore
 
     return d  # type: ignore
 
@@ -224,4 +224,5 @@ __all__ = [
     "calc_mask_to_ignore",
     "calc_distance_matrix",
     "calculate_accuracy_on_triplets",
+    "reduce_metrics",
 ]
