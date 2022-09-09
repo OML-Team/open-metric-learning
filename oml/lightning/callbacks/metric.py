@@ -42,10 +42,6 @@ class MetricValCallback(Callback):
         self.metric = metric
         self.save_image_logs = save_image_logs
 
-        assert (
-            getattr(metric, "save_non_reduced", False) or not self.save_image_logs
-        ), "You have to save reduced metrics to plot worst cases"
-
         self.log_only_main_category = log_only_main_category
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem
