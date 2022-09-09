@@ -140,7 +140,11 @@ def pl_train(cfg: TCfg) -> None:
         **cfg.get("metric_args", {}),
     )
 
-    metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
+    metrics_clb = MetricValCallback(
+        metric=metrics_calc,
+        save_image_logs=cfg.get("log_images", False),
+        log_only_main_category=cfg.get("log_only_main_category", True),
+    )
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
         monitor=f"{OVERALL_CATEGORIES_KEY}/cmc/1",

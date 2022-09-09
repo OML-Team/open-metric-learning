@@ -35,6 +35,7 @@ sampler:
 bs_val: 256
 max_epochs: 10000
 valid_period: 1
+log_images: True
 
 metric_args:
   cmc_top_k: [1]
