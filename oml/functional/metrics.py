@@ -109,9 +109,9 @@ def calc_retrieval_metrics(
 
 
 def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:  # type: ignore
-    if isinstance(metrics_to_reduce, torch.Tensor):
+    if isinstance(metrics_to_reduce, (torch.Tensor, np.ndarray)):
         return metrics_to_reduce.mean()
-    if isinstance(metrics_to_reduce, float):
+    if isinstance(metrics_to_reduce, (float, int)):
         return metrics_to_reduce
 
     d = {}
