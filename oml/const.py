@@ -2,7 +2,6 @@ import os
 import tempfile
 from pathlib import Path
 from sys import platform
-from tkinter.tix import IMAGE
 from typing import Any, Dict, Tuple, Union
 
 from omegaconf import DictConfig
