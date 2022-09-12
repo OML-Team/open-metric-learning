@@ -40,7 +40,7 @@ metric_args:
   cmc_top_k: [1]
   map_top_k: [5]
 
-metric_for_checkpointing: OVERALL/map/5
+metric_for_checkpointing: OVERALL/cmc/1
 log_only_main_category: True
 
 model:
