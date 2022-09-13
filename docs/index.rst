@@ -11,6 +11,7 @@ Contents
    source/installation
 
 .. toctree::
+   source/interfaces
    source/samplers
    source/miners
    source/losses

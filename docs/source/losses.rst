@@ -33,4 +33,3 @@ TripletLossWithMiner
     :show-inheritance:
 
     .. automethod:: forward
-
