@@ -4,12 +4,12 @@ import numpy as np
 from torch import Tensor
 from torch.nn import functional as F
 
-from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
+from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids
 from oml.utils.misc_torch import pairwise_dist
 
 
-class HardTripletsMiner(InBatchTripletsMiner):
+class HardTripletsMiner(ITripletsMinerInBatch):
     """
     This miner selects hardest triplets based on distances between features:
     the hardest positive sample has the maximal distance to the anchor sample,

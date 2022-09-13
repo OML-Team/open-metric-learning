@@ -42,7 +42,7 @@ class ITripletsMiner(ABC):
         raise NotImplementedError()
 
 
-class InBatchTripletsMiner(ITripletsMiner):
+class ITripletsMinerInBatch(ITripletsMiner):
     """
     We expect that the child instances of this class
     will be used for mining triplets inside the batches.
@@ -103,4 +103,4 @@ class InBatchTripletsMiner(ITripletsMiner):
         return features[ids_anchor], features[ids_pos], features[ids_neg]
 
 
-__all__ = ["TTriplets", "TTripletsIds", "TLabels", "labels2list", "ITripletsMiner", "InBatchTripletsMiner"]
+__all__ = ["TTriplets", "TTripletsIds", "TLabels", "labels2list", "ITripletsMiner", "ITripletsMinerInBatch"]

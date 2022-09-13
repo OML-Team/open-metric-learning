@@ -1,4 +1,4 @@
-Base Classes
+Base Interfaces
 =============================
 
 .. toctree::

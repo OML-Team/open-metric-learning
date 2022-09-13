@@ -76,7 +76,7 @@ class ViTExtractor(IExtractor):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mscale:
-            x = self.multi_scale(x)
+            x = self._multi_scale(x)
         else:
             x = self.model(x)
 
@@ -90,7 +90,7 @@ class ViTExtractor(IExtractor):
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)
 
-    def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
+    def _multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
         # code from the original DINO
         # TODO: check grads later
         v = torch.zeros((len(samples), self.feat_dim), device=samples.device)

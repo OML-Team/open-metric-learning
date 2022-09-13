@@ -129,7 +129,7 @@ class ResnetExtractor(IExtractor):
             # 2-layer mlp case
             return self.model.fc[-1].out_features
 
-    def draw_attention(self, image: np.ndarray) -> np.ndarray:
+    def draw_gradients(self, image: np.ndarray) -> np.ndarray:
         model_device = str(list(self.model.parameters())[0].device)
         image_tensor = get_normalisation_albu()(image=image)["image"].to(model_device)
         cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=not (model_device == "cpu"))

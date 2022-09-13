@@ -5,11 +5,11 @@ from typing import List
 
 from torch import Tensor
 
-from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
+from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids
 
 
-class AllTripletsMiner(InBatchTripletsMiner):
+class AllTripletsMiner(ITripletsMinerInBatch):
     """
     This miner selects all the possible triplets for the given labels
 
