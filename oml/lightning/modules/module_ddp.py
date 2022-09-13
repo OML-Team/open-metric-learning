@@ -13,6 +13,7 @@ class ModuleDDP(pl.LightningModule):
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
         loaders_val: Optional[EVAL_DATALOADERS] = None,
     ):
+        assert loaders_train is not None or loaders_val is not None, "At least one dataloader must be specified"
         pl.LightningModule.__init__(self)
         self.loaders_train = loaders_train
         self.loaders_val = loaders_val
@@ -29,5 +30,10 @@ class ModuleDDP(pl.LightningModule):
 
         if isinstance(loaders, DataLoader):
             return patch_dataloader_to_ddp(loaders)
-        else:
+        elif isinstance(loaders, (list, tuple)):
             return [patch_dataloader_to_ddp(loader) for loader in loaders]
+        else:
+            raise TypeError("Not supported loaders type")
+
+
+__all__ = ["ModuleDDP"]

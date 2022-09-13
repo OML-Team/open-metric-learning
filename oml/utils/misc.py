@@ -40,6 +40,7 @@ def set_global_seed(seed: int, num_workers: int = 0) -> None:
         torch.backends.cudnn.deterministic = True
 
     os.environ["PL_GLOBAL_SEED"] = str(seed)
+    # flag PL_SEED_WORKERS allow to use different seeds for generators inside Datasets
     os.environ["PL_SEED_WORKERS"] = str(num_workers)
 
     try:

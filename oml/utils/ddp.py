@@ -204,5 +204,15 @@ def is_ddp() -> bool:
     try:
         get_world_size()
         return True
-    except:
+    except RuntimeError:
         return False
+
+
+__all__ = [
+    "is_ddp",
+    "patch_dataloader_to_ddp",
+    "check_loaders_is_patched",
+    "sync_dicts_ddp",
+    "merge_list_of_dicts",
+    "DDPSamplerWrapper",
+]
