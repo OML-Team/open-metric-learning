@@ -8,4 +8,11 @@ Contents
 
 .. toctree::
 
-   usage
+   source/installation
+
+.. toctree::
+   source/samplers
+   source/miners
+   source/losses
+   source/models
+   source/metrics
