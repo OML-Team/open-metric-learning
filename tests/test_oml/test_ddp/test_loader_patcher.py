@@ -7,11 +7,12 @@ from typing import Any, Dict, List
 import pytest
 from torch.utils.data import DataLoader
 
+from oml.ddp.patching import patch_dataloader_to_ddp
+from oml.ddp.utils import sync_dicts_ddp
 from oml.interfaces.samplers import IBatchSampler
 from oml.samplers.balance import BalanceSampler
 from oml.samplers.category_balance import CategoryBalanceSampler
 from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
-from oml.utils.ddp import patch_dataloader_to_ddp, sync_dicts_ddp
 
 from .utils import init_ddp, run_in_ddp
 

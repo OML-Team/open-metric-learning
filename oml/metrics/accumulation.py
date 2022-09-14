@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.distributed import get_world_size
 
-from oml.utils.ddp import is_ddp, sync_dicts_ddp
+from oml.ddp.utils import is_ddp, sync_dicts_ddp
 
 TStorage = Dict[str, Union[torch.Tensor, np.ndarray, List[Any]]]
 
