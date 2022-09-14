@@ -15,12 +15,12 @@ cache_size: 10
 transforms_train:
   name: augs_torch
   args:
-    im_size: 128
+    im_size: 64
 
 transforms_val:
   name: norm_resize_torch
   args:
-    im_size: 130
+    im_size: 64
 
 criterion:
   name: triplet_with_miner

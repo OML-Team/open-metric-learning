@@ -20,7 +20,7 @@ transforms_train:
 transforms_val:
   name: norm_resize_torch
   args:
-    im_size: 58
+    im_size: 64
 
 criterion:
   name: triplet_with_miner
