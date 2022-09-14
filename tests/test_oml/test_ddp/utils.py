@@ -15,7 +15,7 @@ def init_ddp(rank: int, world_size: int) -> None:
     set_global_seed(1)
 
 
-def func_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> None:  # type: ignore
+def run_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> None:  # type: ignore
     if world_size == 0:
         return fn(0, world_size, *args)
     # note, 'spawn' automatically passes 'rank' as first argument for 'fn'

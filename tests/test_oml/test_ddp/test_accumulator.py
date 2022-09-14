@@ -6,13 +6,13 @@ import torch
 
 from oml.metrics.accumulation import Accumulator
 
-from .utils import func_in_ddp, init_ddp
+from .utils import init_ddp, run_in_ddp
 
 
 @pytest.mark.parametrize("world_size", [1, 2, 3])
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
 def test_ddp_accumulator(world_size: int, device: str) -> None:
-    func_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device,))
+    run_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device,))
 
 
 def check_ddp_accumulator(rank: int, world_size: int, device: str) -> None:
