@@ -22,21 +22,22 @@ def labels2list(labels: TLabels) -> List[int]:
 
 
 class ITripletsMiner(ABC):
-    """An abstraction of inbatch triplet miner."""
+    """
+    An abstraction of triplet miner.
+
+    """
 
     @abstractmethod
     def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
         """
-        This method includes the logic of sampling/selecting triplets.
+        This method includes the logic of mining/sampling triplets.
 
         Args:
-            features: Tensor of features
-            labels: Labels of the samples
+            features: Features with the shape of ``[batch_size, feature_size]``
+            labels: Labels with the size of ``batch_size``
 
-        Returns: Batch of triplets
-
-        Raises:
-            NotImplementedError: You should implement it
+        Returns:
+            Batch of triplets
 
         """
         raise NotImplementedError()
@@ -48,8 +49,8 @@ class ITripletsMinerInBatch(ITripletsMiner):
     will be used for mining triplets inside the batches.
     The batches must contain at least 2 samples for
     each class and at least 2 different labels,
-    such behaviour can be guarantee via using
-    <BalanceBatchSampler>
+    such behaviour can be guarantee via using samplers from
+    our registry.
 
     But you are not limited to using it in any other way.
 
@@ -75,10 +76,11 @@ class ITripletsMinerInBatch(ITripletsMiner):
         choice can be performed randomly.
 
         Args:
-            features: Features with the shape of [batch_size, feature_size]
-            labels: Labels of the samples in the batch
+            features: Features with the shape of ``[batch_size, feature_size]``
+            labels: Labels with the size of ``batch_size``
 
-        Returns: indices of the batch samples to form the triplets
+        Returns:
+            Indices of the batch samples to form the triplets
 
         """
         raise NotImplementedError()
@@ -86,12 +88,11 @@ class ITripletsMinerInBatch(ITripletsMiner):
     def sample(self, features: Tensor, labels: TLabels) -> TTriplets:
         """
         Args:
-            features: Features with the shape of [batch_size, feature_size]
-            labels: Labels of the samples in the batch
+            features: Features with the shape of ``[batch_size, feature_size]``
+            labels: Labels with the size of ``batch_size``
 
         Returns:
-            The batch of the triplets in the order below:
-            (anchor, positive, negative)
+             Batch of triplets
 
         """
         # Convert labels to list

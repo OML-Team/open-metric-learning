@@ -10,20 +10,23 @@ Samplers
 BalanceSampler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.samplers.balance.BalanceSampler
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
+
+    .. automethod:: __init__
 
 CategoryBalanceSampler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.samplers.category_balance.CategoryBalanceSampler
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
+
+    .. automethod:: __init__
 
 DistinctCategoryBalanceSampler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.samplers.distinct_category_balance.DistinctCategoryBalanceSampler
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
+
+    .. automethod:: __init__

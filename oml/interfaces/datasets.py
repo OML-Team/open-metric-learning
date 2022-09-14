@@ -10,48 +10,46 @@ from oml.samplers.balance import BalanceSampler  # noqa
 
 class IDatasetWithLabels(Dataset, ABC):
     """
-    Dataset with get_labels() method.
-    As an example, it can be useful to initialise Sampler.
-    For instance,
-    >>> BalanceSampler
+    This is an interface for the datasets which can provide their labels.
+
     """
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         """
 
         Args:
-            item: Idx of sample
+            item: Idx of the sample
 
         Returns:
-            Dict with the following keys:
+             Dictionary with the following keys:
+
             >>> INPUT_TENSORS_KEY
             >>> LABELS_KEY
+
         """
         raise NotImplementedError()
 
     @abstractmethod
     def get_labels(self) -> np.ndarray:
-        """
-        Raises:
-            NotImplementedError: You should implement it
-
-        """
         raise NotImplementedError()
 
 
 class IDatasetQueryGallery(Dataset, ABC):
     """
-    QueryGalleryDataset
+    This is an interface for the datasets which can provide the information on how to split
+    the validation set into the two parts: query and gallery.
+
     """
 
     @abstractmethod
     def __getitem__(self, item: int) -> Dict[str, Any]:
         """
         Args:
-            item: Idx of sample
+            item: Idx of the sample
 
         Returns:
-            Dict with the following keys:
+             Dictionary with the following keys:
+
             >>> INPUT_TENSORS_KEY
             >>> LABELS_KEY
             >>> IS_QUERY_KEY

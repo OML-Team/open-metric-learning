@@ -10,7 +10,6 @@ Base Interfaces
 IExtractor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.models.IExtractor
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -20,7 +19,6 @@ IExtractor
 IBatchSampler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.samplers.IBatchSampler
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ IBatchSampler
 ITripletLossWithMiner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.criterions.ITripletLossWithMiner
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -39,7 +36,6 @@ ITripletLossWithMiner
 IDatasetWithLabels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.datasets.IDatasetWithLabels
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -49,7 +45,6 @@ IDatasetWithLabels
 IDatasetQueryGallery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.datasets.IDatasetQueryGallery
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -58,7 +53,6 @@ IDatasetQueryGallery
 IBasicMetric
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.metrics.IBasicMetric
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -69,7 +63,6 @@ IBasicMetric
 ITripletsMiner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.miners.ITripletsMiner
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
@@ -78,7 +71,6 @@ ITripletsMiner
 ITripletsMinerInBatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.miners.ITripletsMinerInBatch
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 

@@ -194,7 +194,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
     def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
         """
         Args:
-            features: Features with shape [batch_size, features_dim]
+            features: Features with the shape [batch_size, features_dim]
             labels: Labels of samples which will be used to form triplets
 
         Returns:

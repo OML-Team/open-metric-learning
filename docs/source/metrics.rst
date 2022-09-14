@@ -10,10 +10,10 @@ Metrics
 EmbeddingMetrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.metrics.embeddings.EmbeddingMetrics
-    :exclude-members: __init__
     :undoc-members:
     :show-inheritance:
 
+    .. automethod:: __init__
     .. automethod:: setup
     .. automethod:: update_data
     .. automethod:: compute_metrics
