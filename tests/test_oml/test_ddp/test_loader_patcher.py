@@ -51,7 +51,7 @@ def setup_batch_sampler(
         DistinctCategoryBalanceSampler: _setup_distinct_category_sampler,
     }
 
-    return class2setup[sampler_class](labels=labels, n_labels=n_labels, n_instances=n_instances, **kwargs)  # type: ignore
+    return class2setup[sampler_class](labels=labels, n_labels=n_labels, n_instances=n_instances, **kwargs)
 
 
 def _setup_balance_sampler(
@@ -87,7 +87,7 @@ def _setup_distinct_category_sampler(
     epoch_size: int,
     **kwargs: Dict[str, Any]
 ) -> DistinctCategoryBalanceSampler:
-    label2category = dict(zip(labels, [label % num_categories_in_dataset for label in labels]))  # type: ignore
+    label2category = dict(zip(labels, [label % num_categories_in_dataset for label in labels]))
     return DistinctCategoryBalanceSampler(
         labels=labels,
         label2category=label2category,
