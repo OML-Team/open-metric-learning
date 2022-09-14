@@ -33,7 +33,7 @@ MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
 MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
-MOCK_DATASET_FILES = "df.csv", "df_with_bboxes.csv", "df_with_category.csv", "df_full.csv"
+MOCK_DATASET_FILE = "df.csv"
 
 PAD_COLOR = (255, 255, 255)
 
