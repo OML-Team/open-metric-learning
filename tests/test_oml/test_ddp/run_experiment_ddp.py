@@ -23,7 +23,7 @@ from oml.metrics.embeddings import EmbeddingMetricsDDP
 from oml.samplers.balance import BalanceSampler
 from oml.utils.misc import set_global_seed
 
-motivation = rf"""
+_ = rf"""
 With this experiment we want to test patching of loaders with {ModuleDDP} and similarity of metrics in DDP mode.
 We check the following:
 1) Train and Val loaders are splitted into several part. These parts have no overlapping except several samples (for
@@ -110,7 +110,7 @@ class DummyModule(ModuleDDP):
         assert len(output_batches_synced) - len(set(output_batches_synced)) <= max_num_not_unique_batches
 
     def configure_optimizers(self) -> Any:
-        return Adam(params=self.parameters(), lr=1e-3)
+        return Adam(params=self.parameters(), lr=0.5)
 
 
 class MetricValCallbackWithSaving(MetricValCallbackDDP):

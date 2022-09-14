@@ -1,30 +1,23 @@
 import subprocess
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import pytest
 import torch
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT
 
-from .experiment_ddp import MetricValCallbackWithSaving
+from .run_experiment_ddp import MetricValCallbackWithSaving
 
-exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/experiment_ddp.py"
+exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/run_experiment_ddp.py"
 
 
-@pytest.mark.parametrize(
-    "devices",
-    [
-        (1, 2, 3),
-    ],
-)
 @pytest.mark.parametrize("batch_size", [10, 19])
-@pytest.mark.parametrize("max_epochs", [3])
+@pytest.mark.parametrize("max_epochs", [2])
 @pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-3)])
-def test_metrics_is_similar_in_ddp(
-    devices: Tuple[int, ...], num_labels: int, atol: float, batch_size: int, max_epochs: int
-) -> None:
+def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int, max_epochs: int) -> None:
+    devices = (1, 2, 3)
     # We will compare metrics from same experiment but with different amount of devices. For this we aggregate
     # metrics in variable with following structure:
     # {"cmc_<K>": [cmc_<K>_<exp_1>, cmc_<K>_<exp_2>, cmc_<K>_<exp_3>, ...],
