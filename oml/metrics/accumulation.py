@@ -103,6 +103,7 @@ class Accumulator:
         return self.num_samples == self.collected_samples
 
     def sync(self) -> "Accumulator":
+        # TODO: add option to broadcast instead of sync to avoid duplicating data
         if not self.is_storage_full():
             raise ValueError("Only full storages could be synced")
 
@@ -115,6 +116,10 @@ class Accumulator:
 
                 gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
                 gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
+
+                assert set(gathered_params["keys_to_accumulate"]) == set(
+                    self.keys_to_accumulate
+                ), "Keys of accumulators should be the same on each device"
 
                 synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
                 synced_accum.refresh(sum(gathered_params["num_samples"]))
