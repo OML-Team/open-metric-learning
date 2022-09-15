@@ -24,5 +24,5 @@ ResnetExtractor
     :show-inheritance:
 
     .. automethod:: __init__
-    .. automethod:: draw_gradients
+    .. automethod:: draw_gradcam
     .. autoproperty:: feat_dim

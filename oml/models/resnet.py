@@ -135,7 +135,7 @@ class ResnetExtractor(IExtractor):
             # 2-layer mlp case
             return self.model.fc[-1].out_features
 
-    def draw_gradients(self, image: np.ndarray) -> np.ndarray:
+    def draw_gradcam(self, image: np.ndarray) -> np.ndarray:
         """
         Visualization of the gradients on a particular image using `GradCam` algorithm.
 

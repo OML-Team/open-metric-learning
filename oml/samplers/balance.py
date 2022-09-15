@@ -38,7 +38,7 @@ class BalanceSampler(IBatchSampler):
 
     - If some label does not contain ``n_instances``, a choice will be made with repetition.
 
-    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in batch to be able to form positive pairs later on.
+    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in a batch to be able to form positive pairs later on.
 
     """
 

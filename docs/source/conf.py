@@ -5,11 +5,11 @@
 import sys
 from pathlib import Path
 
-project_root = str(Path(__file__).parent.parent.parent)
+project_root = Path(__file__).parent.parent.parent
 
-sys.path.insert(0, project_root)
+sys.path.insert(0, str(project_root))
 
-with open(Path.cwd().parent.parent / "oml" / "__init__.py", "r") as f:
+with open(project_root / "oml" / "__init__.py", "r") as f:
     version = f.read().split('"')[-2]
 
 project = "Open Metric Learning"
@@ -37,6 +37,3 @@ templates_path = ["_templates"]
 # -- Options for HTML output
 
 html_theme = "sphinx_rtd_theme"
-
-# -- Options for EPUB output
-epub_show_urls = "footnote"

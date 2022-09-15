@@ -6,7 +6,7 @@
 ![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests-workflow.yaml/badge.svg?)
 [![Pipi version](https://img.shields.io/pypi/v/open-metric-learning.svg)](https://pypi.org/project/open-metric-learning/)
 [![PyPI Status](https://pepy.tech/badge/open-metric-learning)](https://pepy.tech/project/open-metric-learning)
-
+[![Documentation Status](https://readthedocs.org/projects/open-metric-learning/badge/?version=latest)](https://open-metric-learning.readthedocs.io/en/latest/?badge=latest)
 
 <div align="left">
 

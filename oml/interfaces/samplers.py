@@ -5,7 +5,7 @@ from typing import Iterator, List
 class IBatchSampler(ABC):
     """
     We introduce our interface instead of using the default BatchSampler from Torch,
-    because the last one is just a wrapper for the sequential sampler which is not
+    because the last one is just a wrapper for the sequential sampler, which is not
     convenient for our purposes.
 
     """

@@ -22,13 +22,13 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
 
     - Select ``n_instances`` for each of the chosen labels for the 1st batch
 
-    - Define the set of available for the 2nd batch labels ``L*``: these are all the labels ``L`` except the ones chosen for the 1st batch
+    - Define the set of available for the 2nd batch labels ``L^``: these are all the labels ``L`` except the ones chosen for the 1st batch
 
-    - Define set of available categories ``C*``: these are all the categories corresponding to labels from ``L*``
+    - Define set of available categories ``C^``: these are all the categories corresponding to labels from ``L^``
 
-    - Select ``n_categories`` from ``C*`` for the 2nd batch
+    - Select ``n_categories`` from ``C^`` for the 2nd batch
 
-    - Select ``n_labels`` for each category from ``L*`` for the 2nd batch
+    - Select ``n_labels`` for each category from ``L^`` for the 2nd batch
 
     - Select ``n_instances`` for each label for the 2nd batch
 
@@ -38,13 +38,13 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
 
     Behavior in corner cases:
 
-    - If all the categories were chosen before ``epoch_size`` steps the sampler resets its state and goes on sampling from the first step.
+    - If all the categories were chosen before ``epoch_size`` steps, the sampler resets its state and goes on sampling from the first step.
 
     - If some class does not contain ``n_instances``, a choice will be made with repetition.
 
     - If the chosen category does not contain unused ``n_labels``, all the unused labels will be added to a batch and the missing ones will be sampled from the used labels without repetition.
 
-    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in batch to be able to form positive pairs later on.
+    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in a batch to be able to form positive pairs later on.
 
     """
 

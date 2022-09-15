@@ -20,8 +20,8 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 class EmbeddingMetrics(IBasicMetric):
     """
     This class accumulates the information from the batches and embeddings produced by the model
-    at every batch in epoch. After all of the samples have been stored you can call the function
-    which computes retrievals metrics. To get the needed information from the batches it uses
+    at every batch in epoch. After all the samples have been stored, you can call the function
+    which computes retrievals metrics. To get the needed information from the batches, it uses
     keys which have to be provided as init arguments. Please, check the usage example in
     `Readme`.
 

@@ -15,7 +15,7 @@ TLogs = Dict[str, float]
 
 class TripletLoss(Module):
     """
-    Class which combines classical `TripletMarginLoss` and `SoftTripletLoss`.
+    Class, which combines classical `TripletMarginLoss` and `SoftTripletLoss`.
     The idea of `SoftTripletLoss` is the following:
     instead of using the classical formula
     ``loss = relu(margin + positive_distance - negative_distance)``
@@ -140,7 +140,7 @@ class TripletLossPlain(Module):
                       `0,1,2` are indices of the 1st triplet,
                       `3,4,5` are indices of the 2nd triplet,
                       and so on.
-                      Thus, the features describes ``(N / 3)`` triplets
+                      Thus, the features contains ``(N / 3)`` triplets
 
         Returns:
             Loss value
