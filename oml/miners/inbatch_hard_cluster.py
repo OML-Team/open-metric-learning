@@ -12,27 +12,25 @@ from oml.utils.misc_torch import pairwise_dist
 
 class HardClusterMiner(ITripletsMiner):
     """
-    This miner selects hardest triplets based on distance to mean vectors:
-    anchor is a mean vector of features of i-th label in the batch,
-    the hardest positive sample is the most distant from anchor sample of
-    anchor's label, the hardest negative sample is the closest mean vector
-    of another labels.
+    This miner selects the hardest triplets based on the distance to mean vectors:
+    anchor is a mean vector of features of i-th label in the batch, the hardest positive sample
+    is the most distant from the anchor sample of anchor's label, the hardest negative
+    sample is the closest mean vector of other labels.
 
-    The batch must contain n_instances for n_labels in it (n_instances > 1, n_labels > 1).
+    The batch must contain ``n_instances`` for ``n_labels`` where both values higher than 1.
 
     """
 
     def _check_input_labels(self, labels: List[int]) -> None:
         """
-        Check if the labels list is valid: contains n_instances for every n_label.
+        Check if the labels list is valid: contains ``n_instances`` for each of ``n_labels``.
 
         Args:
-            labels: Labels in the batch
+            labels: Labels with the size of ``batch_size``
 
         Raises:
-            ValueError: If batch is invalid (contains different samples
-                for labels, contains only one label or only one sample for
-                each label)
+            ValueError: If the batch is invalid (contains different samples
+                for labels, contains only one label, or only one sample for each label)
 
         """
         labels_counter = Counter(labels)
@@ -47,13 +45,13 @@ class HardClusterMiner(ITripletsMiner):
     @staticmethod
     def _get_labels_mask(labels: List[int]) -> Tensor:
         """
-        Generate matrix of bool of shape (n_unique_labels, batch_size),
-        where n_unique_labels is a number of unique labels
-        in the batch; matrix[i, j] is True if j-th element of
-        the batch relates to i-th label and False otherwise.
+        Generate matrix with the shape of ``[n_unique_labels, batch_size]``,
+        where ``n_unique_labels`` is a number of unique labels
+        in the batch; ``matrix[i, j]`` is ``True`` if j-th element of
+        the batch relates to i-th label and ``False`` otherwise.
 
         Args:
-            labels: Labels of the batch, shape (batch_size)
+            labels: Labels with the size of ``batch_size``
 
         Returns:
             Matrix of indices of labels in batch
@@ -74,12 +72,12 @@ class HardClusterMiner(ITripletsMiner):
         samples embeddings.
 
         Args:
-            embeddings: Tensor of shape (n_labels, n_instances, embed_dim)
-            mean_vectors: Tensor of shape (n_labels, embed_dim) -- mean vectors
+            embeddings: Tensor with the shape of ``[n_labels, n_instances, embed_dim]``
+            mean_vectors: Tensor with the shape of ``[n_labels, embed_dim]`` -- mean vectors
                 of each label in the batch
 
         Returns:
-            Tensor of shape (n_labels, n_instances) -- matrix of distances from mean vectors to
+            Tensor with the shape of ``[n_labels, n_instances]`` -- matrix of distances from mean vectors to
                 related samples in the batch
 
         """
@@ -96,11 +94,11 @@ class HardClusterMiner(ITripletsMiner):
         Count matrix of distances from mean vectors of labels to each other
 
         Args:
-            mean_vectors: Tensor of shape (n_labels, embed_dim) -- mean vectors
-                of labels
+            mean_vectors: Tensor with the shape of ``[n_labels, embed_dim]`` -- mean vectors
+                of the labels
 
         Returns:
-            Tensor of shape (n_labels, n_labels) -- matrix of distances between mean vectors
+            Tensor with the shape of ``[n_labels, n_labels]`` -- matrix of distances between mean vectors
 
         """
         distance = pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
@@ -112,7 +110,7 @@ class HardClusterMiner(ITripletsMiner):
         Set diagonal elements with the value.
 
         Args:
-            matrix: Tensor of shape (n_labels, n_labels)
+            matrix: Tensor with the shape of ``[n_labels, n_labels]``
             value: Value that diagonal should be filled with
 
         Returns:
@@ -129,12 +127,12 @@ class HardClusterMiner(ITripletsMiner):
         This method samples the hardest triplets in the batch.
 
         Args:
-            features: Tensor of shape (batch_size; embed_dim) that contains
-                n_instances for each of n_labels
-            labels: Labels of the batch, list or tensor of size (batch_size)
+            features: Tensor with the shape of ``[batch_size, embed_dim]`` that contains
+                ``n_instances`` for each of ``n_labels``
+            labels: Labels with the size of ``batch_size``
 
         Returns:
-            n_labels triplets of (mean_vector, positive, negative_mean_vector)
+            ``n_labels`` triplets in the form of ``(mean_vector, positive, negative_mean_vector)``
 
         """
         # Convert labels to list

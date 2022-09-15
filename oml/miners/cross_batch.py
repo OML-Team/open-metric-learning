@@ -22,14 +22,21 @@ from oml.interfaces.miners import ITripletsMiner
 
 
 class TripletMinerWithMemory(ITripletsMiner):
+    """
+    This miner has a memory bank that allows to sample not only the triplets from the original batch,
+    but also add batches obtained from both the bank and the original batch.
+
+    """
+
     def __init__(self, bank_size_in_batches: int, tri_expand_k: int):
         """
 
         Args:
-            bank_size_in_batches: The size of the bank calculated in batches
-            tri_expand_k: The parameter which defines how many triplets we sample from the bank.
-                 Specifically, we return tri_expand_k * number of triplets in the original batch
-                 In particular, if tri_expand_k == 1 we sample no triplets from the bank
+            bank_size_in_batches: The size of the bank calculated in the number batches
+            tri_expand_k: This parameter defines how many triplets we sample from the bank.
+                 Specifically, we return ``tri_expand_k * number of original triplets``.
+                 In particular, if ``tri_expand_k == 1`` we sample no triplets from the bank
+
         """
         assert tri_expand_k >= 1
 
@@ -82,6 +89,18 @@ class TripletMinerWithMemory(ITripletsMiner):
     def sample(  # type: ignore
         self, features: Tensor, labels: Tensor  # type: ignore
     ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:  # type: ignore
+        """
+
+        Args:
+            features: Features with the shape of ``(batch_size, feat_dim)``
+            labels: Labels with the size of ``batch_size``
+
+        Returns:
+            Triplets made from the original batch and those that were combined from the bank and the batch.
+            We also return an indicator of whether triplet was obtained from the original batch.
+            So, output is the following ``(anchor, positive, negative, indicators)``
+
+        """
         labels = tensor(labels).long()
         self.__allocate_if_needed(features=features, labels=labels)
 

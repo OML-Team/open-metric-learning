@@ -10,24 +10,42 @@ from oml.utils.misc import smart_sample
 
 class DistinctCategoryBalanceSampler(IBatchSampler):
     """
-    Let C is a set of categories in dataset, L is a set of labels in dataset:
-    - select n_categories for the 1st batch from C
-    - select n_labels for each of chosen categories for the 1st batch
-    - select n_instances for each label for the 1st batch
-    - define set of available for the 2nd batch labels L*: all the labels from L except the ones
-    chosen for the 1st batch
-    - define set of available categories C*: all the categories corresponding to labels from L*
-    - select n_categories from C* for the 2nd batch
-    - select n_labels for each category from L* for the 2nd batch
-    - select n_instances for each label for the 2nd batch
-    ...
-    If all the categories were chosen sampler resets its state and goes on sampling from the first step.
+    This sampler takes ``n_instances`` for each of the ``n_labels`` for each of the
+    ``n_categories`` to form the batches.
+    Thus, the batch size is ``n_instances x n_labels x n_categories``.
+
+    The strategy for the dataset with ``L`` unique labels and ``C`` unique categories is the following:
+
+    - Select ``n_categories`` of ``C`` for the 1st batch
+
+    - Select ``n_labels`` for each of the chosen categories for the 1st batch
+
+    - Select ``n_instances`` for each of the chosen labels for the 1st batch
+
+    - Define the set of available for the 2nd batch labels ``L^``: these are all the labels ``L`` except the ones chosen for the 1st batch
+
+    - Define set of available categories ``C^``: these are all the categories corresponding to labels from ``L^``
+
+    - Select ``n_categories`` from ``C^`` for the 2nd batch
+
+    - Select ``n_labels`` for each category from ``L^`` for the 2nd batch
+
+    - Select ``n_instances`` for each label for the 2nd batch
+
+    - ...
+
+    - Epoch ends after ``epoch_size`` steps
 
     Behavior in corner cases:
-    - If a class does not contain n_instances, a choice will be made with repetition.
-    - If chosen category does not contain unused n_labels, all the unused labels will be added
-    to a batch and missing ones will be sampled from used labels without repetition.
-    - If L % n_labels == 1 then one of the classes should be dropped
+
+    - If all the categories were chosen before ``epoch_size`` steps, the sampler resets its state and goes on sampling from the first step.
+
+    - If some class does not contain ``n_instances``, a choice will be made with repetition.
+
+    - If the chosen category does not contain unused ``n_labels``, all the unused labels will be added to a batch and the missing ones will be sampled from the used labels without repetition.
+
+    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in a batch to be able to form positive pairs later on.
+
     """
 
     def __init__(
@@ -39,15 +57,16 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
         n_instances: int,
         epoch_size: int,
     ):
-        """Init DistinctCategoryBalanceBatchSampler.
+        """
 
         Args:
             labels: Labels to sample from
             label2category: Mapping from label to category
-            n_categories: Number of categories to sample for each batch
-            n_labels: Number of labels to sample for each category in batch
-            n_instances: Number of samples to sample for each label in batch
-            epoch_size: Number of batches in epoch
+            n_categories: The desired number of categories to sample for each batch
+            n_labels: The desired number of labels to sample for each category in batch
+            n_instances: The desired number of samples to sample for each label in batch
+            epoch_size: The desired number of batches in epoch
+
         """
         unique_labels = set(labels)
         unique_categories = set(label2category.values())
@@ -90,32 +109,16 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
 
     @property
     def batch_size(self) -> int:
-        """
-        Returns:
-            This value should be used in DataLoader as batch size
-        """
         return self._batch_size
 
     @property
     def batches_in_epoch(self) -> int:
-        """
-        Returns:
-            Number of batches in an epoch
-        """
         return self._epoch_size
 
     def __len__(self) -> int:
-        """
-        Returns:
-            Number of batches in an epoch
-        """
         return self.batches_in_epoch
 
     def __iter__(self) -> Iterator[List[int]]:
-        """
-        Returns:
-            Indexes for sampling dataset elements during an epoch
-        """
         category2labels = deepcopy(self._category2labels)
         used_labels: Dict[int, Set[int]] = defaultdict(set)
         epoch_indices = []
