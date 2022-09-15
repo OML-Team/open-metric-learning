@@ -11,6 +11,15 @@ build:
   tools:
     python: "3.8"
 
+python:
+  install:
+    - requirements: docs/requirements.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+  system_packages: true
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
    configuration: docs/source/conf.py
@@ -18,4 +27,3 @@ sphinx:
 # If using Sphinx, optionally build your docs in additional formats such as PDF
 formats:
   - pdf
-
