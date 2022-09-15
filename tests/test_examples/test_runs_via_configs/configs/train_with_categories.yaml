@@ -51,6 +51,7 @@ bs_val: 2
 metric_args:
   cmc_top_k: [1, 5]
 
+metric_for_checkpointing: OVERALL/cmc/1
 log_only_main_category: True
 
 max_epochs: 2

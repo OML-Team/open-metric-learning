@@ -154,7 +154,7 @@ def pl_train(cfg: TCfg) -> None:
     )
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
-        monitor=f"{OVERALL_CATEGORIES_KEY}/cmc/1",
+        monitor=cfg.get("metric_for_checkpointing", f"{OVERALL_CATEGORIES_KEY}/cmc/1"),
         mode="max",
         save_top_k=1,
         verbose=True,

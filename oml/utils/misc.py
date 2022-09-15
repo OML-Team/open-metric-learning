@@ -1,15 +1,13 @@
 import os
 import random
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple
 
 import dotenv
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from oml.const import DOTENV_PATH
-
-TCfg = Union[Dict[str, Any], DictConfig]
+from oml.const import DOTENV_PATH, TCfg
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -120,7 +118,6 @@ __all__ = [
     "one_hot",
     "flatten_dict",
     "load_dotenv",
-    "TCfg",
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",
