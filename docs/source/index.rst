@@ -8,12 +8,12 @@ Contents
 
 .. toctree::
 
-   source/installation
+   installation
 
 .. toctree::
-   source/interfaces
-   source/samplers
-   source/miners
-   source/losses
-   source/models
-   source/metrics
+   interfaces
+   samplers
+   miners
+   losses
+   models
+   metrics
