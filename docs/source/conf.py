@@ -2,7 +2,10 @@
 
 # -- Project information
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, "../../../")
 
 with open(Path.cwd().parent.parent / "oml" / "__init__.py", "r") as f:
     version = f.read().split('"')[-2]
