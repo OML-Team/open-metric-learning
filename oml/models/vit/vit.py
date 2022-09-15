@@ -20,6 +20,11 @@ _FB_URL = "https://dl.fbaipublicfiles.com"
 
 
 class ViTExtractor(IExtractor):
+    """
+    The base class for the extractors that follow VisualTransformer architecture.
+
+    """
+
     constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
 
     pretrained_models = {
@@ -45,11 +50,12 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights
-            arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
-            normalise_features: if normalise features
-            use_multi_scale: if use multi scale
-            strict_load: if strict load from checkpoint
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly initialize model's weights.
+             You can check the available pretrained checkpoints in ``self.pretrained_models``.
+            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb1``. You can check all of the available options in ``self.constructors``
+            normalise_features: Set ``True`` to normalise output features
+            use_multi_scale: Set ``True`` to use multi scale (the analogue of test time augmentations)
+            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """
         assert arch in self.constructors.keys()
@@ -108,23 +114,14 @@ class ViTExtractor(IExtractor):
         return v
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
+        """
+        Visualization of the multi-head attention on a particular image.
+
+        """
         return vis_vit(vit=self, image=image)
 
 
 def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
-    """
-    Visualisation of multi heads attention.
-
-    Args:
-        vit: VIT model
-        image: Input image
-        mean: MEAN for the image normalisation
-        std: STD for the image normalisation
-
-    Returns:
-        Image with attention maps drawn on top of the input image
-
-    """
     vit.eval()
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]

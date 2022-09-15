@@ -14,20 +14,25 @@ TLogs = Dict[str, float]
 
 
 class TripletLoss(Module):
+    """
+    Class which combines classical `TripletMarginLoss` and `SoftTripletLoss`.
+    The idea of `SoftTripletLoss` is the following:
+    instead of using the classical formula
+    ``loss = relu(margin + positive_distance - negative_distance)``
+    we use
+    ``loss = log1p(positive_distance - negative_distance)``.
+    It may help to solve the often problem when `TripletMarginLoss` converges to it's
+    margin value (also known as `dimension collapse`).
+
+    """
+
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
 
         Args:
-            margin: Margin for TripletMarginLoss. Set margin=None to use SoftTripletLoss.
-                    We recommend you to go give this option a chance because it may
-                    solve the often problem when TripletMarginLoss converges to it's
-                    margin value (dimension collapse).
-
-            reduction: "mean", "sum" or "none"
-
-            need_logs: Set True if you want to calculate logs.
-                The result will be saved in
-                >>> self.logs
+            margin: Margin value, set ``None`` to use `SoftTripletLoss`
+            reduction: ``mean``, ``sum`` or ``none``
+            need_logs: Set ``True`` if you want to store logs
 
         """
         assert reduction in ("mean", "sum", "none")
@@ -44,12 +49,12 @@ class TripletLoss(Module):
         """
 
         Args:
-            anchor: Anchor features with the shape of (bs, features)
-            positive: Positive features with the shape of (bs, features)
-            negative: Negative features with the shape of (bs, features)
+            anchor: Anchor features with the shape of ``(batch_size, feat)``
+            positive: Positive features with the shape of ``(batch_size, feat)``
+            negative: Negative features with the shape of ``(batch_size, feat)``
 
         Returns:
-            loss value
+            Loss value
 
         """
         assert anchor.shape == positive.shape == negative.shape
@@ -106,21 +111,18 @@ def get_tri_ids_in_plain(n: int) -> Tuple[List[int], List[int], List[int]]:
 
 
 class TripletLossPlain(Module):
+    """
+    The same as `TripletLoss`, but works with anchor, positive and negative features stacked together.
+
+    """
+
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
-        The same as TripletLoss, but works with anchor, positive and negative
-        features stacked together.
 
         Args:
-            margin: Check args of
-            >>> TripletLoss
-
-            reduction: Check args of
-            >>> TripletLoss
-
-            need_logs: Set True if you want to calculate logs.
-               The result will be saved in
-               >>> self.last_logs
+            margin: Margin value, set ``None`` to use `SoftTripletLoss`
+            reduction: ``mean``, ``sum`` or ``none``
+            need_logs: Set ``True`` if you want to store logs
 
         """
         assert reduction in ("mean", "sum", "none")
@@ -134,11 +136,11 @@ class TripletLossPlain(Module):
         """
 
         Args:
-            features: Features of the shape of [N, features_dim]
-                      {0,1,2} are indices of the 1st triplet
-                      {3,4,5} are indices of the 2nd triplet
-                      and so on
-                      Thus, features contain (N / 3) triplets
+            features: Features with the shape of ``[batch_size, feat]`` with the following structure:
+                      `0,1,2` are indices of the 1st triplet,
+                      `3,4,5` are indices of the 2nd triplet,
+                      and so on.
+                      Thus, the features describes ``(N / 3)`` triplets
 
         Returns:
             Loss value
@@ -154,8 +156,7 @@ class TripletLossPlain(Module):
 
 class TripletLossWithMiner(ITripletLossWithMiner):
     """
-    This class combines in-batch mining of triplets and
-    computing of TripletLoss.
+    This class combines `Miner` and `TripletLoss`.
 
     """
 
@@ -167,18 +168,13 @@ class TripletLossWithMiner(ITripletLossWithMiner):
         need_logs: bool = False,
     ):
         """
+
         Args:
-            margin: Check args of
-            >>> TripletLoss
+            margin: Margin value, set ``None`` to use `SoftTripletLoss`
+            miner: A miner that implements the logic of picking triplets to pass them to the triplet loss.
+            reduction: ``mean``, ``sum`` or ``none``
+            need_logs: Set ``True`` if you want to store logs
 
-            miner: Miner to form triplets inside the batch
-
-            reduction: Check args of
-            >>> TripletLoss
-
-            need_logs: Set True if you want to calculate logs.
-               The result will be saved in
-               >>> self.last_logs
         """
         assert reduction in ("mean", "sum", "none")
         assert (margin is None) or (margin > 0)
@@ -194,8 +190,8 @@ class TripletLossWithMiner(ITripletLossWithMiner):
     def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
         """
         Args:
-            features: Features with the shape [batch_size, features_dim]
-            labels: Labels of samples which will be used to form triplets
+            features: Features with the shape ``[batch_size, feat]``
+            labels: Labels with the size of ``batch_size``
 
         Returns:
             Loss value
