@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 1
 
 dataframe_name: df_no_bboxes.csv
-dataset_root: data/DeepFashion_InShop/
-logs_root: logs/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -26,9 +26,9 @@ transforms_val:
 sampler:
   name: category_balance
   args:
-    n_labels: 13
+    n_labels: 11
     n_instances: 6
-    n_categories: 3
+    n_categories: 2
     resample_labels: True
     weight_categories: True
 
@@ -44,12 +44,12 @@ metric_for_checkpointing: OVERALL/cmc/1
 log_only_main_category: True
 
 model:
-  name: vit
+  name: vit_clip
   args:
-    normalise_features: False
-    use_multi_scale: False
-    weights: vits16_dino
-    arch: vits16
+    weights_location: /nydl/logs/cur/ml/openai_vitb16_224.pt
+    image_resolution: 224
+    patch_size: 16
+    jitted_weights: True
 
 criterion:
   name: triplet_with_miner
