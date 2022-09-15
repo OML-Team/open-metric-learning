@@ -4,7 +4,7 @@
 
 from pathlib import Path
 
-with open(Path.cwd().parent / "oml" / "__init__.py", "r") as f:
+with open(Path.cwd().parent.parent / "oml" / "__init__.py", "r") as f:
     version = f.read().split('"')[-2]
 
 project = "Open Metric Learning"

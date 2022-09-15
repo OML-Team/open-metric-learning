@@ -19,6 +19,6 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-build:
-	rm -rf built_docs
-	sphinx-build -a . built_docs
+build_docs:
+	rm -rf $(BUILDDIR)
+	sphinx-build -a . -c $(SOURCEDIR)  $(BUILDDIR)
