@@ -5,7 +5,9 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "../../../")
+project_root = str(Path(__file__).parent.parent.parent)
+
+sys.path.insert(0, project_root)
 
 with open(Path.cwd().parent.parent / "oml" / "__init__.py", "r") as f:
     version = f.read().split('"')[-2]
