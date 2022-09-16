@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 1
 
 dataframe_name: df_no_bboxes.csv
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/DeepFashion_InShop/
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -46,10 +46,7 @@ log_only_main_category: True
 model:
   name: vit_clip
   args:
-    weights_location: /nydl/logs/cur/ml/openai_vitb16_224.pt
-    image_resolution: 224
-    patch_size: 16
-    jitted_weights: True
+    arch: openai_vitb16_224
 
 criterion:
   name: triplet_with_miner
