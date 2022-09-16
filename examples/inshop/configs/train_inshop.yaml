@@ -26,9 +26,9 @@ transforms_val:
 sampler:
   name: category_balance
   args:
-    n_labels: 11
+    n_labels: 13
     n_instances: 6
-    n_categories: 2
+    n_categories: 3
     resample_labels: True
     weight_categories: True
 
@@ -44,9 +44,12 @@ metric_for_checkpointing: OVERALL/cmc/1
 log_only_main_category: True
 
 model:
-  name: vit_clip
+  name: vit
   args:
-    arch: openai_vitb16_224
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
 
 criterion:
   name: triplet_with_miner
