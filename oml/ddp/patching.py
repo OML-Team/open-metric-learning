@@ -1,6 +1,7 @@
+import inspect
 import logging
 import warnings
-from typing import List, Sequence, Union
+from typing import Any, Dict, List, Sequence, Union
 
 from torch.utils.data import (
     BatchSampler,
@@ -55,6 +56,7 @@ class DDPSamplerWrapper(DistributedSampler):
                 data (pad_data_to_num_gpus=False).
             shuffle_samples_between_gpus: shuffle available indices between feeding to GPU. Note, that shuffle
                 inside GPU after feeding will be used according to behavior of sampler.
+
         Note: Wrapper also can be used with default SequentialSampler and RandomSampler, not only custom.
         """
 
@@ -77,6 +79,21 @@ class DDPSamplerWrapper(DistributedSampler):
             yield self.dataset[sampler_idx]
 
 
+def extract_loader_parameters(loader: DataLoader) -> Dict[str, Any]:
+    ignore_fields = ("self", "sampler", "batch_sampler", "drop_last", "shuffle", "batch_size", "dataset")
+    extracted = {}
+
+    signature = inspect.signature(DataLoader.__init__)
+    for parameter in signature.parameters:
+        if parameter not in ignore_fields:
+            if hasattr(loader, parameter):
+                extracted[parameter] = getattr(loader, parameter)
+
+    assert len(extracted)
+
+    return extracted
+
+
 def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
     """
     Function inspects loader and modifies sampler for working in DDP mode.
@@ -86,16 +103,7 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
         different (e.g. metrics).
     """
     if is_ddp():
-        kwargs_loader = {
-            "collate_fn": loader.collate_fn,
-            "persistent_workers": loader.persistent_workers,
-            "pin_memory": loader.pin_memory,
-            "worker_init_fn": loader.worker_init_fn,
-            "prefetch_factor": loader.prefetch_factor,
-            "multiprocessing_context": loader.multiprocessing_context,
-            "pin_memory_device": loader.pin_memory_device,
-            "num_workers": loader.num_workers,
-        }
+        kwargs_loader = extract_loader_parameters(loader)
 
         # If you don't spectify batch_sampler, PyTorch automatically creates default BatchSampler. In this case we
         # need convert to DDP only sampler (your custom sampler / default SequentialSampler or RandomSampler, which
