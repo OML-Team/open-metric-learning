@@ -107,17 +107,19 @@ class VisionTransformer(nn.Module):
 
 
 class ViTCLIPExtractor(IExtractor):
+    pretrained_models: Dict[str, Any] = {}  # there are too many pretrained architectures, so we will skip them
+
     def __init__(
         self,
         arch: Optional[str] = None,
-        normalize_output: bool = True,
+        normalise_features: bool = True,
         embed_dim: int = 512,
         image_resolution: int = 224,
         layers: int = 12,
         width: int = 768,
         patch_size: int = 32,
         heads: int = 8,
-        weights_location: str = "./ViT-B-32.pt",
+        weights: Optional[str] = None,
         jitted_weights: bool = True,  # for jitted weights like from original CLIP repo
         strict_load: bool = True,
     ):
@@ -131,14 +133,11 @@ class ViTCLIPExtractor(IExtractor):
             width = cfg["width"]
             patch_size = cfg["patch_size"]
             heads = cfg["heads"]
-            weights_location = cfg["weights_location"]
+            weights = cfg["weights"]
             jitted_weights = cfg["jitted_weights"]
             strict_load = True
 
-        self.normalize = normalize_output
-
-        load_path = Path(weights_location)
-        assert load_path.is_file(), "There are no weights here!"
+        self.normalize = normalise_features
 
         self.visual = VisionTransformer(
             input_resolution=image_resolution,
@@ -148,6 +147,9 @@ class ViTCLIPExtractor(IExtractor):
             heads=heads,
             output_dim=embed_dim,
         )
+        if not weights:
+            return
+        load_path = Path(weights)
 
         _mapper = {
             "n_pre.weight": "ln_pre.weight",
@@ -307,7 +309,10 @@ def get_vit_config_by_name(model_name: str) -> Dict[str, Any]:
     assert model_name in models_params, f"Model {model_name} is unknown."
 
     params = models_params[model_name]
-    url, md5 = params.pop("weights"), params.pop("md5")  # type: ignore
-    params["weights_location"] = download_checkpoint(url, md5)  # type: ignore
+    weights, md5 = params.pop("weights"), params.pop("md5", None)  # type: ignore
+    if str(weights).startswith("http"):
+        params["weights"] = download_checkpoint(weights, md5)  # type: ignore
+    else:
+        params["weights"] = weights
 
     return params
