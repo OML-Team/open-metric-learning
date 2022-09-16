@@ -24,7 +24,7 @@ def get_custom_augs(im_size: int) -> t.Compose:
 TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs  # type: ignore
 
 
-@hydra.main(config_path="configs", config_name="train_with_resnet.yaml")
+@hydra.main(config_path="configs", config_name="train_with_bboxes.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     cfg = dictconfig_to_dict(cfg)
     download_mock_dataset(MOCK_DATASET_PATH)

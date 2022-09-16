@@ -48,7 +48,7 @@ def test_train(accelerator: str, devices: int) -> None:
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_with_bboxes(accelerator: str, devices: int) -> None:
-    run("train_with_resnet.py", accelerator, devices)
+    run("train_with_bboxes.py", accelerator, devices)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
