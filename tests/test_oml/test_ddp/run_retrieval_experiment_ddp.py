@@ -24,15 +24,19 @@ from oml.samplers.balance import BalanceSampler
 from oml.utils.misc import set_global_seed
 
 _ = rf"""
-With this experiment we want to test patching of loaders with {ModuleDDP} and similarity of metrics in DDP mode.
-We check the following:
-1) Train and Val loaders are splitted into several part. These parts have no overlapping except several samples (for
-validation with default {SequentialSampler}) or several batches (for training with {BalanceSampler}) which is neccesary
-for padding according the number of devices.
-2) Metrics with different number of devices are very similar. For this purposes we save metrics and compare them later.
-Note that only the final metric should be similar.
+MOTIVATION
 
-Our dummy data is presented by GT labels and PRED labels with some errors. Amount of errors are the same for each
+With this experiment, we want to test the patching of loaders with {ModuleDDP} and the similarity of metrics
+in DDP mode.
+
+We check the following:
+1) Train and Val loaders are split into several parts. These parts have no overlapping except for several samples (for
+validation with default {SequentialSampler}) or several batches (for training with {BalanceSampler}) which is necessary
+for padding according to the number of devices.
+2) Metrics obtained with a different number of devices are very similar. For this purpose, we save metrics and
+compare them later. Note that only the final metric should be similar.
+
+Our dummy data is presented by GT labels and PRED labels with some errors. Amount of errors is the same for each
 runnings.
 """
 
@@ -106,7 +110,7 @@ class DummyModule(ModuleDDP):
         output_batches_synced = sync_dicts_ddp({"batches": output_batches}, world_size)["batches"]
 
         assert len(output_batches_synced) == len(output_batches) * world_size
-        max_num_not_unique_batches = world_size
+        max_num_not_unique_batches = world_size - 1
         assert len(output_batches_synced) - len(set(output_batches_synced)) <= max_num_not_unique_batches
 
     def configure_optimizers(self) -> Any:
@@ -161,7 +165,15 @@ def experiment(args: Namespace) -> None:
 
     pl_model = DummyModule(loaders_val=val_dataloader, loaders_train=train_dataloader)
 
-    trainer = Trainer(callbacks=[val_callback], max_epochs=max_epochs, num_sanity_val_steps=0, **trainer_engine_params)
+    trainer = Trainer(
+        callbacks=[val_callback],
+        max_epochs=max_epochs,
+        logger=False,
+        enable_checkpointing=False,
+        enable_model_summary=False,
+        num_sanity_val_steps=0,
+        **trainer_engine_params,
+    )
     trainer.fit(model=pl_model)
 
 

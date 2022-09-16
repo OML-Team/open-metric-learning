@@ -7,7 +7,6 @@ from torch.utils.data import (
     DataLoader,
     Dataset,
     DistributedSampler,
-    RandomSampler,
     Sampler,
 )
 
@@ -19,10 +18,15 @@ TAllSamplers = Union[BatchSampler, Sampler, IBatchSampler]
 
 class _Sampler2Dataset(Dataset):
     def __init__(self, sampler: TAllSamplers):
-        self.sampler = list(sampler)
+        # We read sampler in __getitem__ due to the seed between calling of __init__ and __getitem__ can be changed
+        self.sampler_read = None
+        self.sampler = sampler
 
     def __getitem__(self, item: int) -> Union[int, List[int]]:
-        return self.sampler[item]  # type: ignore
+        if self.sampler_read is None:
+            self.sampler_read = list(self.sampler)  # type: ignore
+
+        return self.sampler_read[item]  # type: ignore
 
     def __len__(self) -> int:
         return len(self.sampler)  # type: ignore
@@ -61,9 +65,10 @@ class DDPSamplerWrapper(DistributedSampler):
         """
         We need to reinstantiate wrapper in order to update available indices from sampler for new epoch
         """
+        if self.seed_shift_per_epoch > 0:
+            super().__init__(dataset=_Sampler2Dataset(self.sampler), shuffle=self.shuffle, drop_last=self.drop_last)
+            self.set_epoch(self.seed_shift_per_epoch)
         self.seed_shift_per_epoch += 1
-        super().__init__(dataset=_Sampler2Dataset(self.sampler), shuffle=self.shuffle, drop_last=self.drop_last)
-        self.set_epoch(self.seed_shift_per_epoch)
 
     def __iter__(self) -> TAllSamplers:
         self._reload()
@@ -97,9 +102,8 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
         # PyTorch creates if sampler=None). We don't use `isinstance(...)` for `if` statement because we need exactly
         # class BatchSampler, ignoring any inheritance
         if type(loader.batch_sampler) is BatchSampler:
-            shuffle = isinstance(loader.sampler, RandomSampler)
             ddp_sampler = DDPSamplerWrapper(
-                sampler=loader.sampler, shuffle_samples_between_gpus=shuffle, pad_data_to_num_gpus=True
+                sampler=loader.sampler, shuffle_samples_between_gpus=False, pad_data_to_num_gpus=True
             )
             patched_loader = DataLoader(
                 dataset=loader.dataset,

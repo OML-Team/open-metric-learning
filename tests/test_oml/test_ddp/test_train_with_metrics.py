@@ -8,9 +8,9 @@ import torch
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT
 
-from .run_experiment_ddp import MetricValCallbackWithSaving
+from .run_retrieval_experiment_ddp import MetricValCallbackWithSaving
 
-exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/run_experiment_ddp.py"
+exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/run_retrieval_experiment_ddp.py"
 
 
 @pytest.mark.parametrize("batch_size", [10, 19])

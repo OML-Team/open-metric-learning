@@ -26,7 +26,7 @@ def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     return inds
 
 
-def set_global_seed(seed: int, num_workers: int = 0) -> None:
+def set_global_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
 
@@ -37,9 +37,7 @@ def set_global_seed(seed: int, num_workers: int = 0) -> None:
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
-    os.environ["PL_GLOBAL_SEED"] = str(seed)
-    # flag PL_SEED_WORKERS allow to use different seeds for generators inside Datasets
-    os.environ["PL_SEED_WORKERS"] = str(num_workers)
+    os.environ["PL_SEED_WORKERS"] = str(1)
 
     try:
         import torch_xla.core.xla_model as xm

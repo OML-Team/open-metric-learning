@@ -52,7 +52,7 @@ def pl_train(cfg: TCfg) -> None:
 
     pprint(cfg)
 
-    set_global_seed(cfg["seed"], cfg["num_workers"])
+    set_global_seed(cfg["seed"])
 
     cwd = Path.cwd()
 
