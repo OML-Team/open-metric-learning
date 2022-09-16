@@ -16,6 +16,11 @@ from oml.utils.io import download_checkpoint
 
 
 class ResnetExtractor(IExtractor):
+    """
+    The base class for the extractors that follow ResNet architecture.
+
+    """
+
     constructors = {
         "resnet18": resnet18,
         "resnet34": resnet34,
@@ -42,16 +47,17 @@ class ResnetExtractor(IExtractor):
         strict_load: bool = True,
     ):
         """
-        If you want to load FC layer from checkpoint and keep it untouched,
-        set both hid_dim and out_dim equal to None.
 
         Args:
-            weights: path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights or 'default' to use the checkpoint pretrained on ImageNet
-            arch: different types of resnet, please, check self.constructors
-            normalise_features: if normalise features
-            gem_p: value of power in GEM pooling
-            remove_fc: if remove fully connected layer
-            strict_load:  if strict load from checkpoint
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly initialize
+             model's weights or ``default`` to use the checkpoint pretrained on ImageNet.
+             You can check the available pretrained checkpoints in ``self.pretrained_models``.
+            arch: Different types of ResNet, please, check ``self.constructors``
+            normalise_features: Set ``True`` to normalise output features
+            gem_p: Value of power in `Generalized Mean Pooling` that we use as the replacement for the default one
+             (if ``gem_p == 1`` it's just a normal average pooling and if ``gem_p -> inf`` it's max-pooling)
+            remove_fc: Set ``True`` if you want to remove the last fully connected layer
+            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """
         assert arch in self.constructors.keys()
@@ -129,7 +135,11 @@ class ResnetExtractor(IExtractor):
             # 2-layer mlp case
             return self.model.fc[-1].out_features
 
-    def draw_attention(self, image: np.ndarray) -> np.ndarray:
+    def draw_gradcam(self, image: np.ndarray) -> np.ndarray:
+        """
+        Visualization of the gradients on a particular image using `GradCam` algorithm.
+
+        """
         model_device = str(list(self.model.parameters())[0].device)
         image_tensor = get_normalisation_albu()(image=image)["image"].to(model_device)
         cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=not (model_device == "cpu"))
