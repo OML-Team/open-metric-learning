@@ -9,10 +9,12 @@ from torch import nn
 from oml.const import MEAN, STD, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.hubconf import dino_vitb8  # type: ignore
-from oml.models.vit.hubconf import dino_vitb16  # type: ignore
-from oml.models.vit.hubconf import dino_vits8  # type: ignore
-from oml.models.vit.hubconf import dino_vits16  # type: ignore
+from oml.models.vit.hubconf import (  # type: ignore
+    dino_vitb8,
+    dino_vitb16,
+    dino_vits8,
+    dino_vits16,
+)
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint
 

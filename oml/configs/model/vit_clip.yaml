@@ -1,0 +1,3 @@
+name: vit_clip
+args:
+  arch: openai_vitb16_224
