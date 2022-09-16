@@ -117,6 +117,11 @@ err_message_loaders_is_not_patched = (
 
 
 class MetricValCallbackDDP(MetricValCallback):
+    """
+    An extension to the regular callback that takes into account data reduction and padding on the inference for
+    each device
+    """
+
     metric: IBasicMetricDDP
 
     def __init__(self, metric: IBasicMetricDDP, *args: Any, **kwargs: Any):

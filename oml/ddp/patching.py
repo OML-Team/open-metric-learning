@@ -80,6 +80,11 @@ class DDPSamplerWrapper(DistributedSampler):
 
 
 def extract_loader_parameters(loader: DataLoader) -> Dict[str, Any]:
+    """
+    The function extracts parameters from dataloader, such as `collate_fn`, `num_workers`, etc, and automatically
+    handles some new parameters, e.g. `prefetch_factor`.
+    """
+
     ignore_fields = ("self", "sampler", "batch_sampler", "drop_last", "shuffle", "batch_size", "dataset")
     extracted = {}
 

@@ -10,6 +10,12 @@ TTrainDataloaders = Union[TValDataloaders, Dict[str, DataLoader]]
 
 
 class ModuleDDP(pl.LightningModule):
+    """
+    The module automatically patches Train and Val dataloaders to DDP mode by splitting available indices between
+    devices. Don't use ``trainer.fit(...)`` or ``trainer.validate(...)``, because in this case, PytorchLightning will
+    ignore this patching.
+    """
+
     def __init__(
         self,
         loaders_train: Optional[TTrainDataloaders] = None,
