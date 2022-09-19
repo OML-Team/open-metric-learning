@@ -65,7 +65,8 @@ class DDPSamplerWrapper(DistributedSampler):
 
     def _reload(self) -> None:
         """
-        We need to reinstantiate wrapper in order to update available indices from sampler for new epoch
+        We need to reinstantiate wrapper in order to update available indices from sampler for new epoch.
+        We don't perform this step on the 0 epoch, because we want to return the same indices as 1 GPU setup.
         """
         if self.seed_shift_per_epoch > 0:
             super().__init__(dataset=_Sampler2Dataset(self.sampler), shuffle=self.shuffle, drop_last=self.drop_last)
@@ -79,13 +80,22 @@ class DDPSamplerWrapper(DistributedSampler):
             yield self.dataset[sampler_idx]
 
 
-def extract_loader_parameters(loader: DataLoader) -> Dict[str, Any]:
+def extract_loader_parameters(loader: DataLoader, ignore_data_related_parameters: bool = False) -> Dict[str, Any]:
     """
     The function extracts parameters from dataloader, such as `collate_fn`, `num_workers`, etc, and automatically
     handles some new parameters, e.g. `prefetch_factor`.
+
+    Args:
+        loader: loader from which parameters are extracted
+        ignore_data_related_parameters: The flag allows you to ignore parameters, related to data, batch content,
+        and samplers.
     """
 
-    ignore_fields = ("self", "sampler", "batch_sampler", "drop_last", "shuffle", "batch_size", "dataset")
+    ignore_fields = ["self"]
+
+    if ignore_data_related_parameters:
+        ignore_fields.extend(["sampler", "batch_sampler", "drop_last", "shuffle", "batch_size", "dataset"])
+
     extracted = {}
 
     signature = inspect.signature(DataLoader.__init__)
@@ -108,7 +118,7 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
         different (e.g. metrics).
     """
     if is_ddp():
-        kwargs_loader = extract_loader_parameters(loader)
+        kwargs_loader = extract_loader_parameters(loader, ignore_data_related_parameters=True)
 
         # If you don't spectify batch_sampler, PyTorch automatically creates default BatchSampler. In this case we
         # need convert to DDP only sampler (your custom sampler / default SequentialSampler or RandomSampler, which
@@ -128,7 +138,7 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
             sampler_info = f"'{loader.sampler.__class__.__name__}' sampler"
         else:
             ddp_sampler = DDPSamplerWrapper(
-                sampler=loader.batch_sampler, shuffle_samples_between_gpus=True, pad_data_to_num_gpus=True
+                sampler=loader.batch_sampler, shuffle_samples_between_gpus=False, pad_data_to_num_gpus=True
             )
             patched_loader = DataLoader(dataset=loader.dataset, batch_sampler=ddp_sampler, **kwargs_loader)
             sampler_info = f"'{loader.batch_sampler.__class__.__name__}' batch sampler"
@@ -153,5 +163,6 @@ def check_loaders_is_patched(loaders: Union[DataLoader, Sequence[DataLoader]]) -
 __all__ = [
     "DDPSamplerWrapper",
     "patch_dataloader_to_ddp",
+    "extract_loader_parameters",
     "check_loaders_is_patched",
 ]

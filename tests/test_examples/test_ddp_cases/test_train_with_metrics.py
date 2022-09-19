@@ -5,12 +5,33 @@ from typing import Dict, List
 
 import pytest
 import torch
+from torch.utils.data import SequentialSampler
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT
+from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.samplers.balance import BalanceSampler
 
 from .run_retrieval_experiment_ddp import MetricValCallbackWithSaving
 
-exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/run_retrieval_experiment_ddp.py"
+rf"""
+MOTIVATION
+
+With this experiment, we want to test the patching of loaders with {ModuleDDP} and the similarity of metrics
+in DDP mode.
+
+We check the following:
+1) Train and Val loaders are split into several parts. These parts have no overlapping except for several samples (for
+validation with default {SequentialSampler}) or several batches (for training with {BalanceSampler}) which is necessary
+for padding according to the number of devices.
+2) Metrics obtained with a different number of devices are very similar. For this purpose, we save metrics and
+compare them later. Note that only the final metric should be similar.
+
+Our dummy data is presented by GT labels and PRED labels with some errors. Amount of errors is the same for each
+runnings.
+"""
+
+
+exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp_cases/run_retrieval_experiment_ddp.py"
 
 
 @pytest.mark.parametrize("batch_size", [10, 19])

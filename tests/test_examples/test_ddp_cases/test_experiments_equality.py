@@ -10,18 +10,21 @@ from oml.const import PROJECT_ROOT
 
 from .run_triplets_experiment_ddp import DummyModule
 
-exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp/run_triplets_experiment_ddp.py"
-TORCH_EPS = 10 * torch.finfo(torch.float32).eps
+"""
+MOTIVATION
+
+With this experiment we want to:
+1) Test patching of default dataloaders with `shuffle=False` and `shuffle=True`.
+2) Test equality of models with different combinations of parameters `B = sum(Bi * N)`. Where `B` - batch size per
+step which is equal for each experiment, `N` - number of devices,
+`Bi` - batch size per device.
+3) Loaders return the same collections of ids on each step on several epochs.
+
+"""
 
 
-def is_equal_models(model1: nn.Module, model2: nn.Module) -> Tuple[bool, List[torch.Tensor]]:
-    for module1, module2 in zip(model1.modules(), model2.modules()):
-        assert type(module1) == type(module2)
-        if isinstance(module1, nn.Linear):
-            if not torch.all(torch.isclose(module1.weight, module2.weight, atol=TORCH_EPS)):
-                return False, [module1.weight, module2.weight]
-
-    return True, []
+# TODO: check internal `/` on widnows
+exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp_cases/run_triplets_experiment_ddp.py"
 
 
 def test_epochs_are_equal() -> None:
@@ -73,3 +76,16 @@ def test_epochs_are_equal() -> None:
     assert eq_01, not_eq_tensors_01
     assert eq_02, not_eq_tensors_02
     assert not eq_03
+
+
+TORCH_EPS = 10 * torch.finfo(torch.float32).eps
+
+
+def is_equal_models(model1: nn.Module, model2: nn.Module) -> Tuple[bool, List[torch.Tensor]]:
+    for module1, module2 in zip(model1.modules(), model2.modules()):
+        assert type(module1) == type(module2)
+        if isinstance(module1, nn.Linear):
+            if not torch.all(torch.isclose(module1.weight, module2.weight, atol=TORCH_EPS)):
+                return False, [module1.weight, module2.weight]
+
+    return True, []

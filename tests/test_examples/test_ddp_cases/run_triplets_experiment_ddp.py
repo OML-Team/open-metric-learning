@@ -10,7 +10,7 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from oml.const import INPUT_TENSORS_KEY, MOCK_DATASET_FILE, MOCK_DATASET_PATH, TMP_PATH
+from oml.const import INPUT_TENSORS_KEY, MOCK_DATASET_PATH, TMP_PATH
 from oml.datasets.triplet import TriDataset, TTriplet, tri_collate
 from oml.ddp.utils import sync_dicts_ddp
 from oml.lightning.entrypoints.parser import parse_engine_params_from_config
@@ -20,25 +20,12 @@ from oml.lightning.modules.module_ddp import (
     TValDataloaders,
 )
 from oml.losses.triplet import TripletLossPlain
-from oml.miners.inbatch_all_tri import get_all_available_triplets
+from oml.miners.inbatch_all_tri import get_available_triplets
 from oml.transforms.images.albumentations.transforms import (
     get_normalisation_resize_albu,
 )
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import set_global_seed
-
-_ = rf"""
-MOTIVATION
-
-With this experiment we want to:
-1) Test patching of default dataloaders with `shuffle=False` and `shuffle=True`.
-2) Test equality of models with different combinations of parameters `B = sum(Bi * N)`. Where `B` - batch size per
-step which is equal for each experiment, `N` - number of devices,
-`Bi` - batch size per device.
-3) Loaders return the same collections of ids on each step on several epochs.
-
-We use a simple model, instead of ViT or ResNet, because they have Dropouts.
-"""
 
 
 def get_triplets_from_retrieval_setup(df: pd.DataFrame) -> Tuple[List[TTriplet], List[TTriplet]]:
@@ -46,7 +33,7 @@ def get_triplets_from_retrieval_setup(df: pd.DataFrame) -> Tuple[List[TTriplet],
 
     for split in ["train", "validation"]:
         df_split = df[df["split"] == split].reset_index(drop=True)
-        ids_apn = get_all_available_triplets(list(df_split["label"]))
+        ids_apn = get_available_triplets(list(df_split["label"]))
         triplets = list(zip(*map(lambda x: [df_split["path"][idx] for idx in x], ids_apn)))
 
         outputs.append(triplets)
@@ -62,6 +49,7 @@ class DummyModule(ModuleDDP):
     def __init__(self, exp_num: int, loaders_val: TValDataloaders, loaders_train: TTrainDataloaders):
         super().__init__(loaders_val=loaders_val, loaders_train=loaders_train)
         self.exp_num = exp_num
+        # We use a simple model, instead of ViT or ResNet, because they have Dropouts
         self.model = nn.Sequential(
             nn.AvgPool2d((32, 32)), nn.Flatten(), *([nn.Sigmoid(), nn.Linear(3, 3, bias=False)] * 3)
         )
@@ -122,7 +110,7 @@ def experiment(args: Namespace) -> None:
 
     set_global_seed(1)
 
-    df = pd.read_csv(MOCK_DATASET_PATH / MOCK_DATASET_FILE)
+    df = pd.read_csv(MOCK_DATASET_PATH / "df.csv")
     triplets_train, triplets_val = get_triplets_from_retrieval_setup(df)
 
     assert len(triplets_train) > len_dataset

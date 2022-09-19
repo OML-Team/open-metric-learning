@@ -1,11 +1,11 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Sequence, Tuple, Union
 
 import gdown
 import pandas as pd
 
-from oml.const import MOCK_DATASET_FILE, MOCK_DATASET_PATH, MOCK_DATASET_URL
+from oml.const import MOCK_DATASET_FILES, MOCK_DATASET_PATH, MOCK_DATASET_URL
 
 
 def get_argparser() -> ArgumentParser:
@@ -14,9 +14,9 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def check_mock_dataset_exists(dataset_root: Union[str, Path], df_name: str = MOCK_DATASET_FILE) -> bool:
+def check_mock_dataset_exists(dataset_root: Union[str, Path], needed_dfs: Sequence[str] = MOCK_DATASET_FILES) -> bool:
     dataset_root = Path(dataset_root)
-    files_exist = [(dataset_root / df_name).exists()]
+    files_exist = [(dataset_root / df_name).exists() for df_name in needed_dfs]
     for im in ["rectangle", "circle", "triangle", "cross", "equal", "hat", "sign", "star"]:
         for i in range(1, 4):
             files_exist.append((dataset_root / "images" / f"{im}_{i}.jpg").exists())

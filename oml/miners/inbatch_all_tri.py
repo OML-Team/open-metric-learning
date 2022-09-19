@@ -34,10 +34,10 @@ class AllTripletsMiner(ITripletsMinerInBatch):
             Indices of the triplets
 
         """
-        return get_all_available_triplets(labels, max_out_triplets=self._max_out_triplets)
+        return get_available_triplets(labels, max_out_triplets=self._max_out_triplets)
 
 
-def get_all_available_triplets(labels: List[int], max_out_triplets: int = maxsize) -> TTripletsIds:
+def get_available_triplets(labels: List[int], max_out_triplets: int = maxsize) -> TTripletsIds:
     """
     For each label, the function generates all possible positive and negative pairs of triplets.
     """
@@ -61,4 +61,4 @@ def get_all_available_triplets(labels: List[int], max_out_triplets: int = maxsiz
     return list(ids_anchor), list(ids_pos), list(ids_neg)
 
 
-__all__ = ["AllTripletsMiner", "get_all_available_triplets"]
+__all__ = ["AllTripletsMiner", "get_available_triplets"]
