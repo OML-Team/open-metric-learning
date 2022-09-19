@@ -14,7 +14,6 @@ BaseDataset
     :show-inheritance:
 
     .. automethod:: __init__
-    .. automethod:: __getitem__
 
 DatasetWithLabels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
