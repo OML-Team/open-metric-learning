@@ -51,4 +51,17 @@ class IBasicMetric(ABC):
         raise NotImplementedError()
 
 
-__all__ = ["IBasicMetric"]
+class IBasicMetricDDP(IBasicMetric):
+    """
+    This is an extension of a base metric interface to work in DDP mode
+
+    """
+
+    def sync(self) -> None:
+        """
+        Method aggregates data in DDP mode before metric calculations
+        """
+        raise NotImplementedError()
+
+
+__all__ = ["IBasicMetric", "IBasicMetricDDP"]

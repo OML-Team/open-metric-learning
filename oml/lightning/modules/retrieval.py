@@ -2,11 +2,13 @@ from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
 import torch
+from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.models import IExtractor
+from oml.lightning.modules.module_ddp import ModuleDDP
 
 
 class RetrievalModule(pl.LightningModule):
@@ -43,7 +45,7 @@ class RetrievalModule(pl.LightningModule):
             scheduler_monitor_metric: Metric to monitor for the schedulers that depend on the metric value
 
         """
-        super(RetrievalModule, self).__init__()
+        pl.LightningModule.__init__(self)
 
         self.model = model
         self.criterion = criterion
@@ -101,4 +103,16 @@ class RetrievalModule(pl.LightningModule):
         return tqdm_dict
 
 
-__all__ = ["RetrievalModule"]
+class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
+    def __init__(
+        self,
+        loaders_train: Optional[TRAIN_DATALOADERS] = None,
+        loaders_val: Optional[EVAL_DATALOADERS] = None,
+        *args: Any,
+        **kwargs: Any
+    ):
+        ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
+        RetrievalModule.__init__(self, *args, **kwargs)
+
+
+__all__ = ["RetrievalModule", "RetrievalModuleDDP"]

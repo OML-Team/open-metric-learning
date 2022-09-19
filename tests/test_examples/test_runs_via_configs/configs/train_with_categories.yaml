@@ -1,7 +1,6 @@
 postfix: "deepfashion"
 
 seed: 42
-
 precision: 32
 accelerator: cpu
 devices: 1
@@ -19,8 +18,9 @@ transforms_train:
     im_size: 64
 
 transforms_val:
-  name: norm_torch
-  args: {}
+  name: norm_resize_torch
+  args:
+    im_size: 64
 
 criterion:
   name: triplet_with_miner
