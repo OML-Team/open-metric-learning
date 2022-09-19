@@ -11,10 +11,10 @@ from oml.samplers.category_balance import CategoryBalanceSampler
 from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
 from oml.utils.misc import set_global_seed
 
-TLabalesMappingCLI = List[Tuple[List[int], Dict[int, int], int, int, int]]
+TLabelsMappingCLI = List[Tuple[List[int], Dict[int, int], int, int, int]]
 
 
-def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = True) -> TLabalesMappingCLI:
+def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = True) -> TLabelsMappingCLI:
     """This function generates some valid inputs for category sampler.
 
     Parameters:
@@ -59,7 +59,7 @@ def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = T
 
 
 @pytest.fixture()
-def input_for_category_balance_batch_sampler_few_labels() -> TLabalesMappingCLI:
+def input_for_category_balance_batch_sampler_few_labels() -> TLabelsMappingCLI:
     """Generate a list of valid inputs for category balanced batch sampler with few labels for some categories.
 
     Returns:
@@ -72,7 +72,7 @@ def input_for_category_balance_batch_sampler_few_labels() -> TLabalesMappingCLI:
 
 
 @pytest.fixture()
-def input_for_category_balance_batch_sampler() -> TLabalesMappingCLI:
+def input_for_category_balance_batch_sampler() -> TLabelsMappingCLI:
     """Generate a list of valid inputs for category balanced batch sampler.
 
     Returns:
@@ -212,7 +212,7 @@ def test_category_balance_batch_sampler(
     assert True
 
 
-def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_sampler: TLabalesMappingCLI) -> None:
+def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_sampler: TLabelsMappingCLI) -> None:
     """Check that CategoryBalanceBatchSampler behaves the same in case
     of valid input data with enough labels for all the categories for resample_labels "resample" and "raise".
 
@@ -292,14 +292,20 @@ def test_categories_as_strings(sampler_constructor) -> None:  # type: ignore
         1, guarantee_enough_labels=True
     )[0]
 
+    n_labels_batch = randint(2, n_labels)
+    n_instances_batch = randint(2, n_instances)
+    n_categories_batch = randint(1, n_categories)
+
     label2category_str = {label: str(cat) for label, cat in label2category.items()}
 
     set_global_seed(0)
-    sampler = sampler_constructor(labels, label2category, n_categories, n_labels, n_instances)
+    sampler = sampler_constructor(labels, label2category, n_categories_batch, n_labels_batch, n_instances_batch)
     ii_sampled = list(iter(sampler))
 
     set_global_seed(0)
-    sampler_with_str = sampler_constructor(labels, label2category_str, n_categories, n_labels, n_instances)
+    sampler_with_str = sampler_constructor(
+        labels, label2category_str, n_categories_batch, n_labels_batch, n_instances_batch
+    )
     ii_sampled_with_str = list(iter(sampler_with_str))
 
     assert ii_sampled == ii_sampled_with_str, list(zip(ii_sampled, ii_sampled_with_str))
