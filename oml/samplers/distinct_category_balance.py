@@ -111,18 +111,14 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
     def batch_size(self) -> int:
         return self._batch_size
 
-    @property
-    def batches_in_epoch(self) -> int:
-        return self._epoch_size
-
     def __len__(self) -> int:
-        return self.batches_in_epoch
+        return self._epoch_size
 
     def __iter__(self) -> Iterator[List[int]]:
         category2labels = deepcopy(self._category2labels)
         used_labels: Dict[int, Set[int]] = defaultdict(set)
         epoch_indices = []
-        for _ in range(self.batches_in_epoch):
+        for _ in range(self._epoch_size):
             if len(category2labels) < self._n_categories:
                 category2labels = deepcopy(self._category2labels)
                 used_labels = defaultdict(set)

@@ -96,7 +96,7 @@ def check_balance_batch_sampler_epoch(
         # batch-level invariants
         assert len(set(batch_ids)) >= 4, set(batch_ids)  # type: ignore
 
-        is_last_batch = i == sampler.batches_in_epoch - 1
+        is_last_batch = i == len(sampler) - 1
         if is_last_batch:
             assert 1 < num_batch_labels <= n_labels
             assert all(1 < el <= n_instances for el in num_batch_samples)

@@ -96,16 +96,12 @@ class CategoryBalanceSampler(IBatchSampler):
     def batch_size(self) -> int:
         return self._batch_size
 
-    @property
-    def batches_in_epoch(self) -> int:
-        return self._batch_number
-
     def __len__(self) -> int:
-        return self.batches_in_epoch
+        return self._batch_number
 
     def __iter__(self) -> Iterator[List[int]]:
         epoch_indices = []
-        for _ in range(self.batches_in_epoch):
+        for _ in range(self._batch_number):
             categories = np.random.choice(
                 list(self._category2labels.keys()),
                 size=self._n_categories,

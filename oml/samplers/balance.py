@@ -78,19 +78,15 @@ class BalanceSampler(IBatchSampler):
     def batch_size(self) -> int:
         return self._batch_size
 
-    @property
-    def batches_in_epoch(self) -> int:
-        return self._batches_in_epoch
-
     def __len__(self) -> int:
-        return self.batches_in_epoch
+        return self._batches_in_epoch
 
     def __iter__(self) -> Iterator[List[int]]:
         inds_epoch = []
 
         labels_rest = self._unq_labels.copy()
 
-        for _ in range(self.batches_in_epoch):
+        for _ in range(len(self)):
             ids_batch = []
 
             labels_for_batch = set(
