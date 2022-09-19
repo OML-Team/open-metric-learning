@@ -8,6 +8,119 @@ from torch import nn
 from oml.interfaces.models import IExtractor
 from oml.utils.io import download_checkpoint
 
+CLIP_MODELS = {
+    "openai_vitb16_224": {
+        "weights": "https://openaipublic.azureedge.net/clip/models/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
+        "md5": "44c3d804ecac03d9545ac1a3adbca3a6",
+        "embed_dim": 512,
+        "image_resolution": 224,
+        "layers": 12,
+        "width": 768,
+        "patch_size": 16,
+        "heads": 8,
+        "jitted_weights": True,
+    },
+    "openai_vitb32_224": {
+        "weights": "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
+        "md5": "3ba34e387b24dfe590eeb1ae6a8a122b",
+        "embed_dim": 512,
+        "image_resolution": 224,
+        "layers": 12,
+        "width": 768,
+        "patch_size": 32,
+        "heads": 8,
+        "jitted_weights": True,
+    },
+    "openai_vitl14_224": {
+        "weights": "https://openaipublic.azureedge.net/clip/models/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
+        "md5": "096db1af569b284eb76b3881534822d9",
+        "embed_dim": 768,
+        "image_resolution": 224,
+        "layers": 24,
+        "width": 1024,
+        "patch_size": 14,
+        "heads": 12,
+        "jitted_weights": True,
+    },
+    "openai_vitl14_336": {
+        "weights": "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
+        "md5": "b311058cae50cb10fbfa2a44231c9473",
+        "embed_dim": 768,
+        "image_resolution": 224,
+        "layers": 24,
+        "width": 1024,
+        "patch_size": 14,
+        "heads": 12,
+        "jitted_weights": True,
+    },
+    "sber_vitb16_224": {
+        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
+        "md5": "7882e07674d78c674e33cb892a68bbfc",
+        "embed_dim": 512,
+        "image_resolution": 224,
+        "layers": 12,
+        "width": 768,
+        "patch_size": 16,
+        "heads": 8,
+        "jitted_weights": False,
+    },
+    "sber_vitb16_384": {
+        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-384/resolve/main/pytorch_model.bin",
+        "md5": "95e83149d64c81bb7483501e578e8672",
+        "embed_dim": 512,
+        "image_resolution": 224,
+        "layers": 12,
+        "width": 768,
+        "patch_size": 16,
+        "heads": 8,
+        "jitted_weights": False,
+    },
+    "sber_vitb32_224": {
+        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
+        "md5": "e2c4dab46a3cfa608bdd762973e90d32",
+        "embed_dim": 512,
+        "image_resolution": 224,
+        "layers": 12,
+        "width": 768,
+        "patch_size": 32,
+        "heads": 8,
+        "jitted_weights": False,
+    },
+    "sber_vitb32_384": {
+        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-384/resolve/main/pytorch_model.bin",
+        "md5": "e10ae10a6645f9d9ff42cc54d46a0aa2",
+        "embed_dim": 512,
+        "image_resolution": 224,
+        "layers": 12,
+        "width": 768,
+        "patch_size": 32,
+        "heads": 8,
+        "jitted_weights": False,
+    },
+    "sber_vitl14_224": {
+        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
+        "md5": "9b4a1cd25d15bad4ffd2ba6e34b8a67c",
+        "embed_dim": 768,
+        "image_resolution": 224,
+        "layers": 24,
+        "width": 1024,
+        "patch_size": 14,
+        "heads": 12,
+        "jitted_weights": False,
+    },
+    "sber_vitl14_336": {
+        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-336/blob/main/pytorch_model.bin",
+        "md5": "3f2d9d1fe41c5b7467b5e9e462dbb371",
+        "embed_dim": 768,
+        "image_resolution": 224,
+        "layers": 24,
+        "width": 1024,
+        "patch_size": 14,
+        "heads": 12,
+        "jitted_weights": False,
+    },
+}
+
 
 class QuickGELU(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -111,9 +224,27 @@ class ViTCLIPExtractor(IExtractor):
         patch_size: int = 32,
         heads: int = 8,
         weights: Optional[str] = None,
-        jitted_weights: bool = True,  # for jitted weights like from original CLIP repo
+        jitted_weights: bool = True,
         strict_load: bool = True,
     ):
+        """
+        Args:
+            weights: Path to weights or ``None`` for randomly initialized model's weights.
+             You can check the available pretrained checkpoints in ``CLIP_MODELS``.
+            arch: Might be one of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``, ``sber_vitb16_224``,
+             ``sber_vitb16_384``, ``sber_vitb32_224``, ``sber_vitb32_384``, ``sber_vitl14_224`` or ``sber_vitl14_336``.
+            normalise_features: Set ``True`` to normalise output features
+            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
+            jitted_weights: If weights were saved with ``torch.jit.save()`` (as in original CLIP repo), you have to load them differently.
+            embed_dim: Embedding dimension.
+            image_resolution: Input image resolution.
+            layers: Number of layers in ViT.
+            width: ViT's width. Default is 3 * 128.
+            patch_size: Convolutional encoder patch size.
+            heads: Number of heads in MHA.
+
+        """
+
         super().__init__()
 
         if arch:
@@ -176,130 +307,17 @@ class ViTCLIPExtractor(IExtractor):
     def feat_dim(self) -> int:
         return self.visual.state_dict()["proj"].shape[-1]
 
-    @property
-    def input_size(self) -> int:
-        state_dict = self.visual.state_dict()
-        vision_patch_size = state_dict["conv1.weight"].shape[-1]
-        grid_size = round((state_dict["positional_embedding"].shape[0] - 1) ** 0.5)
-        return vision_patch_size * grid_size
-
 
 def get_vit_config_by_name(model_name: str) -> Dict[str, Any]:
-    models_params = {
-        "openai_vitb16_224": {
-            "weights": "https://openaipublic.azureedge.net/clip/models/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
-            "md5": "44c3d804ecac03d9545ac1a3adbca3a6",
-            "embed_dim": 512,
-            "image_resolution": 224,
-            "layers": 12,
-            "width": 768,
-            "patch_size": 16,
-            "heads": 8,
-            "jitted_weights": True,
-        },
-        "openai_vitb32_224": {
-            "weights": "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
-            "md5": "3ba34e387b24dfe590eeb1ae6a8a122b",
-            "embed_dim": 512,
-            "image_resolution": 224,
-            "layers": 12,
-            "width": 768,
-            "patch_size": 32,
-            "heads": 8,
-            "jitted_weights": True,
-        },
-        "openai_vitl14_224": {
-            "weights": "https://openaipublic.azureedge.net/clip/models/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
-            "md5": "096db1af569b284eb76b3881534822d9",
-            "embed_dim": 768,
-            "image_resolution": 224,
-            "layers": 24,
-            "width": 1024,
-            "patch_size": 14,
-            "heads": 12,
-            "jitted_weights": True,
-        },
-        "openai_vitl14_336": {
-            "weights": "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
-            "md5": "b311058cae50cb10fbfa2a44231c9473",
-            "embed_dim": 768,
-            "image_resolution": 224,
-            "layers": 24,
-            "width": 1024,
-            "patch_size": 14,
-            "heads": 12,
-            "jitted_weights": True,
-        },
-        "sber_vitb16_224": {
-            "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
-            "md5": "7882e07674d78c674e33cb892a68bbfc",
-            "embed_dim": 512,
-            "image_resolution": 224,
-            "layers": 12,
-            "width": 768,
-            "patch_size": 16,
-            "heads": 8,
-            "jitted_weights": False,
-        },
-        "sber_vitb16_384": {
-            "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-384/resolve/main/pytorch_model.bin",
-            "md5": "95e83149d64c81bb7483501e578e8672",
-            "embed_dim": 512,
-            "image_resolution": 224,
-            "layers": 12,
-            "width": 768,
-            "patch_size": 16,
-            "heads": 8,
-            "jitted_weights": False,
-        },
-        "sber_vitb32_224": {
-            "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
-            "md5": "e2c4dab46a3cfa608bdd762973e90d32",
-            "embed_dim": 512,
-            "image_resolution": 224,
-            "layers": 12,
-            "width": 768,
-            "patch_size": 32,
-            "heads": 8,
-            "jitted_weights": False,
-        },
-        "sber_vitb32_384": {
-            "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-384/resolve/main/pytorch_model.bin",
-            "md5": "e10ae10a6645f9d9ff42cc54d46a0aa2",
-            "embed_dim": 512,
-            "image_resolution": 224,
-            "layers": 12,
-            "width": 768,
-            "patch_size": 32,
-            "heads": 8,
-            "jitted_weights": False,
-        },
-        "sber_vitl14_224": {
-            "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
-            "md5": "9b4a1cd25d15bad4ffd2ba6e34b8a67c",
-            "embed_dim": 768,
-            "image_resolution": 224,
-            "layers": 24,
-            "width": 1024,
-            "patch_size": 14,
-            "heads": 12,
-            "jitted_weights": False,
-        },
-        "sber_vitl14_336": {
-            "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-336/blob/main/pytorch_model.bin",
-            "md5": "3f2d9d1fe41c5b7467b5e9e462dbb371",
-            "embed_dim": 768,
-            "image_resolution": 224,
-            "layers": 24,
-            "width": 1024,
-            "patch_size": 14,
-            "heads": 12,
-            "jitted_weights": False,
-        },
-    }
-    assert model_name in models_params, f"Model {model_name} is unknown."
+    f"""
+    Function which returns configuration of known CLIP models. OpenAI's original CLIP and RuCLIP are suported.
+    Args:
+        model_name: One of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``, ``sber_vitb16_224``,
+         ``sber_vitb16_384``, ``sber_vitb32_224``, ``sber_vitb32_384``, ``sber_vitl14_224`` or ``sber_vitl14_336``.
+    """
+    assert model_name in CLIP_MODELS, f"Model {model_name} is unknown."
 
-    params = models_params[model_name]
+    params = CLIP_MODELS[model_name]
     weights, md5 = params.pop("weights"), params.pop("md5", None)  # type: ignore
     if str(weights).startswith("http"):
         params["weights"] = download_checkpoint(weights, md5)  # type: ignore

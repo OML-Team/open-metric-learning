@@ -17,6 +17,15 @@ ViTExtractor
     .. automethod:: draw_attention
     .. autoproperty:: feat_dim
 
+ViTCLIPExtractor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.vit.clip.ViTCLIPExtractor
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. autoproperty:: feat_dim
+
 ResnetExtractor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.models.resnet.ResnetExtractor

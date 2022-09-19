@@ -10,6 +10,7 @@ from oml.transforms.images.albumentations.transforms import (
 )
 from oml.transforms.images.torchvision.transforms import (
     get_augs_torch,
+    get_clip_transforms,
     get_normalisation_resize_torch,
     get_normalisation_torch,
 )
@@ -27,6 +28,7 @@ TRANSFORMS_TORCH = {
     "augs_torch": get_augs_torch,
     "norm_torch": get_normalisation_torch,
     "norm_resize_torch": get_normalisation_resize_torch,
+    "clip_transforms": get_clip_transforms,
 }
 
 TRANSFORMS_REGISTRY = {**TRANSFORMS_ALBU, **TRANSFORMS_TORCH}
