@@ -26,13 +26,13 @@ def check_retrieval_dataframe_format(
     df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ",", verbose: bool = True
 ) -> None:
     """
-    Function checks if the data is in the correct format.
+    Function checks if the dataset is in the correct format.
 
     Args:
-        df: Path to .csv file or pandas DataFrame
-        dataset_root: Path to the dataset root
-        sep: Separator used in .csv
-        verbose: Set True if you want to see warnings
+        df: Path to ``.csv`` file or pandas DataFrame
+        dataset_root: Path to the dataset root, set ``None`` if you used absolute paths in your dataframe
+        sep: Separator used in ``.csv``
+        verbose: Set ``True`` if you want to see warnings
 
     """
     if isinstance(df, (Path, str)):
