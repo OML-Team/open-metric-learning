@@ -57,14 +57,14 @@ class BalanceSampler(IBatchSampler):
         assert all(n > 1 for n in Counter(labels).values()), "Each label should contain at least 2 samples"
 
         self._labels = np.array(labels)
-        self._n_labels = n_labels
-        self._instances = n_instances
+        self.n_labels = n_labels
+        self.n_instances = n_instances
 
-        self._batch_size = self._n_labels * self._instances
+        self._batch_size = self.n_labels * self.n_instances
         self._unq_labels = unq_labels
 
         n_labels = len(self._unq_labels)
-        if n_labels % self._n_labels == 1:
+        if n_labels % self.n_labels == 1:
             self._labels_per_epoch = n_labels - 1
         else:
             self._labels_per_epoch = n_labels
@@ -72,7 +72,7 @@ class BalanceSampler(IBatchSampler):
         labels = np.array(labels)
         self.lbl2idx = {label: np.arange(len(labels))[labels == label].tolist() for label in set(labels)}
 
-        self._batches_in_epoch = int(np.ceil(self._labels_per_epoch / self._n_labels))
+        self._batches_in_epoch = int(np.ceil(self._labels_per_epoch / self.n_labels))
 
     @property
     def batch_size(self) -> int:
@@ -90,13 +90,13 @@ class BalanceSampler(IBatchSampler):
             ids_batch = []
 
             labels_for_batch = set(
-                np.random.choice(list(labels_rest), size=min(self._n_labels, len(labels_rest)), replace=False)
+                np.random.choice(list(labels_rest), size=min(self.n_labels, len(labels_rest)), replace=False)
             )
             labels_rest -= labels_for_batch
 
             for cls in labels_for_batch:
                 cls_ids = self.lbl2idx[cls]
-                selected_inds = smart_sample(cls_ids, self._instances)
+                selected_inds = smart_sample(cls_ids, self.n_instances)
                 ids_batch.extend(selected_inds)
 
             inds_epoch.append(ids_batch)
