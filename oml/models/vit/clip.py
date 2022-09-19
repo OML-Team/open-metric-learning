@@ -9,15 +9,6 @@ from oml.interfaces.models import IExtractor
 from oml.utils.io import download_checkpoint
 
 
-class LayerNorm(nn.LayerNorm):  # TODO: check if this is not a legacy
-    """Subclass torch's LayerNorm to handle fp16."""
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        orig_type = x.dtype
-        ret = super().forward(x.type(torch.float32))
-        return ret.type(orig_type)
-
-
 class QuickGELU(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x * torch.sigmoid(1.702 * x)
@@ -28,7 +19,7 @@ class ResidualAttentionBlock(nn.Module):
         super().__init__()
 
         self.attn = nn.MultiheadAttention(d_model, n_head)
-        self.ln_1 = LayerNorm(d_model)
+        self.ln_1 = nn.LayerNorm(d_model)
         self.mlp = nn.Sequential(
             OrderedDict(
                 [
@@ -38,7 +29,7 @@ class ResidualAttentionBlock(nn.Module):
                 ]
             )
         )
-        self.ln_2 = LayerNorm(d_model)
+        self.ln_2 = nn.LayerNorm(d_model)
         self.attn_mask = attn_mask
 
     def attention(self, x: torch.Tensor) -> torch.Tensor:
@@ -72,11 +63,11 @@ class VisionTransformer(nn.Module):
         scale = width**-0.5
         self.class_embedding = nn.Parameter(scale * torch.randn(width))
         self.positional_embedding = nn.Parameter(scale * torch.randn((input_resolution // patch_size) ** 2 + 1, width))
-        self.ln_pre = LayerNorm(width)
+        self.ln_pre = nn.LayerNorm(width)
 
         self.transformer = Transformer(width, layers, heads)
 
-        self.ln_post = LayerNorm(width)
+        self.ln_post = nn.LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
