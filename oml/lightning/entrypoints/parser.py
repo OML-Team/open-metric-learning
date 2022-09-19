@@ -45,7 +45,5 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
     }
 
 
-def raise_error_if_ddp(cfg: TCfg) -> None:
-    # TODO: now DDP works in the wrong way. We temporarily force to specify 'devices=1'
-    if cfg["strategy"]:
-        raise RuntimeError("Now DDP works in wrong way. Please, specifiy explicitly 'devices=1' in your config")
+def check_is_config_for_ddp(cfg: TCfg) -> bool:
+    return bool(cfg["strategy"])
