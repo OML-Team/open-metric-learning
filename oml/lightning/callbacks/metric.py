@@ -9,6 +9,11 @@ from oml.utils.misc import flatten_dict
 
 
 class MetricValCallback(Callback):
+    """
+    This is a wrapper which allows to use IBasicMetric with PyTorch Lightning.
+
+    """
+
     def __init__(
         self,
         metric: IBasicMetric,
@@ -17,14 +22,14 @@ class MetricValCallback(Callback):
         samples_in_getitem: int = 1,
     ):
         """
-        It's a wrapper which allows to use IBasicMetric with PyTorch Lightning.
         Args:
-            metric: metric
-            loader_idx: loader idx
-            samples_in_getitem: Some of the datasets return several samples when calling __getitem__,
+            metric: Metric
+            loader_idx: Idx of the loader to calculate metric for
+            samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
                 so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
-                but for TriDataset, which return anchor, positive and negative images, this value must be equal to 3,
+                but for the dataset which explicitly return triplets, this value must be equal to 3,
                 for a dataset of pairs it must be equal to 2.
+
         """
         self.metric = metric
         self.log_only_main_category = log_only_main_category

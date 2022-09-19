@@ -24,6 +24,15 @@ def check_mock_dataset_exists(dataset_root: Union[str, Path], needed_dfs: Iterab
 
 
 def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Function to download mock dataset which is already prepared in the required format.
+
+    Args:
+        dataset_root: Path to save the dataset
+
+    Returns: Dataframes for the training and validation stages
+
+    """
     dataset_root = Path(dataset_root)
 
     if not check_mock_dataset_exists(dataset_root):
