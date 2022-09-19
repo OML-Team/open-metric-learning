@@ -27,6 +27,9 @@ Specifically, our framework provides modules for supervised training and retriev
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
   4. Calculating retrieval metrics like CMC@k, Precision@k or MeanAveragePrecision.
 
+## Documentation
+Documentation is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/index.html).
+
 ## Installation
 OML is available in PyPI:
 ```shell script

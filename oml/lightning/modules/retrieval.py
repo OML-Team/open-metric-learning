@@ -12,6 +12,11 @@ from oml.lightning.modules.module_ddp import ModuleDDP
 
 
 class RetrievalModule(pl.LightningModule):
+    """
+    This is a base module for the training of your model with Lightning.
+
+    """
+
     def __init__(
         self,
         model: IExtractor,
@@ -25,6 +30,21 @@ class RetrievalModule(pl.LightningModule):
         embeddings_key: str = EMBEDDINGS_KEY,
         scheduler_monitor_metric: Optional[str] = None,
     ):
+        """
+
+        Args:
+            model: Model to train
+            criterion: Criterion to optimize
+            optimizer: Optimizer
+            scheduler: Learning rate scheduler
+            scheduler_interval: Interval of calling scheduler (must be ``step`` or ``epoch``)
+            scheduler_frequency: Frequency of calling scheduler
+            input_tensors_key: Key to get tensors from the batches
+            labels_key: Key to get labels from the batches
+            embeddings_key: Key to get embeddings from the batches
+            scheduler_monitor_metric: Metric to monitor for the schedulers that depend on the metric value
+
+        """
         pl.LightningModule.__init__(self)
 
         self.model = model

@@ -12,8 +12,11 @@ Contents
 
 .. toctree::
    interfaces
+   datasets
    samplers
    miners
    losses
    models
    metrics
+   lightning
+   utils
