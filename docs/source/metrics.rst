@@ -17,3 +17,7 @@ EmbeddingMetrics
     .. automethod:: setup
     .. automethod:: update_data
     .. automethod:: compute_metrics
+
+calc_retrieval_metrics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.functional.metrics.calc_retrieval_metrics
