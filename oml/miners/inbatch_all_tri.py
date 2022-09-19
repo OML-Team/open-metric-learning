@@ -5,13 +5,13 @@ from typing import List
 
 from torch import Tensor
 
-from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
+from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids
 
 
-class AllTripletsMiner(InBatchTripletsMiner):
+class AllTripletsMiner(ITripletsMinerInBatch):
     """
-    This miner selects all the possible triplets for the given labels
+    This miner selects all the possible triplets for the given batch.
 
     """
 
@@ -19,9 +19,7 @@ class AllTripletsMiner(InBatchTripletsMiner):
         """
         Args:
             max_output_triplets: Number of all of the possible triplets
-              in the batch can be very large,
-              so we can sample only some part of them,
-              determined by this parameter.
+              in the batch can be very large, so we can limit them vis this parameter.
 
         """
         self._max_out_triplets = max_output_triplets

@@ -4,23 +4,25 @@ import numpy as np
 from torch import Tensor
 from torch.nn import functional as F
 
-from oml.interfaces.miners import InBatchTripletsMiner, TTripletsIds
+from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids
 from oml.utils.misc_torch import pairwise_dist
 
 
-class HardTripletsMiner(InBatchTripletsMiner):
+class HardTripletsMiner(ITripletsMinerInBatch):
     """
-    This miner selects hardest triplets based on distances between features:
-    the hardest positive sample has the maximal distance to the anchor sample,
-    the hardest negative sample has the minimal distance to the anchor sample.
+    This miner selects the hardest triplets based on the distances between the features:
+
+    - The hardest `positive` sample has the `maximal` distance to the anchor sample
+
+    - The hardest `negative` sample has the `minimal` distance to the anchor sample
 
     """
 
     def __init__(self, norm_required: bool = False):
         """
         Args:
-            norm_required: Set True if features normalisation is needed
+            norm_required: Set ``True`` if features normalisation is needed
 
         """
         self._norm_required = norm_required
@@ -30,12 +32,12 @@ class HardTripletsMiner(InBatchTripletsMiner):
         This method samples the hardest triplets inside the batch.
 
         Args:
-            features: Features with the shape of [batch_size, feature_size]
-            labels: Labels of the samples in the batch
+            features: Features with the shape of ``[batch_size, feature_size]``
+            labels: Labels with the size of ``batch_size``
 
         Returns:
             The batch of the triplets in the order below:
-            (anchor, positive, negative)
+            ``(anchor, positive, negative)``
 
         """
         assert features.shape[0] == len(labels)
@@ -59,12 +61,12 @@ class HardTripletsMiner(InBatchTripletsMiner):
         anchor and then finds the hardest positive and negative pair.
 
         Args:
-            distmat: Matrix of distances between the features
-            labels: Labels of the samples
+            distmat: Matrix with the shape of ``[batch_size, batch_size]``
+            labels: Labels with the size of ``batch_size``
 
         Returns:
-            The batch of triplets (with the size equals to the original bs)
-            in the following order: (anchor, positive, negative)
+            The batch of the triplets with the size of ``batch_size``, order is the following:
+                ``(anchor, positive, negative)``
 
         """
         ids_all = set(range(len(labels)))
