@@ -75,7 +75,7 @@ class BaseDataset(Dataset):
             f_imread: Function to read the images
             cache_size: Size of the dataset's cache
             input_tensors_key: Key to put tensors into the batches
-            labels_key: Key to put labels labels into the batches
+            labels_key: Key to put labels into the batches
             paths_key: Key put paths into the batches
             categories_key: Key to put categories into the batches
             x1_key: Key to put ``x1`` into the batches
