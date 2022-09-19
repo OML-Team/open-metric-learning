@@ -26,7 +26,6 @@ def get_normalisation_resize_torch(im_size: int, mean: TNormParam = MEAN, std: T
 
 
 def get_clip_transforms(
-    im_size: int,
     mean: TNormParam = (0.48145466, 0.4578275, 0.40821073),
     std: TNormParam = (0.26862954, 0.26130258, 0.27577711),
 ) -> Compose:
