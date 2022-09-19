@@ -31,7 +31,7 @@ runnings.
 """
 
 
-exp_file = PROJECT_ROOT / "tests/test_oml/test_ddp_cases/run_retrieval_experiment_ddp.py"
+exp_file = PROJECT_ROOT / "tests/test_examples/test_ddp_cases/run_retrieval_experiment_ddp.py"
 
 
 @pytest.mark.parametrize("batch_size", [10, 19])
