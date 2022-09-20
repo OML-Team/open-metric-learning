@@ -15,9 +15,9 @@ MetricValCallback
 
     .. automethod:: __init__
 
-RetrievalModule
+BaseModule
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.modules.retrieval.RetrievalModule
+.. autoclass:: oml.lightning.modules.module.BaseModule
     :undoc-members:
     :show-inheritance:
 

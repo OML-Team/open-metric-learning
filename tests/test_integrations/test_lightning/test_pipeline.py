@@ -37,7 +37,7 @@ class DummyTripletDataset(Dataset):
         return self.num_triplets
 
 
-class DummyRetrievalDataset(Dataset):
+class DummyDataset(Dataset):
     def __init__(self, labels: List[int], im_size: int):
         self.labels = labels
         self.im_size = im_size
@@ -77,7 +77,7 @@ class DummyTripletModule(DummyCommonModule):
         return loss
 
 
-class DummyRetrievalModule(DummyCommonModule):
+class DummyModule(DummyCommonModule):
     def __init__(self, im_size: int):
         super().__init__(im_size=im_size)
         self.criterion = TripletLossWithMiner(margin=None, need_logs=True)
@@ -104,12 +104,12 @@ def create_retrieval_dataloader(
 
     labels = [idx // n_instances for idx in range(num_samples)]
 
-    dataset = DummyRetrievalDataset(labels=labels, im_size=im_size)
+    dataset = DummyDataset(labels=labels, im_size=im_size)
 
-    sampler_retrieval = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
+    sampler = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
     train_retrieval_loader = DataLoader(
         dataset=dataset,
-        batch_sampler=sampler_retrieval,
+        batch_sampler=sampler,
         num_workers=num_workers,
     )
     return train_retrieval_loader
@@ -157,7 +157,7 @@ def test_lightning(
         create_callback = create_triplet_callback
     elif pipeline == "retrieval":
         create_dataloader = partial(create_retrieval_dataloader, n_labels=n_labels, n_instances=n_instances)
-        lightning_module = DummyRetrievalModule(im_size=im_size)
+        lightning_module = DummyModule(im_size=im_size)
         create_callback = create_retrieval_callback
     else:
         raise ValueError

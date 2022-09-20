@@ -11,7 +11,7 @@ from oml.interfaces.models import IExtractor
 from oml.lightning.modules.module_ddp import ModuleDDP
 
 
-class RetrievalModule(pl.LightningModule):
+class BaseModule(pl.LightningModule):
     """
     This is a base module for the training of your model with Lightning.
 
@@ -103,7 +103,7 @@ class RetrievalModule(pl.LightningModule):
         return tqdm_dict
 
 
-class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
+class BaseModuleDDP(BaseModule, ModuleDDP):
     def __init__(
         self,
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
@@ -112,7 +112,7 @@ class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
         **kwargs: Any
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
-        RetrievalModule.__init__(self, *args, **kwargs)
+        BaseModule.__init__(self, *args, **kwargs)
 
 
-__all__ = ["RetrievalModule", "RetrievalModuleDDP"]
+__all__ = ["BaseModule", "BaseModuleDDP"]
