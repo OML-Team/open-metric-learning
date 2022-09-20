@@ -72,11 +72,11 @@ class CategoryBalanceSampler(IBatchSampler):
         self._resample_labels = resample_labels
         self._labels = np.array(labels)
         self._label2category = label2category
-        self._n_categories = n_categories
-        self._n_labels = n_labels
-        self._n_instances = n_instances
+        self.n_categories = n_categories
+        self.n_labels = n_labels
+        self.n_instances = n_instances
 
-        self._batch_size = self._n_categories * self._n_labels * self._n_instances
+        self._batch_size = self.n_categories * self.n_labels * self.n_instances
         self._weight_categories = weight_categories
 
         self._label2index = {
@@ -90,7 +90,7 @@ class CategoryBalanceSampler(IBatchSampler):
         self._category_weights = (
             [category_weights[cat] for cat in unique_categories] if self._weight_categories else None
         )
-        self._batch_number = math.ceil(len(unique_labels) / self._n_labels)
+        self._batch_number = math.ceil(len(unique_labels) / self.n_labels)
 
     @property
     def batch_size(self) -> int:
@@ -104,17 +104,17 @@ class CategoryBalanceSampler(IBatchSampler):
         for _ in range(self._batch_number):
             categories = np.random.choice(
                 list(self._category2labels.keys()),
-                size=self._n_categories,
+                size=self.n_categories,
                 replace=False,
                 p=self._category_weights,
             )
             batch_indices = []
             for category in categories:
                 labels_available = list(self._category2labels[category])
-                labels = smart_sample(array=labels_available, k=self._n_labels)
+                labels = smart_sample(array=labels_available, k=self.n_labels)
                 for label in labels:
                     indices = self._label2index[label]
-                    samples_indices = smart_sample(array=indices, k=self._n_instances)
+                    samples_indices = smart_sample(array=indices, k=self.n_instances)
                     batch_indices.extend(samples_indices)
             epoch_indices.append(batch_indices)
         return iter(epoch_indices)

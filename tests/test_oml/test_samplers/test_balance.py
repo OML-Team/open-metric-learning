@@ -117,6 +117,6 @@ def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabels) -> None
     """
     for labels in input_for_balance_batch_sampler:
         n_labels_batch = randint(2, len(set(labels)))
-        n_instances_batch = randint(2, len(labels))
+        n_instances_batch = randint(2, max(Counter(labels).values()))
         sampler = BalanceSampler(labels=labels, n_labels=n_labels_batch, n_instances=n_instances_batch)
         check_balance_batch_sampler_epoch(sampler=sampler, labels=labels)

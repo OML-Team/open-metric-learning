@@ -95,12 +95,12 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
 
         self._labels = np.array(labels)
         self._label2category = label2category
-        self._n_categories = n_categories
-        self._n_labels = n_labels
-        self._n_instances = n_instances
+        self.n_categories = n_categories
+        self.n_labels = n_labels
+        self.n_instances = n_instances
         self._epoch_size = epoch_size
 
-        self._batch_size = self._n_categories * self._n_labels * self._n_instances
+        self._batch_size = self.n_categories * self.n_labels * self.n_instances
 
         self._label2index = {
             label: np.arange(len(self._labels))[self._labels == label].tolist() for label in sorted(list(unique_labels))
@@ -119,29 +119,29 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
         used_labels: Dict[int, Set[int]] = defaultdict(set)
         epoch_indices = []
         for _ in range(self._epoch_size):
-            if len(category2labels) < self._n_categories:
+            if len(category2labels) < self.n_categories:
                 category2labels = deepcopy(self._category2labels)
                 used_labels = defaultdict(set)
             categories_available = list(category2labels.keys())
             categories = np.random.choice(
-                categories_available, size=min(self._n_categories, len(categories_available)), replace=False
+                categories_available, size=min(self.n_categories, len(categories_available)), replace=False
             )
             batch_indices = []
             for category in categories:
                 labels_available = list(category2labels[category])
                 labels_available_number = len(labels_available)
-                if self._n_labels <= labels_available_number:
-                    labels = np.random.choice(labels_available, size=self._n_labels, replace=False).tolist()
+                if self.n_labels <= labels_available_number:
+                    labels = np.random.choice(labels_available, size=self.n_labels, replace=False).tolist()
                 else:
                     labels = (
                         labels_available
                         + np.random.choice(
-                            list(used_labels[category]), size=self._n_labels - labels_available_number, replace=False
+                            list(used_labels[category]), size=self.n_labels - labels_available_number, replace=False
                         ).tolist()
                     )
                 for label in labels:
                     indices = self._label2index[label]
-                    samples_indices = smart_sample(array=indices, k=self._n_instances)
+                    samples_indices = smart_sample(array=indices, k=self.n_instances)
                     batch_indices.extend(samples_indices)
                 category2labels[category] -= set(labels)
                 used_labels[category].update(labels)
