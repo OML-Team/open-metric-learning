@@ -106,10 +106,10 @@ def create_retrieval_dataloader(
 
     dataset = DummyRetrievalDataset(labels=labels, im_size=im_size)
 
-    sampler = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
+    sampler_retrieval = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
     train_retrieval_loader = DataLoader(
         dataset=dataset,
-        batch_sampler=sampler,
+        batch_sampler=sampler_retrieval,
         num_workers=num_workers,
     )
     return train_retrieval_loader
