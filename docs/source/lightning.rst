@@ -23,6 +23,22 @@ RetrievalModule
 
     .. automethod:: __init__
 
+ModuleDDP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.lightning.modules.module_ddp.ModuleDDP
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+
+RetrievalModuleDDP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.lightning.modules.retrieval.RetrievalModuleDDP
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+
 pl_train
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.lightning.entrypoints.train.pl_train

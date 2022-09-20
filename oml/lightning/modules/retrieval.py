@@ -104,6 +104,11 @@ class RetrievalModule(pl.LightningModule):
 
 
 class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
+    """
+    This is a base module for the training of your model with Lightning in DDP.
+
+    """
+
     def __init__(
         self,
         loaders_train: Optional[TRAIN_DATALOADERS] = None,

@@ -58,6 +58,7 @@ class DDPSamplerWrapper(DistributedSampler):
                 inside GPU after feeding will be used according to behavior of sampler.
 
         Note: Wrapper also can be used with default SequentialSampler and RandomSampler, not only custom.
+
         """
 
         self.seed_shift_per_epoch = 0
@@ -112,10 +113,12 @@ def extract_loader_parameters(loader: DataLoader, ignore_data_related_parameters
 def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
     """
     Function inspects loader and modifies sampler for working in DDP mode.
+
     Note:
         We ALWAYS use the padding of samples (number of batches or number of samples per epoch) in order to use the
         same amount of data for each device in DDP, so behavior with and without DDP may be slightly
         different (e.g. metrics).
+
     """
     if is_ddp():
         kwargs_loader = extract_loader_parameters(loader, ignore_data_related_parameters=True)

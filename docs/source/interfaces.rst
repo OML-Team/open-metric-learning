@@ -60,6 +60,14 @@ IBasicMetric
     .. automethod:: update_data
     .. automethod:: compute_metrics
 
+IBasicMetricDDP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.metrics.IBasicMetricDDP
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: sync
+
 ITripletsMiner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.miners.ITripletsMiner
