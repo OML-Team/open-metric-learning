@@ -8,10 +8,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.models import IExtractor
-from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.lightning.modules.retrieval_ddp import ModuleDDP
 
 
-class BaseModule(pl.LightningModule):
+class RetrievalModule(pl.LightningModule):
     """
     This is a base module for the training of your model with Lightning.
 
@@ -103,7 +103,7 @@ class BaseModule(pl.LightningModule):
         return tqdm_dict
 
 
-class BaseModuleDDP(BaseModule, ModuleDDP):
+class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
     def __init__(
         self,
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
@@ -112,7 +112,7 @@ class BaseModuleDDP(BaseModule, ModuleDDP):
         **kwargs: Any
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
-        BaseModule.__init__(self, *args, **kwargs)
+        RetrievalModule.__init__(self, *args, **kwargs)
 
 
-__all__ = ["BaseModule", "BaseModuleDDP"]
+__all__ = ["RetrievalModule", "RetrievalModuleDDP"]

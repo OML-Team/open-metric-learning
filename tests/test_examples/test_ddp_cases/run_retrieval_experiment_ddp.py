@@ -17,7 +17,7 @@ from oml.const import TMP_PATH
 from oml.ddp.utils import sync_dicts_ddp
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import parse_engine_params_from_config
-from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.lightning.modules.retrieval_ddp import ModuleDDP
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetricsDDP
 from oml.samplers.balance import BalanceSampler

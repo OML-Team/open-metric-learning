@@ -268,7 +268,7 @@ import pytorch_lightning as pl
 import torch
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.module import BaseModule
+from oml.lightning.modules.retrieval import RetrievalModule
 from oml.lightning.callbacks.metric import  MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics

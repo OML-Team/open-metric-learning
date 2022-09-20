@@ -22,7 +22,7 @@ from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
     parse_engine_params_from_config,
 )
-from oml.lightning.modules.module import BaseModule, BaseModuleDDP
+from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
@@ -124,9 +124,9 @@ def pl_train(cfg: TCfg) -> None:
     module_kwargs = scheduler_kwargs
     if is_ddp:
         module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
-        module_constructor = BaseModuleDDP
+        module_constructor = RetrievalModuleDDP
     else:
-        module_constructor = BaseModule  # type: ignore
+        module_constructor = RetrievalModule  # type: ignore
 
     pl_model = module_constructor(
         model=extractor,
