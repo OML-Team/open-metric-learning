@@ -14,7 +14,7 @@ from oml.const import (
     PROJECT_ROOT,
     TCfg,
 )
-from oml.datasets.retrieval import get_retrieval_datasets
+from oml.datasets.base import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
