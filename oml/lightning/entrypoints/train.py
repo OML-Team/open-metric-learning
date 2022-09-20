@@ -14,7 +14,7 @@ from oml.const import (
     PROJECT_ROOT,
     TCfg,
 )
-from oml.datasets.base import get_datasets
+from oml.datasets.base import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
@@ -59,7 +59,7 @@ def pl_train(cfg: TCfg) -> None:
     transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
     transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
 
-    train_dataset, valid_dataset = get_datasets(
+    train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         transforms_train=transforms_train,
         transforms_val=transforms_val,

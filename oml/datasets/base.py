@@ -252,7 +252,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         return item
 
 
-def get_datasets(
+def get_retrieval_datasets(
     dataset_root: Path,
     transforms_train: Any,
     transforms_val: Any,
@@ -287,4 +287,4 @@ def get_datasets(
     return train_dataset, valid_dataset
 
 
-__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_datasets"]
+__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_retrieval_datasets"]
