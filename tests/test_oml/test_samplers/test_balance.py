@@ -99,11 +99,6 @@ def check_balance_batch_sampler_epoch(sampler: BalanceSampler, labels: List[int]
 
 
 def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabels) -> None:
-    """
-    Args:
-        input_for_balance_batch_sampler: List of (labels, n_labels, n_instances)
-
-    """
     for labels in input_for_balance_batch_sampler:
         n_labels_batch = randint(2, max(2, len(set(labels)) // 5))
         n_instances_batch = randint(2, max(Counter(labels).values()))
