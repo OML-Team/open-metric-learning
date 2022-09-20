@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from logging import warning
 from pathlib import Path
 from typing import Any, Dict, Optional
 
