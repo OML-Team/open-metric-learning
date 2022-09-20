@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from logging import warning
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -18,7 +19,6 @@ CLIP_MODELS = {
         "width": 768,
         "patch_size": 16,
         "heads": 8,
-        "jitted_weights": True,
     },
     "openai_vitb32_224": {
         "weights": "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
@@ -29,7 +29,6 @@ CLIP_MODELS = {
         "width": 768,
         "patch_size": 32,
         "heads": 8,
-        "jitted_weights": True,
     },
     "openai_vitl14_224": {
         "weights": "https://openaipublic.azureedge.net/clip/models/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
@@ -40,7 +39,6 @@ CLIP_MODELS = {
         "width": 1024,
         "patch_size": 14,
         "heads": 12,
-        "jitted_weights": True,
     },
     "openai_vitl14_336": {
         "weights": "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
@@ -51,75 +49,17 @@ CLIP_MODELS = {
         "width": 1024,
         "patch_size": 14,
         "heads": 12,
-        "jitted_weights": True,
-    },
-    "sber_vitb16_224": {
-        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
-        "md5": "7882e07674d78c674e33cb892a68bbfc",
-        "embed_dim": 512,
-        "image_resolution": 224,
-        "layers": 12,
-        "width": 768,
-        "patch_size": 16,
-        "heads": 8,
-        "jitted_weights": False,
-    },
-    "sber_vitb16_384": {
-        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-384/resolve/main/pytorch_model.bin",
-        "md5": "95e83149d64c81bb7483501e578e8672",
-        "embed_dim": 512,
-        "image_resolution": 224,
-        "layers": 12,
-        "width": 768,
-        "patch_size": 16,
-        "heads": 8,
-        "jitted_weights": False,
-    },
-    "sber_vitb32_224": {
-        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
-        "md5": "e2c4dab46a3cfa608bdd762973e90d32",
-        "embed_dim": 512,
-        "image_resolution": 224,
-        "layers": 12,
-        "width": 768,
-        "patch_size": 32,
-        "heads": 8,
-        "jitted_weights": False,
-    },
-    "sber_vitb32_384": {
-        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-384/resolve/main/pytorch_model.bin",
-        "md5": "e10ae10a6645f9d9ff42cc54d46a0aa2",
-        "embed_dim": 512,
-        "image_resolution": 224,
-        "layers": 12,
-        "width": 768,
-        "patch_size": 32,
-        "heads": 8,
-        "jitted_weights": False,
-    },
-    "sber_vitl14_224": {
-        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
-        "md5": "9b4a1cd25d15bad4ffd2ba6e34b8a67c",
-        "embed_dim": 768,
-        "image_resolution": 224,
-        "layers": 24,
-        "width": 1024,
-        "patch_size": 14,
-        "heads": 12,
-        "jitted_weights": False,
-    },
-    "sber_vitl14_336": {
-        "weights": "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-336/blob/main/pytorch_model.bin",
-        "md5": "3f2d9d1fe41c5b7467b5e9e462dbb371",
-        "embed_dim": 768,
-        "image_resolution": 224,
-        "layers": 24,
-        "width": 1024,
-        "patch_size": 14,
-        "heads": 12,
-        "jitted_weights": False,
     },
 }
+
+
+class LayerNorm(nn.LayerNorm):
+    """Subclass torch's LayerNorm to handle fp16."""
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        orig_type = x.dtype
+        ret = super().forward(x.type(torch.float32))
+        return ret.type(orig_type)
 
 
 class QuickGELU(nn.Module):
@@ -132,7 +72,7 @@ class ResidualAttentionBlock(nn.Module):
         super().__init__()
 
         self.attn = nn.MultiheadAttention(d_model, n_head)
-        self.ln_1 = nn.LayerNorm(d_model)
+        self.ln_1 = LayerNorm(d_model)
         self.mlp = nn.Sequential(
             OrderedDict(
                 [
@@ -142,7 +82,7 @@ class ResidualAttentionBlock(nn.Module):
                 ]
             )
         )
-        self.ln_2 = nn.LayerNorm(d_model)
+        self.ln_2 = LayerNorm(d_model)
         self.attn_mask = attn_mask
 
     def attention(self, x: torch.Tensor) -> torch.Tensor:
@@ -176,11 +116,11 @@ class VisionTransformer(nn.Module):
         scale = width**-0.5
         self.class_embedding = nn.Parameter(scale * torch.randn(width))
         self.positional_embedding = nn.Parameter(scale * torch.randn((input_resolution // patch_size) ** 2 + 1, width))
-        self.ln_pre = nn.LayerNorm(width)
+        self.ln_pre = LayerNorm(width)
 
         self.transformer = Transformer(width, layers, heads)
 
-        self.ln_post = nn.LayerNorm(width)
+        self.ln_post = LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -224,28 +164,24 @@ class ViTCLIPExtractor(IExtractor):
         patch_size: int = 32,
         heads: int = 8,
         weights: Optional[str] = None,
-        jitted_weights: bool = True,
-        strict_load: bool = True,
     ):
         """
         Args:
             weights: Path to weights or ``None`` for randomly initialized model's weights.
-             You can check the available pretrained checkpoints in ``CLIP_MODELS``.
-            arch: Might be one of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``, ``sber_vitb16_224``,
-             ``sber_vitb16_384``, ``sber_vitb32_224``, ``sber_vitb32_384``, ``sber_vitl14_224`` or ``sber_vitl14_336``.
+             You can check the available pretrained checkpoints in ``oml.models.vit.clip.CLIP_MODELS``.
+            arch: Might be one of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``.
             normalise_features: Set ``True`` to normalise output features
-            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
-            jitted_weights: If weights were saved with ``torch.jit.save()`` (as in original CLIP repo), you have to load them differently.
             embed_dim: Embedding dimension.
             image_resolution: Input image resolution.
             layers: Number of layers in ViT.
             width: ViT's width. Default is 3 * 128.
             patch_size: Convolutional encoder patch size.
             heads: Number of heads in MHA.
-
         """
 
         super().__init__()
+
+        self.normalize = normalise_features
 
         if arch:
             cfg = get_vit_config_by_name(arch)
@@ -256,52 +192,26 @@ class ViTCLIPExtractor(IExtractor):
             patch_size = cfg["patch_size"]
             heads = cfg["heads"]
             weights = cfg["weights"]
-            jitted_weights = cfg["jitted_weights"]
-            strict_load = True
 
-        self.normalize = normalise_features
-
-        self.visual = VisionTransformer(
-            input_resolution=image_resolution,
-            patch_size=patch_size,
-            layers=layers,
-            width=width,
-            heads=heads,
-            output_dim=embed_dim,
-        )
         if not weights:
-            return
-        load_path = Path(weights)
-
-        _mapper = {
-            "n_pre.weight": "ln_pre.weight",
-            "n_pre.bias": "ln_pre.bias",
-            "n_post.weight": "ln_post.weight",
-            "n_post.bias": "ln_post.bias",
-        }
-        if not jitted_weights:
-            state_dict = torch.load(load_path, map_location="cpu")
-            sd = {
-                _mapper.get(k.lstrip("visual."), k.lstrip("visual.")): v.to(dtype=torch.float32)
-                for k, v in state_dict.items()
-                if k.startswith("visual.")
-            }
-            self.visual.load_state_dict(sd, strict=strict_load)
+            self.visual = VisionTransformer(
+                input_resolution=image_resolution,
+                patch_size=patch_size,
+                layers=layers,
+                width=width,
+                heads=heads,
+                output_dim=embed_dim,
+            )
         else:
-            model = torch.jit.load(load_path, map_location="cpu")
-            sd = {
-                _mapper.get(k.lstrip("visual."), k.lstrip("visual.")): v.to(dtype=torch.float32)
-                for k, v in model.state_dict().items()
-                if k.startswith("visual.")
-            }
-            self.visual.load_state_dict(sd, strict=strict_load)
+            self.visual = torch.jit.load(Path(weights), map_location="cpu").visual
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if not self.normalize:
-            return self.visual.forward(x)
-        else:
-            res = self.visual.forward(x)
-            return res / res.norm(dim=1, keepdim=True)
+        with torch.autocast(x.device.type):
+            if not self.normalize:
+                return self.visual.forward(x)
+            else:
+                res = self.visual.forward(x)
+                return res / res.norm(dim=1, keepdim=True)
 
     @property
     def feat_dim(self) -> int:
@@ -310,10 +220,9 @@ class ViTCLIPExtractor(IExtractor):
 
 def get_vit_config_by_name(model_name: str) -> Dict[str, Any]:
     f"""
-    Function which returns configuration of known CLIP models. OpenAI's original CLIP and RuCLIP are suported.
+    Function which returns configuration of known CLIP models..
     Args:
-        model_name: One of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``, ``sber_vitb16_224``,
-         ``sber_vitb16_384``, ``sber_vitb32_224``, ``sber_vitb32_384``, ``sber_vitl14_224`` or ``sber_vitl14_336``.
+        model_name: One of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``.
     """
     assert model_name in CLIP_MODELS, f"Model {model_name} is unknown."
 
