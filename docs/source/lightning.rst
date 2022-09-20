@@ -15,14 +15,6 @@ MetricValCallback
 
     .. automethod:: __init__
 
-MetricValCallbackDDP
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.callbacks.metric.MetricValCallbackDDP
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-
 RetrievalModule
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.lightning.modules.retrieval.RetrievalModule
