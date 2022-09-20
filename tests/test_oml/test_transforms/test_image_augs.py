@@ -5,7 +5,7 @@ import pytest
 from omegaconf import OmegaConf
 
 from oml.const import CONFIGS_PATH, MOCK_DATASET_PATH
-from oml.datasets.retrieval import DatasetWithLabels
+from oml.datasets.base import DatasetWithLabels
 from oml.registry.transforms import TRANSFORMS_REGISTRY, get_transforms_by_cfg
 from oml.transforms.images.utils import get_im_reader_for_transforms
 

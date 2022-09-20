@@ -29,7 +29,7 @@ class BalanceSampler(IBatchSampler):
 
     - ...
 
-    - The epoch ends when there are no labels left (after ``L / n_labels`` steps).
+    - The epoch ends after ``L // n_labels``.
 
     Thus, in each epoch, all the labels will be selected once, but this
     does not mean that all the instances will be picked.
@@ -38,7 +38,7 @@ class BalanceSampler(IBatchSampler):
 
     - If some label does not contain ``n_instances``, a choice will be made with repetition.
 
-    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in a batch to be able to form positive pairs later on.
+    - If ``L % n_labels != 0`` then we drop the last batch.
 
     """
 
@@ -57,50 +57,40 @@ class BalanceSampler(IBatchSampler):
         assert all(n > 1 for n in Counter(labels).values()), "Each label should contain at least 2 samples"
 
         self._labels = np.array(labels)
-        self._n_labels = n_labels
-        self._instances = n_instances
+        self.n_labels = n_labels
+        self.n_instances = n_instances
 
-        self._batch_size = self._n_labels * self._instances
+        self._batch_size = self.n_labels * self.n_instances
         self._unq_labels = unq_labels
-
-        n_labels = len(self._unq_labels)
-        if n_labels % self._n_labels == 1:
-            self._labels_per_epoch = n_labels - 1
-        else:
-            self._labels_per_epoch = n_labels
 
         labels = np.array(labels)
         self.lbl2idx = {label: np.arange(len(labels))[labels == label].tolist() for label in set(labels)}
 
-        self._batches_in_epoch = int(np.ceil(self._labels_per_epoch / self._n_labels))
+        self._batches_in_epoch = len(self._unq_labels) // self.n_labels
 
     @property
     def batch_size(self) -> int:
         return self._batch_size
 
-    @property
-    def batches_in_epoch(self) -> int:
-        return self._batches_in_epoch
-
     def __len__(self) -> int:
-        return self.batches_in_epoch
+        return self._batches_in_epoch
 
     def __iter__(self) -> Iterator[List[int]]:
         inds_epoch = []
 
         labels_rest = self._unq_labels.copy()
 
-        for _ in range(self.batches_in_epoch):
+        for _ in range(len(self)):
             ids_batch = []
 
             labels_for_batch = set(
-                np.random.choice(list(labels_rest), size=min(self._n_labels, len(labels_rest)), replace=False)
+                np.random.choice(list(labels_rest), size=min(self.n_labels, len(labels_rest)), replace=False)
             )
             labels_rest -= labels_for_batch
 
             for cls in labels_for_batch:
                 cls_ids = self.lbl2idx[cls]
-                selected_inds = smart_sample(cls_ids, self._instances)
+                selected_inds = smart_sample(cls_ids, self.n_instances)
                 ids_batch.extend(selected_inds)
 
             inds_epoch.append(ids_batch)

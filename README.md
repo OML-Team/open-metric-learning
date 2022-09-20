@@ -192,7 +192,7 @@ on a tiny dataset of
 import torch
 from tqdm import tqdm
 
-from oml.datasets.retrieval import DatasetWithLabels
+from oml.datasets.base import DatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
@@ -231,7 +231,7 @@ for batch in tqdm(train_loader):
 import torch
 from tqdm import tqdm
 
-from oml.datasets.retrieval import DatasetQueryGallery
+from oml.datasets.base import DatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -267,7 +267,7 @@ metrics = calculator.compute_metrics()
 import pytorch_lightning as pl
 import torch
 
-from oml.datasets.retrieval import DatasetQueryGallery, DatasetWithLabels
+from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.lightning.modules.retrieval import RetrievalModule
 from oml.lightning.callbacks.metric import  MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner

@@ -9,7 +9,7 @@ Datasets
 
 BaseDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.retrieval.BaseDataset
+.. autoclass:: oml.datasets.base.BaseDataset
     :undoc-members:
     :show-inheritance:
 
@@ -17,7 +17,7 @@ BaseDataset
 
 DatasetWithLabels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.retrieval.DatasetWithLabels
+.. autoclass:: oml.datasets.base.DatasetWithLabels
     :undoc-members:
     :show-inheritance:
 
@@ -27,7 +27,7 @@ DatasetWithLabels
 
 DatasetQueryGallery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.retrieval.DatasetQueryGallery
+.. autoclass:: oml.datasets.base.DatasetQueryGallery
     :undoc-members:
     :show-inheritance:
 

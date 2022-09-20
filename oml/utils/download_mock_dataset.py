@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Sequence, Tuple, Union
 
 import gdown
 import pandas as pd
@@ -14,10 +14,10 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def check_mock_dataset_exists(dataset_root: Union[str, Path], needed_dfs: Iterable[str] = MOCK_DATASET_FILES) -> bool:
+def check_mock_dataset_exists(dataset_root: Union[str, Path], needed_dfs: Sequence[str] = MOCK_DATASET_FILES) -> bool:
     dataset_root = Path(dataset_root)
     files_exist = [(dataset_root / df_name).exists() for df_name in needed_dfs]
-    for im in ["rectangle", "circle", "triangle", "cross"]:
+    for im in ["rectangle", "circle", "triangle", "cross", "equal", "hat", "sign", "star"]:
         for i in range(1, 4):
             files_exist.append((dataset_root / "images" / f"{im}_{i}.jpg").exists())
     return all(files_exist)
