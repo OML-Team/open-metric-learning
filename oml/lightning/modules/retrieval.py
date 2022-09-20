@@ -8,7 +8,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.models import IExtractor
-from oml.lightning.modules.retrieval_ddp import ModuleDDP
+from oml.lightning.modules.module_ddp import ModuleDDP
 
 
 class RetrievalModule(pl.LightningModule):

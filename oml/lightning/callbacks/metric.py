@@ -7,7 +7,7 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.metrics import IBasicMetric, IBasicMetricDDP
-from oml.lightning.modules.retrieval_ddp import ModuleDDP
+from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
 
