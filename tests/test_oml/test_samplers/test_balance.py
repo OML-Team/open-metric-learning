@@ -1,8 +1,7 @@
 from collections import Counter
-from math import ceil
 from operator import itemgetter
 from random import randint, shuffle
-from typing import List, Set, Tuple
+from typing import List, Set
 
 import pytest
 
@@ -26,8 +25,8 @@ def generate_valid_labels(num: int) -> TLabels:
     labels_generated = []
 
     for _ in range(num):
-        n_labels = randint(2, 22)
-        labels_list = [[label] * randint(2, 22) for label in range(n_labels)]
+        n_labels = randint(2, 30)
+        labels_list = [[label] * randint(2, 10) for label in range(n_labels)]
         labels = [el for sublist in labels_list for el in sublist]
 
         shuffle(labels)
@@ -69,44 +68,34 @@ def input_for_balance_batch_sampler() -> TLabels:
 
 def check_balance_batch_sampler_epoch(sampler: BalanceSampler, labels: List[int]) -> None:
     sampled_ids = list(sampler)
-
     collected_labels: Set[int] = set()
 
     # emulating of 1 epoch
     for i, batch_ids in enumerate(sampled_ids):
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
-        assert all(label not in collected_labels for label in batch_labels)
-        collected_labels.update(batch_labels)
 
         labels_counter = Counter(batch_labels)
         num_batch_labels = len(labels_counter)
-        num_batch_samples = list(labels_counter.values())
-        cur_batch_size = len(batch_labels)
+        num_batch_samples_counts = list(labels_counter.values())
 
         # batch-level invariants
+        assert all(label not in collected_labels for label in batch_labels)
         assert len(set(batch_ids)) >= 4, set(batch_ids)  # type: ignore
+        assert len(batch_ids) == sampler.n_labels * sampler.n_instances
+        assert num_batch_labels == sampler.n_labels, (num_batch_labels, sampler.n_labels)
+        assert all(el == sampler.n_instances for el in num_batch_samples_counts)
 
-        is_last_batch = i == len(sampler) - 1
-        if is_last_batch:
-            assert 1 < num_batch_labels <= sampler.n_labels
-            assert all(1 < el <= sampler.n_instances for el in num_batch_samples)
-            assert 2 * 2 <= cur_batch_size <= sampler.n_labels * sampler.n_instances
-        else:
-            assert num_batch_labels == sampler.n_labels, (num_batch_labels, sampler.n_labels)
-            assert all(el == sampler.n_instances for el in num_batch_samples)
-            assert cur_batch_size == sampler.n_labels * sampler.n_instances
+        collected_labels.update(batch_labels)
 
     # epoch-level invariants
-    n_expected_batches = ceil(len(set(labels)) / sampler.n_labels)
+    n_expected_batches = len(set(labels)) // sampler.n_labels
     num_labels_in_data = len(set(labels))
     num_labels_sampled = len(collected_labels)
-
-    assert len(sampler) in [n_expected_batches, n_expected_batches - 1]
-    assert num_labels_in_data in [num_labels_sampled, num_labels_sampled + 1]
-
     n_instances_sampled = sum(map(len, sampled_ids))  # type: ignore
-    bs = sampler.n_labels * sampler.n_instances
-    assert (len(sampler) - 1) * bs <= n_instances_sampled <= len(sampler) * bs
+
+    assert len(sampler) == n_expected_batches, (len(sampler), n_expected_batches)
+    assert (num_labels_in_data - sampler.n_labels + 1) <= num_labels_sampled <= num_labels_in_data
+    assert len(sampler) * sampler.n_labels * sampler.n_instances == n_instances_sampled
 
 
 def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabels) -> None:
@@ -116,7 +105,7 @@ def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabels) -> None
 
     """
     for labels in input_for_balance_batch_sampler:
-        n_labels_batch = randint(2, len(set(labels)))
+        n_labels_batch = randint(2, max(2, len(set(labels)) // 5))
         n_instances_batch = randint(2, max(Counter(labels).values()))
         sampler = BalanceSampler(labels=labels, n_labels=n_labels_batch, n_instances=n_instances_batch)
         check_balance_batch_sampler_epoch(sampler=sampler, labels=labels)

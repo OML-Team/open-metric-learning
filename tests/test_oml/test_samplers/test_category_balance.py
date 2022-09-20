@@ -106,6 +106,8 @@ def check_category_balance_batch_sampler_epoch(
 
     # emulating of 1 epoch
     for i, batch_ids in enumerate(sampled_ids):
+        assert len(batch_ids) == sampler.n_labels * sampler.n_categories * sampler.n_instances
+
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
         batch_categories = set(label2category[label] for label in batch_labels)
 

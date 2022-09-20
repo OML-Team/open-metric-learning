@@ -29,7 +29,7 @@ class BalanceSampler(IBatchSampler):
 
     - ...
 
-    - The epoch ends when there are no labels left (after ``L / n_labels`` steps).
+    - The epoch ends after ``L // n_labels``.
 
     Thus, in each epoch, all the labels will be selected once, but this
     does not mean that all the instances will be picked.
@@ -38,7 +38,7 @@ class BalanceSampler(IBatchSampler):
 
     - If some label does not contain ``n_instances``, a choice will be made with repetition.
 
-    - If ``L % n_labels == 1`` then one of the labels must be dropped because we always want to have more than 1 label in a batch to be able to form positive pairs later on.
+    - If ``L % n_labels != 0`` then we drop the last batch.
 
     """
 
@@ -63,16 +63,10 @@ class BalanceSampler(IBatchSampler):
         self._batch_size = self.n_labels * self.n_instances
         self._unq_labels = unq_labels
 
-        n_labels = len(self._unq_labels)
-        if n_labels % self.n_labels == 1:
-            self._labels_per_epoch = n_labels - 1
-        else:
-            self._labels_per_epoch = n_labels
-
         labels = np.array(labels)
         self.lbl2idx = {label: np.arange(len(labels))[labels == label].tolist() for label in set(labels)}
 
-        self._batches_in_epoch = int(np.ceil(self._labels_per_epoch / self.n_labels))
+        self._batches_in_epoch = len(self._unq_labels) // self.n_labels
 
     @property
     def batch_size(self) -> int:
