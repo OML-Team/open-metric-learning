@@ -1,4 +1,4 @@
-PyTorch Lightning
+DDP
 =============================
 
 .. toctree::
@@ -7,34 +7,39 @@ PyTorch Lightning
 .. contents::
    :local:
 
-MetricValCallback
+
+IBasicMetricDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.callbacks.metric.MetricValCallback
+.. autoclass:: oml.interfaces.metrics.IBasicMetricDDP
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: sync
+
+EmbeddingMetricsDDP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.metrics.embeddings.EmbeddingMetricsDDP
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: setup
+    .. automethod:: update_data
+    .. automethod:: compute_metrics
+    .. automethod:: sync
+
+ModuleDDP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.lightning.modules.module_ddp.ModuleDDP
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
 
-MetricValCallbackDDP
+RetrievalModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.callbacks.metric.MetricValCallbackDDP
+.. autoclass:: oml.lightning.modules.retrieval.RetrievalModuleDDP
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
-
-RetrievalModule
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.modules.retrieval.RetrievalModule
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-
-pl_train
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.lightning.entrypoints.train.pl_train
-
-pl_val
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.lightning.entrypoints.validate.pl_val
