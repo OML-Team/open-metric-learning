@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from oml.interfaces.models import IExtractor
+from oml.models.utils import remove_prefix_from_state_dict
 from oml.utils.io import download_checkpoint
 
 CLIP_MODELS = {
@@ -164,11 +165,12 @@ class ViTCLIPExtractor(IExtractor):
         patch_size: int = 32,
         heads: int = 8,
         weights: Optional[str] = None,
+        strict_load: bool = True,
     ):
         """
         Args:
             weights: Path to weights or ``None`` for randomly initialized model's weights.
-             You can check the available pretrained checkpoints in ``oml.models.vit.clip.CLIP_MODELS``.
+             Available pretrained checkpoints are currently matching with possible architectures (``arch`` param).
             arch: Might be one of ``openai_vitb16_224``, ``openai_vitb32_224``, ``openai_vitl14_224``, ``openai_vitl14_336``.
             normalise_features: Set ``True`` to normalise output features
             embed_dim: Embedding dimension.
@@ -177,23 +179,14 @@ class ViTCLIPExtractor(IExtractor):
             width: ViT's width. Default is 3 * 128.
             patch_size: Convolutional encoder patch size.
             heads: Number of heads in MHA.
+            strict_load: Whether the weights needed to be loaded strictly. Doesn't work with OpenAI's models.
         """
 
         super().__init__()
 
         self.normalize = normalise_features
 
-        if arch:
-            cfg = get_vit_config_by_name(arch)
-            embed_dim = cfg["embed_dim"]
-            image_resolution = cfg["image_resolution"]
-            layers = cfg["layers"]
-            width = cfg["width"]
-            patch_size = cfg["patch_size"]
-            heads = cfg["heads"]
-            weights = cfg["weights"]
-
-        if not weights:
+        if not arch:
             self.visual = VisionTransformer(
                 input_resolution=image_resolution,
                 patch_size=patch_size,
@@ -202,7 +195,19 @@ class ViTCLIPExtractor(IExtractor):
                 heads=heads,
                 output_dim=embed_dim,
             )
+            if weights:
+                state_dict = torch.load(Path(weights), map_location="cpu")["state_dict"]
+                state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight")
+                self.visual.load_state_dict(state_dict=state_dict, strict=strict_load)
         else:
+            cfg = get_vit_config_by_name(arch)
+            embed_dim = cfg["embed_dim"]
+            image_resolution = cfg["image_resolution"]
+            layers = cfg["layers"]
+            width = cfg["width"]
+            patch_size = cfg["patch_size"]
+            heads = cfg["heads"]
+            weights = cfg["weights"]
             self.visual = torch.jit.load(Path(weights), map_location="cpu").visual
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
