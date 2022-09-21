@@ -216,7 +216,7 @@ class CustomModel(IExtractor):
         self.resnet = resnet18(pretrained=pretrained)
 
     def forward(self, x):
-        self.resnet(x)
+        return self.resnet(x)
 
     @property
     def feat_dim(self):
