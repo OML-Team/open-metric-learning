@@ -53,11 +53,14 @@ def sync_dicts_ddp(
     outputs_from_device: Dict[str, Any], world_size: int, device: Union[torch.device, str] = "cpu"
 ) -> Dict[str, Any]:
     """
-    Function allows you to combine and merge data stored in dict from all devices. You can place this function in
-    your code and all devices upon reaching this function will wait for each other to synchronize and merge dicts.
+    The function allows you to combine and merge data stored in dictionaries from all devices.
+    You can place this function in your code and all the devices upon reaching this function will wait for
+    each other to synchronize and merge dictionaries.
 
-    NOTE: Function under the hood pickles all object, convert bytes to tensor, then unpickle after syncing. With
-        NCCL (default) DDP backend intermediate tensors are stored on CUDA.
+    Note:
+       The function under the hood pickles all object, converts bytes to tensor, then unpickles them after syncing.
+       With `NCCL DDP` backend (the default one) intermediate tensors are stored on CUDA.
+
     """
     if world_size >= 1 and is_ddp():
         gathered: List[Optional[Dict[str, Any]]] = [None for _ in range(world_size)]

@@ -13,7 +13,7 @@ from oml.lightning.modules.module_ddp import ModuleDDP
 
 class RetrievalModule(pl.LightningModule):
     """
-    This is a base module for the training of your model with Lightning.
+    This is a base module to train your model with Lightning.
 
     """
 
@@ -104,6 +104,11 @@ class RetrievalModule(pl.LightningModule):
 
 
 class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
+    """
+    This is a base module for the training of your model with Lightning in DDP.
+
+    """
+
     def __init__(
         self,
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
