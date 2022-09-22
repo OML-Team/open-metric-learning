@@ -4,6 +4,23 @@ DATA_DIR ?= data
 RUNTIME ?= cpu
 IMAGE_NAME = omlteam/oml:$(RUNTIME)
 
+.PHONY: build_docs
+build_docs:
+	rm Readme.md
+	touch Readme.md
+	cat docs/readme/header.md >> Readme.md
+	echo "\n## FAQ\n" >> Readme.md
+	cat docs/readme/faq.md >> Readme.md
+	cat docs/readme/documentation.md >> Readme.md
+	echo "\n## Installation\n" >> Readme.md
+	cat docs/readme/installation.md >> Readme.md
+	cat docs/readme/get_started_config.md >> Readme.md
+	echo "\n## Python examples\n" >> Readme.md
+	cat docs/readme/python_examples.md >> Readme.md
+	echo "\n## Zoo\n" >> Readme.md
+	cat docs/readme/zoo.md >> Readme.md
+	cat docs/readme/acknowledgments.md >> Readme.md
+
 # ====================================== TESTS ======================================
 
 .PHONY: download_mock_dataset
