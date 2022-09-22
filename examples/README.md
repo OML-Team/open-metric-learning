@@ -4,7 +4,7 @@ All you need is to prepare the `.csv` table which describes your dataset, so the
 can be implemented in any programming language.
 
 
-### Usage with public datasets
+## Usage with public datasets
 
 We've prepared the examples on 4 popular benchmarks used by researchers to evaluate metric learning models,
 [link](https://paperswithcode.com/task/metric-learning).
