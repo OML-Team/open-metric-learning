@@ -1,3 +1,4 @@
+## Config API
 Config API is a way to run metric learning experiments via changing only the config.
 It allows you to train the model without knowing Machine Learning.
 All you need is to prepare the `.csv` table which describes your dataset, so the converter
