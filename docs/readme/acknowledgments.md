@@ -1,5 +1,3 @@
-## Acknowledgments
-
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
 
 The project was started in 2020 as a module for [Catalyst](https://github.com/catalyst-team/catalyst) library.

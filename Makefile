@@ -2,24 +2,29 @@ JUPYTER_CMD=export TEST_RUN=1; jupyter nbconvert --to html --output-dir /tmp
 
 DATA_DIR ?= data
 RUNTIME ?= cpu
-IMAGE_NAME = omlteam/oml:$(RUNTIME)
+IMAGE_NAME ?= omlteam/oml:$(RUNTIME)
+
+README_FILE ?= Readme.md
 
 .PHONY: build_docs
 build_docs:
-	rm Readme.md
-	touch Readme.md
-	cat docs/readme/header.md >> Readme.md
-	echo "\n## FAQ\n" >> Readme.md
-	cat docs/readme/faq.md >> Readme.md
-	cat docs/readme/documentation.md >> Readme.md
-	echo "\n## Installation\n" >> Readme.md
-	cat docs/readme/installation.md >> Readme.md
-	cat docs/readme/get_started_config.md >> Readme.md
-	echo "\n## Python examples\n" >> Readme.md
-	cat docs/readme/python_examples.md >> Readme.md
-	echo "\n## Zoo\n" >> Readme.md
-	cat docs/readme/zoo.md >> Readme.md
-	cat docs/readme/acknowledgments.md >> Readme.md
+	rm -f ${README_FILE}
+	touch ${README_FILE}
+	cat docs/readme/header.md >> ${README_FILE}
+	echo "\n## FAQ\n" >> ${README_FILE}
+	cat docs/readme/faq.md >> ${README_FILE}
+	echo "\n## Documentation\n" >> ${README_FILE}
+	cat docs/readme/documentation.md >> ${README_FILE}
+	echo "\n## Installation\n" >> ${README_FILE}
+	cat docs/readme/installation.md >> ${README_FILE}
+	echo "\n## Get started using Config API\n" >> ${README_FILE}
+	cat docs/readme/get_started_config.md >> ${README_FILE}
+	echo "\n## Python examples\n" >> ${README_FILE}
+	cat docs/readme/python_examples.md >> ${README_FILE}
+	echo "\n## Zoo\n" >>${README_FILE}
+	cat docs/readme/zoo.md >> ${README_FILE}
+	echo "\n## Acknowledgments\n" >> ${README_FILE}
+	cat docs/readme/acknowledgments.md >> ${README_FILE}
 
 # ====================================== TESTS ======================================
 

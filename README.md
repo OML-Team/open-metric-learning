@@ -159,7 +159,9 @@ Probably we already have a suitable pre-trained model for your domain
 in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
+
 ## Documentation
+
 Documentation is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/index.html).
 
 ## Installation
@@ -183,7 +185,9 @@ docker pull omlteam/oml:cpu
 make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
+
 ## Get started using Config API
+
 Using configs is the best option if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the
 [examples](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
@@ -360,6 +364,7 @@ model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.c
 
 For more details about the training process, please, visit *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+
 ## Acknowledgments
 
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
