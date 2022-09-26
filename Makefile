@@ -19,7 +19,7 @@ build_docs:
 	cat docs/readme/installation.md >> ${README_FILE}
 	echo "\n## Get started using Config API\n" >> ${README_FILE}
 	cat docs/readme/get_started_config.md >> ${README_FILE}
-	echo "\n## Python examples\n" >> ${README_FILE}
+	echo "\n## Get started using Python\n" >> ${README_FILE}
 	cat docs/readme/python_examples.md >> ${README_FILE}
 	echo "\n## Zoo\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}
