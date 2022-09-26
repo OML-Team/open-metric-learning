@@ -22,17 +22,17 @@ You may think *"If I need image embeddings I can simply train a vanilla classifi
 Well, it makes sense as a starting point. But there are several possible drawbacks:
 
 * If you want to use embeddings to perform searching you need to calculate some distance among them (for example, cosine or L2).
-  Usually, you don't directly optimize these distances during the training in the classification setup. So, you can only hope that
+  Usually, **you don't directly optimize these distances during the training** in the classification setup. So, you can only hope that
   final embeddings will have the desired properties.
 
-* The second problem is the validation process.
+* **The second problem is the validation process**.
   In the searching setup, you usually care how related your top-N outputs are to the query.
   The natural way to evaluate the model is to simulate searching requests to the reference set
   and apply one of the retrieval metrics.
   So, there is no guarantee that classification accuracy will correlate with these metrics.
 
 * Finally, you may want to implement a metric learning pipeline by yourself.
-  There is a lot of work: to use triplet loss you need to form batches in a specific way,
+  **There is a lot of work**: to use triplet loss you need to form batches in a specific way,
   implement different kinds of triplets mining, tracking distances, etc. For the validation, you also need to
   implement retrieval metrics,
   which include effective embeddings accumulation during the epoch, covering corner cases, etc.
@@ -48,7 +48,7 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 <summary>What is Metric Learning?</summary>
 <p>
 
-Metric Learning problem (also known as "extreme classification" problem) means a situation in which we
+Metric Learning problem (also known as *extreme classification* problem) means a situation in which we
 have thousands of ids of some entities, but only a few samples for every entity.
 Often we assume that during the test stage (or production) we will deal with unseen entities
 which makes it impossible to apply the vanilla classification pipeline directly. In many cases obtained embeddings
@@ -80,7 +80,7 @@ Here are a few examples of such tasks from the computer vision sphere:
   "skirts", "jackets", "shorts" and so on (we name them `categories`).
   Note, we avoid using the term `class` to avoid misunderstanding.
 * `training epoch` - batch samplers which we use for combination-based losses usually have a length equal to
-  [number of labels in training dataset] / [numbers of labels in one batch]. It means that we don't observe all of
+  `[number of labels in training dataset] / [numbers of labels in one batch]`. It means that we don't observe all of
   the available training samples in one epoch (as opposed to vanilla classification),
   instead, we observe all of the available labels.
 
@@ -192,7 +192,7 @@ Using configs is the best option if your dataset and pipeline are standard enoug
 experienced in Machine Learning or Python. You can find more details in the
 [examples](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
-## Python examples
+## Get started using Python
 
 The most flexible, but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
@@ -322,12 +322,7 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 </p>
 </details>
 
-Please, check out our registry to see all of the available models, batch samplers, losses, miners, optimizers, transforms, and lr schedulers.
-You can manually inspect `oml.registry` or `oml.configs` or use the function:
-```python
-from oml.registry import show_registry
-show_registry()
-```
+<br/><br/>
 
 ## Zoo
 
