@@ -59,7 +59,7 @@ class IBasicMetricDDP(IBasicMetric):
 
     def sync(self) -> None:
         """
-        Method aggregates data in DDP mode before metric calculations
+        Method aggregates data in DDP mode before metrics calculations
         """
         raise NotImplementedError()
 

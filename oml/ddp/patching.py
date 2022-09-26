@@ -34,39 +34,45 @@ class _Sampler2Dataset(Dataset):
 
 
 class DDPSamplerWrapper(DistributedSampler):
+    """
+    This is a wrapper to allow using custom sampler in DDP mode.
+
+    Default `DistributedSampler` allows us to build a sampler for a dataset in DDP mode.
+    Usually we can easily replace default `SequentialSampler` [when ``DataLoader(shuffle=False, ...)``] and `RandomSampler`
+    [when ``DataLoader(shuffle=True, ...)``] with `DistributedSampler`. But for the custom sampler, we need an extra wrapper.
+
+    Thus, this wrapper distributes indices produced by sampler among several devices for further usage.
+
+    """
+
     def __init__(
         self, sampler: TAllSamplers, shuffle_samples_between_gpus: bool = True, pad_data_to_num_gpus: bool = True
     ):
+        """
+        Args:
+            sampler: Sequential or batch sampler
+            pad_data_to_num_gpus: When using DDP we should manage behavior with the last batch, because each device
+                should have the same amount of data. If the sampler length is not evenly divisible by the number of
+                devices, we must duplicate part of the data (``pad_data_to_num_gpus=True``), or discard part of the
+                data (``pad_data_to_num_gpus=False``).
+            shuffle_samples_between_gpus: shuffle available indices before feeding them to GPU. Note, that shuffle
+                inside GPU after the feeding will be used according to behavior of the sampler.
+
+        Note: Wrapper can be used with both the default `SequentialSampler` or `RandomSampler` from `PyTorch` and
+        with some custom sampler.
+
+        """
         super().__init__(
             dataset=_Sampler2Dataset(sampler), shuffle=shuffle_samples_between_gpus, drop_last=not pad_data_to_num_gpus
         )
-        """
-        Default DistributedSampler allows us to build a sampler for a dataset in DDP mode. Usually we can easily replace
-        default SequentialSampler (when DataLoader(shuffle=False, ...)) and RandomSampler
-        (when DataLoader(shuffle=True, ...)) with DistributedSampler. But for the custom sampler, we need an extra
-        wrapper.
-        With this class, we mimic any type of samplers to a dataset and use indices of sampler splitted for each device.
-        Using these distributed indices we can prepare a batch of data.
-
-        Args:
-            sampler: sequential or batch sampler
-            pad_data_to_num_gpus: When using DDP we should manage behavior with the last batch, because each device
-                should have the same amount of data. If the sampler length is not evenly divisible by the number of
-                devices, we must duplicate part of the data (pad_data_to_num_gpus=True), or discard part of the
-                data (pad_data_to_num_gpus=False).
-            shuffle_samples_between_gpus: shuffle available indices between feeding to GPU. Note, that shuffle
-                inside GPU after feeding will be used according to behavior of sampler.
-
-        Note: Wrapper also can be used with default SequentialSampler and RandomSampler, not only custom.
-        """
-
         self.seed_shift_per_epoch = 0
         self.sampler = sampler
 
     def _reload(self) -> None:
         """
-        We need to reinstantiate wrapper in order to update available indices from sampler for new epoch.
-        We don't perform this step on the 0 epoch, because we want to return the same indices as 1 GPU setup.
+        We need to re-instantiate the wrapper in order to update the available indices for the new epoch.
+        We don't perform this step on the epoch 0, because we want to be comparable with no DDP setup there.
+
         """
         if self.seed_shift_per_epoch > 0:
             super().__init__(dataset=_Sampler2Dataset(self.sampler), shuffle=self.shuffle, drop_last=self.drop_last)
@@ -89,6 +95,7 @@ def extract_loader_parameters(loader: DataLoader, ignore_data_related_parameters
         loader: loader from which parameters are extracted
         ignore_data_related_parameters: The flag allows you to ignore parameters, related to data, batch content,
         and samplers.
+
     """
 
     ignore_fields = ["self"]
@@ -112,10 +119,12 @@ def extract_loader_parameters(loader: DataLoader, ignore_data_related_parameters
 def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
     """
     Function inspects loader and modifies sampler for working in DDP mode.
+
     Note:
-        We ALWAYS use the padding of samples (number of batches or number of samples per epoch) in order to use the
-        same amount of data for each device in DDP, so behavior with and without DDP may be slightly
-        different (e.g. metrics).
+        We ALWAYS use the padding of samples (in terms of the number of batches or number of samples per epoch) in order to use the
+        same amount of data for each device in DDP. Thus, the behavior with and without DDP may be slightly
+        different (e.g. metrics values).
+
     """
     if is_ddp():
         kwargs_loader = extract_loader_parameters(loader, ignore_data_related_parameters=True)

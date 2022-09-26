@@ -123,8 +123,9 @@ err_message_loaders_is_not_patched = (
 
 class MetricValCallbackDDP(MetricValCallback):
     """
-    An extension to the regular callback that takes into account data reduction and padding on the inference for
-    each device
+    This is an extension to the regular callback that takes into account data reduction and padding
+    on the inference for each device in DDP setup
+
     """
 
     metric: IBasicMetricDDP
