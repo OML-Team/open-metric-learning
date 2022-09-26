@@ -6,17 +6,17 @@ You may think *"If I need image embeddings I can simply train a vanilla classifi
 Well, it makes sense as a starting point. But there are several possible drawbacks:
 
 * If you want to use embeddings to perform searching you need to calculate some distance among them (for example, cosine or L2).
-  Usually, you don't directly optimize these distances during the training in the classification setup. So, you can only hope that
+  Usually, **you don't directly optimize these distances during the training** in the classification setup. So, you can only hope that
   final embeddings will have the desired properties.
 
-* The second problem is the validation process.
+* **The second problem is the validation process**.
   In the searching setup, you usually care how related your top-N outputs are to the query.
   The natural way to evaluate the model is to simulate searching requests to the reference set
   and apply one of the retrieval metrics.
   So, there is no guarantee that classification accuracy will correlate with these metrics.
 
 * Finally, you may want to implement a metric learning pipeline by yourself.
-  There is a lot of work: to use triplet loss you need to form batches in a specific way,
+  **There is a lot of work**: to use triplet loss you need to form batches in a specific way,
   implement different kinds of triplets mining, tracking distances, etc. For the validation, you also need to
   implement retrieval metrics,
   which include effective embeddings accumulation during the epoch, covering corner cases, etc.
@@ -32,7 +32,7 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 <summary>What is Metric Learning?</summary>
 <p>
 
-Metric Learning problem (also known as "extreme classification" problem) means a situation in which we
+Metric Learning problem (also known as *extreme classification* problem) means a situation in which we
 have thousands of ids of some entities, but only a few samples for every entity.
 Often we assume that during the test stage (or production) we will deal with unseen entities
 which makes it impossible to apply the vanilla classification pipeline directly. In many cases obtained embeddings
@@ -64,7 +64,7 @@ Here are a few examples of such tasks from the computer vision sphere:
   "skirts", "jackets", "shorts" and so on (we name them `categories`).
   Note, we avoid using the term `class` to avoid misunderstanding.
 * `training epoch` - batch samplers which we use for combination-based losses usually have a length equal to
-  [number of labels in training dataset] / [numbers of labels in one batch]. It means that we don't observe all of
+  `[number of labels in training dataset] / [numbers of labels in one batch]`. It means that we don't observe all of
   the available training samples in one epoch (as opposed to vanilla classification),
   instead, we observe all of the available labels.
 
@@ -77,7 +77,7 @@ Here are a few examples of such tasks from the computer vision sphere:
 <p>
 
 **Training part** implies using losses, well-established for metric learning, such as the angular losses
-(like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
+(like *ArcFace*) or the combinations based losses (like *TripletLoss* or *ContrastiveLoss*).
 The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
 Thus, during the training we:
    1. Use `DataLoader` + `Sampler` to form batches (for example `BalanceSampler`)
@@ -88,7 +88,7 @@ Thus, during the training we:
   1. Accumulating all of the embeddings (`EmbeddingMetrics`).
   2. Calculating distances between them with respect to query/gallery split.
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
-  4. Calculating retrieval metrics like CMC@k, Precision@k or MeanAveragePrecision.
+  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision*.
 
 </p>
 </details>
@@ -106,7 +106,7 @@ At the same time, it would be unwise to ignore success in this sphere, so we sti
 * As a source of checkpoints that would be great to start training with. From publications and our experience,
   they are much better as initialisation than the default supervised model trained on ImageNet. Thus, we added the possibility
   to initialise your models using these pretrained checkpoints only by passing an argument in the config or the constructor.
-* As a source of inspiration. For example, we adapted the idea of a memory bank from MoCo for the TripletLoss.
+* As a source of inspiration. For example, we adapted the idea of a memory bank from *MoCo* for the *TripletLoss*.
 
 </p>
 </details>

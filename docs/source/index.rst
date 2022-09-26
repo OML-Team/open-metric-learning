@@ -1,4 +1,3 @@
-
 .. image:: https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg
     :target: https://github.com/OML-Team/open-metric-learning
     :alt: OML logo

@@ -1,14 +1,14 @@
 ## Config API
-Config API is a way to run metric learning experiments via changing only the config.
-It allows you to train the model without knowing Machine Learning.
+Config API is a way to run metric learning experiments via changing only the config file.
 All you need is to prepare the `.csv` table which describes your dataset, so the converter
 can be implemented in any programming language.
 
 
 ## Usage with public datasets
 
-We've prepared the examples on 4 popular benchmarks used by researchers to evaluate metric learning models,
-[link](https://paperswithcode.com/task/metric-learning).
+We've prepared the [examples](https://github.com/OML-Team/open-metric-learning/tree/main/examples)
+on 4 popular benchmarks used by researchers to evaluate metric learning models,
+see [metric learning leaderboard](https://paperswithcode.com/task/metric-learning).
 After downloading a dataset you can train or validate your model by the following commands:
 
 ```shell
@@ -18,7 +18,7 @@ python train_<example>.py
 python validate_<example>.py
 ```
 
-Note, you can find our pretrained checkpoints for these datasets in the `Models zoo` section of the main readme.
+Note, you can find our pretrained checkpoints for these datasets in the *Models zoo* section of the main readme.
 
 <details>
 <summary>CARS 196</summary>
@@ -124,4 +124,7 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
 </p>
 </details>
 
+<br/><br/>
 
+You can find more instructions in the
+[documentation](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#usage-with-custom-dataset).

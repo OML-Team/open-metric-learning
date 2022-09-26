@@ -5,4 +5,4 @@ Get started using Config API
 
 |
 
-.. mdinclude:: config_api.md
+.. mdinclude:: config_advanced.md

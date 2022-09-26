@@ -93,7 +93,7 @@ Here are a few examples of such tasks from the computer vision sphere:
 <p>
 
 **Training part** implies using losses, well-established for metric learning, such as the angular losses
-(like ArcFace) or the combinations based losses (like TripletLoss or ContrastiveLoss).
+(like *ArcFace*) or the combinations based losses (like *TripletLoss* or *ContrastiveLoss*).
 The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
 Thus, during the training we:
    1. Use `DataLoader` + `Sampler` to form batches (for example `BalanceSampler`)
@@ -104,7 +104,7 @@ Thus, during the training we:
   1. Accumulating all of the embeddings (`EmbeddingMetrics`).
   2. Calculating distances between them with respect to query/gallery split.
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
-  4. Calculating retrieval metrics like CMC@k, Precision@k or MeanAveragePrecision.
+  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision*.
 
 </p>
 </details>
@@ -122,7 +122,7 @@ At the same time, it would be unwise to ignore success in this sphere, so we sti
 * As a source of checkpoints that would be great to start training with. From publications and our experience,
   they are much better as initialisation than the default supervised model trained on ImageNet. Thus, we added the possibility
   to initialise your models using these pretrained checkpoints only by passing an argument in the config or the constructor.
-* As a source of inspiration. For example, we adapted the idea of a memory bank from MoCo for the TripletLoss.
+* As a source of inspiration. For example, we adapted the idea of a memory bank from *MoCo* for the *TripletLoss*.
 
 </p>
 </details>

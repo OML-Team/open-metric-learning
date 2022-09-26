@@ -35,13 +35,6 @@ using command line interface:
 python train_cars.py optimizer.args.lr=0.000001 bs_val=128
 ```
 
-You can change not only the training parameters in the config file, but also
-the model, loss, optimizer, etc. Please, check our registry for the possible options.
-You can manually inspect `oml.registry` or `oml.configs` or use the function:
-```python
-from oml.registry import show_registry
-show_registry()
-```
 
 ## How to use my own implementation of loss, model, augmentations, etc?
 You should put your python object inside the corresponding registry by some key.
