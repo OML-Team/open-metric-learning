@@ -124,7 +124,5 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
 </p>
 </details>
 
-<br/><br/>
-
 You can find more instructions in the
 [documentation](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#usage-with-custom-dataset).
