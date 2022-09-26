@@ -6,8 +6,8 @@ IMAGE_NAME ?= omlteam/oml:$(RUNTIME)
 
 README_FILE ?= Readme.md
 
-.PHONY: build_docs
-build_docs:
+.PHONY: build_readme
+build_readme:
 	rm -f ${README_FILE}
 	touch ${README_FILE}
 	cat docs/readme/header.md >> ${README_FILE}

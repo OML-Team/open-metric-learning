@@ -6,7 +6,7 @@ from oml.const import PROJECT_ROOT
 def test_readme_was_built_correctly() -> None:
     readme_tmp_file = "Readme_tmp"
     os.chdir(PROJECT_ROOT)
-    os.system(f"make build_docs README_FILE={readme_tmp_file}.md")
+    os.system(f"make build_readme README_FILE={readme_tmp_file}.md")
 
     with open(PROJECT_ROOT / "Readme.md", "r") as f1:
         readme = f1.read()
