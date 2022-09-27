@@ -36,7 +36,7 @@ exp_file = PROJECT_ROOT / "tests/test_examples/test_ddp_cases/run_retrieval_expe
 
 @pytest.mark.parametrize("batch_size", [10, 19])
 @pytest.mark.parametrize("max_epochs", [2])
-@pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-3)])
+@pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-2)])
 def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int, max_epochs: int) -> None:
     devices = (1, 2, 3)
     # We will compare metrics from same experiment but with different amount of devices. For this we aggregate

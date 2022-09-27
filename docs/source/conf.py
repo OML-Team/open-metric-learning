@@ -24,6 +24,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx_mdinclude",
 ]
 
 intersphinx_mapping = {
