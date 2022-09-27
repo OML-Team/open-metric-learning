@@ -5,11 +5,11 @@ from oml.const import PROJECT_ROOT
 
 
 def test_readme_was_built_correctly() -> None:
-    readme_tmp_file = "Readme_tmp"
+    readme_tmp_file = "README_tmp"
     os.chdir(PROJECT_ROOT)
     os.system(f"make build_readme README_FILE={readme_tmp_file}.md")
 
-    with open("Readme.md", "r") as f1:
+    with open("README.md", "r") as f1:
         readme = f1.read()
 
     with open(f"{readme_tmp_file}.md", "r") as f2:

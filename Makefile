@@ -4,7 +4,7 @@ DATA_DIR ?= data
 RUNTIME ?= cpu
 IMAGE_NAME ?= omlteam/oml:$(RUNTIME)
 
-README_FILE ?= Readme.md
+README_FILE ?= README.md
 
 .PHONY: build_readme
 build_readme:

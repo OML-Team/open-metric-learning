@@ -88,7 +88,7 @@ Thus, during the training we:
   1. Accumulating all of the embeddings (`EmbeddingMetrics`).
   2. Calculating distances between them with respect to query/gallery split.
   3. Applying some specific retrieval techniques like query reranking or score normalisation.
-  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision*.
+  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision@k*.
 
 </p>
 </details>
