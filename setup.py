@@ -23,8 +23,8 @@ def load_version() -> str:
 setup(
     # technical things
     version=load_version(),
-    packages=find_packages(include="oml"),
-    python_requires=">=3.8,<4.0",
+    packages=find_packages(exclude=["tests"]),
+    python_requires="==3.8",
     install_requires=load_requirements("ci/requirements.txt"),
     include_package_data=True,
     long_description=Path("README.md").read_text(),
