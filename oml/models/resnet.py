@@ -137,7 +137,9 @@ class ResnetExtractor(IExtractor):
 
     def draw_gradcam(self, image: np.ndarray) -> np.ndarray:
         """
-        Visualization of the gradients on a particular image using `GradCam` algorithm.
+        Visualization of the gradients on a particular image using `GradCam`_.
+
+        .. _GradCam: https://arxiv.org/abs/1610.02391
 
         """
         model_device = str(list(self.model.parameters())[0].device)

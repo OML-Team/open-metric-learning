@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from oml.const import PROJECT_ROOT
 
@@ -8,10 +9,10 @@ def test_readme_was_built_correctly() -> None:
     os.chdir(PROJECT_ROOT)
     os.system(f"make build_readme README_FILE={readme_tmp_file}.md")
 
-    with open(PROJECT_ROOT / "Readme.md", "r") as f1:
+    with open("Readme.md", "r") as f1:
         readme = f1.read()
 
-    with open(PROJECT_ROOT / f"{readme_tmp_file}.md", "r") as f2:
+    with open(f"{readme_tmp_file}.md", "r") as f2:
         readme_tmp = f2.read()
 
     assert readme == readme_tmp, (
@@ -20,4 +21,4 @@ def test_readme_was_built_correctly() -> None:
         "in docs/readme folder."
     )
 
-    (PROJECT_ROOT / f"{readme_tmp_file}.md").unlink()
+    Path(f"{readme_tmp_file}.md").unlink()
