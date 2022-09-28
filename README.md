@@ -210,12 +210,12 @@ on a tiny dataset of
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.datasets import DatasetWithLabels
+from oml.losses import TripletLossWithMiner
+from oml.miners import AllTripletsMiner
+from oml.models import ViTExtractor
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
 
 dataset_root = "mock_dataset/"
 df_train, _ = download_mock_dataset(dataset_root)
@@ -249,10 +249,10 @@ for batch in tqdm(train_loader):
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.models.vit.vit import ViTExtractor
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.datasets import DatasetQueryGallery
+from oml.metrics import EmbeddingMetrics
+from oml.models import ViTExtractor
+from oml.utils import download_mock_dataset
 
 dataset_root =  "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root)
@@ -285,15 +285,14 @@ metrics = calculator.compute_metrics()
 import pytorch_lightning as pl
 import torch
 
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.retrieval import RetrievalModule
-from oml.lightning.callbacks.metric import  MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.datasets import DatasetQueryGallery, DatasetWithLabels
+from oml.lightning import RetrievalModule, MetricValCallback
+from oml.losses import TripletLossWithMiner
+from oml.metrics import EmbeddingMetrics
+from oml.miners import AllTripletsMiner
+from oml.models import ViTExtractor
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
 
 dataset_root =  "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
@@ -339,7 +338,7 @@ However, you may also do it manually by the link in `weights` column.
 [comment]:checkpoint-start
 ```python
 import oml
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 
 # We are downloading vits16 pretrained on CARS dataset:
 model = ViTExtractor(weights="vits16_cars", arch="vits16", normalise_features=False)
