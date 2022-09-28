@@ -1,1 +1,1 @@
-from oml.losses import *
+from oml.losses.triplet import *
