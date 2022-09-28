@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from oml.analysis import *
 from oml.datasets import *
 from oml.ddp import *
@@ -12,8 +14,6 @@ from oml.registry import *
 from oml.samplers import *
 from oml.transforms import *
 from oml.utils import *
-
-from pprint import pprint
 
 
 def test_empty() -> None:
