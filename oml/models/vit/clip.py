@@ -107,7 +107,7 @@ class ViTCLIPExtractor(IExtractor):
             return self.visual.forward(x)
         else:
             res = self.visual.forward(x)
-            return res / res.norm(dim=1, keepdim=True)
+            return res / torch.linalg.norm(res, 2, dim=1, keepdim=True).detach()
 
     @property
     def feat_dim(self) -> int:
