@@ -25,17 +25,4 @@ def get_normalisation_resize_torch(im_size: int, mean: TNormParam = MEAN, std: T
     return Compose([t.Resize(size=(im_size, im_size), antialias=True), ToTensor(), Normalize(mean=mean, std=std)])
 
 
-def get_clip_transforms(
-    mean: TNormParam = (0.48145466, 0.4578275, 0.40821073),
-    std: TNormParam = (0.26862954, 0.26130258, 0.27577711),
-) -> Compose:
-    return t.Compose(
-        [
-            t.Lambda(lambda img: img.convert("RGB") if img.mode != "RGB" else img),
-            t.ToTensor(),
-            t.Normalize(mean=mean, std=std),
-        ]
-    )
-
-
-__all__ = ["get_augs_torch", "get_normalisation_torch", "get_normalisation_resize_torch", "get_clip_transforms"]
+__all__ = ["get_augs_torch", "get_normalisation_torch", "get_normalisation_resize_torch"]

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import pytest
 import torch
@@ -22,7 +22,7 @@ resnet_args = {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "st
         (ResnetExtractor, resnet_args, "resnet50"),
     ],
 )
-def test_creation(constructor: IExtractor, args: Dict[str, Any], default_arch: Optional[str]) -> None:
+def test_creation(constructor: IExtractor, args: Dict[str, Any], default_arch: str) -> None:
     # 1. Random weights
     net = constructor(weights=None, arch=default_arch, **args)
     net.forward(torch.randn(1, 3, 224, 224))
