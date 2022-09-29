@@ -1,3 +1,5 @@
 name: vit_clip
 args:
-  arch: openai_vitb16_224
+  arch: vitb32_224
+  weights: openai_vitb32_224
+  normalise_features: False

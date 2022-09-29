@@ -6,11 +6,11 @@ import torch
 
 from oml.interfaces.models import IExtractor
 from oml.models.resnet import ResnetExtractor
-from oml.models.vit.clip import CLIP_MODELS, ViTCLIPExtractor
+from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
 
 vit_args = {"normalise_features": False, "use_multi_scale": False, "strict_load": True}
-vit_clip_args = {"normalise_features": False}
+vit_clip_args = {"normalise_features": False, "strict_load": True}
 resnet_args = {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "strict_load": True}
 
 
@@ -18,7 +18,7 @@ resnet_args = {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "st
     "constructor,args,default_arch",
     [
         (ViTExtractor, vit_args, "vits16"),
-        (ViTCLIPExtractor, vit_clip_args, None),
+        (ViTCLIPExtractor, vit_clip_args, "vitb32_224"),
         (ResnetExtractor, resnet_args, "resnet50"),
     ],
 )
@@ -35,16 +35,16 @@ def test_creation(constructor: IExtractor, args: Dict[str, Any], default_arch: O
     Path(fname).unlink()
 
     # 3. Pretrained checkpoints
-    if not isinstance(constructor, ViTCLIPExtractor):
-        for key in constructor.pretrained_models.keys():
-            net = constructor(weights=key, arch=key.split("_")[0], **args)
-            net(torch.randn(1, 3, 224, 224))
-    else:
-        """
-        We are skipping tests for OpenAI's CLIP due to its hardcoded cuda requirement in forward.
-        It is not possible (or at least is not so easy) to rewrite forward pass because OpenAI's models
-        are jitted and have tricky mixed precision.
-        """
-        pass
+    for key in constructor.pretrained_models.keys():
+        if constructor == ViTCLIPExtractor:
+            if not key.endswith("224"):
+                continue
+            arch = key.lstrip("sber_").lstrip("openai_")
+        else:
+            arch = key.split("_")[0]
+
+        print(constructor, key, arch, args)
+        net = constructor(weights=key, arch=arch, **args)
+        net(torch.randn(1, 3, 224, 224))
 
     assert True
