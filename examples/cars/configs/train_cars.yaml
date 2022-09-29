@@ -1,13 +1,13 @@
 postfix: metric_learning_cars
 
 seed: 42
-precision: 32
+precision: 16
 accelerator: gpu
-devices: 1
+devices: 2
 
 dataframe_name: df.csv
-dataset_root: data/CARS196/
-logs_root: logs/CARS196/
+dataset_root: /nydl/data/CARS196/
+logs_root: /nydl/logs/CARS196/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -26,7 +26,7 @@ transforms_val:
 sampler:
   name: balance
   args:
-    n_labels: 20
+    n_labels: 35
     n_instances: 10
 
 bs_val: 512
@@ -71,7 +71,7 @@ scheduling: null
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
 # .env file or via `export NEPTUNE_API_TOKEN=...`
-neptune_project: null
+neptune_project: NEWYORKER/similarity-api
 
 
 hydra_dir: ${logs_root}/${logs_folder}/

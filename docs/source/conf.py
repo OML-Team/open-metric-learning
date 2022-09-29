@@ -25,6 +25,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx_mdinclude",
+    "sphinx.ext.viewcode",
 ]
 
 intersphinx_mapping = {
@@ -47,8 +48,6 @@ html_context = {
     "conf_py_path": "/docs/source/",
     "source_suffix": ".rst",
 }
-
-html_show_sourcelink = True
 
 # -- Options for HTML output
 
