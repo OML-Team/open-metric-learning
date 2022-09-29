@@ -1,7 +1,6 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
-import albumentations as albu
-import torchvision.transforms as t
+from const import TTransforms
 
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
@@ -14,8 +13,6 @@ from oml.transforms.images.torchvision.transforms import (
     get_normalisation_torch,
 )
 from oml.utils.misc import TCfg, dictconfig_to_dict
-
-TTransforms = Union[albu.Compose, t.Compose]
 
 TRANSFORMS_ALBU = {
     "augs_albu": get_augs_albu,
