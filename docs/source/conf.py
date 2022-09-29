@@ -48,6 +48,8 @@ html_context = {
     "source_suffix": ".rst",
 }
 
+html_show_sourcelink = True
+
 # -- Options for HTML output
 
 html_theme = "sphinx_rtd_theme"
