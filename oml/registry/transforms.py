@@ -1,7 +1,6 @@
 from typing import Any, Dict
 
-from const import TTransforms
-
+from oml.const import TTransforms
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
     get_normalisation_albu,
