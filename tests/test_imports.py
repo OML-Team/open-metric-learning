@@ -3,13 +3,32 @@ import importlib
 import json
 from itertools import chain
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import pytest
 
 from oml.const import PROJECT_ROOT
 
 LIBS_TO_IGNORE = ["torch_xla"]
+
+
+def get_imports_from_files() -> List[Tuple[str, str]]:
+    files = get_files_with_imports()
+
+    file_import_pairs = []
+
+    for file in files:
+        fname = PROJECT_ROOT / file
+        if fname.suffix == ".py":
+            imports = find_imports_in_script(fname)
+        elif fname.suffix == ".ipynb":
+            imports = find_imports_in_notebook(fname)
+        else:
+            raise ValueError
+
+        file_import_pairs.extend(list(zip([file] * len(imports), imports)))
+
+    return file_import_pairs
 
 
 def get_files_with_imports() -> List[str]:
@@ -69,18 +88,26 @@ def find_imports(code: str) -> List[str]:
     return list(imports)
 
 
-@pytest.mark.parametrize("file", get_files_with_imports())
-def test_project_imports(file: str) -> None:
-    fname = PROJECT_ROOT / file
-    if fname.suffix == ".py":
-        imports = find_imports_in_script(fname)
-    elif fname.suffix == ".ipynb":
-        imports = find_imports_in_notebook(fname)
+@pytest.mark.parametrize("file,lib", get_imports_from_files())
+def test_project_imports(file: str, lib: str) -> None:
+    if any(lib.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
+        pass
     else:
-        raise ValueError
+        importlib.import_module(lib)
 
-    for library in imports:
-        if any(library.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
-            continue
-        else:
-            importlib.import_module(library)
+
+# @pytest.mark.parametrize("file", get_files_with_imports())
+# def test_project_imports(file: str) -> None:
+#     fname = PROJECT_ROOT / file
+#     if fname.suffix == ".py":
+#         imports = find_imports_in_script(fname)
+#     elif fname.suffix == ".ipynb":
+#         imports = find_imports_in_notebook(fname)
+#     else:
+#         raise ValueError
+#
+#     for library in imports:
+#         if any(library.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
+#             continue
+#         else:
+#             importlib.import_module(library)
