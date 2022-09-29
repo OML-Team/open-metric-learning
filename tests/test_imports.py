@@ -94,20 +94,3 @@ def test_project_imports(file: str, lib: str) -> None:
         pass
     else:
         importlib.import_module(lib)
-
-
-# @pytest.mark.parametrize("file", get_files_with_imports())
-# def test_project_imports(file: str) -> None:
-#     fname = PROJECT_ROOT / file
-#     if fname.suffix == ".py":
-#         imports = find_imports_in_script(fname)
-#     elif fname.suffix == ".ipynb":
-#         imports = find_imports_in_notebook(fname)
-#     else:
-#         raise ValueError
-#
-#     for library in imports:
-#         if any(library.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
-#             continue
-#         else:
-#             importlib.import_module(library)
