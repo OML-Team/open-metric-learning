@@ -360,6 +360,8 @@ We also have some pretrained ViT-CLIP models with their zeros-shot scores (cmc@1
 | SberbankAI ViT Base, patch 32  |                    0.53945 |              0.49937 |        0.45202 |    0.61647 |
 | SberbankAI ViT Base, patch 16  |                    0.55978 |              0.55683 |        0.52848 |    0.64184 |
 | SberbankAI ViT Large, patch 14 |                    0.50793 |              0.54888 |        0.61011 |    0.69606 |
+| OpenAI ViT Base, patch 16      | x                          |              0.59713 |        0.66379 |    0.7598  |
+| DINO ViT Base, patch 16        | 0.63581                    |              0.46434 |        0.62599 |    0.33988 |
 
 note that each model here has image size 224x224.
 
