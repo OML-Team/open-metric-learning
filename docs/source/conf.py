@@ -35,6 +35,19 @@ intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
 
+docs_user = "OML-Team"
+docs_repo = "open-metric-learning"
+html_context = {
+    "display_github": True,
+    "source_url_prefix": f"https://github.com/{docs_user}/{docs_repo}/tree/master/docs",
+    "github_host": "github.com",
+    "github_user": docs_user,
+    "github_repo": docs_repo,
+    "github_version": "master",
+    "conf_py_path": "/docs/source/",
+    "source_suffix": ".rst",
+}
+
 # -- Options for HTML output
 
 html_theme = "sphinx_rtd_theme"
