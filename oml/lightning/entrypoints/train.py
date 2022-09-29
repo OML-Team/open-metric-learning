@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from pprint import pprint
 
@@ -187,6 +188,7 @@ def pl_train(cfg: TCfg) -> None:
         logger = True
 
     trainer = pl.Trainer(
+        max_time=timedelta(hours=4),
         max_epochs=cfg["max_epochs"],
         num_sanity_val_steps=0,
         check_val_every_n_epoch=cfg["valid_period"],
