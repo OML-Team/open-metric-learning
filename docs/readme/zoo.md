@@ -30,13 +30,15 @@ model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.c
 [comment]:checkpoint-end
 
 We also have some pretrained ViT-CLIP models with their zeros-shot scores (cmc@1) presented below:
-|                                     |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
-|:------------------------------------|---------------------------:|---------------------:|---------------:|-----------:|
-| SberbankAI ViT-CLIP Base, patch 32  |                    0.53945 |              0.49937 |        0.45202 |    0.61647 |
-| SberbankAI ViT-CLIP Base, patch 16  |                    0.55978 |              0.55683 |        0.52848 |    0.64184 |
-| SberbankAI ViT-CLIP Large, patch 14 |                    0.50793 |              0.54888 |        0.61011 |    0.69606 |
-| OpenAI ViT-CLIP Base, patch 16      |                    0.64018 |              0.59713 |        0.66379 |    0.7598  |
-| DINO ViT Base, patch 16             |                    0.63581 |              0.46434 |        0.62599 |    0.33988 |
+|                                         |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
+|:----------------------------------------|:--------------------------:|:--------------------:|:--------------:|:----------:|
+| SberbankAI ViT-CLIP Base, patch 32      |                    0.53945 |              0.49937 |        0.45202 |    0.61647 |
+| SberbankAI ViT-CLIP Base, patch 16      |                    0.55978 |              0.55683 |        0.52848 |    0.64184 |
+| SberbankAI ViT-CLIP Large, patch 14     |                    0.50793 |              0.54888 |        0.61011 |    0.69606 |
+| OpenAI ViT-CLIP Base, patch 32          |                    0.59401 |              0.47236 |        0.56231 |    0.67902 |
+| OpenAI ViT-CLIP Base, patch 16          |                    0.64018 |              0.59713 |        0.66379 |    0.7598  |
+| OpenAI ViT-CLIP Large, patch 14         |                    0.66078 |              0.66711 |        0.7437  |    0.8392  |
+| For comparison: DINO ViT Base, patch 16 |                    0.63581 |              0.46434 |        0.62599 |    0.33988 |
 
 note that each model here has image size 224x224.
 
