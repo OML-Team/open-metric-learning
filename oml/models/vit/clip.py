@@ -95,7 +95,8 @@ class ViTCLIPExtractor(IExtractor):
             patch_device_and_float(visual, device="cpu")
             state_dict = visual.state_dict()
         else:
-            state_dict = torch.load(Path(weights), map_location="cpu").get("state_dict", state_dict)
+            state_dict = torch.load(Path(weights), map_location="cpu")
+            state_dict = state_dict.get("state_dict", state_dict)
             state_dict = filter_vit_clip_state_dict(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=strict_load)
