@@ -1,12 +1,12 @@
 import inspect
 
-from oml.registry.losses import *
-from oml.registry.miners import *
-from oml.registry.models import *
-from oml.registry.optimizers import *
-from oml.registry.samplers import *
-from oml.registry.schedulers import *
-from oml.registry.transforms import *
+from oml.registry.losses import LOSSES_REGISTRY
+from oml.registry.miners import MINERS_REGISTRY
+from oml.registry.models import MODELS_REGISTRY
+from oml.registry.optimizers import OPTIMIZERS_REGISTRY
+from oml.registry.samplers import SAMPLERS_REGISTRY
+from oml.registry.schedulers import SCHEDULERS_REGISTRY
+from oml.registry.transforms import TRANSFORMS_REGISTRY
 
 
 def show_registry() -> None:

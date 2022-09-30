@@ -14,7 +14,7 @@ from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
-from oml.utils.io import download_checkpoint
+from oml.utils.io import download_checkpoint_one_of
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 
@@ -73,7 +73,7 @@ class ViTExtractor(IExtractor):
 
         if weights in self.pretrained_models.keys():
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            weights = download_checkpoint_one_of(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
 
         ckpt = torch.load(weights, map_location="cpu")
         state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt

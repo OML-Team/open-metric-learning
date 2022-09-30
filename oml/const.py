@@ -29,11 +29,13 @@ DOTENV_PATH = PROJECT_ROOT / ".env"
 CONFIGS_PATH = PROJECT_ROOT / "oml" / "configs"
 MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 
-MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
-MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
-MOCK_DATASET_FILES = "df.csv", "df_with_bboxes.csv", "df_with_category.csv"
+MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
+MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
+MOCK_DATASET_MD5 = "4734fb8998aeb86b03a471bbe5d9fd99"
+
+REQUESTS_TIMEOUT = 120.0
 
 PAD_COLOR = (255, 255, 255)
 
