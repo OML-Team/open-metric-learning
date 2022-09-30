@@ -354,7 +354,7 @@ model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.c
 ```
 [comment]:checkpoint-end
 
-We also have some pretrained ViT-CLIP models with their zeros-shot scores (cmc@1) presented below:
+We also have some CLIP-pretrained ViT models with their cmc@1 scores presented below (+DINO pretrain for comparison):
 |                                         |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
 |:----------------------------------------|:--------------------------:|:--------------------:|:--------------:|:----------:|
 | SberbankAI ViT-CLIP Base, patch 32      |                    0.53945 |              0.49937 |        0.45202 |    0.61647 |
