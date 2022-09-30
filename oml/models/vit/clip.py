@@ -46,9 +46,9 @@ class ViTCLIPExtractor(IExtractor):
 
     def __init__(
         self,
+        weights: Optional[str],
         arch: str,
         normalise_features: bool = True,
-        weights: Optional[str] = None,
         strict_load: bool = True,
     ):
         """
@@ -64,7 +64,7 @@ class ViTCLIPExtractor(IExtractor):
 
         self.normalize = normalise_features
 
-        cfg = get_vit_config_by_name(arch)
+        cfg = get_vit_config_by_arch(arch)
         embed_dim = cfg["embed_dim"]
         image_resolution = cfg["image_resolution"]
         layers = cfg["layers"]
@@ -120,7 +120,7 @@ def filter_vit_clip_state_dict(state_dict: TStateDict, needed_keys: Iterable[str
     return state_dict
 
 
-def get_vit_config_by_name(model_name: str) -> Dict[str, Any]:
+def get_vit_config_by_arch(model_name: str) -> Dict[str, Any]:
     """
     Function which returns configuration of known CLIP models.
     Args:
@@ -161,7 +161,6 @@ def get_vit_config_by_name(model_name: str) -> Dict[str, Any]:
         },
     }
 
-    assert model_name in CLIP_MODELS, f"Model {model_name} is unknown."
     return CLIP_MODELS[model_name]
 
 

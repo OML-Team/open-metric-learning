@@ -1,6 +1,6 @@
 """
 Mostly copy-paste from ruclip library.
-https://github.com/ai-forever/ru-clip
+https://github.com/openai/CLIP/blob/main/clip/model.py
 """
 
 from collections import OrderedDict
