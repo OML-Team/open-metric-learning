@@ -1,9 +1,11 @@
-from typing import Optional
+from typing import Optional, Union
 
+import albumentations as albu
 import torchvision.transforms as t
 
-from oml.const import TTransforms
 from oml.utils.images.images import TImReader, imread_cv2, imread_pillow
+
+TTransforms = Union[albu.Compose, t.Compose]
 
 
 def get_im_reader_for_transforms(transforms: Optional[TTransforms]) -> TImReader:
@@ -13,4 +15,4 @@ def get_im_reader_for_transforms(transforms: Optional[TTransforms]) -> TImReader
         return imread_cv2
 
 
-__all__ = ["get_im_reader_for_transforms"]
+__all__ = ["TTransforms", "get_im_reader_for_transforms"]

@@ -4,8 +4,6 @@ from pathlib import Path
 from sys import platform
 from typing import Any, Dict, Tuple, Union
 
-import albumentations as albu
-import torchvision.transforms as t
 from omegaconf import DictConfig
 
 
@@ -45,8 +43,6 @@ TCfg = Union[Dict[str, Any], DictConfig]
 TNormParam = Tuple[float, float, float]
 MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
-
-TTransforms = Union[albu.Compose, t.Compose]
 
 CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 

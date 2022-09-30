@@ -1,6 +1,5 @@
 from typing import Any, Dict
 
-from oml.const import TTransforms
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
     get_normalisation_albu,
@@ -11,6 +10,7 @@ from oml.transforms.images.torchvision.transforms import (
     get_normalisation_resize_torch,
     get_normalisation_torch,
 )
+from oml.transforms.images.utils import TTransforms
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 TRANSFORMS_ALBU = {
