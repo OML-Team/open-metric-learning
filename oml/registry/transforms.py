@@ -39,7 +39,6 @@ def get_transforms_by_cfg(cfg: TCfg) -> TTransforms:
 
 
 __all__ = [
-    "TTransforms",
     "TRANSFORMS_TORCH",
     "TRANSFORMS_ALBU",
     "TRANSFORMS_REGISTRY",

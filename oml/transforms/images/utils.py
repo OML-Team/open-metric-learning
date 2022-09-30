@@ -2,7 +2,7 @@ from typing import Optional
 
 import torchvision.transforms as t
 
-from oml.registry.transforms import TTransforms
+from oml.const import TTransforms
 from oml.utils.images.images import TImReader, imread_cv2, imread_pillow
 
 

@@ -29,9 +29,10 @@ from oml.const import (
     Y1_KEY,
     Y2_COLUMN,
     Y2_KEY,
+    TTransforms,
 )
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
-from oml.registry.transforms import TTransforms, get_transforms
+from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images import TImReader, imread_cv2
