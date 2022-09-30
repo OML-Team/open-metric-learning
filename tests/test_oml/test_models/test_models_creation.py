@@ -37,13 +37,13 @@ def test_creation(constructor: IExtractor, args: Dict[str, Any], default_arch: s
     # 3. Pretrained checkpoints
     for key in constructor.pretrained_models.keys():
         if constructor == ViTCLIPExtractor:
-            if not key.endswith("224"):
+            is_large_model = "vitl" in key
+            if is_large_model:
                 continue
-            arch = key.lstrip("sber_").lstrip("openai_")
+            arch = key.lstrip("sber_").lstrip("openai_")  # sber_vitb16_224 -> vitb16_224
         else:
             arch = key.split("_")[0]
 
-        print(constructor, key, arch, args)
         net = constructor(weights=key, arch=arch, **args)
         net(torch.randn(1, 3, 224, 224))
 

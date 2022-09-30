@@ -1,4 +1,4 @@
-from typing import OrderedDict, Union
+from typing import Iterable, OrderedDict, Union
 
 import torch
 from torch import nn
@@ -6,17 +6,17 @@ from torch import nn
 TStateDict = OrderedDict[str, torch.Tensor]
 
 
-def find_prefix_in_state_dict(state_dict: TStateDict, trial_key: str, skip_unnecessary: bool = False) -> str:
+def find_prefix_in_state_dict(state_dict: TStateDict, trial_key: str) -> str:
     k0 = [k for k in state_dict.keys() if trial_key in k][0]
     prefix = k0[: k0.index(trial_key)]
 
-    assert all(k.startswith(prefix) for k in state_dict.keys()) or skip_unnecessary
+    assert all(k.startswith(prefix) for k in state_dict.keys())
 
     return prefix
 
 
-def remove_prefix_from_state_dict(state_dict: TStateDict, trial_key: str, skip_unnecessary: bool = False) -> TStateDict:
-    prefix = find_prefix_in_state_dict(state_dict, trial_key, skip_unnecessary=skip_unnecessary)
+def remove_prefix_from_state_dict(state_dict: TStateDict, trial_key: str) -> TStateDict:
+    prefix = find_prefix_in_state_dict(state_dict, trial_key)
 
     if prefix == "":
         return state_dict
@@ -33,16 +33,19 @@ def remove_prefix_from_state_dict(state_dict: TStateDict, trial_key: str, skip_u
         return state_dict
 
 
-def filter_state_dict(state_dict: TStateDict, needed_state_dict: TStateDict) -> TStateDict:
+def filter_state_dict(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
 
     for k in list(state_dict):
-        if not k in needed_state_dict:
+        if not k in needed_keys:
             del state_dict[k]
 
     return state_dict
 
 
 def patch_float(module: nn.Module, float_node: torch.Node) -> None:
+    """
+    This function is for patching jitted weights with hardcoded ``.to(dtype)`` operation.
+    """
     try:
         graphs = [module.graph] if hasattr(module, "graph") else []
     except RuntimeError:
@@ -63,6 +66,9 @@ def patch_float(module: nn.Module, float_node: torch.Node) -> None:
 
 
 def patch_device(module: nn.Module, device_node: torch.Node) -> None:
+    """
+    This function is for patching jitted weights with hardcoded ``.to(device)`` operation.
+    """
     try:
         graphs = [module.graph] if hasattr(module, "graph") else []
     except RuntimeError:
@@ -81,6 +87,10 @@ def patch_device(module: nn.Module, device_node: torch.Node) -> None:
 
 
 def patch_device_and_float(module: nn.Module, device: Union[str, torch.device] = "cuda") -> None:
+    """
+    This function is for patching jitted weights with hardcoded ``.to(device)`` and ``.to(dtype)`` operations.
+    You may need this if you want to correctly load some jitted model which uses half-precision and(or) which device was hardcoded.
+    """
     device_holder = torch.jit.trace(lambda: torch.ones([]).to(torch.device(device)), example_inputs=[])
     device_node = [n for n in device_holder.graph.findAllNodes("prim::Constant") if "Device" in repr(n)][-1]
     patch_device(module, device_node)

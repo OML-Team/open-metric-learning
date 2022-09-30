@@ -1,51 +1,42 @@
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, Optional
 
 import torch
 
 from oml.interfaces.models import IExtractor
-from oml.models.utils import (
-    filter_state_dict,
-    patch_device_and_float,
-    remove_prefix_from_state_dict,
-)
+from oml.models.utils import TStateDict, filter_state_dict, patch_device_and_float
 from oml.models.vit.vision_transformer_clip import VisionTransformer
 from oml.utils.io import download_checkpoint
+
+SBER_MODELS_URL = "https://huggingface.co/sberbank-ai"
+OPENAI_MODELS_URL = "https://openaipublic.azureedge.net/clip/models"
 
 
 class ViTCLIPExtractor(IExtractor):
     pretrained_models: Dict[str, Any] = {
         # checkpoints pretrained by OpenAI
         "openai_vitb16_224": (
-            "https://openaipublic.azureedge.net/clip/models/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
-            "44c3d804ecac03d9545ac1a3adbca3a6",
+            f"{OPENAI_MODELS_URL}/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
+            "44c3d8",
         ),
         "openai_vitb32_224": (
-            "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
-            "3ba34e387b24dfe590eeb1ae6a8a122b",
+            f"{OPENAI_MODELS_URL}/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
+            "3ba34e",
         ),
         "openai_vitl14_224": (
-            "https://openaipublic.azureedge.net/clip/models/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
-            "096db1af569b284eb76b3881534822d9",
+            f"{OPENAI_MODELS_URL}/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
+            "096db1",
         ),
         "openai_vitl14_336": (
-            "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
-            "b311058cae50cb10fbfa2a44231c9473",
+            f"{OPENAI_MODELS_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
+            "b31105",
         ),
         # checkpoints pretrained by SberbankAI
-        "sber_vitb16_224": (
-            "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
-            "7882e07674d78c674e33cb892a68bbfc",
-        ),
-        "sber_vitb32_224": (
-            "https://huggingface.co/sberbank-ai/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
-            "e2c4dab46a3cfa608bdd762973e90d32",
-        ),
-        "sber_vitl14_224": (
-            "https://huggingface.co/sberbank-ai/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
-            "9b4a1cd25d15bad4ffd2ba6e34b8a67c",
-        ),
+        "sber_vitb16_224": (f"{SBER_MODELS_URL}/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin", "7882e0"),
+        "sber_vitb32_224": (f"{SBER_MODELS_URL}/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin", "e2c4da"),
+        "sber_vitl14_224": (f"{SBER_MODELS_URL}/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin", "9b4a1c"),
     }
+    jitted_weights = {"openai_vitb16_224", "openai_vitb32_224", "openai_vitl14_224", "openai_vitl14_336"}
 
     def __init__(
         self,
@@ -87,18 +78,19 @@ class ViTCLIPExtractor(IExtractor):
         if weights is None:
             return
         if weights in self.pretrained_models:
+            jitted_weights = weights in self.jitted_weights
             weights, md5 = self.pretrained_models[weights]
             weights = download_checkpoint(weights, md5)
+        else:
+            jitted_weights = False
 
-        try:  # check if weights are jitted
+        if jitted_weights:  # check if weights are jitted
             visual = torch.jit.load(Path(weights), map_location="cpu").visual.eval()
             patch_device_and_float(visual, device="cpu")
             state_dict = visual.state_dict()
-        except RuntimeError:
-            state_dict = torch.load(Path(weights), map_location="cpu")
-            state_dict = state_dict.get("state_dict", state_dict)
-            state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight", skip_unnecessary=True)
-            state_dict = filter_state_dict(state_dict, self.visual.state_dict())
+        else:
+            state_dict = torch.load(Path(weights), map_location="cpu").get("state_dict", state_dict)
+            state_dict = filter_vit_clip_state_dict(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=strict_load)
 
@@ -112,6 +104,14 @@ class ViTCLIPExtractor(IExtractor):
     @property
     def feat_dim(self) -> int:
         return self.visual.state_dict()["proj"].shape[-1]
+
+
+def filter_vit_clip_state_dict(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
+    for k in list(state_dict):
+        if k.startswith("visual."):
+            state_dict[k.lstrip("visual.")] = state_dict.pop(k)
+    state_dict = filter_state_dict(state_dict, needed_keys=needed_keys)
+    return state_dict
 
 
 def get_vit_config_by_name(model_name: str) -> Dict[str, Any]:
