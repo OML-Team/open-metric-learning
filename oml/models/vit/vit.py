@@ -14,7 +14,7 @@ from oml.models.vit.hubconf import dino_vitb16  # type: ignore
 from oml.models.vit.hubconf import dino_vits8  # type: ignore
 from oml.models.vit.hubconf import dino_vits16  # type: ignore
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
-from oml.utils.io import download_checkpoint_one_of
+from oml.utils.io import download_checkpoint
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 
@@ -34,10 +34,10 @@ class ViTExtractor(IExtractor):
         "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
         "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
         # our pretrained checkpoints
-        "vits16_inshop": ("1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste", "e1017d", "vits16_inshop.ckpt"),
-        "vits16_sop": ("1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt", "85cfa5", "vits16_sop.ckpt"),
-        "vits16_cub": ("1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G", "e82633", "vits16_cub.ckpt"),
-        "vits16_cars": ("1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg", "9f1e59", "vits16_cars.ckpt"),
+        "vits16_inshop": ("inshop/vits16_inshop.ckpt", "e1017d", "vits16_inshop.ckpt"),
+        "vits16_sop": ("sop/vits16_sop.ckpt", "85cfa5", "vits16_sop.ckpt"),
+        "vits16_cub": ("cub/vits16_cub.ckpt", "e82633", "vits16_cub.ckpt"),
+        "vits16_cars": ("cars/vits16_cars.ckpt", "9f1e59", "vits16_cars.ckpt"),
     }
 
     def __init__(
@@ -73,7 +73,7 @@ class ViTExtractor(IExtractor):
 
         if weights in self.pretrained_models.keys():
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            weights = download_checkpoint_one_of(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            weights = download_checkpoint(url_or_remote_path=url_or_fid, hash_md5=hash_md5, fname=fname)
 
         ckpt = torch.load(weights, map_location="cpu")
         state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt

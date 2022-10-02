@@ -12,7 +12,7 @@ from oml.interfaces.models import IExtractor
 from oml.models.pooling import GEM
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
-from oml.utils.io import download_checkpoint_one_of
+from oml.utils.io import download_checkpoint
 
 
 class ResnetExtractor(IExtractor):
@@ -94,7 +94,7 @@ class ResnetExtractor(IExtractor):
 
         elif weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            path_to_ckpt = download_checkpoint_one_of(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            path_to_ckpt = download_checkpoint(url_or_remote_path=url_or_fid, hash_md5=hash_md5, fname=fname)
             state_dict = load_moco_model(path_to_model=Path(path_to_ckpt)).state_dict()
 
         else:
