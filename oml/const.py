@@ -35,7 +35,7 @@ STORAGE_URL = "https://oml.daloroserver.com"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
-MOCK_DATASET_MD5 = "4734fb8998aeb86b03a471bbe5d9fd99"
+MOCK_DATASET_MD5 = "f725276646677ce3d63fd4c7d8a7f666"
 
 REQUESTS_TIMEOUT = 30.0
 
