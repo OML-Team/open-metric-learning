@@ -31,11 +31,13 @@ MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
+STORAGE_URL = "https://oml.daloroserver.com"
+
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
 MOCK_DATASET_MD5 = "4734fb8998aeb86b03a471bbe5d9fd99"
 
-REQUESTS_TIMEOUT = 120.0
+REQUESTS_TIMEOUT = 30.0
 
 PAD_COLOR = (255, 255, 255)
 

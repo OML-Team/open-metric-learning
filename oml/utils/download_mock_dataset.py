@@ -5,7 +5,7 @@ from typing import Tuple, Union
 import gdown
 import pandas as pd
 
-from oml.const import MOCK_DATASET_PATH, MOCK_DATASET_URL_GDRIVE, MOCK_DATASET_MD5
+from oml.const import MOCK_DATASET_MD5, MOCK_DATASET_PATH, MOCK_DATASET_URL_GDRIVE
 from oml.utils.io import calc_folder_hash, download_folder_from_remote_storage
 
 

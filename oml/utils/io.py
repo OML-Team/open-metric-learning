@@ -1,14 +1,13 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Optional, Union
 
-import gdown
 import requests
 import validators
 from tqdm.auto import tqdm
 
-from oml.const import CKPT_SAVE_ROOT, REQUESTS_TIMEOUT
+from oml.const import CKPT_SAVE_ROOT, REQUESTS_TIMEOUT, STORAGE_URL
 
 
 def calc_file_hash(fname: Union[Path, str]) -> str:
@@ -27,7 +26,7 @@ def calc_folder_hash(folder: Union[Path, str]) -> str:
 
     folder = Path(folder)
     assert folder.exists() and folder.is_dir()
-    files = sorted(tuple(str(fname) for fname in folder.rglob('*') if fname.is_file()))
+    files = sorted(tuple(str(fname) for fname in folder.rglob("*") if fname.is_file()))
 
     folder_hash = hashlib.md5()
     structure_hash = "".join(files).encode()
@@ -39,7 +38,7 @@ def calc_folder_hash(folder: Union[Path, str]) -> str:
     return folder_hash.hexdigest()
 
 
-def download_file(url: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT) -> Optional[bytes]:
+def download_file_from_url(url: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT) -> Optional[bytes]:  # type: ignore
     assert validators.url(url), "Invalid URL"
     response = requests.get(url, timeout=timeout)
 
@@ -54,25 +53,29 @@ def download_file(url: str, fname: Optional[str] = None, timeout: float = REQUES
         raise RuntimeError(f"Can not download file from '{url}'")
 
 
-def download_checkpoint_one_of(url_or_fid_list: Union[List[str], str], hash_md5: str, fname: Optional[str] = None) -> str:
-    if not isinstance(url_or_fid_list, (tuple, list)):
-        url_or_fid_list = [url_or_fid_list]
+def _fix_path_for_remote_storage(path: str) -> str:
+    if path == "/":
+        path = ""
+    elif path.startswith("/"):
+        path = path[1:]
 
-    attempt = 0
-    for url_or_fid in url_or_fid_list:
-        attempt += 1
+    if path.endswith("/"):
+        path = path[:-1]
 
-        try:
-            return download_checkpoint(url_or_fid, hash_md5, fname)
-        except:
-            if attempt == len(url_or_fid_list):
-                raise
+    return path
 
 
-def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = None) -> str:
+def download_file_from_remote_storage(
+    remote_path: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT
+) -> Optional[bytes]:
+    remote_path = _fix_path_for_remote_storage(remote_path)
+    return download_file_from_url(f"{STORAGE_URL}/download/{remote_path}", fname, timeout=timeout)
+
+
+def download_checkpoint(url_or_remote_path: str, hash_md5: str, fname: Optional[str] = None) -> str:
     """
     Args:
-        url_or_fid: URL to the checkpoint or file id on Google Drive
+        url_or_remote_path: URL to the checkpoint or path to the file on our storage
         hash_md5: Value of md5sum
         fname: Name of the checkpoint after the downloading process
 
@@ -82,7 +85,7 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     """
     CKPT_SAVE_ROOT.mkdir(exist_ok=True, parents=True)
 
-    fname = fname if fname else Path(url_or_fid).name
+    fname = fname if fname else Path(url_or_remote_path).name
     save_path = str(CKPT_SAVE_ROOT / fname)
 
     if Path(save_path).exists():
@@ -95,11 +98,11 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
 
     print("Downloading checkpoint...")
 
-    if validators.url(url_or_fid):
-        download_file(url=url_or_fid, fname=save_path)
+    if validators.url(url_or_remote_path):
+        download_file_from_url(url=url_or_remote_path, fname=save_path)
 
     else:  # we assume we work we file id (Google Drive)
-        gdown.download(id=url_or_fid, output=save_path, quiet=False)
+        download_file_from_remote_storage(remote_path=url_or_remote_path, fname=save_path)
 
     if not calc_file_hash(save_path).startswith(hash_md5):
         raise Exception("Downloaded checkpoint is probably broken. " "Hash values don't match.")
@@ -107,31 +110,9 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     return str(save_path)
 
 
-__all__ = ["calc_file_hash",
-           "download_checkpoint_one_of",
-           "download_checkpoint",
-           "download_file"]
-STORAGE_URL = "https://oml.daloroserver.com"
-
-
-def _fix_path_for_remote_storage(path: str):
-    if path == '/':
-        path = ''
-    elif path.startswith('/'):
-        path = path[1:]
-
-    if path.endswith('/'):
-        path = path[:-1]
-
-    return path
-
-
-def download_file_from_remote_storage(remote_path: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT) -> Optional[bytes]:
-    remote_path = _fix_path_for_remote_storage(remote_path)
-    return download_file(f"{STORAGE_URL}/download/{remote_path}", fname, timeout=timeout)
-
-
-def download_folder_from_remote_storage(remote_folder: str, local_folder: str, timeout: float = REQUESTS_TIMEOUT) -> None:
+def download_folder_from_remote_storage(
+    remote_folder: str, local_folder: str, timeout: float = REQUESTS_TIMEOUT
+) -> None:
     remote_folder = _fix_path_for_remote_storage(remote_folder)
 
     remote_ls_response = requests.get(f"{STORAGE_URL}/ls/{remote_folder}", timeout=timeout)
@@ -140,7 +121,7 @@ def download_folder_from_remote_storage(remote_folder: str, local_folder: str, t
     if remote_ls_response.status_code == 200:
         remote_files = content["remote_files"]
     else:
-        raise Exception(content['detail'])
+        raise Exception(content["detail"])
 
     local_folder = Path(local_folder)
     local_folder.mkdir(parents=True, exist_ok=True)
@@ -152,4 +133,14 @@ def download_folder_from_remote_storage(remote_folder: str, local_folder: str, t
 
         local_fname = local_folder / fname
         local_fname.parent.mkdir(exist_ok=True, parents=True)
-        download_file_from_remote_storage(remote_file, local_fname, timeout=timeout)
+        download_file_from_remote_storage(remote_file, str(local_fname), timeout=timeout)
+
+
+__all__ = [
+    "calc_file_hash",
+    "calc_folder_hash",
+    "download_file_from_url",
+    "download_file_from_remote_storage",
+    "download_checkpoint",
+    "download_folder_from_remote_storage",
+]
