@@ -324,6 +324,10 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 ## Zoo
 
+Below are the models trained with OML on 4 public datasets.
+For more details about the training process, please, visit *examples* submodule and it's
+[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+
 |                            model                            | cmc1  |         dataset          |                                           weights                                            |                                           configs                                            | hash (the beginning) |
 |:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
 | `ViTExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.903 |    DeepFashion Inshop    | [link](https://drive.google.com/file/d/1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste/view?usp=sharing)   | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/inshop/configs)   |        e1017d        |
@@ -331,10 +335,27 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 |  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     |        9f1e59        |
 |  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      |        e82633        |
 
-Note, that the models above expect the crop of the region of interest rather than the whole picture.
+We also provide an integration with the models pretrained by other researchers (todo: finish the table):
 
-You can specify the desired weights and architecture and automatically download pretrained checkpoint (by the analogue with `torchvision.models`).
-However, you may also do it manually by the link in `weights` column.
+|                        model                              |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
+|:----------------------------------------------------------|:--------------------------:|:--------------------:|:--------------:|:----------:|
+| Sber ViT-CLIP Base, patch 32                              |                      0.539 |                0.499 |          0.452 |      0.616 |
+| Sber ViT-CLIP Base, patch 16                              |                      0.560 |                0.557 |          0.528 |      0.642 |
+| Sber ViT-CLIP Large, patch 14                             |                      0.508 |                0.549 |          0.610 |      0.696 |
+| OpenAI ViT-CLIP Base, patch 32                            |                      0.594 |                0.472 |          0.562 |      0.679 |
+| OpenAI ViT-CLIP Base, patch 16                            |                      0.640 |                0.597 |          0.664 |      0.760 |
+| OpenAI ViT-CLIP Large, patch 14                           |                      0.661 |                0.667 |          0.744 |      0.839 |
+| `ViTExtractor(weights="vitb16_dino", arch="vitb16", ...)` |                      0.636 |                0.464 |          0.626 |      0.340 |
+| `ViTExtractor(weights="vitb8_dino", arch="vitb8", ...)`   |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
+| `ViTExtractor(weights="vits16_dino", arch="vits16", ...)` |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
+| `ViTExtractor(weights="vits8_dino", arch="vits8", ...)`   |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
+| MoCo, Resnet50                                            |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
+
+*All figures above were obtained on the images with the sizes of 224 x 224.
+Also note, that the models above expect the crop of the region of interest rather than the whole picture.*
+
+
+You can specify the desired weights and architecture to automatically download pretrained checkpoint (by the analogue with `torchvision.models`):
 
 [comment]:checkpoint-start
 ```python
@@ -354,23 +375,6 @@ print(oml.registry.models.MODELS_REGISTRY)
 model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.ckpt", arch="vits16", normalise_features=False)
 ```
 [comment]:checkpoint-end
-
-We also have some CLIP-pretrained ViT models with their cmc@1 scores presented below (+DINO pretrain for comparison):
-|                                         |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
-|:----------------------------------------|:--------------------------:|:--------------------:|:--------------:|:----------:|
-| SberbankAI ViT-CLIP Base, patch 32      |                    0.53945 |              0.49937 |        0.45202 |    0.61647 |
-| SberbankAI ViT-CLIP Base, patch 16      |                    0.55978 |              0.55683 |        0.52848 |    0.64184 |
-| SberbankAI ViT-CLIP Large, patch 14     |                    0.50793 |              0.54888 |        0.61011 |    0.69606 |
-| OpenAI ViT-CLIP Base, patch 32          |                    0.59401 |              0.47236 |        0.56231 |    0.67902 |
-| OpenAI ViT-CLIP Base, patch 16          |                    0.64018 |              0.59713 |        0.66379 |    0.7598  |
-| OpenAI ViT-CLIP Large, patch 14         |                    0.66078 |              0.66711 |        0.7437  |    0.8392  |
-| For comparison: DINO ViT Base, patch 16 |                    0.63581 |              0.46434 |        0.62599 |    0.33988 |
-
-note that each model here has image size 224x224.
-
-For more details about the training process, please, visit *examples* submodule and it's
-[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
-
 ## Acknowledgments
 
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
