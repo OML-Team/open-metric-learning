@@ -136,6 +136,12 @@ def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TN
     )
 
 
+def get_clip_transforms(im_size: int) -> albu.Compose:
+    return get_normalisation_resize_albu(
+        im_size=im_size, mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711)
+    )
+
+
 __all__ = [
     "get_augs_albu",
     "get_normalisation_albu",

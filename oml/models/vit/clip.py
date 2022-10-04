@@ -91,32 +91,31 @@ class ViTCLIPExtractor(IExtractor):
             jitted_weights = False
 
         if jitted_weights:  # check if weights are jitted
-            visual = torch.jit.load(Path(weights), map_location="cpu").visual.eval()
+            visual = torch.jit.load(Path(weights), map_location="cpu").visual
             patch_device_and_float(visual, device="cpu")
             state_dict = visual.state_dict()
         else:
             state_dict = torch.load(Path(weights), map_location="cpu")
             state_dict = state_dict.get("state_dict", state_dict)
-            state_dict = filter_vit_clip_state_dict(state_dict, needed_keys=self.visual.state_dict().keys())
+            state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if not self.normalize:
-            return self.visual.forward(x)
-        else:
-            res = self.visual.forward(x)
-            return res / torch.linalg.norm(res, 2, dim=1, keepdim=True).detach()
+        res = self.visual.forward(x)
+        if self.normalize:
+            res = res / torch.linalg.norm(res, 2, dim=1, keepdim=True).detach()
+        return res
 
     @property
     def feat_dim(self) -> int:
         return self.visual.state_dict()["proj"].shape[-1]
 
 
-def filter_vit_clip_state_dict(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
+def take_visual_part_of_vit_clip(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
     for k in list(state_dict):
         if k.startswith("visual."):
-            state_dict[k.lstrip("visual.")] = state_dict.pop(k)
+            state_dict[k.lstrip("visual")[1:]] = state_dict.pop(k)
     state_dict = filter_state_dict(state_dict, needed_keys=needed_keys)
     return state_dict
 

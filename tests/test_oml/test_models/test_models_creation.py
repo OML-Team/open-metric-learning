@@ -15,14 +15,16 @@ resnet_args = {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "st
 
 
 @pytest.mark.parametrize(
-    "constructor,args,default_arch",
+    "constructor,args,default_arch,download_large_checkpoints",
     [
-        (ViTExtractor, vit_args, "vits16"),
-        (ViTCLIPExtractor, vit_clip_args, "vitb32_224"),
-        (ResnetExtractor, resnet_args, "resnet50"),
+        (ViTExtractor, vit_args, "vits16", False),
+        (ViTCLIPExtractor, vit_clip_args, "vitb32_224", False),
+        (ResnetExtractor, resnet_args, "resnet50", False),
     ],
 )
-def test_creation(constructor: IExtractor, args: Dict[str, Any], default_arch: str) -> None:
+def test_creation(
+    constructor: IExtractor, args: Dict[str, Any], default_arch: str, download_large_checkpoints: bool
+) -> None:
     # 1. Random weights
     net = constructor(weights=None, arch=default_arch, **args)
     net.forward(torch.randn(1, 3, 224, 224))
@@ -36,15 +38,17 @@ def test_creation(constructor: IExtractor, args: Dict[str, Any], default_arch: s
 
     # 3. Pretrained checkpoints
     for key in constructor.pretrained_models.keys():
+        model_im_size = 224
         if constructor == ViTCLIPExtractor:
             is_large_model = "vitl" in key
-            if is_large_model:
+            model_im_size = int(key.split("_")[-1])  # openai_vitl14_336 -> 336
+            if is_large_model and not download_large_checkpoints:
                 continue
-            arch = key.lstrip("sber_").lstrip("openai_")  # sber_vitb16_224 -> vitb16_224
+            arch = key.split("_", maxsplit=1)[1]  # sber_vitb16_224 -> vitb16_224, openai_vitb16_224 -> vitb16_224
         else:
             arch = key.split("_")[0]
 
         net = constructor(weights=key, arch=arch, **args)
-        net(torch.randn(1, 3, 224, 224))
+        net(torch.randn(1, 3, model_im_size, model_im_size))
 
     assert True

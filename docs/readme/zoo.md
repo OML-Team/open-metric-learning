@@ -9,24 +9,26 @@ For more details about the training process, please, visit *examples* submodule 
 |  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     |        9f1e59        |
 |  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      |        e82633        |
 
-We also provide an integration with the models pretrained by other researchers (todo: finish the table):
+We also provide an integration with the models pretrained by other researchers:
 
 |                        model                              |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
 |:----------------------------------------------------------|:--------------------------:|:--------------------:|:--------------:|:----------:|
-| Sber ViT-CLIP Base, patch 32                              |                      0.539 |                0.499 |          0.452 |      0.616 |
-| Sber ViT-CLIP Base, patch 16                              |                      0.560 |                0.557 |          0.528 |      0.642 |
-| Sber ViT-CLIP Large, patch 14                             |                      0.508 |                0.549 |          0.610 |      0.696 |
-| OpenAI ViT-CLIP Base, patch 32                            |                      0.594 |                0.472 |          0.562 |      0.679 |
-| OpenAI ViT-CLIP Base, patch 16                            |                      0.640 |                0.597 |          0.664 |      0.760 |
-| OpenAI ViT-CLIP Large, patch 14                           |                      0.661 |                0.667 |          0.744 |      0.839 |
-| `ViTExtractor(weights="vitb16_dino", arch="vitb16", ...)` |                      0.636 |                0.464 |          0.626 |      0.340 |
-| `ViTExtractor(weights="vitb8_dino", arch="vitb8", ...)`   |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
-| `ViTExtractor(weights="vits16_dino", arch="vits16", ...)` |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
-| `ViTExtractor(weights="vits8_dino", arch="vits8", ...)`   |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
-| MoCo, Resnet50                                            |                      0.xxx |                0.xxx |          0.xxx |      0.xxx |
+| `ViTCLIPExtractor("sber_vitb32_224", "vitb32_224")`       |                      0.547 |                0.514 |          0.448 |      0.618 |
+| `ViTCLIPExtractor("sber_vitb16_224", "vitb16_224")`       |                      0.565 |                0.565 |          0.524 |      0.648 |
+| `ViTCLIPExtractor("sber_vitl14_224", "vitl14_224")`       |                      0.512 |                0.555 |          0.606 |      0.707 |
+| `ViTCLIPExtractor("openai_vitb32_224", "vitb32_224")`     |                      0.612 |                0.491 |          0.560 |      0.693 |
+| `ViTCLIPExtractor("openai_vitb16_224", "vitb16_224")`     |                      0.648 |                0.606 |          0.665 |      0.767 |
+| `ViTCLIPExtractor("openai_vitl14_224", "vitl14_224")`     |                      0.670 |                0.675 |          0.745 |      0.844 |
+| `ViTExtractor("vits16_dino", "vits16")`                   |                      0.629 |                0.456 |          0.693 |      0.313 |
+| `ViTExtractor("vits8_dino", "vits8")`                     |                      0.637 |                0.478 |          0.703 |      0.344 |
+| `ViTExtractor("vitb16_dino", "vitb16")`                   |                      0.636 |                0.464 |          0.626 |      0.340 |
+| `ViTExtractor("vitb8_dino", "vitb8")`                     |                      0.673 |                0.548 |          0.546 |      0.342 |
+| `ResnetExtractor("resnet50_moco_v2", "resnet50")`         |                      0.491 |                0.310 |          0.244 |      0.155 |
 
 *All figures above were obtained on the images with the sizes of 224 x 224.
-Also note, that the models above expect the crop of the region of interest rather than the whole picture.*
+Note, that the models above expect the crop of the region of interest rather than the whole picture.
+It is also important to say that different models expect different preprocessing.
+For example, you should use `clip_transforms` for `ViTCLIPExtractor`*
 
 
 You can specify the desired weights and architecture to automatically download pretrained checkpoint (by the analogue with `torchvision.models`):

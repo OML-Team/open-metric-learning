@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
+    get_clip_transforms,
     get_normalisation_albu,
     get_normalisation_resize_albu,
 )
@@ -17,6 +18,7 @@ TRANSFORMS_ALBU = {
     "augs_albu": get_augs_albu,
     "norm_albu": get_normalisation_albu,
     "norm_resize_albu": get_normalisation_resize_albu,
+    "clip_transforms": get_clip_transforms,
 }
 
 TRANSFORMS_TORCH = {
