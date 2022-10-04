@@ -59,12 +59,15 @@ docker_build:
 docker_tests:
 	docker run -t $(IMAGE_NAME) make run_tests
 
-.PHONY: upload_to_pip
-upload_to_pip:
+.PHONY: build_wheel
+build_wheel:
 	pip install omegaconf
 	python -m pip install --upgrade pip
 	python3 -m pip install --upgrade twine
 	pip install --upgrade pip setuptools wheel
 	rm -rf dist build open_metric_learning.egg-info
 	python3 setup.py sdist bdist_wheel
+
+.PHONY: upload_to_pip
+upload_to_pip: build_wheel
 	twine upload dist/*

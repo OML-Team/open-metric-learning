@@ -19,9 +19,11 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: "3.8.0"
-    - name: Push OML to PyPI
+    - name: Build wheel
       run: |
-        make upload_to_pip
+        make build_wheel
+    - name: Publish distribution to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        username: ${{ secrets.PYPI_USERNAME }}
-        password: ${{ secrets.PYPI_PASSWORD }}
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository_url: https://pypi.org/project/open-metric-learning/
