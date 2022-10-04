@@ -26,4 +26,4 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
-        repository_url: https://pypi.org/project/open-metric-learning/
+        repository_url: https://upload.pypi.org/legacy/
