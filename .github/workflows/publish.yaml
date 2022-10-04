@@ -22,3 +22,6 @@ jobs:
     - name: Push OML to PyPI
       run: |
         make upload_to_pip
+      with:
+        username: ${{ secrets.PYPI_USERNAME }}
+        password: ${{ secrets.PYPI_PASSWORD }}
