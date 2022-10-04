@@ -1,0 +1,24 @@
+name: Publishing
+
+on:
+  pull_request:
+    branches:
+      - release
+  push:
+    branches:
+      - release
+
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8.0"
+    - name: Push OML to PyPI
+      run: |
+        make upload_to_pip
