@@ -61,6 +61,7 @@ docker_tests:
 
 .PHONY: upload_to_pip
 upload_to_pip:
+	pip install omegaconf
 	python -m pip install --upgrade pip
 	python3 -m pip install --upgrade twine
 	pip install --upgrade pip setuptools wheel
