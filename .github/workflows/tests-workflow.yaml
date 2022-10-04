@@ -22,7 +22,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Build OML
       run: |
-        echo "a"
+        make docker_build RUNTIME=cpu
     - name: Tests OML
       run: |
-        echo "b"
+        make docker_tests RUNTIME=cpu
