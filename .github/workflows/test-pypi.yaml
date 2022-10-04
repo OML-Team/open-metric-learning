@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: "3.8.0"
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     - name: Install OML
       run: pip install open-metric-learning
     - name: Check is importable
