@@ -1,4 +1,4 @@
-name: Publishing
+name: Push repo to PyPI
 
 on:
   pull_request:
