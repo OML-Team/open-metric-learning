@@ -38,10 +38,8 @@ def test_creation(
 
     # 3. Pretrained checkpoints
     for key in constructor.pretrained_models.keys():
-        model_im_size = 224
         if constructor == ViTCLIPExtractor:
             is_large_model = "vitl" in key
-            model_im_size = int(key.split("_")[-1])  # openai_vitl14_336 -> 336
             if is_large_model and not download_large_checkpoints:
                 continue
             arch = key.split("_", maxsplit=1)[1]  # sber_vitb16_224 -> vitb16_224, openai_vitb16_224 -> vitb16_224
@@ -49,6 +47,6 @@ def test_creation(
             arch = key.split("_")[0]
 
         net = constructor(weights=key, arch=arch, **args)
-        net(torch.randn(1, 3, model_im_size, model_im_size))
+        net(torch.randn(1, 3, 224, 224))
 
     assert True
