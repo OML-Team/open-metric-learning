@@ -1,4 +1,4 @@
-name: Push repo to PyPI
+name: Publish repo on PyPI
 
 on:
   pull_request:
@@ -8,9 +8,8 @@ on:
     branches:
       - release
 
-
 jobs:
-  publish:
+  publish_on_pypi:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -22,7 +21,7 @@ jobs:
     - name: Build wheel
       run: |
         make build_wheel
-    - name: Publish distribution to Test PyPI
+    - name: Push the distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
