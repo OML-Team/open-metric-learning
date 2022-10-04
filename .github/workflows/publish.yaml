@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  pypi:
+  publish:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -20,8 +20,5 @@ jobs:
       with:
         python-version: "3.8.0"
     - name: Push OML to PyPI
-      with:
-        username: ${{ secrets.PYPI_USERNAME }}
-        password: ${{ secrets.PYPI_PASSWORD }}
       run: |
         make upload_to_pip
