@@ -260,7 +260,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
 
         fig = plt.figure(figsize=(30, 30 / (top_k + 2 + 1) * len(query_ids)))
         for j, query_idx in enumerate(query_ids):
-            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:top_k]
+            ids = torch.topk(dist_matrix_with_inf[query_idx], top_k)[1]
 
             n_gt = self.mask_gt[query_idx].sum()  # type: ignore
 
