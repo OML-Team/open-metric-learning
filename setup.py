@@ -5,8 +5,6 @@ from typing import List
 
 from setuptools import find_packages, setup
 
-from oml.const import PROJECT_ROOT
-
 
 def load_requirements(filename: str) -> List[str]:
     with open(filename, "r") as f:
@@ -15,7 +13,7 @@ def load_requirements(filename: str) -> List[str]:
 
 
 def load_version() -> str:
-    version_file = PROJECT_ROOT / "oml" / "__init__.py"
+    version_file = Path(__file__).parent / "oml" / "__init__.py"
     with io.open(version_file, encoding="utf-8") as f:
         return re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
 

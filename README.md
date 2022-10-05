@@ -6,11 +6,11 @@
 [![Documentation Status](https://readthedocs.org/projects/open-metric-learning/badge/?version=latest)](https://open-metric-learning.readthedocs.io/en/latest/?badge=latest)
 [![PyPI Status](https://pepy.tech/badge/open-metric-learning)](https://pepy.tech/project/open-metric-learning)
 [![Pipi version](https://img.shields.io/pypi/v/open-metric-learning.svg)](https://pypi.org/project/open-metric-learning/)
-![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_3.7-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_3.8-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_3.9-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_4.0-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
+![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
+[![python](https://img.shields.io/badge/python_3.7-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
+[![python](https://img.shields.io/badge/python_3.8-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
+[![python](https://img.shields.io/badge/python_3.9-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
+[![python](https://img.shields.io/badge/python_3.10-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
 
 <div align="left">
 
