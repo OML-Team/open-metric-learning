@@ -21,19 +21,8 @@ jobs:
     - name: Build wheel
       run: |
         make build_wheel
-#    - name: Push the distribution to PyPI
-#      uses: pypa/gh-action-pypi-publish@release/v1
-#      with:
-#        password: ${{ secrets.PYPI_API_TOKEN }}
-#        repository_url: https://upload.pypi.org/legacy/
-  check_published:
-  needs: publish_on_pypi
-  steps:
-  - name: Checkout
-    uses: actions/checkout@v3
-  - name: Set up Python
-    uses: actions/setup-python@v4
-    with:
-      python-version: "3.8"
-  - name: Install OML
-    run: make pip_install_actual_oml
+    - name: Push the distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository_url: https://upload.pypi.org/legacy/
