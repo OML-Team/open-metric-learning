@@ -50,6 +50,8 @@ BLUE = (0, 0, 255)
 GRAY = (120, 120, 120)
 PAD_COLOR = (255, 255, 255)
 
+N_GT_SHOW_EMBEDDING_METRICS = 2
+
 TCfg = Union[Dict[str, Any], DictConfig]
 
 # ImageNet Params

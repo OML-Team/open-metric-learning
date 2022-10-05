@@ -112,17 +112,18 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:  # type: ignore
-    if isinstance(metrics_to_reduce, (torch.Tensor, np.ndarray)):
-        return metrics_to_reduce.mean()
-    if isinstance(metrics_to_reduce, (float, int)):
-        return metrics_to_reduce
+def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
+    output: TMetricsDict = {}
 
-    output = {}
     for k, v in metrics_to_reduce.items():
-        output[k] = reduce_metrics(v)  # type: ignore
+        if isinstance(v, (torch.Tensor, np.ndarray)):
+            output[k] = v.mean()
+        elif isinstance(v, (float, int)):
+            output[k] = v
+        else:
+            output[k] = reduce_metrics(v)  # type: ignore
 
-    return output  # type: ignore
+    return output
 
 
 def apply_mask_to_ignore(

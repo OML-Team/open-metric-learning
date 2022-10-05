@@ -14,6 +14,7 @@ from oml.const import (
     LABELS_KEY,
     LOG_TOPK_IMAGES_PER_ROW,
     LOG_TOPK_ROWS_PER_METRIC,
+    N_GT_SHOW_EMBEDDING_METRICS,
     OVERALL_CATEGORIES_KEY,
     PATHS_KEY,
     RED,
@@ -210,7 +211,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
 
     def get_worst_queries_ids(self, metric_name: str, topk: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
-        return np.argsort(metric_values)[:topk].tolist()
+        return torch.topk(metric_values, topk)[1].flatten().tolist()
 
     def get_plot_for_worst_queries(
         self, metric_name: str, topk_queries: int, topk_instances: int, verbose: bool = False
@@ -262,9 +263,12 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
             ids = torch.argsort(dist_matrix_with_inf[query_idx])[:top_k]
 
             n_gt = self.mask_gt[query_idx].sum()  # type: ignore
-            ngt_show = 2
 
-            plt.subplot(len(query_ids), top_k + 1 + ngt_show, j * (top_k + 1 + ngt_show) + 1)
+            plt.subplot(
+                len(query_ids),
+                top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS,
+                j * (top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS) + 1,
+            )
 
             img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
             img = square_pad(img)
@@ -278,17 +282,25 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
                 color = GREEN if self.mask_gt[query_idx, idx] else RED  # type: ignore
                 if verbose:
                     print("G", i, gallery_paths[idx])
-                plt.subplot(len(query_ids), top_k + ngt_show + 1, j * (top_k + 1 + ngt_show) + i + 2)
+                plt.subplot(
+                    len(query_ids),
+                    top_k + N_GT_SHOW_EMBEDDING_METRICS + 1,
+                    j * (top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
+                )
                 img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
                 img = square_pad(img)
                 plt.title(f"{i} - {round(dist_matrix_with_inf[query_idx, idx].item(), 3)}")
                 plt.imshow(img)
                 plt.axis("off")
 
-            gt_ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:ngt_show]  # type: ignore
+            gt_ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
 
             for i, gt_idx in enumerate(gt_ids):
-                plt.subplot(len(query_ids), top_k + ngt_show + 1, j * (top_k + 1 + ngt_show) + i + top_k + 2)
+                plt.subplot(
+                    len(query_ids),
+                    top_k + N_GT_SHOW_EMBEDDING_METRICS + 1,
+                    j * (top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + top_k + 2,
+                )
                 img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
                 img = square_pad(img)
                 plt.title("GT " + str(round(dist_matrix_with_inf[query_idx, gt_idx].item(), 3)))
