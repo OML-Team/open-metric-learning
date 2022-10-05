@@ -1,9 +1,6 @@
 name: Push to PyPI
 
 on:
-  pull_request:
-    branches:
-      - main # todo
   push:
     branches:
       - main # todo
@@ -42,3 +39,4 @@ jobs:
     - name: Installation
       run: |
         make pip_install_actual_oml
+        python3 -c "from oml.losses.triplet import TripletLoss"

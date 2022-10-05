@@ -6,7 +6,7 @@ IMAGE_NAME ?= omlteam/oml:$(RUNTIME)
 
 README_FILE ?= README.md
 
-OML_VERSION=$(shell cat oml/__init__.py | sed 's,__version__ = "\(.*\)",\1,')
+OML_VERSION=$(shell cat oml/__init__.py | sed 's,.*__version__ = "\(.*\)".*,\1,')
 
 .PHONY: build_readme
 build_readme:
