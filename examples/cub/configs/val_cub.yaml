@@ -24,11 +24,11 @@ model:
 
 
 metric_args:
+  ignore: [cmc,]
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [5]
-
-log_only_main_category: False
+  log_only_main_category: False
 
 hydra:
   searchpath:

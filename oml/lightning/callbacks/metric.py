@@ -33,7 +33,6 @@ class MetricValCallback(Callback):
         log_only_main_category: bool = True,
         loader_idx: int = 0,
         samples_in_getitem: int = 1,
-        image_metrics_to_ignore: Iterable[str] = ("cmc",),
     ):
         """
         Args:
@@ -52,8 +51,6 @@ class MetricValCallback(Callback):
         self.log_only_main_category = log_only_main_category
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem
-
-        self.image_metrics_to_ignore = image_metrics_to_ignore
 
         self._expected_samples = 0
         self._collected_samples = 0

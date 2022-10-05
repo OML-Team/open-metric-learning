@@ -145,14 +145,14 @@ def pl_train(cfg: TCfg) -> None:
         is_query_key=valid_dataset.is_query_key,
         is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
-        visualization_metrics_to_ignore=cfg.get("metric_args", {}).get("ignore", ()) ** cfg.get("metric_args", {}),
+        visualization_metrics_to_ignore=cfg.get("metric_args", {}).get("ignore", ()),
     )
 
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     metrics_clb = metrics_clb_constructor(
         metric=metrics_calc,
         save_image_logs=cfg.get("log_images", False),
-        log_only_main_category=cfg.get("log_only_main_category", True),
+        log_only_main_category=cfg.get("metric_args", {}).get("log_only_main_category", True),
     )
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
