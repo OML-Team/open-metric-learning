@@ -10,7 +10,7 @@
 [![python](https://img.shields.io/badge/python_3.7-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.8-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.9-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_4.0-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
+[![python](https://img.shields.io/badge/python_3.10-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/test-pypi.yaml/badge.svg?)
 
 <div align="left">
 

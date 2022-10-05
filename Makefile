@@ -6,6 +6,8 @@ IMAGE_NAME ?= omlteam/oml:$(RUNTIME)
 
 README_FILE ?= README.md
 
+OML_VERSION=$(shell cat oml/__init__.py | sed 's,__version__ = "\(.*\)",\1,')
+
 .PHONY: build_readme
 build_readme:
 	rm -f ${README_FILE}
@@ -71,3 +73,7 @@ build_wheel:
 .PHONY: upload_to_pip
 upload_to_pip: build_wheel
 	twine upload dist/*
+
+.PHONY: pip_install_actual_oml
+pip_install_actual_oml:
+	pip install open-metric-learning==$(OML_VERSION)
