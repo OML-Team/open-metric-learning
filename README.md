@@ -342,7 +342,7 @@ For more details about the training process, please, visit *examples* submodule 
 We also provide an integration with the models pretrained by other researchers:
 
 |                        model                              |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |
-|:----------------------------------------------------------|:--------------------------:|:--------------------:|:--------------:|:----------:|
+|:---------------------------------------------------------:|:--------------------------:|:--------------------:|:--------------:|:----------:|
 | `ViTCLIPExtractor("sber_vitb32_224", "vitb32_224")`       |                      0.547 |                0.514 |          0.448 |      0.618 |
 | `ViTCLIPExtractor("sber_vitb16_224", "vitb16_224")`       |                      0.565 |                0.565 |          0.524 |      0.648 |
 | `ViTCLIPExtractor("sber_vitl14_224", "vitl14_224")`       |                      0.512 |                0.555 |          0.606 |      0.707 |
@@ -358,7 +358,8 @@ We also provide an integration with the models pretrained by other researchers:
 *All figures above were obtained on the images with the sizes of 224 x 224.
 Note, that the models above expect the crop of the region of interest rather than the whole picture.
 It is also important to say that different models expect different preprocessing.
-For example, you should use `clip_transforms` for `ViTCLIPExtractor`*
+You should use `norm_resize_albu_clip` for `ViTCLIPExtractor` and `norm_resize_albu` for all other models
+(note that you can find this transforms in `oml.registry.transforms.TRANSFORMS_REGISTRY`).*
 
 
 You can specify the desired weights and architecture to automatically download pretrained checkpoint (by the analogue with `torchvision.models`):
