@@ -63,7 +63,6 @@ docker_tests:
 
 .PHONY: build_wheel
 build_wheel:
-	pip install omegaconf
 	python -m pip install --upgrade pip
 	python3 -m pip install --upgrade twine
 	pip install --upgrade pip setuptools wheel
