@@ -9,10 +9,12 @@ from torch import nn
 from oml.const import MEAN, STD, STORAGE_URL, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.hubconf import dino_vitb8  # type: ignore
-from oml.models.vit.hubconf import dino_vitb16  # type: ignore
-from oml.models.vit.hubconf import dino_vits8  # type: ignore
-from oml.models.vit.hubconf import dino_vits16  # type: ignore
+from oml.models.vit.hubconf import (  # type: ignore
+    dino_vitb8,
+    dino_vitb16,
+    dino_vits8,
+    dino_vits16,
+)
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
 
@@ -75,7 +77,7 @@ class ViTExtractor(IExtractor):
             strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """
-        assert arch in self.constructors.keys()
+        assert arch in self.constructors
         super(ViTExtractor, self).__init__()
 
         self.normalise_features = normalise_features
@@ -88,12 +90,12 @@ class ViTExtractor(IExtractor):
         if weights is None:
             return
 
-        if weights in self.pretrained_models.keys():
+        if weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
             weights = download_checkpoint_one_of(url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname)  # type: ignore
 
         ckpt = torch.load(weights, map_location="cpu")
-        state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
+        state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
         self.model.load_state_dict(ckpt, strict=strict_load)
 
