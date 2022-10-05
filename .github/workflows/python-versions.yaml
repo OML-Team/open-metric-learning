@@ -1,4 +1,4 @@
-name: Test local installation
+name: Local installation
 
 on:
   pull_request:
