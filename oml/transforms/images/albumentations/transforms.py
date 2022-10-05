@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from albumentations.pytorch import ToTensorV2
 
-from oml.const import CROP_KEY, MEAN, PAD_COLOR, STD, TNormParam
+from oml.const import CROP_KEY, MEAN, MEAN_CLIP, PAD_COLOR, STD, STD_CLIP, TNormParam
 
 TTransformsList = List[Union[albu.ImageOnlyTransform, albu.DualTransform]]
 
@@ -136,10 +136,15 @@ def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TN
     )
 
 
+def get_normalisation_resize_albu_clip(im_size: int) -> albu.Compose:
+    return get_normalisation_resize_albu(im_size=im_size, mean=MEAN_CLIP, std=STD_CLIP)
+
+
 __all__ = [
     "get_augs_albu",
     "get_normalisation_albu",
     "get_normalisation_resize_albu",
+    "get_normalisation_resize_albu_clip",
     "get_spatials",
     "get_blurs",
     "get_colors_level",
