@@ -57,6 +57,9 @@ TNormParam = Tuple[float, float, float]
 MEAN: TNormParam = (0.485, 0.456, 0.406)
 STD: TNormParam = (0.229, 0.224, 0.225)
 
+MEAN_CLIP = (0.48145466, 0.4578275, 0.40821073)
+STD_CLIP = (0.26862954, 0.26130258, 0.27577711)
+
 CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 
 # Required dataset format:
