@@ -29,15 +29,19 @@ DOTENV_PATH = PROJECT_ROOT / ".env"
 CONFIGS_PATH = PROJECT_ROOT / "oml" / "configs"
 MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 
-MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
 LOG_IMAGE_FOLDER = "image_logs"
 LOG_TOPK_ROWS_PER_METRIC = 5
 LOG_TOPK_IMAGES_PER_ROW = 5
 
-MOCK_DATASET_URL = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
-MOCK_DATASET_FILES = "df.csv", "df_with_bboxes.csv", "df_with_category.csv"
+STORAGE_URL = "https://oml.daloroserver.com"
+
+MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
+MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
+MOCK_DATASET_MD5 = "f725276646677ce3d63fd4c7d8a7f666"
+
+REQUESTS_TIMEOUT = 30.0
 
 TColor = Tuple[int, int, int]
 RED = (255, 0, 0)

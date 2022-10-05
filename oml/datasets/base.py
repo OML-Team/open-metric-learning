@@ -38,6 +38,11 @@ from oml.utils.images.images import TImReader, imread_cv2
 
 
 class BaseDataset(Dataset):
+    """
+    Base class for the retrieval datasets.
+
+    """
+
     def __init__(
         self,
         df: pd.DataFrame,
@@ -57,23 +62,26 @@ class BaseDataset(Dataset):
         """
 
         Args:
-            df: Table with the following columns:
-                  obligatory:
+            df: Table with the following obligatory columns:
+
                   >>> LABELS_COLUMN, PATHS_COLUMN
-                  optional:
+
+                  and the optional ones:
+
                   >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORIES_COLUMN
-            transform: Augmentations for the images
-            dataset_root: Path to the images dir, set None if you provided the absolute paths
-            f_imread: Function to read the image
+
+            transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
+            dataset_root: Path to the images dir, set ``None`` if you provided the absolute paths in your dataframe
+            f_imread: Function to read the images
             cache_size: Size of the dataset's cache
-            input_tensors_key: Key to get input_tensors from batch
-            labels_key: Key to get labels from batch
-            paths_key: Key to get paths from batch
-            categories_key: Key to get categories from batch
-            x1_key: Key to get x1 from batch
-            x2_key: Key to get x2 from batch
-            y1_key: Key to get y1 from batch
-            y2_key: Key to get y2 from batch
+            input_tensors_key: Key to put tensors into the batches
+            labels_key: Key to put labels into the batches
+            paths_key: Key put paths into the batches
+            categories_key: Key to put categories into the batches
+            x1_key: Key to put ``x1`` into the batches
+            x2_key: Key to put ``x2`` into the batches
+            y1_key: Key to put ``y1`` into the batches
+            y2_key: Key to put ``y2`` into the batches
 
         """
         df = df.copy()
@@ -172,8 +180,9 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
 
     It has to know how to return its labels, which is required information
     to perform the training with the combinations-based losses.
-    Particularly, these labels will be passed to Sampler to form the batches and
-    batches will be passed to Miner to form the combinations.
+    Particularly, these labels will be passed to `Sampler` to form the batches and
+    batches will be passed to `Miner` to form the combinations (triplets).
+
     """
 
     def get_labels(self) -> np.ndarray:
@@ -184,18 +193,18 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     """
     The main purpose of this class is to be used as a dataset during
     the validation stage. It has to provide information
-    about its query/gallery split.
+    about its `query`/`gallery` split.
 
-    Note, that some of the datasets used as benchmarks in MetricLearning
-    provide such information (for example, DeepFashion InShop), but some of them
-    don't (for example, CARS196 or CUB200).
+    Note, that some of the datasets used as benchmarks in Metric Learning
+    provide the splitting information (for example, ``DeepFashion InShop`` dataset), but some of them
+    don't (for example, ``CARS196`` or ``CUB200``).
     The validation idea for the latter is to calculate the embeddings for the whole validation set,
-    then for every item find top-k nearest neighbors and calculate the desired retrieval metric.
+    then for every item find ``top-k`` nearest neighbors and calculate the desired retrieval metric.
     In other words, for the desired query item, the gallery is the rest of the validation dataset.
-    If you want to perform this kind of validation process, then simply return
-    is_query == True and is_gallery == True for every item in the dataset.
-    Note, that is_query and is_gallery can be True both at the same time. In this case, we perform
-    a validation procedure for every item in the validation set using the "1 vs rest" approach.
+
+    Thus, if you want to perform this kind of validation process (`1 vs rest`) you should simply return
+    ``is_query == True`` and ``is_gallery == True`` for every item in the dataset sa the same time.
+
     """
 
     def __init__(

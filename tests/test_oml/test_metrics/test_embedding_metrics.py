@@ -144,6 +144,10 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
 
     check_dicts_of_dicts_are_equal(gt_metrics, metrics)
 
+    figures, titles = calc.visualize()
+
+    assert len(figures) == len(titles)
+
     # the euclidean distance between any one-hots is always sqrt(2) or 0
     assert torch.isclose(calc.distance_matrix.unique(), torch.tensor([0, math.sqrt(2)])).all()  # type: ignore
 

@@ -1,15 +1,13 @@
 import os
 import random
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple
 
 import dotenv
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from oml.const import DOTENV_PATH
-
-TCfg = Union[Dict[str, Any], DictConfig]
+from oml.const import DOTENV_PATH, TCfg
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -28,7 +26,7 @@ def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     return inds
 
 
-def set_global_seed(seed: int, num_workers: int = 0) -> None:
+def set_global_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
 
@@ -39,8 +37,7 @@ def set_global_seed(seed: int, num_workers: int = 0) -> None:
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
-    os.environ["PL_GLOBAL_SEED"] = str(seed)
-    os.environ["PL_SEED_WORKERS"] = str(num_workers)
+    os.environ["PL_SEED_WORKERS"] = str(1)
 
     try:
         import torch_xla.core.xla_model as xm
@@ -56,9 +53,13 @@ def one_hot(i: int, dim: int) -> torch.Tensor:
     return vector
 
 
-def flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = "/") -> Dict[str, Any]:
+def flatten_dict(
+    d: Dict[str, Any], parent_key: str = "", sep: str = "/", ignored_keys: Iterable[str] = ()
+) -> Dict[str, Any]:
     items = []  # type: ignore
     for k, v in d.items():
+        if k in ignored_keys:
+            continue
         new_key = str(parent_key) + sep + str(k) if parent_key else str(k)
         if isinstance(v, dict):
             items.extend(flatten_dict(v, new_key, sep=sep).items())
@@ -119,7 +120,6 @@ __all__ = [
     "one_hot",
     "flatten_dict",
     "load_dotenv",
-    "TCfg",
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",

@@ -1,5 +1,4 @@
-from tabnanny import verbose
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +12,9 @@ from oml.const import (
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
     LABELS_KEY,
+    LOG_TOPK_IMAGES_PER_ROW,
+    LOG_TOPK_ROWS_PER_METRIC,
+    OVERALL_CATEGORIES_KEY,
     PATHS_KEY,
     RED,
     X1_KEY,
@@ -28,7 +30,11 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
     reduce_metrics,
 )
-from oml.interfaces.metrics import IBasicMetric
+from oml.interfaces.metrics import (
+    IBasicMetric,
+    IBasicMetricDDP,
+    IMetricWithVisualization,
+)
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
@@ -37,7 +43,16 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-class EmbeddingMetrics(IBasicMetric):
+class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
+    """
+    This class accumulates the information from the batches and embeddings produced by the model
+    at every batch in epoch. After all the samples have been stored, you can call the function
+    which computes retrievals metrics. To get the needed information from the batches, it uses
+    keys which have to be provided as init arguments. Please, check the usage example in
+    `Readme`.
+
+    """
+
     metric_name = ""
 
     def __init__(
@@ -52,14 +67,11 @@ class EmbeddingMetrics(IBasicMetric):
         map_top_k: Tuple[int, ...] = (5,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
+        visualization_metrics_to_ignore: Iterable[str] = (),
         check_dataset_validity: bool = True,
+        log_only_main_category: bool = False,
     ):
         """
-        This class accumulates the information from the batches and embeddings produced by the model
-        at every batch in epoch. After all of the samples have been stored you can call the function
-        which computes retrievals metrics. To get the needed information from the batches it uses
-        keys which have to be provided as init arguments. Please, check the example in the <Using pure PyTorch>
-        section in the main Readme.md.
 
         Args:
             embeddings_key: Key to take the embeddings from the batches
@@ -67,12 +79,12 @@ class EmbeddingMetrics(IBasicMetric):
             is_query_key: Key to take the information whether every batch sample belongs to the query
             is_gallery_key: Key to take the information whether every batch sample belongs to the gallery
             extra_keys: Keys to accumulate some additional information from the batches
-            cmc_top_k: Values of k to compute CMC@k metrics
-            precision_top_k: Values of k to compute Precision@k metrics
-            map_top_k: Values of k to compute MAP@k metrics
-            categories_key: Key to take the samples categories from the batches (if you have ones)
-            postprocessor: IPostprocessor which applies some techniques like query reranking
-            check_dataset_validity: check if all queries have their galleries
+            cmc_top_k: Values of ``k`` to compute ``CMC@k`` metrics
+            precision_top_k: Values of ``k`` to compute ``Precision@k`` metrics
+            map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
+            categories_key: Key to take the samples' categories from the batches (if you have ones)
+            postprocessor: Postprocessor which applies some techniques like query reranking
+            check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
 
         """
         self.embeddings_key = embeddings_key
@@ -93,6 +105,9 @@ class EmbeddingMetrics(IBasicMetric):
         self.mask_to_ignore = None
 
         self.check_dataset_validity = check_dataset_validity
+        self.log_only_main_category = log_only_main_category
+
+        self.visualization_metrics_to_ignore = visualization_metrics_to_ignore
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -177,6 +192,21 @@ class EmbeddingMetrics(IBasicMetric):
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
         return self.metrics
+
+    def visualize(self, *args: Any, **kwargs: Any) -> Tuple[Collection[plt.Figure], Collection[str]]:
+        metrics_flat = flatten_dict(self.metrics, ignored_keys=self.visualization_metrics_to_ignore)
+        figures = []
+        titles = []
+        for metric_name in metrics_flat:
+            if self.log_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
+                continue
+            fig = self.get_plot_for_worst_queries(
+                metric_name=metric_name, topk_queries=LOG_TOPK_ROWS_PER_METRIC, topk_instances=LOG_TOPK_IMAGES_PER_ROW
+            )
+            log_str = f"top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name}"
+            figures.append(fig)
+            titles.append(log_str)
+        return figures, titles
 
     def get_worst_queries_ids(self, metric_name: str, topk: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
@@ -269,4 +299,9 @@ class EmbeddingMetrics(IBasicMetric):
         return fig
 
 
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]
+class EmbeddingMetricsDDP(EmbeddingMetrics, IBasicMetricDDP):
+    def sync(self) -> None:
+        self.acc = self.acc.sync()
+
+
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "EmbeddingMetricsDDP"]

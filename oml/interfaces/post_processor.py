@@ -2,7 +2,7 @@ class IPostprocessor:
     """
     This is a parent class for the classes which apply some postprocessing
     after the embeddings have been extracted.
-    For example, we may want to apply some method or dimension reduction or
+    For example, we may want to apply some method of dimension reduction or
     query-reranking.
 
     """

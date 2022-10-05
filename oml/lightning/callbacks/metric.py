@@ -1,5 +1,7 @@
+from math import ceil
 from typing import Any, Iterable, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 from neptune.new.types import File
@@ -7,18 +9,23 @@ from pytorch_lightning import Callback
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
-from oml.const import (
-    LOG_IMAGE_FOLDER,
-    LOG_TOPK_IMAGES_PER_ROW,
-    LOG_TOPK_ROWS_PER_METRIC,
-    OVERALL_CATEGORIES_KEY,
+from oml.const import LOG_IMAGE_FOLDER
+from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
+from oml.interfaces.metrics import (
+    IBasicMetric,
+    IBasicMetricDDP,
+    IMetricWithVisualization,
 )
-from oml.interfaces.metrics import IBasicMetric
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
 
 class MetricValCallback(Callback):
+    """
+    This is a wrapper which allows to use IBasicMetric with PyTorch Lightning.
+
+    """
+
     def __init__(
         self,
         metric: IBasicMetric,
@@ -29,14 +36,14 @@ class MetricValCallback(Callback):
         image_metrics_to_ignore: Iterable[str] = ("cmc",),
     ):
         """
-        It's a wrapper which allows to use IBasicMetric with PyTorch Lightning.
         Args:
-            metric: metric
-            loader_idx: loader idx
-            samples_in_getitem: Some of the datasets return several samples when calling __getitem__,
+            metric: Metric
+            loader_idx: Idx of the loader to calculate metric for
+            samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
                 so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
-                but for TriDataset, which return anchor, positive and negative images, this value must be equal to 3,
+                but for the dataset which explicitly return triplets, this value must be equal to 3,
                 for a dataset of pairs it must be equal to 2.
+
         """
 
         self.metric = metric
@@ -52,12 +59,15 @@ class MetricValCallback(Callback):
         self._collected_samples = 0
         self._ready_to_accumulate = False
 
+    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
+        return self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+
     def on_validation_batch_start(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
-                self._expected_samples = self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+                self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
                 self._collected_samples = 0
 
                 self.metric.setup(num_samples=self._expected_samples)
@@ -90,19 +100,11 @@ class MetricValCallback(Callback):
                 self.calc_and_log_metrics(pl_module)
 
     def _log_images(self, pl_module: pl.LightningDataModule) -> None:
-        if not isinstance(self.metric, EmbeddingMetrics):
+        if not isinstance(self.metric, IMetricWithVisualization):
             return
 
-        for metric_name in flatten_dict(self.metric.metrics):  # type: ignore
-            if any([ignore in metric_name for ignore in self.image_metrics_to_ignore]):
-                continue
-            if self.log_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
-                continue
-            fig = self.metric.get_plot_for_worst_queries(
-                metric_name=metric_name, topk_queries=LOG_TOPK_ROWS_PER_METRIC, topk_instances=LOG_TOPK_IMAGES_PER_ROW
-            )
-            metric_name_for_logging = metric_name.replace("/", "_")
-            log_str = f"{LOG_IMAGE_FOLDER}/epoch_{pl_module.current_epoch}/top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name_for_logging}"
+        for fig, metric_log_str in zip(*self.metric.visualize()):
+            log_str = f"{LOG_IMAGE_FOLDER}/epoch_{pl_module.current_epoch}/{metric_log_str}"
             if isinstance(pl_module.logger, NeptuneLogger):
                 pl_module.logger.experiment[log_str].log(File.as_image(fig))
             elif isinstance(pl_module.logger, TensorBoardLogger):
@@ -139,4 +141,59 @@ class MetricValCallback(Callback):
         )
 
 
-__all__ = ["MetricValCallback"]
+err_message_loaders_is_not_patched = (
+    "\nExperiment is runned in DDP mode, but some of validation dataloaders is not patched. Metric callback will "
+    "be incorrect  without patched loaders. Possible problems and solutions:\n"
+    f"1) If you use custom module inherited from 'pl.LightningModule', please replace ancestor class with "
+    f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n"
+    f"2) If you implement your own 'train_dataloader' or 'val_dataloader' methods for your module, you can add "
+    f"extra line of code for patching loader with '{patch_dataloader_to_ddp.__name__}' function\n"
+    f"3) If you call 'trainer.fit(...)' or 'trainer.validate(...)' method with loaders as argument, PytorchLightning "
+    f"will ignore loaders from 'train_dataloader' and 'val_dataloader' methods. Please avoid substituting loaders to "
+    f"this functions, instead use '{ModuleDDP.__name__}'\n"
+    f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
+    f"replacement in '{ModuleDDP.__name__}' constructor"
+)
+
+
+class MetricValCallbackDDP(MetricValCallback):
+    """
+    This is an extension to the regular callback that takes into account data reduction and padding
+    on the inference for each device in DDP setup
+
+    """
+
+    metric: IBasicMetricDDP
+
+    def __init__(self, metric: IBasicMetricDDP, *args: Any, **kwargs: Any):
+        assert isinstance(metric, IBasicMetricDDP), "Metric has to support DDP interface"
+        super().__init__(metric, *args, **kwargs)
+
+    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
+        len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
+        if trainer.world_size > 1:
+            # we use padding in DDP and sequential sampler for validation
+            len_dataset = ceil(len_dataset / trainer.world_size)
+        return self.samples_in_getitem * len_dataset
+
+    def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
+        # TODO: optimize to avoid duplication of metrics on all devices.
+        #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
+        #  because they need this metric for checkpointing
+        self.metric.sync()
+        return super().calc_and_log_metrics(pl_module=pl_module)
+
+    @staticmethod
+    def _check_loaders(trainer: "pl.Trainer") -> None:
+        if trainer.world_size > 1:
+            if not check_loaders_is_patched(trainer.val_dataloaders):
+                raise RuntimeError(err_message_loaders_is_not_patched)
+
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+
+__all__ = ["MetricValCallback", "MetricValCallbackDDP"]

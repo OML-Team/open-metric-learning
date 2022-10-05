@@ -1,7 +1,6 @@
 postfix: "deepfashion"
 
 seed: 42
-gpus: []
 precision: 32
 accelerator: cpu
 devices: 1
@@ -19,8 +18,9 @@ transforms_train:
     im_size: 64
 
 transforms_val:
-  name: norm_torch
-  args: {}
+  name: norm_resize_torch
+  args:
+    im_size: 64
 
 criterion:
   name: triplet_with_miner
@@ -51,6 +51,7 @@ bs_val: 2
 metric_args:
   cmc_top_k: [1, 5]
 
+metric_for_checkpointing: OVERALL/cmc/1
 log_only_main_category: True
 
 max_epochs: 2

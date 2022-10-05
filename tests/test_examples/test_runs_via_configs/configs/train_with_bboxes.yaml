@@ -1,7 +1,6 @@
 postfix: "deepfashion"
 
 seed: 42
-gpus: []
 precision: 32
 accelerator: cpu
 devices: 1
@@ -65,6 +64,7 @@ bs_val: 2
 metric_args:
   cmc_top_k: [1, 5]
 
+metric_for_checkpointing: OVERALL/cmc/5
 log_only_main_category: True
 
 max_epochs: 2
