@@ -9,6 +9,7 @@ on:
       - main # todo
 
 jobs:
+
   publish_on_pypi:
     runs-on: ubuntu-latest
     steps:
@@ -27,3 +28,16 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
         repository_url: https://upload.pypi.org/legacy/
         skip_existing: true
+
+  test_installation_from_pip:
+    needs: publish_on_pypi
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8.0"
+    - name: Installation
+      run: |
+        make pip_install_actual_oml
