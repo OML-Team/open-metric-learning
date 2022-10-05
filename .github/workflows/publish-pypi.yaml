@@ -26,3 +26,4 @@ jobs:
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
         repository_url: https://upload.pypi.org/legacy/
+        skip_existing: true
