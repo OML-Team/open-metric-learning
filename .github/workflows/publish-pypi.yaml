@@ -3,10 +3,10 @@ name: Push to PyPI
 on:
   pull_request:
     branches:
-      - main
+      - release
   push:
     branches:
-      - main
+      - release
 
 jobs:
 
