@@ -2,10 +2,10 @@ name: Push to PyPI
 
 on:
   pull_request:
-    tags:
+    tag:
       - release.*
   push:
-    tags:
+    tag:
       - release.*
 
 
