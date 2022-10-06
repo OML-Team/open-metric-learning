@@ -1,5 +1,5 @@
 from math import ceil
-from typing import Any, Iterable, Optional
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +14,8 @@ from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.metrics import (
     IBasicMetric,
     IBasicMetricDDP,
-    IMetricWithVisualization,
+    IBasicMetricDDPWithVisualization,
+    IBasicMetricWithVisualization,
 )
 from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
@@ -47,6 +48,9 @@ class MetricValCallback(Callback):
 
         self.metric = metric
         self.save_image_logs = save_image_logs
+        assert not save_image_logs or (
+            hasattr(metric, "ready_to_visualize") and metric.ready_to_visualize()  # type: ignore
+        )
 
         self.log_only_main_category = log_only_main_category
         self.loader_idx = loader_idx
@@ -97,7 +101,7 @@ class MetricValCallback(Callback):
                 self.calc_and_log_metrics(pl_module)
 
     def _log_images(self, pl_module: pl.LightningDataModule) -> None:
-        if not isinstance(self.metric, IMetricWithVisualization):
+        if not isinstance(self.metric, IBasicMetricWithVisualization):
             return
 
         for fig, metric_log_str in zip(*self.metric.visualize()):
@@ -160,10 +164,12 @@ class MetricValCallbackDDP(MetricValCallback):
 
     """
 
-    metric: IBasicMetricDDP
+    metric: Union[IBasicMetricDDP, IBasicMetricDDPWithVisualization]
 
-    def __init__(self, metric: IBasicMetricDDP, *args: Any, **kwargs: Any):
-        assert isinstance(metric, IBasicMetricDDP), "Metric has to support DDP interface"
+    def __init__(self, metric: Union[IBasicMetricDDP, IBasicMetricDDPWithVisualization], *args: Any, **kwargs: Any):
+        assert isinstance(
+            metric, (IBasicMetricDDP, IBasicMetricDDPWithVisualization)
+        ), "Metric has to support DDP interface"
         super().__init__(metric, *args, **kwargs)
 
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:

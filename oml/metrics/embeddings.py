@@ -32,9 +32,9 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import (
-    IBasicMetric,
     IBasicMetricDDP,
-    IMetricWithVisualization,
+    IBasicMetricDDPWithVisualization,
+    IBasicMetricWithVisualization,
 )
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
@@ -44,7 +44,7 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
+class EmbeddingMetrics(IBasicMetricWithVisualization):
     """
     This class accumulates the information from the batches and embeddings produced by the model
     at every batch in epoch. After all the samples have been stored, you can call the function
@@ -209,9 +209,12 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
             titles.append(log_str)
         return figures, titles
 
+    def ready_to_visualize(self) -> bool:
+        return PATHS_KEY in self.extra_keys
+
     def get_worst_queries_ids(self, metric_name: str, topk: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
-        return torch.topk(metric_values, topk)[1].flatten().tolist()
+        return torch.topk(metric_values, min(topk, len(metric_values)))[1].tolist()
 
     def get_plot_for_worst_queries(
         self, metric_name: str, topk_queries: int, topk_instances: int, verbose: bool = False
@@ -260,7 +263,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
 
         fig = plt.figure(figsize=(30, 30 / (top_k + 2 + 1) * len(query_ids)))
         for j, query_idx in enumerate(query_ids):
-            ids = torch.topk(dist_matrix_with_inf[query_idx], top_k)[1]
+            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:top_k]
 
             n_gt = self.mask_gt[query_idx].sum()  # type: ignore
 
@@ -311,7 +314,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricWithVisualization):
         return fig
 
 
-class EmbeddingMetricsDDP(EmbeddingMetrics, IBasicMetricDDP):
+class EmbeddingMetricsDDP(EmbeddingMetrics, IBasicMetricDDPWithVisualization):
     def sync(self) -> None:
         self.acc = self.acc.sync()
 

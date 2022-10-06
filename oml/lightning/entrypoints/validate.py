@@ -68,6 +68,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         is_query_key=valid_dataset.is_query_key,
         is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
+        visualization_metrics_to_ignore=cfg.get("metric_args", {}).pop("ignore", ()),
         **cfg.get("metric_args", {})
     )
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback

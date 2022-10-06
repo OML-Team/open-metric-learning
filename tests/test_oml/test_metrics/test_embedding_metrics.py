@@ -119,6 +119,26 @@ def worst_case() -> Any:
     return (batch1, batch2), (metrics, k)
 
 
+@pytest.fixture()
+def case_for_distance_check() -> Any:
+    batch1 = {
+        EMBEDDINGS_KEY: torch.stack([oh(1) * 2, oh(1) * 3, oh(0)]),  # 3d embedding pretends to be an error
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([True, True, True]),
+        IS_GALLERY_KEY: torch.tensor([False, False, False]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
+    }
+
+    batch2 = {
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([False, False, False]),
+        IS_GALLERY_KEY: torch.tensor([True, True, True]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
+    }
+    return (batch1, batch2), [1, 2, 0]
+
+
 def run_retrieval_metrics(case) -> None:  # type: ignore
     (batch1, batch2), (gt_metrics, k) = case
 
@@ -143,10 +163,6 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     metrics = calc.compute_metrics()
 
     check_dicts_of_dicts_are_equal(gt_metrics, metrics)
-
-    figures, titles = calc.visualize()
-
-    assert len(figures) == len(titles)
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
     assert torch.isclose(calc.distance_matrix.unique(), torch.tensor([0, math.sqrt(2)])).all()  # type: ignore
@@ -218,3 +234,27 @@ def test_mixed_epochs(perfect_case, imperfect_case, worst_case):  # type: ignore
     for case1 in cases:
         for case2 in cases:
             run_across_epochs(case1, case2)
+
+
+def test_worst_k(case_for_distance_check) -> None:  # type: ignore
+    (batch1, batch2), gt_ids = case_for_distance_check
+
+    num_samples = len(batch1[LABELS_KEY]) + len(batch2[LABELS_KEY])
+    calc = EmbeddingMetrics(
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
+        categories_key=CATEGORIES_KEY,
+        cmc_top_k=(),
+        precision_top_k=(),
+        map_top_k=(2,),
+    )
+
+    calc.setup(num_samples=num_samples)
+    calc.update_data(batch1)
+    calc.update_data(batch2)
+
+    calc.compute_metrics()
+
+    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
