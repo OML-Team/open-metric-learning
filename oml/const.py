@@ -34,6 +34,7 @@ CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 LOG_IMAGE_FOLDER = "image_logs"
 LOG_TOPK_ROWS_PER_METRIC = 5
 LOG_TOPK_IMAGES_PER_ROW = 5
+N_GT_SHOW_EMBEDDING_METRICS = 2
 
 STORAGE_URL = "https://oml.daloroserver.com"
 
@@ -49,8 +50,6 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 GRAY = (120, 120, 120)
 PAD_COLOR = (255, 255, 255)
-
-N_GT_SHOW_EMBEDDING_METRICS = 2
 
 TCfg = Union[Dict[str, Any], DictConfig]
 

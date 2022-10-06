@@ -62,7 +62,7 @@ def flatten_dict(
             continue
         new_key = str(parent_key) + sep + str(k) if parent_key else str(k)
         if isinstance(v, dict):
-            items.extend(flatten_dict(v, new_key, sep=sep).items())
+            items.extend(flatten_dict(v, new_key, sep=sep, ignored_keys=ignored_keys).items())
         else:
             items.append((new_key, v))
     return dict(items)

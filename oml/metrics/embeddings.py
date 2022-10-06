@@ -31,10 +31,7 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
     reduce_metrics,
 )
-from oml.interfaces.metrics import (
-    IBasicMetricDDPWithVisualization,
-    IBasicMetricWithVisualization,
-)
+from oml.interfaces.metrics import IMetricDDPWithVisualization, IMetricWithVisualization
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
@@ -43,7 +40,7 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-class EmbeddingMetrics(IBasicMetricWithVisualization):
+class EmbeddingMetrics(IMetricWithVisualization):
     """
     This class accumulates the information from the batches and embeddings produced by the model
     at every batch in epoch. After all the samples have been stored, you can call the function
@@ -313,7 +310,7 @@ class EmbeddingMetrics(IBasicMetricWithVisualization):
         return fig
 
 
-class EmbeddingMetricsDDP(EmbeddingMetrics, IBasicMetricDDPWithVisualization):
+class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDPWithVisualization):
     def sync(self) -> None:
         self.acc = self.acc.sync()
 

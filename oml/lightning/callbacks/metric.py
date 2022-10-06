@@ -11,12 +11,7 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
-from oml.interfaces.metrics import (
-    IBasicMetric,
-    IBasicMetricDDP,
-    IBasicMetricDDPWithVisualization,
-    IBasicMetricWithVisualization,
-)
+from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricWithVisualization
 from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
@@ -49,7 +44,7 @@ class MetricValCallback(Callback):
         self.metric = metric
         self.save_image_logs = save_image_logs
         assert not save_image_logs or (
-            hasattr(metric, "ready_to_visualize") and metric.ready_to_visualize()  # type: ignore
+            isinstance(metric, IMetricWithVisualization) and metric.ready_to_visualize()  # type: ignore
         )
 
         self.log_only_main_category = log_only_main_category
@@ -101,7 +96,7 @@ class MetricValCallback(Callback):
                 self.calc_and_log_metrics(pl_module)
 
     def _log_images(self, pl_module: pl.LightningDataModule) -> None:
-        if not isinstance(self.metric, IBasicMetricWithVisualization):
+        if not isinstance(self.metric, IMetricWithVisualization):
             return
 
         for fig, metric_log_str in zip(*self.metric.visualize()):
@@ -164,12 +159,10 @@ class MetricValCallbackDDP(MetricValCallback):
 
     """
 
-    metric: Union[IBasicMetricDDP, IBasicMetricDDPWithVisualization]
+    metric: IMetricDDP
 
-    def __init__(self, metric: Union[IBasicMetricDDP, IBasicMetricDDPWithVisualization], *args: Any, **kwargs: Any):
-        assert isinstance(
-            metric, (IBasicMetricDDP, IBasicMetricDDPWithVisualization)
-        ), "Metric has to support DDP interface"
+    def __init__(self, metric: IMetricDDP, *args: Any, **kwargs: Any):
+        assert isinstance(metric, IMetricDDP), "Metric has to support DDP interface"
         super().__init__(metric, *args, **kwargs)
 
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
