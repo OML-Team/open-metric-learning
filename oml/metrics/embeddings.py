@@ -204,7 +204,7 @@ class EmbeddingMetrics(IBasicMetricWithVisualization):
             fig = self.get_plot_for_worst_queries(
                 metric_name=metric_name, topk_queries=LOG_TOPK_ROWS_PER_METRIC, topk_instances=LOG_TOPK_IMAGES_PER_ROW
             )
-            log_str = f"top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name}"
+            log_str = f"top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name}".replace("/", "_")
             figures.append(fig)
             titles.append(log_str)
         return figures, titles
