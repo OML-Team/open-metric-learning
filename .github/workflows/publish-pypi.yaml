@@ -1,9 +1,6 @@
 name: Push to PyPI
 
 on:
-  pull_request:
-    tag:
-      - release.*
   push:
     tag:
       - release.*

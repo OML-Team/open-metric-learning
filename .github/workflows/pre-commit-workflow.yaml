@@ -5,13 +5,11 @@ on:
   pull_request:
     branches:
       - main
-      - release
     paths-ignore:
       - 'README.md'
   push:
     branches:
       - main
-      - release
     paths-ignore:
       - 'README.md'
 
