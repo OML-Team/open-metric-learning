@@ -4,9 +4,14 @@ on:
   pull_request:
     branches:
       - release
+    tags:
+      - release.*
   push:
     branches:
       - release
+    tags:
+      - release.*
+
 
 jobs:
 
