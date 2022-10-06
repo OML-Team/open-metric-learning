@@ -7,8 +7,8 @@ matplotlib==3.5.2
 neptune-client==0.14.2
 numpy==1.21.6
 omegaconf==2.2.2
-opencv-python==4.5.1.48
-pandas==1.2.3
+opencv-python==4.5.4.60
+pandas==1.1.5
 pillow==9.2.0
 pytest==6.2.2
 python-dotenv==0.17.0
