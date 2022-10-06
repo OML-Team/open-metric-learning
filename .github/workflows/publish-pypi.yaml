@@ -15,7 +15,7 @@ jobs:
 
     - name: Exit if not on main branch
       if: endsWith(github.ref, 'main') == false
-      run: exit -1
+      run: exit 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -34,7 +34,6 @@ jobs:
         skip_existing: true
 
 
-
   test_installation_from_pypi:
     runs-on: ubuntu-latest
     needs: publish_on_pypi
@@ -44,7 +43,7 @@ jobs:
 
     - name: Exit if not on main branch
       if: endsWith(github.ref, 'main') == false
-      run: exit -1
+      run: exit 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
