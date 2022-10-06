@@ -1,7 +1,7 @@
 import math
 from collections import defaultdict
 from functools import partial
-from typing import Any
+from typing import Any, Tuple
 
 import pytest
 import torch
@@ -13,6 +13,7 @@ from oml.const import (
     IS_QUERY_KEY,
     LABELS_KEY,
     OVERALL_CATEGORIES_KEY,
+    PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
@@ -258,3 +259,20 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
     calc.compute_metrics()
 
     assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
+
+
+@pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])
+def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
+    calc = EmbeddingMetrics(
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
+        categories_key=CATEGORIES_KEY,
+        extra_keys=extra_keys,
+        cmc_top_k=(1,),
+        precision_top_k=(),
+        map_top_k=(),
+    )
+
+    assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys

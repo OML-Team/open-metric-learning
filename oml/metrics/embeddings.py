@@ -32,7 +32,6 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import (
-    IBasicMetricDDP,
     IBasicMetricDDPWithVisualization,
     IBasicMetricWithVisualization,
 )
