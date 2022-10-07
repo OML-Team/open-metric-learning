@@ -5,7 +5,7 @@ import pytest
 import torch
 
 from oml.interfaces.miners import TLabels
-from oml.miners.inbactch_hard_cluster import HardClusterMiner
+from oml.miners.inbatch_hard_cluster import HardClusterMiner
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
 
 

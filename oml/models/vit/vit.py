@@ -6,20 +6,28 @@ import torch
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
-from oml.const import MEAN, STD, TNormParam
+from oml.const import MEAN, STD, STORAGE_URL, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.hubconf import dino_vitb8  # type: ignore
-from oml.models.vit.hubconf import dino_vitb16  # type: ignore
-from oml.models.vit.hubconf import dino_vits8  # type: ignore
-from oml.models.vit.hubconf import dino_vits16  # type: ignore
+from oml.models.vit.hubconf import (  # type: ignore
+    dino_vitb8,
+    dino_vitb16,
+    dino_vits8,
+    dino_vits16,
+)
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
-from oml.utils.io import download_checkpoint
+from oml.utils.io import download_checkpoint_one_of
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
+_STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 
 class ViTExtractor(IExtractor):
+    """
+    The base class for the extractors that follow VisualTransformer architecture.
+
+    """
+
     constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
 
     pretrained_models = {
@@ -29,10 +37,26 @@ class ViTExtractor(IExtractor):
         "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
         "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
         # our pretrained checkpoints
-        "vits16_inshop": ("1Fjf9SlhIgXi-YBf-39BWfd16rsha0qYZ", "384ead", "vits16_inshop.ckpt"),
-        "vits16_sop": ("1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt", "85cfa5", "vits16_sop.ckpt"),
-        "vits16_cub": ("1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G", "e82633", "vits16_cub.ckpt"),
-        "vits16_cars": ("1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg", "9f1e59", "vits16_cars.ckpt"),
+        "vits16_inshop": (
+            [f"{_STORAGE_CKPTS}/inshop/vits16_inshop.ckpt", "1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste"],
+            "e1017d",
+            "vits16_inshop.ckpt",
+        ),
+        "vits16_sop": (
+            [f"{_STORAGE_CKPTS}/sop/vits16_sop.ckpt", "1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt"],
+            "85cfa5",
+            "vits16_sop.ckpt",
+        ),
+        "vits16_cub": (
+            [f"{_STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
+            "e82633",
+            "vits16_cub.ckpt",
+        ),
+        "vits16_cars": (
+            [f"{_STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
+            "9f1e59",
+            "vits16_cars.ckpt",
+        ),
     }
 
     def __init__(
@@ -45,14 +69,15 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or the special key to download pretrained checkpoint, use None to randomly initialize model's weights
-            arch: "vits8", "vits16", "vitb8", "vitb16"; check all of the available options in self.constructor
-            normalise_features: if normalise features
-            use_multi_scale: if use multi scale
-            strict_load: if strict load from checkpoint
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly initialize model's weights.
+             You can check the available pretrained checkpoints in ``self.pretrained_models``.
+            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options in ``self.constructors``
+            normalise_features: Set ``True`` to normalise output features
+            use_multi_scale: Set ``True`` to use multiscale (the analogue of test time augmentations)
+            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """
-        assert arch in self.constructors.keys()
+        assert arch in self.constructors
         super(ViTExtractor, self).__init__()
 
         self.normalise_features = normalise_features
@@ -65,18 +90,18 @@ class ViTExtractor(IExtractor):
         if weights is None:
             return
 
-        if weights in self.pretrained_models.keys():
+        if weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            weights = download_checkpoint_one_of(url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname)  # type: ignore
 
         ckpt = torch.load(weights, map_location="cpu")
-        state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
+        state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
         self.model.load_state_dict(ckpt, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mscale:
-            x = self.multi_scale(x)
+            x = self._multi_scale(x)
         else:
             x = self.model(x)
 
@@ -90,7 +115,7 @@ class ViTExtractor(IExtractor):
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)
 
-    def multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
+    def _multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
         # code from the original DINO
         # TODO: check grads later
         v = torch.zeros((len(samples), self.feat_dim), device=samples.device)
@@ -108,6 +133,10 @@ class ViTExtractor(IExtractor):
         return v
 
     def draw_attention(self, image: np.ndarray) -> np.ndarray:
+        """
+        Visualization of the multi-head attention on a particular image.
+
+        """
         return vis_vit(vit=self, image=image)
 
 
@@ -133,19 +162,6 @@ class ViTWithLinearExtractor(ViTExtractor):
 
 
 def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
-    """
-    Visualisation of multi heads attention.
-
-    Args:
-        vit: VIT model
-        image: Input image
-        mean: MEAN for the image normalisation
-        std: STD for the image normalisation
-
-    Returns:
-        Image with attention maps drawn on top of the input image
-
-    """
     vit.eval()
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]

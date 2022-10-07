@@ -5,17 +5,19 @@ on:
   pull_request:
     branches:
       - main
+      - release
     paths-ignore:
       - 'README.md'
   push:
     branches:
       - main
+      - release
     paths-ignore:
       - 'README.md'
 
 
 jobs:
-  oml_tests:
+  tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout

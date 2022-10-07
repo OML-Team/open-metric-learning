@@ -1,11 +1,12 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+import albumentations as albu
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from oml.const import PATHS_KEY, X1_KEY, X2_KEY, Y1_KEY, Y2_KEY
+from oml.const import PAD_COLOR, PATHS_KEY, X1_KEY, X2_KEY, Y1_KEY, Y2_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.images.images import imread_cv2
 
@@ -38,6 +39,10 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     return im_ret
 
 
+def square_pad(img: np.ndarray) -> np.ndarray:
+    return albu.functional.pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=PAD_COLOR)
+
+
 class RetrievalVisualizer:
     def __init__(
         self,
@@ -50,6 +55,7 @@ class RetrievalVisualizer:
         mask_gt: torch.Tensor,
         query_bboxes: torch.Tensor,
         gallery_bboxes: torch.Tensor,
+        verbose: bool = True,
     ):
         """
         This class allows you to visualize the searching results for the desired queries and
@@ -81,8 +87,10 @@ class RetrievalVisualizer:
         self.query_bboxes = query_bboxes
         self.gallery_bboxes = gallery_bboxes
 
+        self.verbose = verbose
+
     @classmethod
-    def from_embeddings_metric(cls, emb: EmbeddingMetrics) -> "RetrievalVisualizer":
+    def from_embeddings_metric(cls, emb: EmbeddingMetrics, verbose: bool = True) -> "RetrievalVisualizer":
         """
         In some cases, you may prefer to instantiate Visualizer from
         >>> EmbeddingMetrics
@@ -102,8 +110,14 @@ class RetrievalVisualizer:
         query_labels = emb.acc.storage[emb.labels_key][is_query]  # type: ignore
         gallery_labels = emb.acc.storage[emb.labels_key][is_gallery]  # type: ignore
 
+        fake_coord = np.array([float("nan")] * len(is_query))
         bboxes = list(
-            zip(emb.acc.storage[X1_KEY], emb.acc.storage[Y1_KEY], emb.acc.storage[X2_KEY], emb.acc.storage[Y2_KEY])
+            zip(
+                emb.acc.storage.get(X1_KEY, fake_coord),
+                emb.acc.storage.get(Y1_KEY, fake_coord),
+                emb.acc.storage.get(X2_KEY, fake_coord),
+                emb.acc.storage.get(Y2_KEY, fake_coord),
+            )
         )
 
         query_bboxes = torch.tensor(bboxes)[is_query]
@@ -119,9 +133,15 @@ class RetrievalVisualizer:
             mask_gt=emb.mask_gt,
             query_bboxes=query_bboxes,
             gallery_bboxes=gallery_bboxes,
+            verbose=verbose,
         )
 
-    def visualise(self, query_idx: int, top_k: int, skip_no_errors: bool = False) -> None:
+    def visualise(
+        self,
+        query_idx: int,
+        top_k: int,
+        skip_no_errors: bool = False,
+    ) -> Optional[plt.Figure]:
         """
         Visualize the predictions for the query with the index <query_idx>.
 
@@ -134,27 +154,31 @@ class RetrievalVisualizer:
         ids = torch.argsort(self.dist_matrix[query_idx])[:top_k]
 
         if skip_no_errors and torch.all(self.mask_gt[query_idx, ids]):
-            print(f"No errors for {query_idx}")
-            return
+            if self.verbose:
+                print(f"No errors for {query_idx}")
+            return None
 
         n_gt = self.mask_gt[query_idx].sum()
         ngt_show = 2
-        plt.figure(figsize=(30, 15))
+        fig = plt.figure(figsize=(30, 15))
 
         plt.subplot(1, top_k + 1 + ngt_show, 1)
 
         img = self.get_img_with_bbox(self.query_paths[query_idx], self.query_bboxes[query_idx], BLUE)
-        print("Q  ", self.query_paths[query_idx])
+        img = square_pad(img)
+        if self.verbose:
+            print("Q  ", self.query_paths[query_idx])
         plt.imshow(img)
         plt.title(f"Query, #gt = {n_gt}")
         plt.axis("off")
 
         for i, idx in enumerate(ids):
             color = GREEN if self.mask_gt[query_idx, idx] else RED
-            print("G", i, self.gallery_paths[idx])
+            if self.verbose:
+                print("G", i, self.gallery_paths[idx])
             plt.subplot(1, top_k + ngt_show + 1, i + 2)
             img = self.get_img_with_bbox(self.gallery_paths[idx], self.gallery_bboxes[idx], color)
-
+            img = square_pad(img)
             plt.title(f"{i} - {round(self.dist_matrix[query_idx, idx].item(), 3)}")
             plt.imshow(img)
             plt.axis("off")
@@ -164,11 +188,13 @@ class RetrievalVisualizer:
         for i, gt_idx in enumerate(gt_ids):
             plt.subplot(1, top_k + ngt_show + 1, i + top_k + 2)
             img = self.get_img_with_bbox(self.gallery_paths[gt_idx], self.gallery_bboxes[gt_idx], GRAY)
+            img = square_pad(img)
             plt.title("GT " + str(round(self.dist_matrix[query_idx, gt_idx].item(), 3)))
             plt.imshow(img)
             plt.axis("off")
 
         plt.show()
+        return fig
 
     @staticmethod
     def get_img_with_bbox(im_name: str, bbox: torch.Tensor, color: TColor) -> np.ndarray:

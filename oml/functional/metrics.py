@@ -24,17 +24,21 @@ def calc_retrieval_metrics(
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
+
     Args:
-        distances: Distance matrix shape of (query_size, gallery_size)
-        mask_gt: mask_gt[i,j] indicates if for i-th query j-th gallery is the correct prediction
+        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
+        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
-        cmc_top_k: k values to calculate cmc@k
-        precision_top_k: k values to calculate precision@k
-        map_top_k: k values to calculate map@k
-        reduce: if False return metrics for each query without averaging
+        cmc_top_k: Tuple of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
+        precision_top_k: Tuple of  ``k`` values to calculate ``precision@k``
+        map_top_k: Tuple of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
+        reduce: If ``False`` return metrics for each query without averaging
+        check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for each of the queries
+
     Returns:
-        Dictionary with metrics.
+        Metrics dictionary.
+
     """
     top_k_args = [cmc_top_k, precision_top_k, map_top_k]
 

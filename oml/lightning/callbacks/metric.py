@@ -1,14 +1,22 @@
+from math import ceil
 from typing import Any, Optional
 
 import pytorch_lightning as pl
 from pytorch_lightning import Callback
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
-from oml.interfaces.metrics import IBasicMetric
+from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
+from oml.interfaces.metrics import IBasicMetric, IBasicMetricDDP
+from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
 
 class MetricValCallback(Callback):
+    """
+    This is a wrapper which allows to use IBasicMetric with PyTorch Lightning.
+
+    """
+
     def __init__(
         self,
         metric: IBasicMetric,
@@ -17,15 +25,14 @@ class MetricValCallback(Callback):
         samples_in_getitem: int = 1,
     ):
         """
-        It's a wrapper which allows to use IBasicMetric with PyTorch Lightning.
-
         Args:
-            metric: metric
-            loader_idx: loader idx
-            samples_in_getitem: Some of the datasets return several samples when calling __getitem__,
+            metric: Metric
+            loader_idx: Idx of the loader to calculate metric for
+            samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
                 so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
-                but for TriDataset, which return anchor, positive and negative images, this value must be equal to 3,
+                but for the dataset which explicitly return triplets, this value must be equal to 3,
                 for a dataset of pairs it must be equal to 2.
+
         """
         self.metric = metric
         self.log_only_main_category = log_only_main_category
@@ -36,12 +43,15 @@ class MetricValCallback(Callback):
         self._collected_samples = 0
         self._ready_to_accumulate = False
 
+    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
+        return self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+
     def on_validation_batch_start(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
-                self._expected_samples = self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+                self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
                 self._collected_samples = 0
 
                 self.metric.setup(num_samples=self._expected_samples)
@@ -96,4 +106,59 @@ class MetricValCallback(Callback):
         )
 
 
-__all__ = ["MetricValCallback"]
+err_message_loaders_is_not_patched = (
+    "\nExperiment is runned in DDP mode, but some of validation dataloaders is not patched. Metric callback will "
+    "be incorrect  without patched loaders. Possible problems and solutions:\n"
+    f"1) If you use custom module inherited from 'pl.LightningModule', please replace ancestor class with "
+    f"our '{ModuleDDP.__name__}', which automaticaly patches your loaders\n"
+    f"2) If you implement your own 'train_dataloader' or 'val_dataloader' methods for your module, you can add "
+    f"extra line of code for patching loader with '{patch_dataloader_to_ddp.__name__}' function\n"
+    f"3) If you call 'trainer.fit(...)' or 'trainer.validate(...)' method with loaders as argument, PytorchLightning "
+    f"will ignore loaders from 'train_dataloader' and 'val_dataloader' methods. Please avoid substituting loaders to "
+    f"this functions, instead use '{ModuleDDP.__name__}'\n"
+    f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
+    f"replacement in '{ModuleDDP.__name__}' constructor"
+)
+
+
+class MetricValCallbackDDP(MetricValCallback):
+    """
+    This is an extension to the regular callback that takes into account data reduction and padding
+    on the inference for each device in DDP setup
+
+    """
+
+    metric: IBasicMetricDDP
+
+    def __init__(self, metric: IBasicMetricDDP, *args: Any, **kwargs: Any):
+        assert isinstance(metric, IBasicMetricDDP), "Metric has to support DDP interface"
+        super().__init__(metric, *args, **kwargs)
+
+    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
+        len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
+        if trainer.world_size > 1:
+            # we use padding in DDP and sequential sampler for validation
+            len_dataset = ceil(len_dataset / trainer.world_size)
+        return self.samples_in_getitem * len_dataset
+
+    def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
+        # TODO: optimize to avoid duplication of metrics on all devices.
+        #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
+        #  because they need this metric for checkpointing
+        self.metric.sync()
+        return super().calc_and_log_metrics(pl_module=pl_module)
+
+    @staticmethod
+    def _check_loaders(trainer: "pl.Trainer") -> None:
+        if trainer.world_size > 1:
+            if not check_loaders_is_patched(trainer.val_dataloaders):
+                raise RuntimeError(err_message_loaders_is_not_patched)
+
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+
+__all__ = ["MetricValCallback", "MetricValCallbackDDP"]

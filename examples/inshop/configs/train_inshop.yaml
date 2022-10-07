@@ -34,6 +34,7 @@ metric_args:
   cmc_top_k: [1]
   map_top_k: [5]
 
+metric_for_checkpointing: OVERALL/cmc/1
 log_only_main_category: True
 
 # model:
@@ -69,9 +70,8 @@ criterion:
 optimizer:
   name: adam
   args:
-    # this lr was choosed due to heuristic batch_size * N -> lr * sqrt(N)
-    lr: 7e-5 # if you provide scheduler this parameter will be ignored
-    weight_decay: 1e-5
+    lr: 1e-5
+
 
 scheduling:
   scheduler_interval: epoch

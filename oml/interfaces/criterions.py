@@ -6,11 +6,16 @@ from torch.nn import Module
 
 
 class ITripletLossWithMiner(Module):
+    """
+    Base class for TripletLoss combined with Miner.
+
+    """
+
     def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
         """
         Args:
-            features: Features with shape [batch_size, features_dim]
-            labels: Labels of samples which will be used to form triplets
+            features: Features with the shape ``[batch_size, features_dim]``
+            labels: Labels with the size of ``batch_size``
 
         Returns:
             Loss value
@@ -24,3 +29,6 @@ class ICriterion(Module):
     def cirt_name(self) -> str:
         # class name to snake case
         return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower().replace("_loss", "")
+
+
+__all__ = ["ITripletLossWithMiner", "ICriterion"]

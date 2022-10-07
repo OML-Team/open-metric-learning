@@ -35,7 +35,7 @@ def construct_df(annots: Dict[str, np.ndarray], meta: pd.DataFrame, path_to_imgs
     return annots
 
 
-def build_cars196_df(dataset_root: Path) -> pd.DataFrame:
+def build_cars196_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     dataset_root = Path(dataset_root)
 
     cars_meta = dataset_root / "devkit" / "cars_meta.mat"
@@ -63,7 +63,11 @@ def build_cars196_df(dataset_root: Path) -> pd.DataFrame:
     test_annots["split"] = "validation"
 
     df = pd.concat((train_annots, test_annots))
-    df = df[["label", "path", "split", "is_query", "is_gallery", "x_1", "x_2", "y_1", "y_2"]]
+
+    cols_to_pick = ["label", "path", "split", "is_query", "is_gallery"]
+    if not no_bboxes:
+        cols_to_pick.extend(["x_1", "x_2", "y_1", "y_2"])
+    df = df[cols_to_pick]
 
     df = df.rename(
         columns={
@@ -86,14 +90,16 @@ def build_cars196_df(dataset_root: Path) -> pd.DataFrame:
 def get_argparser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("--dataset_root", type=Path)
+    parser.add_argument("--no_bboxes", action="store_true")
     return parser
 
 
 def main() -> None:
     print("Cars dataset preparation started...")
     args = get_argparser().parse_args()
-    df = build_cars196_df(args.dataset_root)
-    df.to_csv(args.dataset_root / "df.csv", index=None)
+    df = build_cars196_df(args.dataset_root, args.no_bboxes)
+    fname = "df_no_bboxes" if args.no_bboxes else "df"
+    df.to_csv(args.dataset_root / f"{fname}.csv", index=None)
     print("Cars dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")
 

@@ -1,12 +1,10 @@
-from typing import Any, Dict, Union
-
-import albumentations as albu
-import torchvision.transforms as t
+from typing import Any, Dict
 
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
     get_normalisation_albu,
     get_normalisation_resize_albu,
+    get_normalisation_resize_albu_clip,
 )
 from oml.transforms.images.torchvision.transforms import (
     get_arcface_test_transforms,
@@ -15,14 +13,14 @@ from oml.transforms.images.torchvision.transforms import (
     get_normalisation_resize_torch,
     get_normalisation_torch,
 )
+from oml.transforms.images.utils import TTransforms
 from oml.utils.misc import TCfg, dictconfig_to_dict
-
-TTransforms = Union[albu.Compose, t.Compose]
 
 TRANSFORMS_ALBU = {
     "augs_albu": get_augs_albu,
     "norm_albu": get_normalisation_albu,
     "norm_resize_albu": get_normalisation_resize_albu,
+    "norm_resize_albu_clip": get_normalisation_resize_albu_clip,
 }
 
 TRANSFORMS_TORCH = {
@@ -47,7 +45,6 @@ def get_transforms_by_cfg(cfg: TCfg) -> TTransforms:
 
 
 __all__ = [
-    "TTransforms",
     "TRANSFORMS_TORCH",
     "TRANSFORMS_ALBU",
     "TRANSFORMS_REGISTRY",

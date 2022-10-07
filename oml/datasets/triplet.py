@@ -85,7 +85,7 @@ class TriDataset(Dataset):
 
         assert len(triplet) == 3
 
-        images = tuple(map(lambda x: self.get_image(self.im_root / Path(x).name), triplet))
+        images = tuple(map(lambda x: self.get_image(self.im_root / x), triplet))
 
         tensors = tuple(map(lambda x: self.transforms(image=x)["image"], images))
 

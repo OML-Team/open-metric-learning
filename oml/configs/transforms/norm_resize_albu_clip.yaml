@@ -1,0 +1,3 @@
+name: norm_resize_albu_clip
+args:
+  im_size: 224

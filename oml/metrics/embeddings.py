@@ -10,7 +10,7 @@ from oml.functional.metrics import (
     calc_mask_to_ignore,
     calc_retrieval_metrics,
 )
-from oml.interfaces.metrics import IBasicMetric
+from oml.interfaces.metrics import IBasicMetric, IBasicMetricDDP
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 
@@ -18,6 +18,15 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
 class EmbeddingMetrics(IBasicMetric):
+    """
+    This class accumulates the information from the batches and embeddings produced by the model
+    at every batch in epoch. After all the samples have been stored, you can call the function
+    which computes retrievals metrics. To get the needed information from the batches, it uses
+    keys which have to be provided as init arguments. Please, check the usage example in
+    `Readme`.
+
+    """
+
     metric_name = ""
 
     def __init__(
@@ -35,11 +44,6 @@ class EmbeddingMetrics(IBasicMetric):
         check_dataset_validity: bool = True,
     ):
         """
-        This class accumulates the information from the batches and embeddings produced by the model
-        at every batch in epoch. After all of the samples have been stored you can call the function
-        which computes retrievals metrics. To get the needed information from the batches it uses
-        keys which have to be provided as init arguments. Please, check the example in the <Using pure PyTorch>
-        section in the main Readme.md.
 
         Args:
             embeddings_key: Key to take the embeddings from the batches
@@ -47,12 +51,12 @@ class EmbeddingMetrics(IBasicMetric):
             is_query_key: Key to take the information whether every batch sample belongs to the query
             is_gallery_key: Key to take the information whether every batch sample belongs to the gallery
             extra_keys: Keys to accumulate some additional information from the batches
-            cmc_top_k: Values of k to compute CMC@k metrics
-            precision_top_k: Values of k to compute Precision@k metrics
-            map_top_k: Values of k to compute MAP@k metrics
-            categories_key: Key to take the samples categories from the batches (if you have ones)
-            postprocessor: IPostprocessor which applies some techniques like query reranking
-            check_dataset_validity: check if all queries have their galleries
+            cmc_top_k: Values of ``k`` to compute ``CMC@k`` metrics
+            precision_top_k: Values of ``k`` to compute ``Precision@k`` metrics
+            map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
+            categories_key: Key to take the samples' categories from the batches (if you have ones)
+            postprocessor: Postprocessor which applies some techniques like query reranking
+            check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
 
         """
         self.embeddings_key = embeddings_key
@@ -155,4 +159,9 @@ class EmbeddingMetrics(IBasicMetric):
         return metrics
 
 
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]
+class EmbeddingMetricsDDP(EmbeddingMetrics, IBasicMetricDDP):
+    def sync(self) -> None:
+        self.acc = self.acc.sync()
+
+
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "EmbeddingMetricsDDP"]

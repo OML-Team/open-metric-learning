@@ -1,15 +1,13 @@
 import os
 import random
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple
 
 import dotenv
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from oml.const import DOTENV_PATH
-
-TCfg = Union[Dict[str, Any], DictConfig]
+from oml.const import DOTENV_PATH, TCfg
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -28,7 +26,7 @@ def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     return inds
 
 
-def set_global_seed(seed: int, num_workers: int = 0) -> None:
+def set_global_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
 
@@ -39,8 +37,7 @@ def set_global_seed(seed: int, num_workers: int = 0) -> None:
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
-    os.environ["PL_GLOBAL_SEED"] = str(seed)
-    os.environ["PL_SEED_WORKERS"] = str(num_workers)
+    os.environ["PL_SEED_WORKERS"] = str(1)
 
     try:
         import torch_xla.core.xla_model as xm
@@ -119,7 +116,6 @@ __all__ = [
     "one_hot",
     "flatten_dict",
     "load_dotenv",
-    "TCfg",
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",

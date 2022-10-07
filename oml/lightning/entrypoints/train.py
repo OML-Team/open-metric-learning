@@ -14,16 +14,16 @@ from oml.const import (
     PROJECT_ROOT,
     TCfg,
 )
-from oml.datasets.retrieval import get_retrieval_datasets
+from oml.datasets.base import get_retrieval_datasets
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.models import IExtractor
-from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import (
+    check_is_config_for_ddp,
     parse_engine_params_from_config,
-    raise_error_if_ddp,
 )
-from oml.lightning.modules.retrieval import RetrievalModule
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
+from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
@@ -42,17 +42,17 @@ def pl_train(cfg: TCfg) -> None:
     """
     This is an entrypoint for the model training in metric learning setup.
 
-    The config can be specified as a dictionary or with hydra: https://hydra.cc/
-    For more details look at examples/README.md
+    The config can be specified as a dictionary or with hydra: https://hydra.cc/.
+    For more details look at ``examples/README.md``
 
     """
     cfg = dictconfig_to_dict(cfg)
     trainer_engine_params = parse_engine_params_from_config(cfg)
-    raise_error_if_ddp(trainer_engine_params)
+    is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
     pprint(cfg)
 
-    set_global_seed(cfg["seed"], cfg["num_workers"])
+    set_global_seed(cfg["seed"])
 
     cwd = Path.cwd()
 
@@ -106,27 +106,18 @@ def pl_train(cfg: TCfg) -> None:
 
     # unpack scheduler to the Lightning format
     if cfg.get("scheduling"):
-        scheduler_args = {
+        scheduler_kwargs = {
             "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
             "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
             "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
             "scheduler_monitor_metric": cfg["scheduling"].get("monitor_metric", None),
         }
     else:
-        scheduler_args = {"scheduler": None}
+        scheduler_kwargs = {"scheduler": None}
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
     # nah, it really shouldn't
     # assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
-
-    pl_model = RetrievalModule(
-        model=extractor,
-        criterion=criterion,
-        optimizer=optimizer,
-        input_tensors_key=train_dataset.input_tensors_key,
-        labels_key=train_dataset.labels_key,
-        **scheduler_args,
-    )
 
     if sampler is None:
         loader_train = DataLoader(
@@ -145,7 +136,24 @@ def pl_train(cfg: TCfg) -> None:
 
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    metrics_calc = EmbeddingMetrics(
+    module_kwargs = scheduler_kwargs
+    if is_ddp:
+        module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
+        module_constructor = RetrievalModuleDDP
+    else:
+        module_constructor = RetrievalModule  # type: ignore
+
+    pl_model = module_constructor(
+        model=extractor,
+        criterion=criterion,
+        optimizer=optimizer,
+        input_tensors_key=train_dataset.input_tensors_key,
+        labels_key=train_dataset.labels_key,
+        **module_kwargs,
+    )
+
+    metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
+    metrics_calc = metrics_constructor(
         embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
         labels_key=valid_dataset.labels_key,
@@ -155,10 +163,13 @@ def pl_train(cfg: TCfg) -> None:
         **cfg.get("metric_args", {}),
     )
 
-    metrics_clb = MetricValCallback(metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True))
+    metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
+    metrics_clb = metrics_clb_constructor(
+        metric=metrics_calc, log_only_main_category=cfg.get("log_only_main_category", True)
+    )
     ckpt_clb = pl.callbacks.ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
-        monitor=f"{OVERALL_CATEGORIES_KEY}/cmc/1",
+        monitor=cfg.get("metric_for_checkpointing", f"{OVERALL_CATEGORIES_KEY}/cmc/1"),
         mode="max",
         save_top_k=1,
         verbose=True,
@@ -204,7 +215,10 @@ def pl_train(cfg: TCfg) -> None:
         **trainer_engine_params,
     )
 
-    trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+    if is_ddp:
+        trainer.fit(model=pl_model)
+    else:
+        trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
 
 __all__ = ["pl_train"]

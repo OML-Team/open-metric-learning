@@ -2,7 +2,31 @@ JUPYTER_CMD=export TEST_RUN=1; jupyter nbconvert --to html --output-dir /tmp
 
 DATA_DIR ?= data
 RUNTIME ?= cpu
-IMAGE_NAME = omlteam/oml:$(RUNTIME)
+IMAGE_NAME ?= omlteam/oml:$(RUNTIME)
+
+README_FILE ?= README.md
+
+OML_VERSION=$(shell cat oml/__init__.py | sed 's,.*__version__ = "\(.*\)".*,\1,')
+
+.PHONY: build_readme
+build_readme:
+	rm -f ${README_FILE}
+	touch ${README_FILE}
+	cat docs/readme/header.md >> ${README_FILE}
+	echo "\n## FAQ\n" >> ${README_FILE}
+	cat docs/readme/faq.md >> ${README_FILE}
+	echo "\n## Documentation\n" >> ${README_FILE}
+	cat docs/readme/documentation.md >> ${README_FILE}
+	echo "\n## Installation\n" >> ${README_FILE}
+	cat docs/readme/installation.md >> ${README_FILE}
+	echo "\n## Get started using Config API\n" >> ${README_FILE}
+	cat docs/readme/get_started_config.md >> ${README_FILE}
+	echo "\n## Get started using Python\n" >> ${README_FILE}
+	cat docs/readme/python_examples.md >> ${README_FILE}
+	echo "\n## Zoo\n" >>${README_FILE}
+	cat docs/readme/zoo.md >> ${README_FILE}
+	echo "\n## Acknowledgments\n" >> ${README_FILE}
+	cat docs/readme/acknowledgments.md >> ${README_FILE}
 
 # ====================================== TESTS ======================================
 
@@ -37,11 +61,18 @@ docker_build:
 docker_tests:
 	docker run -t $(IMAGE_NAME) make run_tests
 
-.PHONY: upload_to_pip
-upload_to_pip:
+.PHONY: build_wheel
+build_wheel:
 	python -m pip install --upgrade pip
 	python3 -m pip install --upgrade twine
 	pip install --upgrade pip setuptools wheel
 	rm -rf dist build open_metric_learning.egg-info
 	python3 setup.py sdist bdist_wheel
+
+.PHONY: upload_to_pip
+upload_to_pip: build_wheel
 	twine upload dist/*
+
+.PHONY: pip_install_actual_oml
+pip_install_actual_oml:
+	pip install open-metric-learning==$(OML_VERSION)

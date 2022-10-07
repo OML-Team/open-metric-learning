@@ -1,7 +1,6 @@
 import warnings
 from collections import defaultdict
 from pathlib import Path
-from pprint import pprint
 from typing import Optional, Union
 
 import numpy as np
@@ -27,13 +26,13 @@ def check_retrieval_dataframe_format(
     df: Union[Path, str, pd.DataFrame], dataset_root: Optional[Path] = None, sep: str = ",", verbose: bool = True
 ) -> None:
     """
-    Function checks if the data is in the correct format.
+    Function checks if the dataset is in the correct format.
 
     Args:
-        df: Path to .csv file or pandas DataFrame
-        dataset_root: Path to the dataset root
-        sep: Separator used in .csv
-        verbose: Set True if you want to see warnings
+        df: Path to ``.csv`` file or pandas DataFrame
+        dataset_root: Path to the dataset root, set ``None`` if you used absolute paths in your dataframe
+        sep: Separator used in ``.csv``
+        verbose: Set ``True`` if you want to see warnings
 
     """
     if isinstance(df, (Path, str)):
@@ -83,8 +82,12 @@ def check_retrieval_dataframe_format(
         )
 
         bboxes_df = df[~(df[X1_COLUMN].isna())]
-        assert all((bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]).to_list())
-        assert all((bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]).to_list())
+        mask_good_x1_x2 = bboxes_df[X1_COLUMN] < bboxes_df[X2_COLUMN]
+        mask_good_y1_y2 = bboxes_df[Y1_COLUMN] < bboxes_df[Y2_COLUMN]
+        n_bad_x1_x2 = (~mask_good_x1_x2).sum()
+        n_bad_y1_y2 = (~mask_good_y1_y2).sum()
+        assert not n_bad_x1_x2, f"Number of bad x1/x2 pairs {n_bad_x1_x2}"
+        assert not n_bad_y1_y2, f"Number of bad y1/y2 pairs {n_bad_y1_y2}"
         for coord in BBOXES_COLUMNS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
 
@@ -97,11 +100,12 @@ def check_retrieval_dataframe_format(
 
         if bad_categories and verbose:
             warnings.warn(
-                "Note! You mapping between categories and labels is not bijection!"
-                "During the training and validation we will force it to be bijection by picking"
-                "one random category for each label."
+                f"Note! You mapping between categories and labels is not bijection!"
+                f"During the training and validation we will force it to be bijection by picking"
+                f"one random category for each label."
+                f"\n"
+                f"{bad_categories}"
             )
-            pprint(bad_categories)
 
 
 __all__ = ["check_retrieval_dataframe_format"]
