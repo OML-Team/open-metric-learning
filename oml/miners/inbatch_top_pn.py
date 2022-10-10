@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, Tuple
 
 import numpy as np
 import torch
@@ -15,25 +15,38 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
     hard negative sample has small distance to the anchor sample.
     """
 
-    def __init__(self, top_positive: int = 1, top_negative: int = 1, top_negative_gap: int = 0):
+    def __init__(self,
+                 top_positive: Union[Tuple[int, int], List[int], int] = 1,
+                 top_negative: Union[Tuple[int, int], List[int], int] = 1):
         """
         Args:
-            top_positive: keep positive examples with topP largest distance
-            top_negative: keep negative examples with topN smallest distance
-            top_negative_gap: The gap allows you to take not the most complex examples. Toward the end of the
-                training, markup errors can affect, if you are not sure about the quality of your dataset, you can set
-                this parameter.
-        """
-        assert top_positive >= 1
-        assert isinstance(top_positive, int)
-        assert top_negative >= 1
-        assert isinstance(top_negative, int)
-        assert top_negative_gap >= 0
-        assert isinstance(top_negative_gap, int)
+            top_positive: keep positive examples with largest distance
+            top_negative: keep negative examples with smallest distance
 
-        self.top_positive = top_positive
-        self.top_negative = top_negative
-        self.top_negative_gap = top_negative_gap
+        Notes: Toward the end of the training, annotation errors can affect, if you are not sure about the quality
+        of your dataset, you can use range instead of integer value for paramters.
+        """
+
+        self.top_positive_range = self._parse_input_arg(top_positive)
+        self.top_negative_range = self._parse_input_arg(top_negative)
+
+        self._top_positive_slice = slice(*self.top_positive_range)
+        self._top_negative_slice = slice(*self.top_negative_range)
+
+    @staticmethod
+    def _parse_input_arg(top: Union[Tuple[int, int], List[int], int]) -> Tuple[int, int]:
+        available_types = (list, tuple, int)
+        assert isinstance(top, available_types), f"Unsupported type of argument, must be only {available_types}"
+
+        if isinstance(top, int):
+            top = (0, top)
+
+        top = tuple(top)
+
+        assert top[1] > top[0]
+        assert top[0] >= 0
+
+        return top
 
     def _sample(
         self,
@@ -92,12 +105,8 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
         ids_n = []
 
         for idx_anch in torch.arange(len(labels))[torch.logical_not(ignore_anchor_mask)]:
-            positives = hardest_positive[idx_anch_pos == idx_anch][:self.top_positive]
-
-            negatives = hardest_negative[idx_anch_neg == idx_anch]
-            negative_start = min(self.top_negative_gap, len(negatives) - 1)
-            negative_end = self.top_negative + negative_start
-            negatives = negatives[negative_start: negative_end]
+            positives = hardest_positive[idx_anch_pos == idx_anch][self._top_positive_slice]
+            negatives = hardest_negative[idx_anch_neg == idx_anch][self._top_negative_slice]
 
             i_pos, i_neg = list(zip(*torch.cartesian_prod(positives, negatives).tolist()))
             ids_a.extend([idx_anch] * len(i_pos))
