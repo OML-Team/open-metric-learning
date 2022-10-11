@@ -16,7 +16,7 @@ num_workers: 0
 bs_val: 2
 
 metric_args:
-  ignore: [cmc,]
+  metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [1, 5]
