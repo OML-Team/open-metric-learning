@@ -64,10 +64,10 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     im_ret = im.copy()
     if not any(torch.isnan(bbox)):
         x1, y1, x2, y2 = list(map(int, bbox))
-    elif any(torch.isnan(bbox)):
-        raise ValueError("BBox can only consist of all NaNs or all numbers.")
-    else:
+    elif all(torch.isnan(bbox)):
         x1, y1, x2, y2 = 0, 0, im_ret.shape[1], im_ret.shape[0]
+    else:
+        raise ValueError("BBox can only consist of all NaNs or all numbers.")
 
     im_ret = cv2.rectangle(im_ret, (x1, y1), (x2, y2), thickness=5, color=color)
 
