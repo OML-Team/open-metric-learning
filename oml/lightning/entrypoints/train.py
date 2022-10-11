@@ -152,7 +152,7 @@ def pl_train(cfg: TCfg) -> None:
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     metrics_clb = metrics_clb_constructor(
         metric=metrics_calc,
-        save_image_logs=cfg.get("log_images", False),
+        save_image_logs=cfg.get("metric_args", {}).get("log_images", False),
         log_only_main_category=cfg.get("metric_args", {}).get("log_only_main_category", True),
     )
     ckpt_clb = pl.callbacks.ModelCheckpoint(

@@ -57,13 +57,15 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     If the elements of the bbox are NaNs, we will draw bbox around the whole image.
 
     Args:
-        im: image
-        bbox: single bounding in the format of [x1, y1, x2, y2]
-        color: tuple of 3 ints
+        im: Image
+        bbox: Single bounding in the format of [x1, y1, x2, y2]
+        color: Tuple of 3 ints
     """
     im_ret = im.copy()
-    if not torch.isnan(bbox[0]):
+    if not any(torch.isnan(bbox)):
         x1, y1, x2, y2 = list(map(int, bbox))
+    elif any(torch.isnan(bbox)):
+        raise ValueError("BBox can only consist of all NaNs or all numbers.")
     else:
         x1, y1, x2, y2 = 0, 0, im_ret.shape[1], im_ret.shape[0]
 

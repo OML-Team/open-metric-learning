@@ -95,7 +95,7 @@ class MetricValCallback(Callback):
             if is_last_expected_batch:
                 self.calc_and_log_metrics(pl_module)
 
-    def _log_images(self, pl_module: pl.LightningDataModule) -> None:
+    def _log_images(self, pl_module: pl.LightningModule) -> None:
         if not isinstance(self.metric, IMetricWithVisualization):
             return
 

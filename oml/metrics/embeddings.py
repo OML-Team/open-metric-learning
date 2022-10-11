@@ -3,6 +3,7 @@ from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from tomlkit import key
 
 from oml.const import (
     BLUE,
@@ -25,13 +26,14 @@ from oml.const import (
 )
 from oml.functional.metrics import (
     TMetricsDict,
+    apply_mask_to_ignore,
     calc_distance_matrix,
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
     reduce_metrics,
 )
-from oml.interfaces.metrics import IMetricDDPWithVisualization, IMetricWithVisualization
+from oml.interfaces.metrics import IMetricDDP, IMetricWithVisualization
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
@@ -235,8 +237,7 @@ class EmbeddingMetrics(IMetricWithVisualization):
         """
         assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        dist_matrix_with_inf = torch.clone(self.distance_matrix)
-        dist_matrix_with_inf[self.mask_to_ignore] = float("inf")
+        _, dist_matrix_with_inf = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
 
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
@@ -244,20 +245,25 @@ class EmbeddingMetrics(IMetricWithVisualization):
         query_paths = np.array(self.acc.storage[PATHS_KEY])[is_query]
         gallery_paths = np.array(self.acc.storage[PATHS_KEY])[is_gallery]
 
-        fake_coord = np.array([float("nan")] * len(is_query))
-        bboxes = list(
-            zip(
-                self.acc.storage.get(X1_KEY, fake_coord),
-                self.acc.storage.get(Y1_KEY, fake_coord),
-                self.acc.storage.get(X2_KEY, fake_coord),
-                self.acc.storage.get(Y2_KEY, fake_coord),
+        if all([k in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
+            bboxes = list(
+                zip(
+                    self.acc.storage[X1_KEY],
+                    self.acc.storage[Y1_KEY],
+                    self.acc.storage[X2_KEY],
+                    self.acc.storage[Y2_KEY],
+                )
             )
-        )
+        elif all([k not in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
+            fake_coord = np.array([float("nan")] * len(is_query))
+            bboxes = list(zip(fake_coord, fake_coord, fake_coord, fake_coord))
+        else:
+            raise KeyError(f"Not all the keys collected in storage! {[*self.acc.storage]}")
 
         query_bboxes = torch.tensor(bboxes)[is_query]
         gallery_bboxes = torch.tensor(bboxes)[is_gallery]
 
-        fig = plt.figure(figsize=(30, 30 / (top_k + 2 + 1) * len(query_ids)))
+        fig = plt.figure(figsize=(30, 30 / (top_k + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
         for j, query_idx in enumerate(query_ids):
             ids = torch.argsort(dist_matrix_with_inf[query_idx])[:top_k]
 
@@ -310,7 +316,7 @@ class EmbeddingMetrics(IMetricWithVisualization):
         return fig
 
 
-class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDPWithVisualization):
+class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP, IMetricWithVisualization):
     def sync(self) -> None:
         self.acc = self.acc.sync()
 

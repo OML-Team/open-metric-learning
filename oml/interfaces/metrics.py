@@ -88,11 +88,4 @@ class IMetricWithVisualization(IBasicMetric):
         raise NotImplementedError()
 
 
-class IMetricDDPWithVisualization(IMetricDDP, IMetricWithVisualization):
-    """
-    This is an extension of a base metric with visualization interface to work in DDP mode
-
-    """
-
-
-__all__ = ["IBasicMetric", "IMetricDDP", "IMetricWithVisualization", "IMetricDDPWithVisualization"]
+__all__ = ["IBasicMetric", "IMetricDDP", "IMetricWithVisualization"]
