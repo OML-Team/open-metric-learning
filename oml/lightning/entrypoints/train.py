@@ -138,6 +138,7 @@ def pl_train(cfg: TCfg) -> None:
     )
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
+    log_images = cfg.get("metric_args", {}).pop("log_images", False)
     metrics_calc = metrics_constructor(
         embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
@@ -151,7 +152,7 @@ def pl_train(cfg: TCfg) -> None:
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     metrics_clb = metrics_clb_constructor(
         metric=metrics_calc,
-        save_image_logs=cfg.get("metric_args", {}).get("log_images", False),
+        save_image_logs=log_images,
         log_only_main_category=cfg.get("metric_args", {}).get("log_only_main_category", True),
     )
     ckpt_clb = pl.callbacks.ModelCheckpoint(
