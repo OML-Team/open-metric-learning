@@ -74,16 +74,16 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     return im_ret
 
 
-def get_img_with_bbox(im_name: str, bbox: torch.Tensor, color: TColor) -> np.ndarray:
+def get_img_with_bbox(im_path: str, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     """
     Reads the image by its name and draws bbox on it.
 
     Args:
-        im_name: Image path
+        im_path: Image path
         bbox: Single bounding box in the format of [x1, y1, x2, y2]. It may also be a list of 4 torch("nan").
         color: Tuple of 3 ints from 0 to 255
     """
-    img = imread_cv2(im_name)
+    img = imread_cv2(im_path)
     img = draw_bbox(img, bbox, color)
     return img
 

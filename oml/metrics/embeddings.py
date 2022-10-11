@@ -33,7 +33,7 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
     reduce_metrics,
 )
-from oml.interfaces.metrics import IMetricDDP, IMetricWithVisualization
+from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
@@ -42,7 +42,7 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-class EmbeddingMetrics(IMetricWithVisualization):
+class EmbeddingMetrics(IMetricVisualisable):
     """
     This class accumulates the information from the batches and embeddings produced by the model
     at every batch in epoch. After all the samples have been stored, you can call the function
@@ -66,7 +66,7 @@ class EmbeddingMetrics(IMetricWithVisualization):
         map_top_k: Tuple[int, ...] = (5,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
-        visualization_metrics_to_ignore: Iterable[str] = (),
+        metrics_to_exclude_from_visualization: Iterable[str] = (),
         check_dataset_validity: bool = True,
         log_only_main_category: bool = False,
     ):
@@ -83,6 +83,7 @@ class EmbeddingMetrics(IMetricWithVisualization):
             map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
+            metrics_to_exclude_from_visualization: Self-explanatory.
             check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
 
         """
@@ -106,7 +107,7 @@ class EmbeddingMetrics(IMetricWithVisualization):
         self.check_dataset_validity = check_dataset_validity
         self.log_only_main_category = log_only_main_category
 
-        self.visualization_metrics_to_ignore = visualization_metrics_to_ignore
+        self.metrics_to_exclude_from_visualization = metrics_to_exclude_from_visualization
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -192,8 +193,8 @@ class EmbeddingMetrics(IMetricWithVisualization):
 
         return self.metrics
 
-    def visualize(self, *args: Any, **kwargs: Any) -> Tuple[Collection[plt.Figure], Collection[str]]:
-        metrics_flat = flatten_dict(self.metrics, ignored_keys=self.visualization_metrics_to_ignore)
+    def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
+        metrics_flat = flatten_dict(self.metrics, ignored_keys=self.metrics_to_exclude_from_visualization)
         figures = []
         titles = []
         for metric_name in metrics_flat:
@@ -316,7 +317,7 @@ class EmbeddingMetrics(IMetricWithVisualization):
         return fig
 
 
-class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP, IMetricWithVisualization):
+class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP, IMetricVisualisable):
     def sync(self) -> None:
         self.acc = self.acc.sync()
 

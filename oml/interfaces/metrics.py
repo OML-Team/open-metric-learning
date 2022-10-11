@@ -67,14 +67,14 @@ class IMetricDDP(IBasicMetric):
         raise NotImplementedError()
 
 
-class IMetricWithVisualization(IBasicMetric):
+class IMetricVisualisable(IBasicMetric):
     """
     This is an interface for all metrics which can visualize themselves.
     For example, mAP@5 can plot worst queries.
     """
 
     @abstractmethod
-    def visualize(self, *args: Any, **kwargs: Any) -> Tuple[Collection[plt.Figure], Collection[str]]:
+    def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
         """
         Method which returns results of visualization and titles for logging.
         """
@@ -88,4 +88,4 @@ class IMetricWithVisualization(IBasicMetric):
         raise NotImplementedError()
 
 
-__all__ = ["IBasicMetric", "IMetricDDP", "IMetricWithVisualization"]
+__all__ = ["IBasicMetric", "IMetricDDP", "IMetricVisualisable"]

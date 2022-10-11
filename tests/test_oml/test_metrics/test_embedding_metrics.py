@@ -123,7 +123,7 @@ def worst_case() -> Any:
 @pytest.fixture()
 def case_for_distance_check() -> Any:
     batch1 = {
-        EMBEDDINGS_KEY: torch.stack([oh(1) * 2, oh(1) * 3, oh(0)]),  # 3d embedding pretends to be an error
+        EMBEDDINGS_KEY: torch.stack([oh(1) * 2, oh(1) * 3, oh(0)]),
         LABELS_KEY: torch.tensor([0, 1, 1]),
         IS_QUERY_KEY: torch.tensor([True, True, True]),
         IS_GALLERY_KEY: torch.tensor([False, False, False]),
@@ -137,7 +137,8 @@ def case_for_distance_check() -> Any:
         IS_GALLERY_KEY: torch.tensor([True, True, True]),
         CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
-    return (batch1, batch2), [1, 2, 0]
+    ids_ranked_by_distance = [1, 2, 0]
+    return (batch1, batch2), ids_ranked_by_distance
 
 
 def run_retrieval_metrics(case) -> None:  # type: ignore

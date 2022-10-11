@@ -11,7 +11,7 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
-from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricWithVisualization
+from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
 from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
@@ -44,7 +44,7 @@ class MetricValCallback(Callback):
         self.metric = metric
         self.save_image_logs = save_image_logs
         assert not save_image_logs or (
-            isinstance(metric, IMetricWithVisualization) and metric.ready_to_visualize()  # type: ignore
+            isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()  # type: ignore
         )
 
         self.log_only_main_category = log_only_main_category
@@ -96,7 +96,7 @@ class MetricValCallback(Callback):
                 self.calc_and_log_metrics(pl_module)
 
     def _log_images(self, pl_module: pl.LightningModule) -> None:
-        if not isinstance(self.metric, IMetricWithVisualization):
+        if not isinstance(self.metric, IMetricVisualisable):
             return
 
         for fig, metric_log_str in zip(*self.metric.visualize()):
