@@ -211,20 +211,20 @@ class EmbeddingMetrics(IMetricVisualisable):
     def ready_to_visualize(self) -> bool:
         return PATHS_KEY in self.extra_keys
 
-    def get_worst_queries_ids(self, metric_name: str, topk: int) -> List[int]:
+    def get_worst_queries_ids(self, metric_name: str, topk_worst_queries: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
-        return torch.topk(metric_values, min(topk, len(metric_values)))[1].tolist()
+        return torch.topk(metric_values, min(topk_worst_queries, len(metric_values)))[1].tolist()
 
     def get_plot_for_worst_queries(
         self, metric_name: str, topk_queries: int, topk_instances: int, verbose: bool = False
     ) -> plt.Figure:
-        query_ids = self.get_worst_queries_ids(metric_name=metric_name, topk=topk_queries)
-        return self.get_plot_for_queries(query_ids=query_ids, top_k=topk_instances, verbose=verbose)
+        query_ids = self.get_worst_queries_ids(metric_name=metric_name, topk_worst_queries=topk_queries)
+        return self.get_plot_for_queries(query_ids=query_ids, topk_instances=topk_instances, verbose=verbose)
 
     def get_plot_for_queries(
         self,
         query_ids: List[int],
-        top_k: int,
+        topk_instances: int,
         verbose: bool = True,
     ) -> plt.Figure:
         """
@@ -232,7 +232,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         Args:
             query_ids: Index of the query
-            top_k: Amount of the predictions to show
+            topk_instances: Amount of the predictions to show
             verbose: wether to show image paths or not
 
         """
@@ -264,16 +264,16 @@ class EmbeddingMetrics(IMetricVisualisable):
         query_bboxes = torch.tensor(bboxes)[is_query]
         gallery_bboxes = torch.tensor(bboxes)[is_gallery]
 
-        fig = plt.figure(figsize=(30, 30 / (top_k + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
+        fig = plt.figure(figsize=(30, 30 / (topk_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
         for j, query_idx in enumerate(query_ids):
-            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:top_k]
+            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:topk_instances]
 
             n_gt = self.mask_gt[query_idx].sum()  # type: ignore
 
             plt.subplot(
                 len(query_ids),
-                top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS,
-                j * (top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS) + 1,
+                topk_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS,
+                j * (topk_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + 1,
             )
 
             img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
@@ -290,8 +290,8 @@ class EmbeddingMetrics(IMetricVisualisable):
                     print("G", i, gallery_paths[idx])
                 plt.subplot(
                     len(query_ids),
-                    top_k + N_GT_SHOW_EMBEDDING_METRICS + 1,
-                    j * (top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
+                    topk_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
+                    j * (topk_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
                 )
                 img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
                 img = square_pad(img)
@@ -304,8 +304,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             for i, gt_idx in enumerate(gt_ids):
                 plt.subplot(
                     len(query_ids),
-                    top_k + N_GT_SHOW_EMBEDDING_METRICS + 1,
-                    j * (top_k + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + top_k + 2,
+                    topk_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
+                    j * (topk_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + topk_instances + 2,
                 )
                 img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
                 img = square_pad(img)
