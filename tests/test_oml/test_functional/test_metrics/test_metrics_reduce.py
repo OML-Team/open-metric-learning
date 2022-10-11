@@ -19,7 +19,7 @@ from oml.functional.metrics import reduce_metrics
         ),
         (
             {"OVERALL": {"cmc": {1: np.r_[0.1, 0.2, 0.0]}}, "a": np.r_[0.3, 0.1]},
-            {"OVERALL": {"cmc": {1: 0.1}}, "a": 0.2},
+            {"OVERALL": {"cmc": {1: np.mean(np.r_[0.1, 0.2, 0.0])}}, "a": np.mean(np.r_[0.3, 0.1])},
         ),
         (
             {"OVERALL": {"cmc": {1: torch.tensor([0.1, 0.2, 0.0])}}, "a": torch.tensor([0.3])},
@@ -29,4 +29,4 @@ from oml.functional.metrics import reduce_metrics
     ],
 )
 def test_reduce_metrics(metrics_dict: Dict[str, Any], result_dict: Dict[str, Any]) -> None:
-    assert reduce_metrics(metrics_dict) == result_dict
+    assert reduce_metrics(metrics_dict) == result_dict, reduce_metrics(metrics_dict)
