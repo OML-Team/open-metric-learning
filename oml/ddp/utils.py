@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-from torch.distributed import all_gather_object, get_world_size
+from torch.distributed import all_gather_object, get_rank, get_world_size
 
 
 class WarningDDP(UserWarning):
@@ -80,8 +80,11 @@ def is_ddp() -> bool:
         return False
 
 
-__all__ = [
-    "is_ddp",
-    "sync_dicts_ddp",
-    "merge_list_of_dicts",
-]
+def is_main_process() -> bool:
+    if is_ddp():
+        return get_rank() == 0
+    else:
+        return True
+
+
+__all__ = ["is_ddp", "sync_dicts_ddp", "merge_list_of_dicts", "is_main_process"]
