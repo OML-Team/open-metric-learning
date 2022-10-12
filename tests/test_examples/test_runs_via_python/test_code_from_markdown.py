@@ -25,6 +25,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("[comment]:vanilla-train-start\n", "[comment]:vanilla-train-end\n"),
         ("[comment]:vanilla-validation-start\n", "[comment]:vanilla-validation-end\n"),
         ("[comment]:lightning-start\n", "[comment]:lightning-end\n"),
+        ("[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
         ("[comment]:checkpoint-start\n", "[comment]:checkpoint-end\n"),
     ],
 )
