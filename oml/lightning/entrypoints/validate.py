@@ -74,8 +74,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     clb_metric = metrics_clb_constructor(
         metric=metrics_calc,
-        save_image_logs=log_images,
-        log_only_main_category=cfg.get("metric_args", {}).get("log_only_main_category", True),
+        save_image_logs=cfg.get("log_images", False),
     )
 
     trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)

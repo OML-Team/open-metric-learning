@@ -34,10 +34,12 @@ max_epochs: 10000
 valid_period: 10
 
 metric_args:
-  ignore: [cmc,]
+  metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1]
   map_top_k: [5]
   log_only_main_category: True
+  visualize_only_main_category: True
+  log_images: False
 
 metric_for_checkpointing: OVERALL/cmc/1
 

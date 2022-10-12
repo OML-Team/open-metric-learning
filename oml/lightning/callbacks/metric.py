@@ -25,8 +25,7 @@ class MetricValCallback(Callback):
     def __init__(
         self,
         metric: IBasicMetric,
-        save_image_logs: bool = False,
-        log_only_main_category: bool = True,
+        log_images: bool = False,
         loader_idx: int = 0,
         samples_in_getitem: int = 1,
     ):
@@ -42,12 +41,11 @@ class MetricValCallback(Callback):
         """
 
         self.metric = metric
-        self.save_image_logs = save_image_logs
-        assert not save_image_logs or (
+        self.log_images = log_images
+        assert not log_images or (
             isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()  # type: ignore
         )
 
-        self.log_only_main_category = log_only_main_category
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem
 
@@ -118,14 +116,10 @@ class MetricValCallback(Callback):
 
     def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
         metrics = self.metric.compute_metrics()
-
-        if self.log_only_main_category:
-            metrics = {self.metric.overall_categories_key: metrics[self.metric.overall_categories_key]}
-
         metrics = flatten_dict(metrics)
         pl_module.log_dict(metrics, rank_zero_only=True, add_dataloader_idx=True)
 
-        if self.save_image_logs:
+        if self.log_images:
             self._log_images(pl_module=pl_module)
 
     def _raise_computation_error(self) -> Exception:
