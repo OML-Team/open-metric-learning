@@ -1,8 +1,10 @@
+from pprint import pprint
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
 from oml.const import EMBEDDINGS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, LABELS_KEY
+from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
     calc_distance_matrix,
@@ -13,6 +15,7 @@ from oml.functional.metrics import (
 from oml.interfaces.metrics import IBasicMetric, IBasicMetricDDP
 from oml.interfaces.post_processor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
+from oml.utils.misc import flatten_dict
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -42,6 +45,7 @@ class EmbeddingMetrics(IBasicMetric):
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         check_dataset_validity: bool = True,
+        verbose: bool = True,
     ):
         """
 
@@ -57,6 +61,7 @@ class EmbeddingMetrics(IBasicMetric):
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
+            verbose: Set ``True`` if you want to print metrics
 
         """
         self.embeddings_key = embeddings_key
@@ -76,6 +81,7 @@ class EmbeddingMetrics(IBasicMetric):
         self.metrics = None
         self.mask_to_ignore = None
         self.check_dataset_validity = check_dataset_validity
+        self.verbose = verbose and is_main_process()
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -155,6 +161,10 @@ class EmbeddingMetrics(IBasicMetric):
                 )
 
         self.metrics = metrics  # type: ignore
+
+        if self.verbose:
+            print("\nMetrics:")
+            pprint(flatten_dict(metrics))  # type: ignore
 
         return metrics
 
