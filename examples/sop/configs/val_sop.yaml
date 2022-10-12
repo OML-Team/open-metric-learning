@@ -28,7 +28,8 @@ metric_args:
   map_top_k: [5]
   log_only_main_category: False
   visualize_only_main_category: True
-  log_images: False
+
+log_images: False
 
 hydra:
   searchpath:
