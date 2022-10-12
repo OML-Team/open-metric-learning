@@ -326,6 +326,10 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 </p>
 </details>
 
+## Usage with PyTorch Metric Learning
+
+todo
+
 ## Zoo
 
 Below are the models trained with OML on 4 public datasets.
