@@ -327,7 +327,7 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 </details>
 
 If you want to train your model in the DDP regime (Distributed Data Parallel), you
-only need to slightly change 3 lines of code in the example below.
+only need to slightly change only few lines of code in the example below.
 
 <details>
 <summary>Training + Validation [Lightning Distributed]</summary>
@@ -364,16 +364,16 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sa
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP())  # ddp specific
+metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP())  # DDP specific
 
 # run
 pl_model = RetrievalModuleDDP(model=model, criterion=criterion, optimizer=optimizer,
-                              loaders_train=train_loader, loaders_val=val_loader  # ddp specific
+                              loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
-trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0,
-                     accelerator="auto", devices=2, strategy=pl.plugins.DDPPlugin(), replace_sampler_ddp=False  # ddp specific
-                     )
-trainer.fit(pl_model)
+
+ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(), "replace_sampler_ddp": False} # DDP specific
+trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
+trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```
 [comment]:lightning-ddp-end
 </p>
