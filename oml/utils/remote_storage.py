@@ -51,7 +51,7 @@ def download_folder_from_remote_storage(
 
         local_fname = local_folder / fname
         local_fname.parent.mkdir(exist_ok=True, parents=True)
-        download_file_from_url(remote_file, str(local_fname), timeout=timeout)
+        download_file_from_remote_storage(remote_file, str(local_fname), timeout=timeout)
 
 
 __all__ = ["download_folder_from_remote_storage", "download_file_from_remote_storage"]

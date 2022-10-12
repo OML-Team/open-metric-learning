@@ -1,3 +1,5 @@
+from copy import deepcopy
+from pprint import pprint
 from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -23,6 +25,7 @@ from oml.const import (
     Y1_KEY,
     Y2_KEY,
 )
+from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
     apply_mask_to_ignore,
@@ -67,8 +70,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         postprocessor: Optional[IPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         check_dataset_validity: bool = True,
-        log_only_main_category: bool = False,
+        return_only_main_category: bool = False,
         visualize_only_main_category: bool = True,
+        verbose: bool = True,
     ):
         """
 
@@ -85,6 +89,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not affect calculations.
             check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
+            verbose: Set ``True`` if you want to print metrics
 
         """
         self.embeddings_key = embeddings_key
@@ -106,9 +111,10 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self.check_dataset_validity = check_dataset_validity
         self.visualize_only_main_category = visualize_only_main_category
-        self.log_only_main_category = log_only_main_category
+        self.return_only_main_category = return_only_main_category
 
         self.metrics_to_exclude_from_visualization = metrics_to_exclude_from_visualization
+        self.verbose = verbose and is_main_process()
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -192,10 +198,16 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics_unreduced = metrics
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
-        if self.log_only_main_category:
-            return {self.overall_categories_key: self.metrics[self.overall_categories_key]}  # type: ignore
+        if self.return_only_main_category:
+            metric_to_return = {self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])}  # type: ignore
         else:
-            return self.metrics
+            metric_to_return = deepcopy(self.metrics)
+
+        if self.verbose:
+            print("\nMetrics:")
+            pprint(metric_to_return)
+
+        return metric_to_return  # type: ignore
 
     def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
         """

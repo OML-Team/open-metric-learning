@@ -4,11 +4,9 @@ on:
   pull_request:
     branches:
       - main
-      - release
   push:
     branches:
       - main
-      - release
 
 jobs:
   test_installation:
