@@ -421,6 +421,7 @@ You can specify the desired weights and architecture to automatically download p
 ```python
 import oml
 from oml.models.vit.vit import ViTExtractor
+from oml.registry.models import MODELS_REGISTRY
 
 # We are downloading vits16 pretrained on CARS dataset:
 model = ViTExtractor(weights="vits16_cars", arch="vits16", normalise_features=False)
@@ -429,7 +430,7 @@ model = ViTExtractor(weights="vits16_cars", arch="vits16", normalise_features=Fa
 print(list(ViTExtractor.pretrained_models.keys()))
 
 # ...or check other available types of architectures
-print(oml.registry.models.MODELS_REGISTRY)
+print(MODELS_REGISTRY)
 
 # It's also possible to use `weights` argument to directly pass the path to the checkpoint:
 model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.ckpt", arch="vits16", normalise_features=False)
