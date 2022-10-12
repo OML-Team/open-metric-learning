@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -30,4 +31,13 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     ],
 )
 def test_code_blocks_in_readme(start_indicator: str, end_indicator: str) -> None:
-    exec(find_code_block(PROJECT_ROOT / "README.md", start_indicator, end_indicator))
+    code = find_code_block(PROJECT_ROOT / "README.md", start_indicator, end_indicator)
+    tmp_fname = "tmp.py"
+
+    with open(tmp_fname, "w") as f:
+        f.write(code)
+
+    try:
+        subprocess.run(f"python {tmp_fname}", check=True, shell=True)
+    finally:
+        Path(tmp_fname).unlink()
