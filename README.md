@@ -325,7 +325,8 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 [comment]:lightning-end
 </p>
 </details>
-
+ㅤ
+ㅤ
 
 If you want to train your model in the DDP regime (Distributed Data Parallel), you
 only need to slightly change only few lines of code in the example below.
@@ -382,8 +383,11 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 
 ## Usage with PyTorch Metric Learning
 
+You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
+with our library. You can see that the examples below are different from the basic ones only in a few lines of code:
+
 <details>
-<summary>Training</summary>
+<summary>Training with loss from PML</summary>
 <p>
 
 ```python
@@ -407,9 +411,9 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 
-# PML
+# PML specific
 # criterion = losses.TripletMarginLoss(margin=0.2, triplets_per_anchor="all")
-criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(), embedding_size=model.feat_dim)
+criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(), embedding_size=model.feat_dim)  # for classification-like losses
 
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
@@ -427,7 +431,7 @@ for batch in tqdm(train_loader):
 
 
 <details>
-<summary>Training</summary>
+<summary>Training with distance, reducer, miner and loss from PML</summary>
 <p>
 
 ```python
@@ -451,7 +455,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 
-# PML specific block of code
+# PML specific
 distance = distances.LpDistance(p=2)
 reducer = reducers.ThresholdReducer(low=0)
 criterion = losses.TripletMarginLoss()
@@ -470,6 +474,15 @@ for batch in tqdm(train_loader):
 
 </p>
 </details>
+
+ㅤ
+
+Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
+we recommend you to pick `distances.LpDistance(p=2)`.
+
+To use content from PyTorch Metric Learning with our Config API just follow the standard
+[tutorial](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc)
+of adding custom loss.
 
 ## Zoo
 
