@@ -10,9 +10,9 @@ DDP
 Note, that this is an advanced section for developers or curious users.
 Normally, you don't even need to know about the existence of the classes and functions below.
 
-IBasicMetricDDP
+IMetricDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.metrics.IBasicMetricDDP
+.. autoclass:: oml.interfaces.metrics.IMetricDDP
     :undoc-members:
     :show-inheritance:
 
