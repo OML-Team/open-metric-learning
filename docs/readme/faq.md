@@ -29,6 +29,16 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 
 
 <details>
+<summary>What is the difference between OML and PyTorch Metric Learning?</summary>
+<p>
+
+todo - comparison
+
+</p>
+</details>
+
+
+<details>
 <summary>What is Metric Learning?</summary>
 <p>
 
