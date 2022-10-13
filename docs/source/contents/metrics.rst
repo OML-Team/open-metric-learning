@@ -17,6 +17,8 @@ EmbeddingMetrics
     .. automethod:: setup
     .. automethod:: update_data
     .. automethod:: compute_metrics
+    .. automethod:: visualize
+    .. automethod:: get_plot_for_queries
 
 calc_retrieval_metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

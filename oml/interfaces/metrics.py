@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Collection, Tuple
+
+import matplotlib.pyplot as plt
 
 from oml.const import OVERALL_CATEGORIES_KEY
 
@@ -51,12 +53,13 @@ class IBasicMetric(ABC):
         raise NotImplementedError()
 
 
-class IBasicMetricDDP(IBasicMetric):
+class IMetricDDP(IBasicMetric):
     """
     This is an extension of a base metric interface to work in DDP mode
 
     """
 
+    @abstractmethod
     def sync(self) -> None:
         """
         Method aggregates data in DDP mode before metrics calculations
@@ -64,4 +67,25 @@ class IBasicMetricDDP(IBasicMetric):
         raise NotImplementedError()
 
 
-__all__ = ["IBasicMetric", "IBasicMetricDDP"]
+class IMetricVisualisable(IBasicMetric):
+    """
+    This is an interface for all metrics which can visualize themselves.
+    For example, mAP@5 can plot worst queries.
+    """
+
+    @abstractmethod
+    def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
+        """
+        Method which returns results of visualization and titles for logging.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def ready_to_visualize(self) -> bool:
+        """
+        Method which checks if visualization can be done.
+        """
+        raise NotImplementedError()
+
+
+__all__ = ["IBasicMetric", "IMetricDDP", "IMetricVisualisable"]

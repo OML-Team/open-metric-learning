@@ -1,12 +1,17 @@
 from math import ceil
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
+from neptune.new.types import File
 from pytorch_lightning import Callback
+from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 
+from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
-from oml.interfaces.metrics import IBasicMetric, IBasicMetricDDP
+from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
 from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
@@ -20,7 +25,7 @@ class MetricValCallback(Callback):
     def __init__(
         self,
         metric: IBasicMetric,
-        log_only_main_category: bool = True,
+        log_images: bool = False,
         loader_idx: int = 0,
         samples_in_getitem: int = 1,
     ):
@@ -34,8 +39,13 @@ class MetricValCallback(Callback):
                 for a dataset of pairs it must be equal to 2.
 
         """
+
         self.metric = metric
-        self.log_only_main_category = log_only_main_category
+        self.log_images = log_images
+        assert not log_images or (
+            isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()  # type: ignore
+        )
+
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem
 
@@ -83,6 +93,22 @@ class MetricValCallback(Callback):
             if is_last_expected_batch:
                 self.calc_and_log_metrics(pl_module)
 
+    def _log_images(self, pl_module: pl.LightningModule) -> None:
+        if not isinstance(self.metric, IMetricVisualisable):
+            return
+
+        for fig, metric_log_str in zip(*self.metric.visualize()):
+            log_str = f"{LOG_IMAGE_FOLDER}/epoch_{pl_module.current_epoch}/{metric_log_str}"
+            if isinstance(pl_module.logger, NeptuneLogger):
+                pl_module.logger.experiment[log_str].log(File.as_image(fig))
+            elif isinstance(pl_module.logger, TensorBoardLogger):
+                fig.canvas.draw()
+                data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+                data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
+            else:
+                raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
+
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._ready_to_accumulate = False
         if self._collected_samples != self._expected_samples:
@@ -90,12 +116,11 @@ class MetricValCallback(Callback):
 
     def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
         metrics = self.metric.compute_metrics()
-
-        if self.log_only_main_category:
-            metrics = {self.metric.overall_categories_key: metrics[self.metric.overall_categories_key]}
-
-        metrics = flatten_dict(metrics, sep="/")  # to-do: don't need
+        metrics = flatten_dict(metrics)
         pl_module.log_dict(metrics, rank_zero_only=True, add_dataloader_idx=True)
+
+        if self.log_images:
+            self._log_images(pl_module=pl_module)
 
     def _raise_computation_error(self) -> Exception:
         raise ValueError(
@@ -128,10 +153,10 @@ class MetricValCallbackDDP(MetricValCallback):
 
     """
 
-    metric: IBasicMetricDDP
+    metric: IMetricDDP
 
-    def __init__(self, metric: IBasicMetricDDP, *args: Any, **kwargs: Any):
-        assert isinstance(metric, IBasicMetricDDP), "Metric has to support DDP interface"
+    def __init__(self, metric: IMetricDDP, *args: Any, **kwargs: Any):
+        assert isinstance(metric, IMetricDDP), "Metric has to support DDP interface"
         super().__init__(metric, *args, **kwargs)
 
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:

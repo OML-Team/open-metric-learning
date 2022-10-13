@@ -31,6 +31,11 @@ MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
+LOG_IMAGE_FOLDER = "image_logs"
+LOG_TOPK_ROWS_PER_METRIC = 5
+LOG_TOPK_IMAGES_PER_ROW = 5
+N_GT_SHOW_EMBEDDING_METRICS = 2
+
 STORAGE_URL = "https://oml.daloroserver.com"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
@@ -39,6 +44,11 @@ MOCK_DATASET_MD5 = "f725276646677ce3d63fd4c7d8a7f666"
 
 REQUESTS_TIMEOUT = 120.0
 
+TColor = Tuple[int, int, int]
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+GRAY = (120, 120, 120)
 PAD_COLOR = (255, 255, 255)
 
 TCfg = Union[Dict[str, Any], DictConfig]
