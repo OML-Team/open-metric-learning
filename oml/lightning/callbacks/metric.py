@@ -127,7 +127,9 @@ class MetricValCallback(Callback):
             f"Incorrect calculation for {self.metric.__class__.__name__} metric. "
             f"Inconsistent number of samples, obtained: {self._collected_samples}, "
             f"expected: {self._expected_samples}, "
-            f"'samples_in_getitem': {self.samples_in_getitem}"
+            f"'samples_in_getitem': {self.samples_in_getitem}.\n"
+            f"Make sure that you don't use the 'overfit_batches' parameter in 'pl.Trainer' and "
+            f"you set 'drop_last=True'."
         )
 
 
