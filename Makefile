@@ -8,6 +8,9 @@ README_FILE ?= README.md
 
 OML_VERSION=$(shell cat oml/__init__.py | sed 's,.*__version__ = "\(.*\)".*,\1,')
 
+# Note, we use the markdown files below to build the documentation (readthedocs).
+# The problem with the documentation is that .rst files have to have their own headers in a special format.
+# So, to avoid duplicating headers in the documentation we removed them from markdown files.
 .PHONY: build_readme
 build_readme:
 	rm -f ${README_FILE}

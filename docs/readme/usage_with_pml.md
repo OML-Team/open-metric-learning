@@ -35,7 +35,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
     embeddings = model(batch["input_tensors"])
-    loss = criterion(embeddings, batch["labels"])  # PML specific
+    loss = criterion(embeddings, batch["labels"])
     loss.backward()
     optimizer.step()
     optimizer.zero_grad()
