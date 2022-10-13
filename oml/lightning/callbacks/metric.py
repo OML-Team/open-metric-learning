@@ -145,7 +145,7 @@ err_message_loaders_is_not_patched = (
     f"this functions, instead use '{ModuleDDP.__name__}'\n"
     f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
     f"replacement in '{ModuleDDP.__name__}' constructor\n"
-    f"5) Turn off the `overfit_batches` parameter in 'pl.Trainer'."
+    f"5) Turn off the 'overfit_batches' parameter in 'pl.Trainer'."
 )
 
 
