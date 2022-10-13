@@ -41,6 +41,7 @@ metric_args:
   cmc_top_k: [1]
   map_top_k: [5]
   return_only_main_category: True
+  visualize_only_main_category: True
 
 log_images: True
 

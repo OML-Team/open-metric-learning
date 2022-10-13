@@ -89,6 +89,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not affect calculations.
             check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
+            return_only_main_category: Whether you want to return only the main category from ``.compute_metrics()``
+            visualize_only_main_category: Whether you want to visualize only the main category with ``.visualize()``
             verbose: Set ``True`` if you want to print metrics
 
         """
@@ -336,7 +338,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         return fig
 
 
-class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP, IMetricVisualisable):
+class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP):
     def sync(self) -> None:
         self.acc = self.acc.sync()
 
