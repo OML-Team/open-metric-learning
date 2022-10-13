@@ -129,7 +129,7 @@ class MetricValCallback(Callback):
             f"expected: {self._expected_samples}, "
             f"'samples_in_getitem': {self.samples_in_getitem}.\n"
             f"Make sure that you don't use the 'overfit_batches' parameter in 'pl.Trainer' and "
-            f"you set 'drop_last=True'."
+            f"you set 'drop_last=False'. The idea is that lengths of dataset and dataloader must match."
         )
 
 
