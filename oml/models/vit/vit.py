@@ -73,7 +73,7 @@ class ViTExtractor(IExtractor):
              You can check the available pretrained checkpoints in ``self.pretrained_models``.
             arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options in ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
-            use_multi_scale: Set ``True`` to use multiscale (the analogue of test time augmentations)
+            use_multi_scale: Set ``True`` to use multi scale (the analogue of test time augmentations)
             strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """

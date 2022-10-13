@@ -92,15 +92,11 @@ def calc_retrieval_metrics(
 
     for k_cmc, k_cmc_show in zip(cmc_top_k_clipped, cmc_top_k):
         cmc = torch.any(gt_tops[:, :k_cmc], dim=1).float()
-        if reduce:
-            cmc = cmc.mean()
         metrics["cmc"][k_cmc_show] = cmc
 
     for k_precision, k_precision_show in zip(precision_top_k_clipped, precision_top_k):
         n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_precision).unsqueeze(0))
         precision = torch.sum(gt_tops[:, :k_precision].float(), dim=1) / n_gt_matrix
-        if reduce:
-            precision = precision.mean()
         metrics["precision"][k_precision_show] = precision
 
     for k_map, k_map_show in zip(map_top_k_clipped, map_top_k):
@@ -108,11 +104,26 @@ def calc_retrieval_metrics(
         correct_preds = torch.cumsum(gt_tops[:, :k_map], dim=1)
         positions = torch.arange(1, k_map + 1).unsqueeze(0)
         mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
-        if reduce:
-            mean_ap = mean_ap.mean()
         metrics["map"][k_map_show] = mean_ap
 
+    if reduce:
+        metrics = reduce_metrics(metrics)
+
     return metrics
+
+
+def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
+    output: TMetricsDict = {}
+
+    for k, v in metrics_to_reduce.items():
+        if isinstance(v, (torch.Tensor, np.ndarray)):
+            output[k] = v.mean()
+        elif isinstance(v, (float, int)):
+            output[k] = v
+        else:
+            output[k] = reduce_metrics(v)  # type: ignore
+
+    return output
 
 
 def apply_mask_to_ignore(
@@ -218,4 +229,5 @@ __all__ = [
     "calc_mask_to_ignore",
     "calc_distance_matrix",
     "calculate_accuracy_on_triplets",
+    "reduce_metrics",
 ]

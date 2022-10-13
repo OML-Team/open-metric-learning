@@ -63,9 +63,12 @@ bs_val: 2
 
 metric_args:
   cmc_top_k: [1, 5]
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+log_images: False
 
 metric_for_checkpointing: OVERALL/cmc/5
-log_only_main_category: True
 
 max_epochs: 2
 valid_period: 2

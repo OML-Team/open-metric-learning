@@ -58,12 +58,16 @@ scheduling:
 bs_val: 2
 
 metric_args:
+  metrics_to_exclude_from_visualization: [cmc, precision]
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [1, 5]
+  return_only_main_category: False
+  visualize_only_main_category: True
+
+log_images: False
 
 metric_for_checkpointing: OVERALL/precision/5
-log_only_main_category: False
 
 max_epochs: 2
 valid_period: 1
