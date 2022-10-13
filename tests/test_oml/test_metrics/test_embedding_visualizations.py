@@ -19,9 +19,12 @@ from oml.utils.misc import one_hot
 oh = partial(one_hot, dim=8)
 
 
-def test_visualization() -> Any:
+def test_visualization() -> None:
+
+    dummy_image = [[0]]
+
     cf = get_cache_folder()
-    plt.imsave(cf / "temp.png", [[0]])
+    plt.imsave(cf / "temp.png", dummy_image)
 
     batch1 = {
         EMBEDDINGS_KEY: torch.stack([oh(1) * 2, oh(1) * 3, oh(0)]),
