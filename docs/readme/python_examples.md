@@ -126,6 +126,7 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 </p>
 </details>
 
+
 If you want to train your model in the DDP regime (Distributed Data Parallel), you
 only need to slightly change only few lines of code in the example below.
 
