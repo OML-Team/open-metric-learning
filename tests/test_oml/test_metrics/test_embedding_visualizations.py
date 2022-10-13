@@ -60,4 +60,6 @@ def test_visualization() -> Any:
 
     figs, log_strs = calc.visualize()
 
+    (cf / "temp.png").unlink()
+
     assert len(figs) == len(log_strs)
