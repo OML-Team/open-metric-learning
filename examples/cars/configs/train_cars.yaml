@@ -80,10 +80,10 @@ neptune_project: null
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
+
 tags:
   - ${postfix}
   - cars
-
 
 hydra:
   run:
