@@ -1,5 +1,6 @@
 postfix: metric_learning_cars
 
+
 seed: 42
 precision: 32
 accelerator: gpu
