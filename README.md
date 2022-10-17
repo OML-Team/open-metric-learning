@@ -52,10 +52,11 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 <summary>What is the difference between Open Metric Learning and PyTorch Metric Learning?</summary>
 <p>
 
-[PML](https://github.com/KevinMusgrave/pytorch-metric-learning) is the popular library for Metric Learning
-and it includes rich collection of losses, miners, distances, and reducers; that is why we provide straightforward
+[PML](https://github.com/KevinMusgrave/pytorch-metric-learning) is the popular library for Metric Learning,
+and it includes a rich collection of losses, miners, distances, and reducers; that is why we provide straightforward
 [examples](https://github.com/OML-Team/open-metric-learning#usage-with-pytorch-metric-learning) of using them with OML.
 Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
+That is how OML differs from PML:
 
 * OML has [Config API](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html)
   which allows training models by preparing a config and your data in the required format
