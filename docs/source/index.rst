@@ -3,7 +3,7 @@
     :alt: OML logo
 
 ㅤ
-========================================
+====================================================================================================
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
@@ -22,6 +22,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
 
    examples/python
    examples/config
+   examples/pml
 
 .. toctree::
    :caption: Contents

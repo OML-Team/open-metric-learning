@@ -49,6 +49,45 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 
 
 <details>
+<summary>What is the difference between Open Metric Learning and PyTorch Metric Learning?</summary>
+<p>
+
+[PML](https://github.com/KevinMusgrave/pytorch-metric-learning) is the popular library for Metric Learning,
+and it includes a rich collection of losses, miners, distances, and reducers; that is why we provide straightforward
+[examples](https://github.com/OML-Team/open-metric-learning#usage-with-pytorch-metric-learning) of using them with OML.
+Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
+That is how OML differs from PML:
+
+* OML has [Config API](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html)
+  which allows training models by preparing a config and your data in the required format
+  (it's like converting data into COCO format to train a detector from [mmdetection](https://github.com/open-mmlab/mmdetection)).
+
+* OML focuses on end-to-end pipelines and practical use cases.
+  It has config based examples on popular benchmarks close to real life (like photos of products of thousands ids).
+  We found some good combinations of hyperparameters on these datasets, trained and published models and their configs.
+  Thus, it makes OML more recipes oriented than PML, and its author
+  [confirms](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/169#issuecomment-670814393)
+  this saying that his library is a set of tools rather the recipes, moreover, the examples in PML are mostly for CIFAR and MNIST datasets.
+
+* OML has the [Zoo](https://github.com/OML-Team/open-metric-learning#zoo) of pretrained models that can be easily accessed from
+  the code in the same way as in `torchvision` (when you type `resnet50(pretrained=True)`).
+
+* OML is integrated with [PyTorch Lightning](https://www.pytorchlightning.ai/), so, we can use the power of its
+  [Trainer](https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html).
+  This is especially helpful when we work with DDP, so, you compare our
+  [DDP example](https://open-metric-learning.readthedocs.io/en/latest/examples/python.html)
+  and the
+  [PMLs one](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb).
+  By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
+  in the examples and custom `train` / `test` functions are used instead.
+
+We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
+
+</p>
+</details>
+
+
+<details>
 <summary>What is Metric Learning?</summary>
 <p>
 
@@ -325,6 +364,8 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 [comment]:lightning-end
 </p>
 </details>
+ㅤ
+ㅤ
 
 If you want to train your model in the DDP regime (Distributed Data Parallel), you
 only need to slightly change only few lines of code in the example below.
@@ -378,6 +419,109 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 [comment]:lightning-ddp-end
 </p>
 </details>
+
+## Usage with PyTorch Metric Learning
+
+You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
+with our library. You can see that the examples below are different from the basic ones only in a few lines of code:
+
+<details>
+<summary>Training with loss from PML</summary>
+<p>
+
+```python
+import torch
+from tqdm import tqdm
+
+from oml.datasets.base import DatasetWithLabels
+from oml.losses.triplet import TripletLossWithMiner
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.vit.vit import ViTExtractor
+from oml.samplers.balance import BalanceSampler
+from oml.utils.download_mock_dataset import download_mock_dataset
+
+from pytorch_metric_learning import losses, distances, reducers, miners
+
+dataset_root = "mock_dataset/"
+df_train, _ = download_mock_dataset(dataset_root)
+
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+
+train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
+
+# PML specific
+# criterion = losses.TripletMarginLoss(margin=0.2, triplets_per_anchor="all")
+criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(), embedding_size=model.feat_dim)  # for classification-like losses
+
+sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
+
+for batch in tqdm(train_loader):
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+```
+
+</p>
+</details>
+
+
+<details>
+<summary>Training with distance, reducer, miner and loss from PML</summary>
+<p>
+
+```python
+import torch
+from tqdm import tqdm
+
+from oml.datasets.base import DatasetWithLabels
+from oml.losses.triplet import TripletLossWithMiner
+from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.vit.vit import ViTExtractor
+from oml.samplers.balance import BalanceSampler
+from oml.utils.download_mock_dataset import download_mock_dataset
+
+from pytorch_metric_learning import losses, distances, reducers, miners
+
+dataset_root = "mock_dataset/"
+df_train, _ = download_mock_dataset(dataset_root)
+
+model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+
+train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
+
+# PML specific
+distance = distances.LpDistance(p=2)
+reducer = reducers.ThresholdReducer(low=0)
+criterion = losses.TripletMarginLoss()
+miner = miners.TripletMarginMiner(margin=0.2, distance=distance, type_of_triplets="all")
+
+sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
+
+for batch in tqdm(train_loader):
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"], miner(embeddings, batch["labels"]))  # PML specific
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+```
+
+</p>
+</details>
+
+ㅤ
+
+Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
+we recommend you to pick `distances.LpDistance(p=2)`.
+
+To use content from PyTorch Metric Learning with our Config API just follow the standard
+[tutorial](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc)
+of adding custom loss.
 
 ## Zoo
 

@@ -8,6 +8,9 @@ README_FILE ?= README.md
 
 OML_VERSION=$(shell cat oml/__init__.py | sed 's,.*__version__ = "\(.*\)".*,\1,')
 
+# Note, we use the markdown files below to build the documentation (readthedocs).
+# The problem with the documentation is that .rst files have to have their own headers in a special format.
+# So, to avoid duplicating headers in the documentation we removed them from markdown files.
 .PHONY: build_readme
 build_readme:
 	rm -f ${README_FILE}
@@ -23,6 +26,8 @@ build_readme:
 	cat docs/readme/get_started_config.md >> ${README_FILE}
 	echo "\n## Get started using Python\n" >> ${README_FILE}
 	cat docs/readme/python_examples.md >> ${README_FILE}
+	echo "\n## Usage with PyTorch Metric Learning\n" >> ${README_FILE}
+	cat docs/readme/usage_with_pml.md >> ${README_FILE}
 	echo "\n## Zoo\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}
 	echo "\n## Acknowledgments\n" >> ${README_FILE}

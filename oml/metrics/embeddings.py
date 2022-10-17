@@ -116,7 +116,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.return_only_main_category = return_only_main_category
 
         self.metrics_to_exclude_from_visualization = metrics_to_exclude_from_visualization
-        self.verbose = verbose and is_main_process()
+        self.verbose = verbose
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
@@ -205,7 +205,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         else:
             metric_to_return = deepcopy(self.metrics)
 
-        if self.verbose:
+        if self.verbose and is_main_process():
             print("\nMetrics:")
             pprint(metric_to_return)
 

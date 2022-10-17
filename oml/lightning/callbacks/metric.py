@@ -127,7 +127,9 @@ class MetricValCallback(Callback):
             f"Incorrect calculation for {self.metric.__class__.__name__} metric. "
             f"Inconsistent number of samples, obtained: {self._collected_samples}, "
             f"expected: {self._expected_samples}, "
-            f"'samples_in_getitem': {self.samples_in_getitem}"
+            f"'samples_in_getitem': {self.samples_in_getitem}.\n"
+            f"Make sure that you don't use the 'overfit_batches' parameter in 'pl.Trainer' and "
+            f"you set 'drop_last=False'. The idea is that lengths of dataset and dataloader must match."
         )
 
 
@@ -142,7 +144,8 @@ err_message_loaders_is_not_patched = (
     f"will ignore loaders from 'train_dataloader' and 'val_dataloader' methods. Please avoid substituting loaders to "
     f"this functions, instead use '{ModuleDDP.__name__}'\n"
     f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
-    f"replacement in '{ModuleDDP.__name__}' constructor"
+    f"replacement in '{ModuleDDP.__name__}' constructor\n"
+    f"5) Turn off the 'overfit_batches' parameter in 'pl.Trainer'."
 )
 
 
