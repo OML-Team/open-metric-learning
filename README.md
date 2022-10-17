@@ -49,6 +49,45 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 
 
 <details>
+<summary>What is the difference between Open Metric Learning and PyTorch Metric Learning?</summary>
+<p>
+
+[PML](https://github.com/KevinMusgrave/pytorch-metric-learning) is the popular library for Metric Learning,
+and it includes a rich collection of losses, miners, distances, and reducers; that is why we provide straightforward
+[examples](https://github.com/OML-Team/open-metric-learning#usage-with-pytorch-metric-learning) of using them with OML.
+Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
+That is how OML differs from PML:
+
+* OML has [Config API](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html)
+  which allows training models by preparing a config and your data in the required format
+  (it's like converting data into COCO format to train a detector from [mmdetection](https://github.com/open-mmlab/mmdetection)).
+
+* OML focuses on end-to-end pipelines and practical use cases.
+  It has config based examples on popular benchmarks close to real life (like photos of products of thousands ids).
+  We found some good combinations of hyperparameters on these datasets, trained and published models and their configs.
+  Thus, it makes OML more recipes oriented than PML, and its author
+  [confirms](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/169#issuecomment-670814393)
+  this saying that his library is a set of tools rather the recipes, moreover, the examples in PML are mostly for CIFAR and MNIST datasets.
+
+* OML has the [Zoo](https://github.com/OML-Team/open-metric-learning#zoo) of pretrained models that can be easily accessed from
+  the code in the same way as in `torchvision` (when you type `resnet50(pretrained=True)`).
+
+* OML is integrated with [PyTorch Lightning](https://www.pytorchlightning.ai/), so, we can use the power of its
+  [Trainer](https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html).
+  This is especially helpful when we work with DDP, so, you compare our
+  [DDP example](https://open-metric-learning.readthedocs.io/en/latest/examples/python.html)
+  and the
+  [PMLs one](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb).
+  By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
+  in the examples and custom `train` / `test` functions are used instead.
+
+We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
+
+</p>
+</details>
+
+
+<details>
 <summary>What is Metric Learning?</summary>
 <p>
 
