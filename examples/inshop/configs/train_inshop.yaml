@@ -54,12 +54,12 @@ num_workers: 20
 cache_size: 0
 
 transforms_train:
-  name: augs_albu
+  name: augs_hypvit_torch
   args:
     im_size: 224
 
 transforms_val:
-  name: norm_resize_albu
+  name: norm_resize_hypvit_torch
   args:
     im_size: 224
 

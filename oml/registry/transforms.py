@@ -9,7 +9,9 @@ from oml.transforms.images.albumentations.transforms import (
 from oml.transforms.images.torchvision.transforms import (
     get_arcface_test_transforms,
     get_arcface_train_transforms,
+    get_augs_hypvit,
     get_augs_torch,
+    get_normalisation_resize_hypvit,
     get_normalisation_resize_torch,
     get_normalisation_torch,
 )
@@ -29,6 +31,8 @@ TRANSFORMS_TORCH = {
     "norm_resize_torch": get_normalisation_resize_torch,
     "arcface_train_torch": get_arcface_train_transforms,
     "arcface_test_torch": get_arcface_test_transforms,
+    "augs_hypvit_torch": get_augs_hypvit,
+    "norm_resize_hypvit_torch": get_normalisation_resize_hypvit,
 }
 
 TRANSFORMS_REGISTRY = {**TRANSFORMS_ALBU, **TRANSFORMS_TORCH}
