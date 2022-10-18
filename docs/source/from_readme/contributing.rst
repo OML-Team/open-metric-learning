@@ -1,0 +1,4 @@
+Contributing
+~~~~~~~~~~~~
+
+.. mdinclude:: ../../../CONTRIBUTING.md
