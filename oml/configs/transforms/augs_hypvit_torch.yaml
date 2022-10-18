@@ -1,0 +1,3 @@
+name: augs_hypvit_torch
+args:
+  im_size: 224

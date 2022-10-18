@@ -1,0 +1,4 @@
+name: norm_resize_hypvit_torch
+args:
+  im_size: 256
+  crop_size: 224
