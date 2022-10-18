@@ -233,7 +233,7 @@ def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
         trainer.fit(model=pl_model)
     else:
         trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
-    
+
     return trainer
 
 

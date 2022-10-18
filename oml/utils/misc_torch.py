@@ -1,13 +1,24 @@
 from abc import ABC
 from collections.abc import MutableMapping
-from typing import Any, Collection, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Hashable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import numpy as np
+import pytorch_lightning as pl
 import torch
 from torch import Tensor, cdist
-import pytorch_lightning as pl
-from oml.const import OVERALL_CATEGORIES_KEY
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.utils.misc import flatten_dict
 
@@ -63,7 +74,9 @@ def _check_is_sequence(val: Any) -> bool:
         return False
 
 
-def get_embedding_metric_from_callbacks(callbacks: Collection[pl.Callback], key: str = f"{OVERALL_CATEGORIES_KEY}/cmc/1") -> float:
+def get_embedding_metric_from_callbacks(
+    callbacks: Collection[pl.Callback], key: str = f"{OVERALL_CATEGORIES_KEY}/cmc/1"
+) -> float:
     for clb in callbacks:
         if isinstance(clb, MetricValCallback):
             metric = float(flatten_dict(clb.metric.metrics)[key])
