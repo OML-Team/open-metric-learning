@@ -1,3 +1,43 @@
+defaults:
+  - override hydra/sweeper: nevergrad
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+   - pkg://oml.configs
+  sweeper:
+    optim:
+      # optimizer: OnePlusOne
+      optimizer: NGOpt
+      budget: 40
+      num_workers: 1
+      maximize: true
+      noisy: true
+    parametrization:
+      optimizer.args.lr:
+        init: 0.00005
+        step: 1.5
+        lower: 0.00001
+        upper: 0.0001
+        log: true
+      bs_train:
+        init: 256
+        lower: 128
+        upper: 384
+        integer: true
+      criterion.args.m:
+        init: 0.4
+        lower: 0.1
+        upper: 0.75
+      criterion.args.s:
+        init: 64
+        lower: 8
+        upper: 128
+
+remove_this_hack_later: True
+
+
 postfix: metric_learning
 
 seed: 42
@@ -27,7 +67,7 @@ sampler: null
 bs_train: 256
 
 bs_val: 256
-max_epochs: 10000
+max_epochs: 35
 valid_period: 1
 
 metric_args:
@@ -100,9 +140,5 @@ tags:
   - deepfashion
   - arcface_fix2
   - classification_only
+  - multirun
 
-hydra:
-  run:
-    dir: ${hydra_dir}
-  searchpath:
-   - pkg://oml.configs

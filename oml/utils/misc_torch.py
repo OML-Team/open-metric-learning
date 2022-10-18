@@ -66,7 +66,7 @@ def _check_is_sequence(val: Any) -> bool:
 def get_embedding_metric_from_callbacks(callbacks: Collection[pl.Callback], key: str = f"{OVERALL_CATEGORIES_KEY}/cmc/1") -> float:
     for clb in callbacks:
         if isinstance(clb, MetricValCallback):
-            metric: float = flatten_dict(clb.metric.metrics)[key]
+            metric = float(flatten_dict(clb.metric.metrics)[key])
             return metric
     raise KeyError(f"There are no MetricValCallback in callbacks, so it is impossible to get metric")
 
