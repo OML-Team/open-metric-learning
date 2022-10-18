@@ -30,7 +30,7 @@ build_readme:
 	cat docs/readme/usage_with_pml.md >> ${README_FILE}
 	echo "\n## Zoo\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}
-	echo "\n## Contributing\n" >> ${README_FILE}
+	echo "\n## Contributing guide\n" >> ${README_FILE}
 	cat docs/readme/contributing.md >> ${README_FILE}
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
 	cat docs/readme/acknowledgments.md >> ${README_FILE}

@@ -1,4 +1,4 @@
-Contributing
-~~~~~~~~~~~~
+Contributing guide
+~~~~~~~~~~~~~~~~~~
 
 .. mdinclude:: ../../../CONTRIBUTING.md

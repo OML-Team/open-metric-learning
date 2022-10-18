@@ -581,10 +581,10 @@ model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.c
 ```
 [comment]:checkpoint-end
 
-## Contributing
+## Contributing guide
 
 We welcome new contributors! Please, see our
-[contribution guide](https://open-metric-learning.readthedocs.io/en/latest/from_readme/contributing.html).
+[contributing guide](https://open-metric-learning.readthedocs.io/en/latest/from_readme/contributing.html).
 
 ## Acknowledgments
 
