@@ -1,7 +1,7 @@
 import math
 from collections import defaultdict
 from functools import partial
-from typing import Any
+from typing import Any, Tuple
 
 import pytest
 import torch
@@ -13,6 +13,7 @@ from oml.const import (
     IS_QUERY_KEY,
     LABELS_KEY,
     OVERALL_CATEGORIES_KEY,
+    PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
@@ -119,6 +120,27 @@ def worst_case() -> Any:
     return (batch1, batch2), (metrics, k)
 
 
+@pytest.fixture()
+def case_for_distance_check() -> Any:
+    batch1 = {
+        EMBEDDINGS_KEY: torch.stack([oh(1) * 2, oh(1) * 3, oh(0)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([True, True, True]),
+        IS_GALLERY_KEY: torch.tensor([False, False, False]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
+    }
+
+    batch2 = {
+        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
+        LABELS_KEY: torch.tensor([0, 1, 1]),
+        IS_QUERY_KEY: torch.tensor([False, False, False]),
+        IS_GALLERY_KEY: torch.tensor([True, True, True]),
+        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
+    }
+    ids_ranked_by_distance = [1, 2, 0]
+    return (batch1, batch2), ids_ranked_by_distance
+
+
 def run_retrieval_metrics(case) -> None:  # type: ignore
     (batch1, batch2), (gt_metrics, k) = case
 
@@ -214,3 +236,44 @@ def test_mixed_epochs(perfect_case, imperfect_case, worst_case):  # type: ignore
     for case1 in cases:
         for case2 in cases:
             run_across_epochs(case1, case2)
+
+
+def test_worst_k(case_for_distance_check) -> None:  # type: ignore
+    (batch1, batch2), gt_ids = case_for_distance_check
+
+    num_samples = len(batch1[LABELS_KEY]) + len(batch2[LABELS_KEY])
+    calc = EmbeddingMetrics(
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
+        categories_key=CATEGORIES_KEY,
+        cmc_top_k=(),
+        precision_top_k=(),
+        map_top_k=(2,),
+    )
+
+    calc.setup(num_samples=num_samples)
+    calc.update_data(batch1)
+    calc.update_data(batch2)
+
+    calc.compute_metrics()
+
+    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
+
+
+@pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])
+def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
+    calc = EmbeddingMetrics(
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
+        categories_key=CATEGORIES_KEY,
+        extra_keys=extra_keys,
+        cmc_top_k=(1,),
+        precision_top_k=(),
+        map_top_k=(),
+    )
+
+    assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys

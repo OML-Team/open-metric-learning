@@ -21,3 +21,6 @@ class ITripletLossWithMiner(Module):
 
         """
         raise NotImplementedError()
+
+
+__all__ = ["ITripletLossWithMiner"]

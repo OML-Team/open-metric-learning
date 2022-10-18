@@ -6,17 +6,20 @@ import torch
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
-from oml.const import MEAN, STD, TNormParam
+from oml.const import MEAN, STD, STORAGE_URL, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.hubconf import dino_vitb8  # type: ignore
-from oml.models.vit.hubconf import dino_vitb16  # type: ignore
-from oml.models.vit.hubconf import dino_vits8  # type: ignore
-from oml.models.vit.hubconf import dino_vits16  # type: ignore
+from oml.models.vit.hubconf import (  # type: ignore
+    dino_vitb8,
+    dino_vitb16,
+    dino_vits8,
+    dino_vits16,
+)
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
-from oml.utils.io import download_checkpoint
+from oml.utils.io import download_checkpoint_one_of
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
+_STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 
 class ViTExtractor(IExtractor):
@@ -34,10 +37,26 @@ class ViTExtractor(IExtractor):
         "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
         "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
         # our pretrained checkpoints
-        "vits16_inshop": ("1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste", "e1017d", "vits16_inshop.ckpt"),
-        "vits16_sop": ("1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt", "85cfa5", "vits16_sop.ckpt"),
-        "vits16_cub": ("1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G", "e82633", "vits16_cub.ckpt"),
-        "vits16_cars": ("1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg", "9f1e59", "vits16_cars.ckpt"),
+        "vits16_inshop": (
+            [f"{_STORAGE_CKPTS}/inshop/vits16_inshop.ckpt", "1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste"],
+            "e1017d",
+            "vits16_inshop.ckpt",
+        ),
+        "vits16_sop": (
+            [f"{_STORAGE_CKPTS}/sop/vits16_sop.ckpt", "1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt"],
+            "85cfa5",
+            "vits16_sop.ckpt",
+        ),
+        "vits16_cub": (
+            [f"{_STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
+            "e82633",
+            "vits16_cub.ckpt",
+        ),
+        "vits16_cars": (
+            [f"{_STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
+            "9f1e59",
+            "vits16_cars.ckpt",
+        ),
     }
 
     def __init__(
@@ -58,7 +77,7 @@ class ViTExtractor(IExtractor):
             strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """
-        assert arch in self.constructors.keys()
+        assert arch in self.constructors
         super(ViTExtractor, self).__init__()
 
         self.normalise_features = normalise_features
@@ -71,12 +90,12 @@ class ViTExtractor(IExtractor):
         if weights is None:
             return
 
-        if weights in self.pretrained_models.keys():
+        if weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            weights = download_checkpoint_one_of(url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname)  # type: ignore
 
         ckpt = torch.load(weights, map_location="cpu")
-        state_dict = ckpt["state_dict"] if "state_dict" in ckpt.keys() else ckpt
+        state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
         self.model.load_state_dict(ckpt, strict=strict_load)
 
