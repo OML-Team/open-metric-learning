@@ -6,3 +6,4 @@ args:
   in_features: 384
   num_classes: 3985
   mlp_features: [512, 256]
+  

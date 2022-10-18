@@ -2,11 +2,13 @@ from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
 import torch
+from torch.distributed import get_rank
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
+from oml.ddp.utils import is_main_process
 from oml.interfaces.criterions import ICriterion
 from oml.interfaces.models import IExtractor
 from oml.lightning.modules.module_ddp import ModuleDDP

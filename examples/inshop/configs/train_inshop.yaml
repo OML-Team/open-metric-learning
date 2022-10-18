@@ -2,9 +2,9 @@ postfix: metric_learning
 
 seed: 42
 precision: 32
-gpus: [0]
+gpus: [0, 1]
 
-dataframe_name: df_fixed_train_fixed_val.csv
+dataframe_name: df_no_bboxes.csv
 show_dataset_warnings: False
 dataset_root: /nydl/data/DeepFashion_InShop/
 logs_root: /nydl/logs/DeepFashion_InShop/
@@ -31,7 +31,7 @@ max_epochs: 10000
 valid_period: 1
 
 metric_args:
-  metrics_to_exclude_from_visualization: [cmc,]
+  metrics_to_exclude_from_visualization: [cmc, precision]
   cmc_top_k: [1]
   map_top_k: [5]
   return_only_main_category: True
@@ -52,14 +52,14 @@ metric_for_checkpointing: OVERALL/cmc/1
 #     normalise_features: False
 
 model:
-  name: vit
-  # name: vit_with_projection
+  # name: vit
+  name: vit_with_projection
   args:
     normalise_features: False
-    use_multi_scale: False
+    # use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    # feature_size: 256
+    feature_size: 512
 
 map_labels: True
 # map_categories: True
@@ -75,6 +75,7 @@ optimizer:
   name: adam
   args:
     lr: 1e-5
+    weight_decay: 1e-5
 
 
 scheduling:

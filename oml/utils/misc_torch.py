@@ -1,10 +1,15 @@
 from abc import ABC
 from collections.abc import MutableMapping
-from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Any, Collection, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import torch
 from torch import Tensor, cdist
+import pytorch_lightning as pl
+from oml.const import OVERALL_CATEGORIES_KEY
+
+from oml.lightning.callbacks.metric import MetricValCallback
+from oml.utils.misc import flatten_dict
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
@@ -56,6 +61,14 @@ def _check_is_sequence(val: Any) -> bool:
         return True
     except Exception:
         return False
+
+
+def get_embedding_metric_from_callbacks(callbacks: Collection[pl.Callback], key: str = f"{OVERALL_CATEGORIES_KEY}/cmc/1") -> float:
+    for clb in callbacks:
+        if isinstance(clb, MetricValCallback):
+            metric: float = flatten_dict(clb.metric.metrics)[key]
+            return metric
+    raise KeyError(f"There are no MetricValCallback in callbacks, so it is impossible to get metric")
 
 
 class OnlineCalc(ABC):
