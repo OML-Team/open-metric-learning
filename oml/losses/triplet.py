@@ -222,10 +222,12 @@ class TripletLossWithMiner(ITripletLossWithMiner):
                         "neg_dist_bank": avg_d(anchor[is_bank_tri], negative[is_bank_tri]),
                     }
                 )
-
         else:
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
+
+        if hasattr(self.miner, "last_logs"):
+            self.last_logs.update(self.miner.last_logs)
 
         self.last_logs.update(self.tri_loss.last_logs)
 
