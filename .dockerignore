@@ -1,0 +1,13 @@
+__pycache__/
+*.DS_Store*
+**/.env
+*.idea/*
+dataset
+lightning_logs/
+notebooks/
+dist/*
+tests/test_examples/**/mock_dataset/
+tests/test_examples/**/logs/
+mock_dataset/
+logs/
+docs/build
