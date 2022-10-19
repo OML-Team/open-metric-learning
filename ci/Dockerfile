@@ -33,6 +33,5 @@ RUN pip install torch==1.12.0 torchvision==0.13.0 --extra-index-url https://down
 COPY ci/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /oml
-RUN rm /oml/.env
 WORKDIR /oml/
 RUN pip install -e .
