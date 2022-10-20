@@ -6,7 +6,7 @@ from oml.lightning.entrypoints.train import pl_train
 
 @hydra.main(config_path="configs", config_name="train_inshop.yaml")
 def main_hydra(cfg: DictConfig) -> None:
-    return pl_train(cfg)
+    pl_train(cfg)
 
 
 if __name__ == "__main__":

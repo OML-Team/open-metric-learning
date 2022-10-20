@@ -1,77 +1,43 @@
-defaults:
-  - override hydra/sweeper: nevergrad
-
-hydra:
-  run:
-    dir: ${hydra_dir}
-  searchpath:
-   - pkg://oml.configs
-  sweeper:
-    optim:
-      # optimizer: OnePlusOne
-      optimizer: NGOpt
-      budget: 40
-      num_workers: 1
-      maximize: true
-      noisy: true
-    parametrization:
-      optimizer.args.lr:
-        init: 0.00005
-        step: 1.5
-        lower: 0.00001
-        upper: 0.0001
-        log: true
-      bs_train:
-        init: 256
-        lower: 128
-        upper: 384
-        integer: true
-      criterion.args.m:
-        init: 0.4
-        lower: 0.1
-        upper: 0.75
-      criterion.args.s:
-        init: 64
-        lower: 8
-        upper: 128
-
-remove_this_hack_later: True
-
-
 postfix: metric_learning
 
 seed: 42
 precision: 32
-gpus: [0, 1]
+accelerator: gpu
+devices: 1
 
 dataframe_name: df_no_bboxes.csv
-show_dataset_warnings: False
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/DeepFashion_InShop/
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
+cache_size: 100000
 
 transforms_train:
-  name: augs_hypvit_torch
+  name: augs_albu
   args:
     im_size: 224
 
 transforms_val:
-  name: norm_resize_hypvit_torch
+  name: norm_resize_albu
   args:
     im_size: 224
 
-sampler: null
-bs_train: 256
+sampler:
+  name: category_balance
+  args:
+    n_labels: 13
+    n_instances: 6
+    n_categories: 3
+    resample_labels: True
+    weight_categories: True
 
 bs_val: 256
-max_epochs: 35
+max_epochs: 10000
 valid_period: 1
 
 metric_args:
-  metrics_to_exclude_from_visualization: [cmc, precision]
+  metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1]
   map_top_k: [5]
   return_only_main_category: True
@@ -81,51 +47,32 @@ log_images: True
 
 metric_for_checkpointing: OVERALL/cmc/1
 
-# model:
-#   name: resnet_with_projection
-#   args:
-#     arch: resnet50
-#     weights: imagenet_v1
-#     feature_size: 256
-#     remove_fc: True
-#     gem_p: 2
-#     normalise_features: False
-
 model:
-  # name: vit
-  name: vit_with_projection
+  name: vit
   args:
     normalise_features: False
-    # use_multi_scale: False
+    use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    feature_size: 512
 
-map_labels: True
-# map_categories: True
 criterion:
-  name: arcface
+  name: triplet_with_miner
   args:
-    label_smoothing: null
-    m: 0.4
-    s: 64
-    # mlp_features: [512, 256]
+    need_logs: True
+    margin: null
+    reduction: mean
+    miner:
+      name: hard_triplets
+      args:
+        norm_required: False
 
 optimizer:
   name: adam
   args:
     lr: 1e-5
-    weight_decay: 1e-5
 
 
-scheduling:
-  scheduler_interval: epoch
-  scheduler_frequency: 1
-  scheduler:
-    name: multi_step
-    args:
-      milestones: [20, 40, 60]
-      gamma: 0.5
+scheduling: null
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
@@ -138,7 +85,9 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
-  - arcface_fix2
-  - classification_only
-  - multirun
 
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+   - pkg://oml.configs
