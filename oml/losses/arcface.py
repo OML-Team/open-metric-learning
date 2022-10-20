@@ -45,12 +45,16 @@ class ArcFaceLoss(ICriterion):
         self.sin_m = np.sin(m)
         self.th = -self.cos_m
         self.mm = self.sin_m * m
+        self.last_logs: Dict[str, float] = {}
 
     def fc(self, x: torch.Tensor) -> torch.Tensor:
         return F.linear(F.normalize(x, p=2), F.normalize(self.weight, p=2))
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         cos = self.fc(x)
+
+        self._log_accuracy_on_batch(cos, y)
+
         sin = torch.sqrt(1.0 - torch.pow(cos, 2))
 
         cos_w_margin = cos * self.cos_m - sin * self.sin_m
@@ -68,6 +72,14 @@ class ArcFaceLoss(ICriterion):
             y = torch.where(mask_l2c, self.label_smoothing / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
 
         return self.criterion(logit, y)
+
+    def _log_accuracy_on_batch(self, logits: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        accuracy = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
+        self.last_logs.update(
+            {
+                "accuracy": float(accuracy),
+            }
+        )
 
 
 class ArcFaceLossWithMLP(ArcFaceLoss):

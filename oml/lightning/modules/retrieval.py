@@ -2,9 +2,9 @@ from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
 import torch
-from torch.distributed import get_rank
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
+from torch.distributed import get_rank
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
@@ -76,6 +76,10 @@ class RetrievalModule(pl.LightningModule):
         self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
+            if "accuracy" in self.criterion.last_logs:
+                self.log(
+                    "accuracy", self.criterion.last_logs.pop("accuracy"), prog_bar=False, on_step=False, on_epoch=True
+                )
             self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
         if self.scheduler is not None:

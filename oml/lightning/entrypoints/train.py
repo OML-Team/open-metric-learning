@@ -43,11 +43,7 @@ def pl_train(cfg: TCfg) -> None:
 
 
 def pl_train_return_main_metric(cfg: TCfg) -> float:
-    if dictconfig_to_dict(cfg).get("remove_this_hack_later", False):
-        try:
-            trainer = pl_train_return_trainer(cfg)
-        except:
-            return 0
+    trainer = pl_train_return_trainer(cfg)
     return get_embedding_metric_from_callbacks(trainer.callbacks, key=cfg["metric_for_checkpointing"])
 
 
@@ -129,8 +125,6 @@ def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
         scheduler_kwargs = {"scheduler": None}
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
-    # nah, it really shouldn't
-    # assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
     if sampler is None:
         loader_train = DataLoader(

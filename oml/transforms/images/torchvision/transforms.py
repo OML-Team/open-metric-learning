@@ -1,6 +1,5 @@
-import PIL
 import torchvision.transforms as t
-from torchvision.transforms import Compose, Normalize, ToTensor
+from torchvision.transforms import Compose, InterpolationMode, Normalize, ToTensor
 
 from oml.const import MEAN, STD, TNormParam
 
@@ -21,7 +20,7 @@ def get_augs_torch(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD)
 def get_augs_hypvit(im_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD) -> t.Compose:
     augs = t.Compose(
         [
-            t.RandomResizedCrop(im_size, scale=(0.2, 1.0), interpolation=PIL.Image.BICUBIC),
+            t.RandomResizedCrop(im_size, scale=(0.2, 1.0), interpolation=InterpolationMode.BICUBIC),
             t.RandomHorizontalFlip(),
             t.ToTensor(),
             t.Normalize(mean=mean, std=std),
@@ -35,7 +34,7 @@ def get_normalisation_resize_hypvit(
 ) -> t.Compose:
     transforms = t.Compose(
         [
-            t.Resize(im_size, interpolation=PIL.Image.BICUBIC),
+            t.Resize(im_size, interpolation=InterpolationMode.BICUBIC),
             t.CenterCrop(crop_size),
             t.ToTensor(),
             t.Normalize(mean=mean, std=std),
