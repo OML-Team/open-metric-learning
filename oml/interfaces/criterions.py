@@ -1,4 +1,3 @@
-import re
 from typing import List, Union
 
 from torch import Tensor
