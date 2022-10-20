@@ -24,11 +24,4 @@ class ITripletLossWithMiner(Module):
         raise NotImplementedError()
 
 
-class ICriterion(Module):
-    @property
-    def cirt_name(self) -> str:
-        # class name to snake case
-        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower().replace("_loss", "")
-
-
-__all__ = ["ITripletLossWithMiner", "ICriterion"]
+__all__ = ["ITripletLossWithMiner"]

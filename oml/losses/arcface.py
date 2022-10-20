@@ -7,10 +7,8 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import MLP
 
-from oml.interfaces.criterions import ICriterion
 
-
-class ArcFaceLoss(ICriterion):
+class ArcFaceLoss(nn.Module):
     def __init__(
         self,
         in_features: int,

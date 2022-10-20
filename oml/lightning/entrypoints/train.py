@@ -35,19 +35,9 @@ from oml.utils.misc import (
     load_dotenv,
     set_global_seed,
 )
-from oml.utils.misc_torch import get_embedding_metric_from_callbacks
 
 
 def pl_train(cfg: TCfg) -> None:
-    pl_train_return_trainer(cfg)
-
-
-def pl_train_return_main_metric(cfg: TCfg) -> float:
-    trainer = pl_train_return_trainer(cfg)
-    return get_embedding_metric_from_callbacks(trainer.callbacks, key=cfg["metric_for_checkpointing"])
-
-
-def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
     """
     This is an entrypoint for the model training in metric learning setup.
 
@@ -231,4 +221,4 @@ def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
     return trainer
 
 
-__all__ = ["pl_train", "pl_train_return_main_metric", "pl_train_return_trainer"]
+__all__ = ["pl_train"]
