@@ -603,6 +603,6 @@ I would like to thank people who continue working on this pipeline when it becam
 [Aleksei Tarasov](https://github.com/DaloroAT) and
 [Verkhovtsev Leonid](https://github.com/leoromanovich).
 
-I also want to thank NewYorker, since the part of functionality was developed (and used) by its computer vision team led by me.
-
 <a href="https://www.newyorker.de/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/New_Yorker.svg/1280px-New_Yorker.svg.png" width="100"/></a>
+
+I also want to thank NewYorker, since the part of functionality was developed (and used) by its computer vision team led by me.
