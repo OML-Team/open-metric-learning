@@ -234,7 +234,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def get_worst_queries_ids(self, metric_name: str, n_queries: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
-        return torch.topk(metric_values, min(n_queries, len(metric_values)))[1].tolist()
+        return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
 
     def get_plot_for_worst_queries(
         self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
@@ -259,7 +259,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
         assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        dist_matrix_with_inf, _ = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
+        dist_matrix_with_inf, mask_gt = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
 
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
@@ -289,7 +289,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         for j, query_idx in enumerate(query_ids):
             ids = torch.argsort(dist_matrix_with_inf[query_idx])[:n_instances]
 
-            n_gt = self.mask_gt[query_idx].sum()  # type: ignore
+            n_gt = mask_gt[query_idx].sum()  # type: ignore
 
             plt.subplot(
                 len(query_ids),
@@ -306,7 +306,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             plt.axis("off")
 
             for i, idx in enumerate(ids):
-                color = GREEN if self.mask_gt[query_idx, idx] else RED  # type: ignore
+                color = GREEN if mask_gt[query_idx, idx] else RED  # type: ignore
                 if verbose:
                     print("G", i, gallery_paths[idx])
                 plt.subplot(
@@ -320,7 +320,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                 plt.imshow(img)
                 plt.axis("off")
 
-            gt_ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
+            gt_ids = mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
 
             for i, gt_idx in enumerate(gt_ids):
                 plt.subplot(
