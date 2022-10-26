@@ -259,7 +259,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
         assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        _, dist_matrix_with_inf = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
+        dist_matrix_with_inf, _ = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
 
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
