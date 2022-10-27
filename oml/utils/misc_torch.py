@@ -79,8 +79,9 @@ def get_embedding_metric_from_callbacks(
 ) -> float:
     for clb in callbacks:
         if isinstance(clb, MetricValCallback):
-            metric = float(flatten_dict(clb.metric.metrics)[key])
-            return metric
+            if hasattr(clb.metric, "metrics"):
+                metric = float(flatten_dict(clb.metric.metrics)[key])  # type: ignore
+                return metric
     raise KeyError(f"There are no MetricValCallback in callbacks, so it is impossible to get metric")
 
 
