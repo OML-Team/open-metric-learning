@@ -226,9 +226,6 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
-        if hasattr(self.miner, "last_logs"):
-            self.last_logs.update(self.miner.last_logs)
-
         self.last_logs.update(self.tri_loss.last_logs)
 
         if self.reduction == "mean":

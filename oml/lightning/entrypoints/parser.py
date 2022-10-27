@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 import torch
-from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.plugins import DDPPlugin
 
 from oml.const import TCfg
 from oml.utils.misc import dictconfig_to_dict
@@ -32,7 +32,7 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
         devices = len(devices)
 
     if (isinstance(devices, int) and devices > 1) or (isinstance(devices, (list, tuple)) and len(devices) > 1):
-        strategy = DDPStrategy(find_unused_parameters=False, static_graph=True)
+        strategy = DDPPlugin()
     else:
         strategy = None
 
