@@ -137,7 +137,7 @@ def case_for_distance_check() -> Any:
         IS_GALLERY_KEY: torch.tensor([True, True, True]),
         CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
-    ids_ranked_by_distance = [1, 2, 0]
+    ids_ranked_by_distance = [0, 2, 1]
     return (batch1, batch2), ids_ranked_by_distance
 
 
