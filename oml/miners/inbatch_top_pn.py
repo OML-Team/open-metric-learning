@@ -29,8 +29,8 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
     ):
         """
         Args:
-            top_positive: keep ``top_positive`` positive examples with large distances. If value is range, minimal
-                value have to be less than available amount of labels in batches
+            top_positive: keep ``top_positive`` positive examples with large distances. If the value is a range, minimal
+                value has to be less than the available amount of labels in batches
             top_negative: keep ``top_negative`` negative examples with small distances
 
         """
