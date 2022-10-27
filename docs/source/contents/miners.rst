@@ -42,3 +42,12 @@ HardClusterMiner
 
     .. automethod:: __init__
     .. automethod:: sample
+
+TopPNTripletsMiner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.miners.inbatch_top_pn.TopPNTripletsMiner
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: sample

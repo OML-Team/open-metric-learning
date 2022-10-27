@@ -10,9 +10,16 @@ from oml.utils.misc_torch import pairwise_dist
 
 class TopPNTripletsMiner(ITripletsMinerInBatch):
     """
-    This miner selects hard triplets based on distances between features:
-    hard positive sample has large distance to the anchor sample,
-    hard negative sample has small distance to the anchor sample.
+    This miner selects top hard triplets based on distances between features:
+
+    - hard `positive` samples has large distance to the anchor sample
+
+    - hard `negative` samples has small distance to the anchor sample
+
+    Toward the end of the training, annotation errors can affect final metric. If you are not sure about
+    the quality of your dataset, you can use range instead of integer value for paramters and exclude combinations
+    with the largest distances. For example instead picking `top5` positive examples, you can use `top2 - top5` examples
+
     """
 
     def __init__(
@@ -22,11 +29,10 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
     ):
         """
         Args:
-            top_positive: keep positive examples with largest distance
-            top_negative: keep negative examples with smallest distance
+            top_positive: keep ``top_positive`` positive examples with large distances. If value is range, minimal
+                value have to be less than available amount of labels in batches
+            top_negative: keep ``top_negative`` negative examples with small distances
 
-        Notes: Toward the end of the training, annotation errors can affect, if you are not sure about the quality
-        of your dataset, you can use range instead of integer value for paramters.
         """
 
         self.top_positive_slice = slice(*self._parse_input_arg(top_positive))
