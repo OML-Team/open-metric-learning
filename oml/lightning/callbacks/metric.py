@@ -98,7 +98,7 @@ class MetricValCallback(Callback):
             return
 
         for fig, metric_log_str in zip(*self.metric.visualize()):
-            log_str = f"{LOG_IMAGE_FOLDER}/epoch_{pl_module.current_epoch}/{metric_log_str}"
+            log_str = f"{LOG_IMAGE_FOLDER}/{metric_log_str}"
             if isinstance(pl_module.logger, NeptuneLogger):
                 pl_module.logger.experiment[log_str].log(File.as_image(fig))
             elif isinstance(pl_module.logger, TensorBoardLogger):
