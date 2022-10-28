@@ -6,6 +6,7 @@ from typing import List, Tuple, Union
 import pytest
 import torch
 
+from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.miners.inbatch_top_pn import TopPNTripletsMiner
 from oml.utils.misc_torch import pairwise_dist
@@ -35,17 +36,30 @@ def test_top_pn_miner(top_positive: Union[Tuple[int, int], int], top_negative: U
         check_miner(miner, features_and_labels)
 
 
-def test_top_and_hard_are_equal() -> None:
-    miner_hard = HardTripletsMiner()
-    miner_top_pn = TopPNTripletsMiner(top_positive=1, top_negative=1)
-    num_batches = 10
+@pytest.mark.parametrize(
+    "miner,top_miner",
+    [
+        (HardTripletsMiner(), TopPNTripletsMiner(top_positive=1, top_negative=1)),
+        (AllTripletsMiner(), TopPNTripletsMiner(top_positive=1000000, top_negative=1000000)),
+    ],
+)
+def test_all_and_hard_are_specific_cases(
+    miner: Union[AllTripletsMiner, HardTripletsMiner], top_miner: TopPNTripletsMiner
+) -> None:
+    num_batches = 100
     for features, labels in get_features_and_labels(
-        num_batches=num_batches, range_labels=(2, 5), range_instances=(3, 5)
+        num_batches=num_batches, range_labels=(2, 10), range_instances=(3, 7)
     ):
-        triplets_from_hard = miner_hard._sample(features=features, labels=labels)
-        triplets_from_top_pn = miner_top_pn._sample(features=features, labels=labels)
+        ids_from_miner = miner._sample(features, labels=labels)
+        ids_from_top_miner = top_miner._sample(features, labels=labels)
 
-        assert triplets_from_hard == triplets_from_top_pn
+        triplets_from_miner = list(zip(*ids_from_miner))
+        triplets_from_top_miner = list(zip(*ids_from_top_miner))
+
+        assert len(triplets_from_miner) > 0
+        assert len(triplets_from_top_miner) > 0
+
+        assert set(triplets_from_miner) == set(triplets_from_top_miner)
 
 
 def get_features_and_labels(
