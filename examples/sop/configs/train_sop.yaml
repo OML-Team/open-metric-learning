@@ -1,9 +1,9 @@
 postfix: metric_learning
 
 seed: 42
-precision: 32
+precision: 16
 accelerator: gpu
-devices: 1
+devices: 2
 
 dataframe_name: df.csv
 dataset_root: data/Stanford_Online_Products/
@@ -14,19 +14,20 @@ num_workers: 20
 cache_size: 100000
 
 transforms_train:
-  name: augs_albu
+  name: augs_hypvit_torch
   args:
     im_size: 224
 
 transforms_val:
-  name: norm_resize_albu
+  name: norm_resize_hypvit_torch
   args:
     im_size: 224
+    crop_size: 224
 
 sampler:
   name: category_balance
   args:
-    n_labels: 13
+    n_labels: 32
     n_instances: 6
     n_categories: 3
     resample_labels: True
@@ -59,7 +60,7 @@ criterion:
   name: triplet_with_miner
   args:
     need_logs: True
-    margin: 0.1
+    margin: 0.15
     reduction: mean
     miner:
       name: hard_triplets
@@ -69,7 +70,7 @@ criterion:
 optimizer:
   name: adam
   args:
-    lr: 2e-5  # if you provide scheduler this parameter will be ignored
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
 scheduling: null
 
