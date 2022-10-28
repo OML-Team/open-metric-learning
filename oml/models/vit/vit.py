@@ -43,7 +43,7 @@ class ViTExtractor(IExtractor):
             "vits16_inshop.ckpt",
         ),
         "vits16_sop": (
-            [f"{_STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],  # UPDATE GDRIVE!
+            [f"{_STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
             "21e743",
             "vits16_sop.ckpt",
         ),
