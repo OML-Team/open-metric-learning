@@ -1,6 +1,6 @@
 from collections import defaultdict
 from itertools import chain
-from random import randint, shuffle
+from random import randint, sample, shuffle
 from typing import List, Tuple, Union
 
 import pytest
@@ -86,8 +86,17 @@ def check_miner(
     labels = torch.tensor(labels)
     distmat = pairwise_dist(x1=features, x2=features, p=2)
 
-    ids_a, ids_p, ids_n = top_miner._sample_from_distmat(distmat=distmat, labels=labels)
+    ignore_anchor_mask = torch.zeros(len(labels), dtype=torch.bool)
+    ignore_ids = sample(range(len(labels)), k=len(labels) // 2)
+    ignore_anchor_mask[ignore_ids] = True
+
+    ids_a, ids_p, ids_n = top_miner._sample_from_distmat(
+        distmat=distmat, labels=labels, ignore_anchor_mask=ignore_anchor_mask
+    )
     triplets = list(zip(ids_a, ids_p, ids_n))
+
+    expected_anchors = (ignore_anchor_mask == 0).nonzero().squeeze().tolist()
+    assert set(ids_a) == set(expected_anchors)
 
     check_triplets_are_top(distmat=distmat, labels=labels, top_miner=top_miner, triplets=triplets)
 

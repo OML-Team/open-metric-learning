@@ -12,13 +12,13 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
     """
     This miner selects top hard triplets based on distances between features:
 
-    - hard `positive` samples has large distance to the anchor sample
+    - hard `positive` samples have large distance to the anchor sample
 
-    - hard `negative` samples has small distance to the anchor sample
+    - hard `negative` samples have small distance to the anchor sample
 
-    Toward the end of the training, annotation errors can affect final metric. If you are not sure about
-    the quality of your dataset, you can use range instead of integer value for paramters and exclude combinations
-    with the largest distances. For example instead picking `top5` positive examples, you can use `top2 - top5` examples
+    Toward the end of the training, annotation errors can affect final metric. If you are not sure about the quality of
+    your dataset, you can use range instead of integer value for paramters and exclude combinations with the largest
+    distances. For example instead picking `top5` positive examples, you can use `top2 - top5` examples.
 
     """
 
@@ -33,6 +33,10 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
                 value has to be less than the available amount of labels in batches
             top_negative: keep ``top_negative`` negative examples with small distances
 
+        Note:
+            If both parameters are 1, the miner is equivalent to ``HardTripletsMiner``.
+            If both parameters are large enough, the miner can be equivalent to ``AllTripletsMiner``
+
         """
 
         self.top_positive_slice = slice(*self._parse_input_arg(top_positive))
@@ -40,14 +44,13 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
 
     @staticmethod
     def _parse_input_arg(top: Union[Tuple[int, int], List[int], int]) -> List[int]:
-        available_types = (list, tuple, int)
-        assert isinstance(top, available_types), f"Unsupported type of argument, must be only {available_types}"
-
         if isinstance(top, int):
             top = [0, top]
-        else:
+        elif isinstance(top, (list, tuple)):
             top = list(top)
             top[0] -= 1
+        else:
+            raise TypeError("Unsupported type of argument. Must be int, tuple or list")
 
         assert top[1] > top[0]
         assert top[0] >= 0
@@ -61,6 +64,19 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
         *_: Any,
         ignore_anchor_mask: Optional[Union[List[int], Tensor, np.ndarray]] = None,
     ) -> TTripletsIds:
+        """
+        This method samples the hard triplets inside the batch based on distance between features.
+
+        Args:
+            features: Features with the shape of ``[batch_size, feature_size]``
+            labels: Labels with the size of ``batch_size``
+            ignore_anchor_mask: Parameter allows you to specify the ids of features that cannot be used as anchors. Can
+            be useful with memory banks to create triplets in which at least one vector will have gradients.
+
+        Returns:
+            The batch of the triplets in the order below:
+            ``(anchor, positive, negative)``
+        """
         assert features.shape[0] == len(labels)
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)
