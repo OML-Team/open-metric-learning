@@ -102,7 +102,6 @@ def pl_train(cfg: TCfg) -> None:
         scheduler_kwargs = {"scheduler": None}
 
     assert isinstance(extractor, IExtractor), "You model must to be child of IExtractor"
-    assert isinstance(criterion, ITripletLossWithMiner), "You criterion must be child of ITripletLossWithMiner"
 
     if sampler is None:
         loader_train = DataLoader(
