@@ -176,6 +176,8 @@ class BaseDataset(Dataset):
 
 
 class ListDataset(Dataset):
+    """Iterate over list of images"""
+
     def __init__(
         self,
         filenames_list: Sequence[Path],
@@ -184,6 +186,15 @@ class ListDataset(Dataset):
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
     ):
+        """
+        Args:
+            filenames_list: list of paths to images
+            boxes: Sequences of bounding boxes. Should be either ``None`` or
+                Sequence of Sequences of bboxes.
+            transform: torchvision or albumentations augmentations
+            f_imread: function that opens image and returns bytes
+            cache_size: cache_size: Size of the dataset's cache
+        """
         self.filenames_list = filenames_list
         self.transform = transform
         self.f_imread = f_imread
