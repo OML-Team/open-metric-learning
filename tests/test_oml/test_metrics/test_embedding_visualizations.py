@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
