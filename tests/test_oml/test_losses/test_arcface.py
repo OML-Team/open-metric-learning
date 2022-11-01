@@ -1,21 +1,27 @@
-from typing import Callable, Dict, Tuple
+import math
+from typing import Any, Dict, Tuple, Union
 
 import pytest
 import torch
+import torch.nn.functional as F
+from black import out
+from torch import nn
 from torch.optim import SGD
 
 from oml.losses.arcface import ArcFaceLoss
+from oml.utils.misc import set_global_seed
 
 
-def dataset1(seed: int) -> Tuple[torch.Tensor, torch.Tensor]:
-    torch.manual_seed(seed)
+@pytest.fixture(scope="session", params=[24, 42])
+def dataset1(request: Any) -> Tuple[torch.Tensor, torch.Tensor]:
+    set_global_seed(request.param)
     X = torch.rand((10, 2))
     y = (X[:, 0] > X[:, 1]).to(torch.int64)
     return X, y
 
 
-def dataset2(seed: int = 0) -> Tuple[torch.Tensor, torch.Tensor]:
-    seed
+@pytest.fixture
+def dataset2() -> Tuple[torch.Tensor, torch.Tensor]:
     X = torch.tensor(
         [
             [0, 0, 1],
@@ -26,22 +32,57 @@ def dataset2(seed: int = 0) -> Tuple[torch.Tensor, torch.Tensor]:
         ]
     )
     y = torch.tensor([2, 1, 0, 1, 2])
-    return X, y
+    return (X, y), {0: 0, 1: 1, 2: 1}
 
 
 @pytest.fixture
-def dataset2_label2category() -> Dict[int, int]:
-    return {0: 0, 1: 1, 2: 1}
+def dataset3() -> Tuple[torch.Tensor, torch.Tensor]:
+    X = torch.tensor(
+        [
+            [1, 0, 0],
+            [0, 0.2, 0.8],
+            [0, 0.8, 0.2],
+        ]
+    )
+    y = torch.tensor([0, 1, 2])
+    return (X, y), {0: 0, 1: 1, 2: 1}
 
 
-@pytest.mark.parametrize("seed", [2, 4, 8, 16])
-@pytest.mark.parametrize("dataset,dataset_seed", [(dataset1, 24), (dataset1, 42), (dataset2, 0)])
-def test_arcface_trainable(
-    seed: int, dataset: Callable[[int], Tuple[torch.Tensor, torch.Tensor]], dataset_seed: int
-) -> None:
-    torch.manual_seed(seed)
+def arcface_functional_for_comarison(
+    x: torch.Tensor,
+    label: torch.Tensor,
+    weight: Union[torch.Tensor, nn.Parameter],
+    criterion: nn.Module,
+    m: float = 0.5,
+    s: float = 64,
+) -> torch.Tensor:
+    """
+    Implementation from https://github.com/ronghuaiyang/arcface-pytorch
 
-    X, y = dataset(dataset_seed)
+    """
+
+    cos_m = math.cos(m)
+    sin_m = math.sin(m)
+    th = math.cos(math.pi - m)
+    mm = math.sin(math.pi - m) * m
+
+    # --------------------------- cos(theta) & phi(theta) ---------------------------
+    cosine = F.linear(F.normalize(x), F.normalize(weight))
+    sine = torch.sqrt((1.0 - torch.pow(cosine, 2)).clamp(0, 1))
+    phi = cosine * cos_m - sine * sin_m
+    phi = torch.where(cosine > th, phi, cosine - mm)
+    # --------------------------- convert label to one-hot ---------------------------
+    one_hot = torch.zeros(cosine.size(), device="cuda")
+    one_hot.scatter_(1, label.view(-1, 1).long(), 1)
+    # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
+    output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
+    output *= s
+
+    return criterion(output, label)
+
+
+def check_arcface_trainable(X: Any, y: Any) -> None:
+    # X, y = dataset(dataset_seed)
     loss = ArcFaceLoss(X.shape[-1], len(torch.unique(y)))
 
     l0 = loss(X, y).item()
@@ -57,13 +98,25 @@ def test_arcface_trainable(
     assert l0 > l1
 
 
+def test_arcface_trainable_rand_dataset(dataset1: Tuple[torch.Tensor, torch.Tensor]) -> None:
+    X, y = dataset1
+    check_arcface_trainable(X, y)
+
+
+def test_arcface_trainable_ls_dataset(dataset2: Tuple[Tuple[torch.Tensor, torch.Tensor], Dict[int, int]]) -> None:
+    (X, y), _ = dataset2
+    check_arcface_trainable(X, y)
+
+
 @pytest.mark.parametrize("label_smoothing", [0.1, 0.2, 0.5])
-def test_label_smoothing_working(label_smoothing: float, dataset2_label2category: Dict[int, int]) -> None:
-    X, y = dataset2()
+def test_label_smoothing_working(
+    label_smoothing: float, dataset2: Tuple[Tuple[torch.Tensor, torch.Tensor], Dict[int, int]]
+) -> None:
+    (X, y), label2category = dataset2
     loss = ArcFaceLoss(
         X.shape[-1],
         len(torch.unique(y)),
-        label2category=dataset2_label2category,
+        label2category=label2category,
         label_smoothing=label_smoothing,
     )
 
@@ -81,17 +134,12 @@ def test_label_smoothing_working(label_smoothing: float, dataset2_label2category
 
 
 @pytest.mark.parametrize("label_smoothing", [0.1, 0.5])
-def test_label_smoothing_fuzzy(label_smoothing: float) -> None:
-    X = torch.tensor(
-        [
-            [1.0, 0.0, 0.0],
-            [0.0, 0.5, 0.5],
-            [0.0, 0.5, 0.5],
-        ]
-    )
-    y = torch.tensor([0, 1, 2])
+def test_label_smoothing_fuzzy(
+    label_smoothing: float, dataset3: Tuple[Tuple[torch.Tensor, torch.Tensor], Dict[int, int]]
+) -> None:
+    (X, y), label2category = dataset3
 
-    loss_ls = ArcFaceLoss(3, 3, label2category={0: 0, 1: 1, 2: 1}, label_smoothing=label_smoothing)
+    loss_ls = ArcFaceLoss(3, 3, label2category=label2category, label_smoothing=label_smoothing)
     loss = ArcFaceLoss(3, 3)
 
     w = torch.eye(3).float()
@@ -100,11 +148,6 @@ def test_label_smoothing_fuzzy(label_smoothing: float) -> None:
         loss_ls.weight.copy_(w)
 
     assert loss(X, y).item() > loss_ls(X, y).item()
-
-
-def test_label_smoothing_raises_no_l2c() -> None:
-    with pytest.raises(AssertionError):
-        ArcFaceLoss(1, 1, label_smoothing=0.3)
 
 
 @pytest.mark.parametrize("label_smoothing", [0, -1, 1])

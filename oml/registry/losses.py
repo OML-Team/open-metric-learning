@@ -18,27 +18,16 @@ LOSSES_REGISTRY = {
 
 def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
     if "miner" in kwargs:
-        miner = get_miner_by_cfg(kwargs["miner"].copy())
-        del kwargs["miner"]
+        miner = get_miner_by_cfg(kwargs.pop("miner"))
         return LOSSES_REGISTRY[name](miner=miner, **kwargs)
     else:
         return LOSSES_REGISTRY[name](**kwargs)
 
 
-def get_criterion_by_cfg(
-    cfg: TCfg,
-    in_features: Optional[int] = None,
-    num_classes: Optional[int] = None,
-    label2category: Optional[Dict[str, Any]] = None,
-) -> nn.Module:
+def get_criterion_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
     cfg.setdefault("args", {})
-
-    if "arcface" in cfg["name"]:
-        cfg["args"]["in_features"] = in_features
-        cfg["args"]["num_classes"] = num_classes
-        if "label_smoothing" in cfg["args"]:
-            cfg["args"]["label2category"] = label2category
+    cfg["args"].update(**kwargs_runtime)
     return get_criterion(name=cfg["name"], **cfg["args"])
 
 

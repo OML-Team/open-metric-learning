@@ -91,11 +91,13 @@ def pl_train(cfg: TCfg) -> None:
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
+
+    criterion_runtime_args = {}
+    if cfg["criterion"].get("args", {}).get("label2category", None):
+        criterion_runtime_args["label2category"] = label2category
     criterion = get_criterion_by_cfg(
         cfg["criterion"],
-        in_features=extractor.feat_dim,
-        num_classes=df[LABELS_COLUMN].nunique(),
-        label2category=label2category,
+        **criterion_runtime_args,
     )
     optimizable_parameters = [
         {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},

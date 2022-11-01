@@ -154,28 +154,6 @@ class ResnetExtractor(IExtractor):
         return img_with_grads
 
 
-class ResNetWithLinearExtractor(ResnetExtractor):
-    def __init__(
-        self,
-        weights: Optional[Union[Path, str]],
-        arch: str,
-        normalise_features: bool = False,
-        gem_p: Optional[float] = None,
-        remove_fc: bool = True,
-        feature_size: int = 128,
-        strict_load: bool = True,
-    ):
-        super().__init__(weights, arch, normalise_features, gem_p, remove_fc, strict_load)
-        self.linear = nn.Linear(super().feat_dim, feature_size)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.linear(super().forward(x))
-
-    @property
-    def feat_dim(self) -> int:
-        return self.linear.out_features
-
-
 def load_moco_model(path_to_model: Path) -> nn.Module:
     """
     Args:

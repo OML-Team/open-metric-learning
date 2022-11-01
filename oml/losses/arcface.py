@@ -7,6 +7,8 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import MLP
 
+from oml.const import ACCURACY_KEY
+
 
 class ArcFaceLoss(nn.Module):
     def __init__(
@@ -21,19 +23,14 @@ class ArcFaceLoss(nn.Module):
     ):
         super(ArcFaceLoss, self).__init__()
 
-        if label2category is not None and label_smoothing is None:
-            warnings.warn("Label smoothing in arcface head will not be used!")
-        else:
-            assert (
-                label_smoothing is None or label2category is not None
-            ), "You have to provide label2category to use label smoothing in arcface!"
+        assert label2category is None or label_smoothing is not None, "You should provide `label_smoothing`!"
         assert (
             label_smoothing is None or label_smoothing > 0 and label_smoothing < 1
         ), f"Choose another label_smoothing parametrization, got {label_smoothing}"
 
-        self.criterion = criterion if criterion is not None else nn.CrossEntropyLoss()
+        self.criterion = criterion or nn.CrossEntropyLoss()
         self.num_classes = num_classes
-        self.label2category = {} if label_smoothing is None else torch.arange(num_classes).apply_(label2category.get)
+        self.label2category = {} if label2category is None else torch.arange(num_classes).apply_(label2category.get)
         self.label_smoothing = label_smoothing
         self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
         nn.init.xavier_uniform_(self.weight)
@@ -47,6 +44,22 @@ class ArcFaceLoss(nn.Module):
 
     def fc(self, x: torch.Tensor) -> torch.Tensor:
         return F.linear(F.normalize(x, p=2), F.normalize(self.weight, p=2))
+
+    def smooth_labels(self, ohe: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        if not isinstance(self.label2category, torch.Tensor):
+            if self.label2category.device.type != self.weight.device.type:
+                self.label2category = self.label2category.to(self.weight.device)
+            with torch.no_grad():
+                ohe = ohe.float()
+                ohe *= 1 - self.label_smoothing
+                mask_l2c = self.label2category[y].tile(self.label2category.shape[0], 1).t() == self.label2category
+            return torch.where(mask_l2c, self.label_smoothing / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
+        else:
+            with torch.no_grad():
+                ohe = ohe.float()
+                ohe *= 1 - self.label_smoothing
+                ohe += self.label_smoothing / self.num_classes
+            return ohe
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         cos = self.fc(x)
@@ -62,12 +75,7 @@ class ArcFaceLoss(nn.Module):
         logit = torch.where(ohe.bool(), cos_w_margin, cos) * self.rescale
 
         if self.label_smoothing:
-            if self.label2category.device.type != self.weight.device.type:
-                self.label2category = self.label2category.to(self.weight.device)
-            ohe = ohe.float()
-            ohe *= 1 - self.label_smoothing
-            mask_l2c = self.label2category[y].tile(self.label2category.shape[0], 1).t() == self.label2category
-            y = torch.where(mask_l2c, self.label_smoothing / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
+            y = self.smooth_labels(ohe, y)
 
         return self.criterion(logit, y)
 
@@ -75,12 +83,12 @@ class ArcFaceLoss(nn.Module):
         accuracy = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
         self.last_logs.update(
             {
-                "accuracy": float(accuracy),
+                ACCURACY_KEY: float(accuracy),
             }
         )
 
 
-class ArcFaceLossWithMLP(ArcFaceLoss):
+class ArcFaceLossWithMLP(nn.Module):
     def __init__(
         self,
         in_features: int,
@@ -92,8 +100,8 @@ class ArcFaceLossWithMLP(ArcFaceLoss):
         m: float = 0.5,
         s: float = 64,
     ):
-        super().__init__(mlp_features[-1], num_classes, criterion, label2category, label_smoothing, m, s)
         self.mlp = MLP(in_features, mlp_features)
+        self.arcface = ArcFaceLoss(mlp_features[-1], num_classes, criterion, label2category, label_smoothing, m, s)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return super().forward(self.mlp(x), y)
+        return self.arcface(self.mlp(x), y)

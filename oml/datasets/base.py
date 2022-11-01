@@ -266,7 +266,7 @@ def get_retrieval_datasets(
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
     if map_categories:
-        mapper = {l: i for i, l in enumerate(df[CATEGORIES_COLUMN].unique())}
+        mapper = {l: i for i, l in enumerate(sorted(df[CATEGORIES_COLUMN].unique()))}
         df[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].map(mapper)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)

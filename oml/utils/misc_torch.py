@@ -14,13 +14,8 @@ from typing import (
 )
 
 import numpy as np
-import pytorch_lightning as pl
 import torch
 from torch import Tensor, cdist
-
-from oml.const import OVERALL_CATEGORIES_KEY
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.utils.misc import flatten_dict
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
@@ -72,17 +67,6 @@ def _check_is_sequence(val: Any) -> bool:
         return True
     except Exception:
         return False
-
-
-def get_embedding_metric_from_callbacks(
-    callbacks: Collection[pl.Callback], key: str = f"{OVERALL_CATEGORIES_KEY}/cmc/1"
-) -> float:
-    for clb in callbacks:
-        if isinstance(clb, MetricValCallback):
-            if hasattr(clb.metric, "metrics"):
-                metric = float(flatten_dict(clb.metric.metrics)[key])  # type: ignore
-                return metric
-    raise KeyError(f"There are no MetricValCallback in callbacks, so it is impossible to get metric")
 
 
 class OnlineCalc(ABC):

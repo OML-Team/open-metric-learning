@@ -140,27 +140,6 @@ class ViTExtractor(IExtractor):
         return vis_vit(vit=self, image=image)
 
 
-class ViTWithLinearExtractor(ViTExtractor):
-    def __init__(
-        self,
-        weights: Optional[Union[Path, str]],
-        arch: str,
-        normalise_features: bool,
-        use_multi_scale: bool = False,
-        strict_load: bool = True,
-        feature_size: int = 128,
-    ):
-        super().__init__(weights, arch, normalise_features, use_multi_scale, strict_load)
-        self.linear = nn.Linear(super().feat_dim, feature_size)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.linear(super().forward(x))
-
-    @property
-    def feat_dim(self) -> int:
-        return self.linear.out_features
-
-
 def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
     vit.eval()
 
