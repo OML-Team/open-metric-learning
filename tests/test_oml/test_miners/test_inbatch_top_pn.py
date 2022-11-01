@@ -15,15 +15,15 @@ from tests.test_oml.test_miners.shared_checkers import check_triplets_consistenc
 TFeaturesAndLabels = Tuple[torch.Tensor, List[int]]
 
 
-@pytest.mark.parametrize("top_positive", [1, 3, (2, 4)])
-@pytest.mark.parametrize("top_negative", [1, 5, (3, 6)])
-def test_top_pn_miner(top_positive: Union[Tuple[int, int], int], top_negative: Union[Tuple[int, int], int]) -> None:
-    miner = TopPNTripletsMiner(top_positive=top_positive, top_negative=top_negative)
+@pytest.mark.parametrize("n_positive", [1, 3, (2, 4)])
+@pytest.mark.parametrize("n_negative", [1, 5, (3, 6)])
+def test_top_pn_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union[Tuple[int, int], int]) -> None:
+    miner = TopPNTripletsMiner(n_positive=n_positive, n_negative=n_negative)
 
     num_batches = 100
-    if isinstance(top_positive, tuple):
-        min_instances = top_positive[0] + 2
-        max_instances = randint(min_instances, min_instances + top_positive[1])
+    if isinstance(n_positive, tuple):
+        min_instances = n_positive[0] + 2
+        max_instances = randint(min_instances, min_instances + n_positive[1])
     else:
         min_instances = 2
         max_instances = randint(min_instances, min_instances + 5)
@@ -39,8 +39,8 @@ def test_top_pn_miner(top_positive: Union[Tuple[int, int], int], top_negative: U
 @pytest.mark.parametrize(
     "miner,top_miner",
     [
-        (HardTripletsMiner(), TopPNTripletsMiner(top_positive=1, top_negative=1)),
-        (AllTripletsMiner(), TopPNTripletsMiner(top_positive=1000000, top_negative=1000000)),
+        (HardTripletsMiner(), TopPNTripletsMiner(n_positive=1, n_negative=1)),
+        (AllTripletsMiner(), TopPNTripletsMiner(n_positive=1000000, n_negative=1000000)),
     ],
 )
 def test_all_and_hard_are_specific_cases(
@@ -118,10 +118,10 @@ def check_triplets_are_top(
         distmat_ = distmat[idx_anch].clone()
         # we need to select largest distances across same labels and ignore self distance
         distmat_[labels != labels[idx_anch]] = -1
-        distmat_[idx_anch] = -1
+        distmat_[idx_anch] = -float("inf")
         max_available_positives = sum(labels == labels[idx_anch]) - 1  # type: ignore
         _, hardest_positive = torch.topk(distmat_, k=max_available_positives, largest=True)
-        hardest_positive = set(hardest_positive[top_miner.top_positive_slice].tolist())
+        hardest_positive = set(hardest_positive[top_miner.positive_slice].tolist())
         assert len(miner_positives) > 0
         assert miner_positives == hardest_positive
 
@@ -133,6 +133,6 @@ def check_triplets_are_top(
         distmat_[idx_anch] = float("inf")
         max_available_negatives = sum(labels != labels[idx_anch])  # type: ignore
         _, hardest_negative = torch.topk(distmat_, k=max_available_negatives, largest=False)
-        hardest_negative = set(hardest_negative[top_miner.top_negative_slice].tolist())
+        hardest_negative = set(hardest_negative[top_miner.negative_slice].tolist())
         assert len(miner_negatives) > 0
         assert miner_negatives == hardest_negative

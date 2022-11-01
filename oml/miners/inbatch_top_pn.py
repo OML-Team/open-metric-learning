@@ -24,14 +24,14 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
 
     def __init__(
         self,
-        top_positive: Union[Tuple[int, int], List[int], int] = 1,
-        top_negative: Union[Tuple[int, int], List[int], int] = 1,
+        n_positive: Union[Tuple[int, int], List[int], int] = 1,
+        n_negative: Union[Tuple[int, int], List[int], int] = 1,
     ):
         """
         Args:
-            top_positive: keep ``top_positive`` positive examples with large distances. If the value is a range, minimal
+            n_positive: keep ``n_positive`` positive examples with large distances. If the value is a range, minimal
                 value has to be less than the available amount of labels in batches
-            top_negative: keep ``top_negative`` negative examples with small distances
+            n_negative: keep ``n_negative`` negative examples with small distances
 
         Note:
             If both parameters are 1, the miner is equivalent to ``HardTripletsMiner``.
@@ -39,23 +39,23 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
 
         """
 
-        self.top_positive_slice = slice(*self._parse_input_arg(top_positive))
-        self.top_negative_slice = slice(*self._parse_input_arg(top_negative))
+        self.positive_slice = slice(*self._parse_input_arg(n_positive))
+        self.negative_slice = slice(*self._parse_input_arg(n_negative))
 
     @staticmethod
-    def _parse_input_arg(top: Union[Tuple[int, int], List[int], int]) -> List[int]:
-        if isinstance(top, int):
-            top = [0, top]
-        elif isinstance(top, (list, tuple)):
-            top = list(top)
-            top[0] -= 1
+    def _parse_input_arg(n: Union[Tuple[int, int], List[int], int]) -> List[int]:
+        if isinstance(n, int):
+            n = [0, n]
+        elif isinstance(n, (list, tuple)):
+            n = list(n)
+            n[0] -= 1
         else:
             raise TypeError("Unsupported type of argument. Must be int, tuple or list")
 
-        assert top[1] > top[0]
-        assert top[0] >= 0
+        assert n[1] > n[0]
+        assert n[0] >= 0
 
-        return top
+        return n
 
     def _sample(
         self,
@@ -107,7 +107,7 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
             torch.arange(len(distmat_reduced), device=distmat.device).unsqueeze(-1).expand(distmat_reduced.shape)
         )
 
-        _, ids_highest_distance = torch.topk(distmat_reduced, k=distmat_reduced.shape[-1], largest=True)
+        ids_highest_distance = torch.argsort(distmat_reduced, descending=True, dim=1)
         mask_same_label = labels[:, None] == labels[None, :]  # type: ignore
         mask_same_label.fill_diagonal_(False)
         mask_same_label = mask_same_label[torch.logical_not(ignore_anchor_mask)]
@@ -129,8 +129,8 @@ class TopPNTripletsMiner(ITripletsMinerInBatch):
         ids_n = []
 
         for idx_anch in torch.arange(len(labels))[torch.logical_not(ignore_anchor_mask)]:
-            positives = hardest_positive[idx_anch_pos == idx_anch][self.top_positive_slice]
-            negatives = hardest_negative[idx_anch_neg == idx_anch][self.top_negative_slice]
+            positives = hardest_positive[idx_anch_pos == idx_anch][self.positive_slice]
+            negatives = hardest_negative[idx_anch_neg == idx_anch][self.negative_slice]
 
             i_pos, i_neg = list(zip(*torch.cartesian_prod(positives, negatives).tolist()))
             ids_a.extend([idx_anch.item()] * len(i_pos))
