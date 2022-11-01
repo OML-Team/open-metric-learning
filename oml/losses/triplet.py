@@ -20,7 +20,7 @@ class TripletLoss(Module):
     instead of using the classical formula
     ``loss = relu(margin + positive_distance - negative_distance)``
     we use
-    ``loss = log1p(positive_distance - negative_distance)``.
+    ``loss = log1p(exp(positive_distance - negative_distance))``.
     It may help to solve the often problem when `TripletMarginLoss` converges to it's
     margin value (also known as `dimension collapse`).
 
