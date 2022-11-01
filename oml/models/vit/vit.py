@@ -69,9 +69,11 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly initialize model's weights.
-             You can check the available pretrained checkpoints in ``self.pretrained_models``.
-            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options in ``self.constructors``
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to
+             randomly initialize model's weights. You can check the available pretrained checkpoints
+             in ``self.pretrained_models``.
+            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options
+             in ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
             use_multi_scale: Set ``True`` to use multi scale (the analogue of test time augmentations)
             strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
@@ -92,7 +94,9 @@ class ViTExtractor(IExtractor):
 
         if weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            weights = download_checkpoint_one_of(url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname)  # type: ignore
+            weights = download_checkpoint_one_of(
+                url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname  # type: ignore
+            )
 
         ckpt = torch.load(weights, map_location="cpu")
         state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt

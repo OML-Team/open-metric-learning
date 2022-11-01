@@ -36,7 +36,7 @@ def remove_prefix_from_state_dict(state_dict: TStateDict, trial_key: str) -> TSt
 def filter_state_dict(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
 
     for k in list(state_dict):
-        if not k in needed_keys:
+        if k not in needed_keys:
             del state_dict[k]
 
     return state_dict
@@ -89,7 +89,8 @@ def patch_device(module: nn.Module, device_node: torch.Node) -> None:
 def patch_device_and_float(module: nn.Module, device: Union[str, torch.device] = "cuda") -> None:
     """
     This function is for patching jitted weights with hardcoded ``.to(device)`` and ``.to(dtype)`` operations.
-    You may need this if you want to correctly load some jitted model which uses half-precision and(or) which device was hardcoded.
+    You may need this if you want to correctly load some jitted model which uses half-precision and(or) which
+    device was hardcoded.
     """
     device_holder = torch.jit.trace(lambda: torch.ones([]).to(torch.device(device)), example_inputs=[])
     device_node = [n for n in device_holder.graph.findAllNodes("prim::Constant") if "Device" in repr(n)][-1]

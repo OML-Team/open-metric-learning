@@ -1,6 +1,5 @@
 from abc import ABC
 
-import numpy as np
 from torch import Tensor, nn
 
 

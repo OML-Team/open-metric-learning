@@ -49,7 +49,7 @@ def check_exists_and_validate_md5(path: Union[str, Path], md5: str) -> bool:
         return calc_file_hash(path) == md5
 
 
-def download_file_from_url(url: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT) -> Optional[bytes]:  # type: ignore
+def download_file_from_url(url: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT) -> Optional[bytes]:
     assert validators.url(url), "Invalid URL"
     response = requests.get(url, timeout=timeout)
 
@@ -58,6 +58,7 @@ def download_file_from_url(url: str, fname: Optional[str] = None, timeout: float
             Path(fname).parent.mkdir(parents=True, exist_ok=True)
             with open(fname, "wb+") as f:
                 f.write(response.content)
+            return None
         else:
             return response.content
     else:
@@ -80,7 +81,7 @@ def download_checkpoint_one_of(
         print(url_or_fid)
         try:
             return download_checkpoint(url_or_fid, hash_md5, fname)
-        except:
+        except Exception:
             if attempt == len(url_or_fid_list):
                 raise
 
