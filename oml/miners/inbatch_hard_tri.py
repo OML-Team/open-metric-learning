@@ -2,7 +2,6 @@ from typing import List
 
 import numpy as np
 from torch import Tensor
-from torch.nn import functional as F
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids
@@ -18,14 +17,6 @@ class HardTripletsMiner(ITripletsMinerInBatch):
     - The hardest `negative` sample has the `minimal` distance to the anchor sample
 
     """
-
-    def __init__(self, norm_required: bool = False):
-        """
-        Args:
-            norm_required: Set ``True`` if features normalisation is needed
-
-        """
-        self._norm_required = norm_required
 
     def _sample(self, features: Tensor, labels: List[int]) -> TTripletsIds:
         """
@@ -43,9 +34,6 @@ class HardTripletsMiner(ITripletsMinerInBatch):
         assert features.shape[0] == len(labels)
 
         features = features.clone().detach()
-
-        if self._norm_required:
-            features = F.normalize(features, p=2, dim=1)
 
         dist_mat = pairwise_dist(x1=features, x2=features, p=2)
 

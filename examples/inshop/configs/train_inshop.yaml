@@ -64,8 +64,7 @@ criterion:
     reduction: mean
     miner:
       name: hard_triplets
-      args:
-        norm_required: False
+      args: {}
 
 optimizer:
   name: adamw
