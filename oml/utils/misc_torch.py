@@ -83,17 +83,14 @@ def label_smoothing(
             category-based label smoothing. In that case the biggest value in OHE-vector will be
             ``1 - label_smoothing + 1 / num_classes_of_the_same_category``
     """
-    ohe = F.one_hot(y, num_classes)
+    ohe = F.one_hot(y, num_classes).float()
     if isinstance(label2category, torch.Tensor):
-        assert y is not None, "You should provide y to use category-based label smoothing."
         with torch.no_grad():
-            ohe = ohe.float()
             ohe *= 1 - label_smoothing
             mask_l2c = label2category[y].tile(num_classes, 1).t() == label2category
         return torch.where(mask_l2c, label_smoothing / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
     else:
         with torch.no_grad():
-            ohe = ohe.float()
             ohe *= 1 - label_smoothing
             ohe += label_smoothing / num_classes
         return ohe
