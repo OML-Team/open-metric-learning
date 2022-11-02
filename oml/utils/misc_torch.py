@@ -1,17 +1,6 @@
 from abc import ABC
 from collections.abc import MutableMapping
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    Hashable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import torch
