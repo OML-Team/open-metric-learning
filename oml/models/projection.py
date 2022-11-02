@@ -24,6 +24,7 @@ class ExtractorWithMLP(IExtractor):
         weights: Optional[Union[str, Path]] = None,
         strict_load: bool = True,
     ):
+        super().__init__()
         self.extractor = extractor
         self.projection = MLP(self.extractor.feat_dim, mlp_features)
         if weights:

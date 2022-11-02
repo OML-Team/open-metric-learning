@@ -1,0 +1,10 @@
+name: extractor_with_mlp
+args:
+  mlp_features: [512]
+  extractor:
+    name: vit
+    args:
+      normalise_features: False
+      use_multi_scale: False
+      weights: vits16_dino
+      arch: vits16

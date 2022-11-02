@@ -4,7 +4,6 @@ from typing import Any, Dict, Tuple, Union
 import pytest
 import torch
 import torch.nn.functional as F
-from black import out
 from torch import nn
 from torch.optim import SGD
 

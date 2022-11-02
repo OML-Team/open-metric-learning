@@ -124,6 +124,7 @@ class ArcFaceLossWithMLP(nn.Module):
             m: Margin parameter for ArcFace loss. Usually you should use 0.3-0.5 values for it
             s: Scaling parameter for ArcFace loss. Usually you should use 30-64 values for it
         """
+        super().__init__()
         self.mlp = MLP(in_features, mlp_features)
         self.arcface = ArcFaceLoss(mlp_features[-1], num_classes, criterion, label2category, label_smoothing, m, s)
 
