@@ -8,7 +8,7 @@ from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc_torch import pairwise_dist
 
 
-class TopPNTripletsMiner(ITripletsMinerInBatch):
+class NHardTripletsMiner(ITripletsMinerInBatch):
     """
     This miner selects top hard triplets based on distances between features:
 

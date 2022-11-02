@@ -1,4 +1,4 @@
-name: top_pn
+name: nhard_triplets
 args:
   n_positive: 2
   n_negative: 2

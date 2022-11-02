@@ -5,7 +5,7 @@ from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.miners.inbatch_hard_cluster import HardClusterMiner
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
-from oml.miners.inbatch_top_pn import TopPNTripletsMiner
+from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 MINERS_REGISTRY = {
@@ -13,7 +13,7 @@ MINERS_REGISTRY = {
     "hard_cluster": HardClusterMiner,
     "hard_triplets": HardTripletsMiner,
     "triplets_with_memory": TripletMinerWithMemory,
-    "top_pn": TopPNTripletsMiner,
+    "nhard_triplets": NHardTripletsMiner,
 }
 
 

@@ -8,7 +8,7 @@ import torch
 
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
-from oml.miners.inbatch_top_pn import TopPNTripletsMiner
+from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
 from oml.utils.misc_torch import pairwise_dist
 from tests.test_oml.test_miners.shared_checkers import check_triplets_consistency
 
@@ -17,8 +17,8 @@ TFeaturesAndLabels = Tuple[torch.Tensor, List[int]]
 
 @pytest.mark.parametrize("n_positive", [1, 3, (2, 4)])
 @pytest.mark.parametrize("n_negative", [1, 5, (3, 6)])
-def test_top_pn_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union[Tuple[int, int], int]) -> None:
-    miner = TopPNTripletsMiner(n_positive=n_positive, n_negative=n_negative)
+def test_nhard_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union[Tuple[int, int], int]) -> None:
+    miner = NHardTripletsMiner(n_positive=n_positive, n_negative=n_negative)
 
     num_batches = 100
     if isinstance(n_positive, tuple):
@@ -37,29 +37,29 @@ def test_top_pn_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union
 
 
 @pytest.mark.parametrize(
-    "miner,top_miner",
+    "miner,nhard_miner",
     [
-        (HardTripletsMiner(), TopPNTripletsMiner(n_positive=1, n_negative=1)),
-        (AllTripletsMiner(), TopPNTripletsMiner(n_positive=1000000, n_negative=1000000)),
+        (HardTripletsMiner(), NHardTripletsMiner(n_positive=1, n_negative=1)),
+        (AllTripletsMiner(), NHardTripletsMiner(n_positive=1000000, n_negative=1000000)),
     ],
 )
 def test_all_and_hard_are_specific_cases(
-    miner: Union[AllTripletsMiner, HardTripletsMiner], top_miner: TopPNTripletsMiner
+    miner: Union[AllTripletsMiner, HardTripletsMiner], nhard_miner: NHardTripletsMiner
 ) -> None:
     num_batches = 100
     for features, labels in get_features_and_labels(
         num_batches=num_batches, range_labels=(2, 10), range_instances=(3, 7)
     ):
         ids_from_miner = miner._sample(features, labels=labels)
-        ids_from_top_miner = top_miner._sample(features, labels=labels)
+        ids_from_nhard_miner = nhard_miner._sample(features, labels=labels)
 
         triplets_from_miner = list(zip(*ids_from_miner))
-        triplets_from_top_miner = list(zip(*ids_from_top_miner))
+        triplets_from_nhard_miner = list(zip(*ids_from_nhard_miner))
 
         assert len(triplets_from_miner) > 0
-        assert len(triplets_from_top_miner) > 0
+        assert len(triplets_from_nhard_miner) > 0
 
-        assert set(triplets_from_miner) == set(triplets_from_top_miner)
+        assert set(triplets_from_miner) == set(triplets_from_nhard_miner)
 
 
 def get_features_and_labels(
@@ -79,7 +79,7 @@ def get_features_and_labels(
 
 
 def check_miner(
-    top_miner: TopPNTripletsMiner,
+    nhard_miner: NHardTripletsMiner,
     features_and_labels: TFeaturesAndLabels,
 ) -> None:
     features, labels = features_and_labels
@@ -90,7 +90,7 @@ def check_miner(
     ignore_ids = sample(range(len(labels)), k=len(labels) // 2)
     ignore_anchor_mask[ignore_ids] = True
 
-    ids_a, ids_p, ids_n = top_miner._sample_from_distmat(
+    ids_a, ids_p, ids_n = nhard_miner._sample_from_distmat(
         distmat=distmat, labels=labels, ignore_anchor_mask=ignore_anchor_mask
     )
     triplets = list(zip(ids_a, ids_p, ids_n))
@@ -98,13 +98,13 @@ def check_miner(
     expected_anchors = (ignore_anchor_mask == 0).nonzero().squeeze().tolist()
     assert set(ids_a) == set(expected_anchors)
 
-    check_triplets_are_top(distmat=distmat, labels=labels, top_miner=top_miner, triplets=triplets)
+    check_triplets_are_top(distmat=distmat, labels=labels, nhard_miner=nhard_miner, triplets=triplets)
 
     check_triplets_consistency(ids_anchor=ids_a, ids_pos=ids_p, ids_neg=ids_n, labels=labels)
 
 
 def check_triplets_are_top(
-    distmat: torch.Tensor, labels: List[int], top_miner: TopPNTripletsMiner, triplets: List[Tuple[int, int, int]]
+    distmat: torch.Tensor, labels: List[int], nhard_miner: NHardTripletsMiner, triplets: List[Tuple[int, int, int]]
 ) -> None:
     ids_anchor2positives = defaultdict(set)
     ids_anchor2negatives = defaultdict(set)
@@ -121,7 +121,7 @@ def check_triplets_are_top(
         distmat_[idx_anch] = -float("inf")
         max_available_positives = sum(labels == labels[idx_anch]) - 1  # type: ignore
         _, hardest_positive = torch.topk(distmat_, k=max_available_positives, largest=True)
-        hardest_positive = set(hardest_positive[top_miner.positive_slice].tolist())
+        hardest_positive = set(hardest_positive[nhard_miner.positive_slice].tolist())
         assert len(miner_positives) > 0
         assert miner_positives == hardest_positive
 
@@ -133,6 +133,6 @@ def check_triplets_are_top(
         distmat_[idx_anch] = float("inf")
         max_available_negatives = sum(labels != labels[idx_anch])  # type: ignore
         _, hardest_negative = torch.topk(distmat_, k=max_available_negatives, largest=False)
-        hardest_negative = set(hardest_negative[top_miner.negative_slice].tolist())
+        hardest_negative = set(hardest_negative[nhard_miner.negative_slice].tolist())
         assert len(miner_negatives) > 0
         assert miner_negatives == hardest_negative
