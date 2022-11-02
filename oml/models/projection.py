@@ -28,7 +28,8 @@ class ExtractorWithMLP(IExtractor):
         self.extractor = extractor
         self.projection = MLP(self.extractor.feat_dim, mlp_features)
         if weights:
-            self.load_state_dict(torch.load(weights), strict=strict_load)
+            loaded = torch.load(weights)
+            self.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.projection(self.extractor(x))
