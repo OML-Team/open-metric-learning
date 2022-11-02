@@ -40,7 +40,7 @@ repos:
   rev: 3.8.4
   hooks:
   - id: flake8
-    files: ^__init__.py
+    exclude: __init__.py
 
 
 # static type checking

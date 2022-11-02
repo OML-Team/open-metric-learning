@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 
 import pytest
 import torch
@@ -15,7 +15,7 @@ def compare_params(cfg: TCfg, expected_params: TCfg) -> None:
 
     for key in expected_params.keys():
         if key == "strategy":
-            assert type(expected_params[key]) == type(parsed_params[key])
+            assert isinstance(expected_params[key], type(parsed_params[key]))
         else:
 
             assert expected_params[key] == parsed_params[key]

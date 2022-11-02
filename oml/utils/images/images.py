@@ -69,7 +69,7 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     else:
         raise ValueError("BBox can only consist of all NaNs or all numbers.")
 
-    im_ret = cv2.rectangle(im_ret, (x1, y1), (x2, y2), thickness=5, color=color)
+    im_ret = cv2.rectangle(im_ret, (x1, y1), (x2, y2), thickness=15, color=color)
 
     return im_ret
 
