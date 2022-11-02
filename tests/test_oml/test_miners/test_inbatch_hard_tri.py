@@ -37,7 +37,7 @@ def test_hard_miner_from_features(features_and_labels) -> None:  # type: ignore
         features_and_labels: Features and valid labels
 
     """
-    miner = HardTripletsMiner(norm_required=True)
+    miner = HardTripletsMiner()
 
     for features, labels in features_and_labels:
         ids_a, ids_p, ids_n = miner._sample(features=features, labels=labels)
@@ -54,7 +54,7 @@ def test_hard_miner_from_dist(distmats_and_labels) -> None:  # type: ignore
             List of distance matrices and valid labels
 
     """
-    miner = HardTripletsMiner(norm_required=True)
+    miner = HardTripletsMiner()
 
     for distmat, labels in distmats_and_labels:
         ids_a, ids_p, ids_n = miner._sample_from_distmat(distmat=distmat, labels=labels)
@@ -90,7 +90,7 @@ def test_hard_miner_manual() -> None:
 
     gt = {(0, 1, 2), (1, 0, 2), (2, 3, 0), (3, 2, 0)}
 
-    miner = HardTripletsMiner(norm_required=True)
+    miner = HardTripletsMiner()
 
     ids_a, ids_p, ids_n = miner._sample_from_distmat(distmat=dist_mat, labels=labels)
     predict = set(zip(ids_a, ids_p, ids_n))
