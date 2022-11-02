@@ -2,7 +2,6 @@ from typing import List
 
 import numpy as np
 from torch import Tensor
-from torch.nn import functional as F
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids

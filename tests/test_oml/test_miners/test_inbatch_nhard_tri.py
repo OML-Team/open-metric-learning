@@ -98,12 +98,12 @@ def check_miner(
     expected_anchors = (ignore_anchor_mask == 0).nonzero().squeeze().tolist()
     assert set(ids_a) == set(expected_anchors)
 
-    check_triplets_are_top(distmat=distmat, labels=labels, nhard_miner=nhard_miner, triplets=triplets)
+    check_triplets_are_hardest(distmat=distmat, labels=labels, nhard_miner=nhard_miner, triplets=triplets)
 
     check_triplets_consistency(ids_anchor=ids_a, ids_pos=ids_p, ids_neg=ids_n, labels=labels)
 
 
-def check_triplets_are_top(
+def check_triplets_are_hardest(
     distmat: torch.Tensor, labels: List[int], nhard_miner: NHardTripletsMiner, triplets: List[Tuple[int, int, int]]
 ) -> None:
     ids_anchor2positives = defaultdict(set)
