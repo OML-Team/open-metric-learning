@@ -131,7 +131,7 @@ class ResnetExtractor(IExtractor):
     @property
     def feat_dim(self) -> int:
         if isinstance(self.model.fc, torch.nn.Identity):
-            return self.last_conv_channels  # TODO: just use self.model.fc.in_features of previous fc?
+            return self.last_conv_channels
         elif isinstance(self.model.fc, torch.nn.Linear):
             return self.model.fc.out_features
         else:

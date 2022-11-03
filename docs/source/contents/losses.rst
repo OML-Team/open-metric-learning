@@ -33,19 +33,3 @@ TripletLossWithMiner
 
     .. automethod:: __init__
     .. automethod:: forward
-
-ArcFaceLoss
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.losses.arcface.ArcFaceLoss
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-
-ArcFaceLoss
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.losses.arcface.ArcFaceLossWithMLP
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__

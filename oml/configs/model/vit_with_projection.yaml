@@ -1,8 +1,0 @@
-name: vit_with_projection
-args:
-  arch: vits8
-  normalise_features: False
-  use_multi_scale: False
-  weights: vits8_dino
-  strict_load: True
-  feature_size: 128
