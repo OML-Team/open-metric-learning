@@ -24,6 +24,13 @@ class ExtractorWithMLP(IExtractor):
         weights: Optional[Union[str, Path]] = None,
         strict_load: bool = True,
     ):
+        """
+        Args:
+            extractor: Instance of IExtractor (e.g. ViTExtractor)
+            mlp_features: Sizes of projection layers
+            weights: Path to weights file or None for random initialization
+            strict_load: Whether to use ``self.load_state_dict`` with strict argument
+        """
         super().__init__()
         self.extractor = extractor
         self.projection = MLP(self.extractor.feat_dim, mlp_features)

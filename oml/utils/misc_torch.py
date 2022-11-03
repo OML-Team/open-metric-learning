@@ -66,12 +66,9 @@ def label_smoothing(
     label2category: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     """
-    This function doing `label smoothing`_.
-
-    .. label smoothing: https://arxiv.org/pdf/1512.00567v3.pdf
-
-    You can also use modified version, where label is smoothed only for the same category.
-    To use this you should provide the ``label2category`` argument: vector, for which i-th entry
+    This function is doing `label smoothing <https://arxiv.org/pdf/1512.00567v3.pdf>`_.
+    You can also use modified version, where the label is smoothed only for the same category.
+    To use this, you should provide the ``label2category`` argument: vector, for which i-th entry
     is a corresponding category for label ``i``.
 
     Args:
