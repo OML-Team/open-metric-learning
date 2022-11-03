@@ -266,7 +266,6 @@ def get_retrieval_datasets(
 
     # train
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
-
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,
