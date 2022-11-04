@@ -4,7 +4,6 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch import Tensor, cdist
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
