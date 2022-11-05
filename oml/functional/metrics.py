@@ -34,7 +34,8 @@ def calc_retrieval_metrics(
         precision_top_k: Tuple of  ``k`` values to calculate ``precision@k``
         map_top_k: Tuple of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
         reduce: If ``False`` return metrics for each query without averaging
-        check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for each of the queries
+        check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
+         each of the queries
 
     Returns:
         Metrics dictionary.
@@ -209,7 +210,9 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
 
 
 def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
-    assert (mask_gt & ~mask_to_ignore).any(1).all(), "There are queries without available correct answers in the gallery!"  # type: ignore
+    assert (
+        (mask_gt & ~mask_to_ignore).any(1).all()
+    ), "There are queries without available correct answers in the gallery!"
 
 
 def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:

@@ -38,8 +38,9 @@ class DDPSamplerWrapper(DistributedSampler):
     This is a wrapper to allow using custom sampler in DDP mode.
 
     Default `DistributedSampler` allows us to build a sampler for a dataset in DDP mode.
-    Usually we can easily replace default `SequentialSampler` [when ``DataLoader(shuffle=False, ...)``] and `RandomSampler`
-    [when ``DataLoader(shuffle=True, ...)``] with `DistributedSampler`. But for the custom sampler, we need an extra wrapper.
+    Usually we can easily replace default `SequentialSampler` [when ``DataLoader(shuffle=False, ...)``] and
+    `RandomSampler` [when ``DataLoader(shuffle=True, ...)``] with `DistributedSampler`. But for the custom sampler,
+    we need an extra wrapper.
 
     Thus, this wrapper distributes indices produced by sampler among several devices for further usage.
 
@@ -121,9 +122,9 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
     Function inspects loader and modifies sampler for working in DDP mode.
 
     Note:
-        We ALWAYS use the padding of samples (in terms of the number of batches or number of samples per epoch) in order to use the
-        same amount of data for each device in DDP. Thus, the behavior with and without DDP may be slightly
-        different (e.g. metrics values).
+        We ALWAYS use the padding of samples (in terms of the number of batches or number of samples per epoch) in
+        order to use the same amount of data for each device in DDP. Thus, the behavior with and without DDP may be
+        slightly different (e.g. metrics values).
 
     """
     if is_ddp():

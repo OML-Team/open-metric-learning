@@ -38,13 +38,13 @@ class ViTExtractor(IExtractor):
         "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
         # our pretrained checkpoints
         "vits16_inshop": (
-            [f"{_STORAGE_CKPTS}/inshop/vits16_inshop.ckpt", "1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste"],
-            "e1017d",
+            [f"{_STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
+            "a76b85",
             "vits16_inshop.ckpt",
         ),
         "vits16_sop": (
-            [f"{_STORAGE_CKPTS}/sop/vits16_sop.ckpt", "1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt"],
-            "85cfa5",
+            [f"{_STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
+            "21e743",
             "vits16_sop.ckpt",
         ),
         "vits16_cub": (
@@ -69,9 +69,11 @@ class ViTExtractor(IExtractor):
     ):
         """
         Args:
-            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly initialize model's weights.
-             You can check the available pretrained checkpoints in ``self.pretrained_models``.
-            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options in ``self.constructors``
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to
+             randomly initialize model's weights. You can check the available pretrained checkpoints
+             in ``self.pretrained_models``.
+            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options
+             in ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
             use_multi_scale: Set ``True`` to use multi scale (the analogue of test time augmentations)
             strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
@@ -92,7 +94,9 @@ class ViTExtractor(IExtractor):
 
         if weights in self.pretrained_models:
             url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            weights = download_checkpoint_one_of(url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname)  # type: ignore
+            weights = download_checkpoint_one_of(
+                url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname  # type: ignore
+            )
 
         ckpt = torch.load(weights, map_location="cpu")
         state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
