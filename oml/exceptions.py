@@ -4,4 +4,3 @@ class BaseOMLException(Exception):
 
 class InvalidBBoxesException(BaseOMLException):
     pass
-

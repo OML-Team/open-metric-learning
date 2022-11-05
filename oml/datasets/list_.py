@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterator, Optional, Sequence, Tuple, Union, List, Dict
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import albumentations as albu
 import numpy as np
@@ -8,14 +8,12 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset
 
-from oml.transforms.images.utils import TTransforms
-from oml.utils.images.images import TImReader, imread_cv2
 from oml.exceptions import InvalidBBoxesException
 from oml.transforms.images.torchvision.transforms import get_normalisation_torch
+from oml.transforms.images.utils import TTransforms
+from oml.utils.images.images import TImReader, imread_cv2
 
 TBBox = Union[List[int], Tuple[int, int, int, int]]
-
-
 
 
 class ListDataset(Dataset):
@@ -63,13 +61,12 @@ class ListDataset(Dataset):
                     if x2 <= x1 or y2 <= y1:
                         raise InvalidBBoxesException(f"Bbox has invalid dimensions for image {files[idx]}")
 
-
     @staticmethod
     def _read_bytes_image(path: Union[Path, str]) -> bytes:
         with open(str(path), "rb") as fin:
             return fin.read()
 
-    def crop(self, img: Union[Image.Image, np.ndarray], bbox: Tuple[int, int, int, int]) -> np.ndarray:
+    def crop(self, img: Union[Image.Image, np.ndarray], bbox: TBBox) -> np.ndarray:
         if isinstance(img, Image.Image):
             return np.array(img.crop(bbox))
         else:
