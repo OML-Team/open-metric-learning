@@ -1,13 +1,11 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
 import pandas as pd
-import torch
 import torchvision
-from PIL import Image
 from torch.utils.data import Dataset
 
 from oml.const import (
@@ -175,84 +173,6 @@ class BaseDataset(Dataset):
             return tuple()
 
 
-class ListDataset(Dataset):
-    """Iterate over list of images"""
-
-    def __init__(
-        self,
-        filenames_list: Sequence[Path],
-        bboxes: Optional[Sequence[Sequence[Tuple[int, int, int, int]]]] = None,
-        transform: Optional[TTransforms] = None,
-        f_imread: TImReader = imread_cv2,
-        cache_size: int = 100_000,
-    ):
-        """
-        Args:
-            filenames_list: list of paths to images
-            boxes: Sequences of bounding boxes. Should be either ``None`` or
-                Sequence of Sequences of bboxes.
-            transform: torchvision or albumentations augmentations
-            f_imread: function that opens image and returns bytes
-            cache_size: cache_size: Size of the dataset's cache
-        """
-        self.filenames_list = filenames_list
-        self.transform = transform
-        self.f_imread = f_imread
-        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
-        self.bboxes = bboxes
-
-    @staticmethod
-    def _read_bytes_image(path: Union[Path, str]) -> bytes:
-        with open(str(path), "rb") as fin:
-            return fin.read()
-
-    def crop(self, img: Union[Image.Image, np.ndarray], bbox: Tuple[int, int, int, int]) -> np.ndarray:
-        if isinstance(img, Image.Image):
-            return np.array(img.crop(bbox))
-        else:
-            x1, y1, x2, y2 = bbox
-            return img[y1:y2, x1:x2, :]
-
-    def apply_transforms(self, img: Union[Image.Image], bbox: Tuple[int, int, int, int]) -> torch.Tensor:
-        x1, y2, x2, y2 = bbox
-        img = self.crop(img, bbox)  # todo: since albu may handle bboxes we should move it to augs
-        if self.transform is not None:
-            if isinstance(self.transform, albu.Compose):
-                image_tensor = self.transform(image=img)["image"]
-            else:
-                # torchvision.transforms
-                image_tensor = self.transform(img)
-        image_tensor = torch.tensor(img)
-
-        return image_tensor
-
-    def __iter__(self) -> Iterator[torch.Tensor]:
-        for i, im_path in enumerate(self.filenames_list):
-            img_bytes = self.read_bytes_image_cached(im_path)
-            img = self.f_imread(img_bytes)
-
-            if self.bboxes is not None:
-                for bbox in self.bboxes[i]:
-                    yield self.apply_transforms(img, bbox)
-            else:
-                img = self.f_imread(img_bytes)
-                im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
-                bbox = (0, 0, im_w, im_h)
-                yield self.apply_transforms(img, bbox)
-
-    def __len__(self) -> int:
-        if self.bboxes is not None:
-            res = 0
-            for boxes in self.bboxes:
-                if len(boxes) == 0:
-                    res += 1
-                else:
-                    res += len(boxes)
-        else:
-            res = len(self.filenames_list)
-        return res
-
-
 class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
     """
     The main purpose of this class is to be used as a dataset during
@@ -367,4 +287,4 @@ def get_retrieval_datasets(
     return train_dataset, valid_dataset
 
 
-__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "ListDataset", "get_retrieval_datasets"]
+__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_retrieval_datasets"]
