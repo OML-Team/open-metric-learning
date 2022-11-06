@@ -282,6 +282,8 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing) 一 Training
+
 <details>
 <summary>Validation</summary>
 <p>
@@ -317,6 +319,8 @@ metrics = calculator.compute_metrics()
 [comment]:vanilla-validation-end
 </p>
 </details>
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1O2o3k8I8jN5hRin3dKnAS3WsgG04tmIT?usp=sharing) 一 Validation
 
 <details>
 <summary>Training + Validation [Lightning]</summary>
@@ -420,9 +424,6 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 </details>
 
 
-* [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing) 一 Training
-* [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1O2o3k8I8jN5hRin3dKnAS3WsgG04tmIT?usp=sharing) 一 Validation
-
 ## Usage with PyTorch Metric Learning
 
 You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
@@ -471,7 +472,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1m66v1qhCyAUciEcXsJlIJtjF6nz6ZLI7?usp=sharing) 一 Training with loss from PML
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1m66v1qhCyAUciEcXsJlIJtjF6nz6ZLI7?usp=sharing)
 
 <details>
 <summary>Training with distance, reducer, miner and loss from PML</summary>
@@ -518,7 +519,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MbVmSnQvO16eVgAqy1kcOd1XysgaYVBo?usp=sharing) 一 Training with distance, reducer, miner and loss from PML
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MbVmSnQvO16eVgAqy1kcOd1XysgaYVBo?usp=sharing)
 
 Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
 we recommend you to pick `distances.LpDistance(p=2)`.
