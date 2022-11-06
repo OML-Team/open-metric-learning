@@ -282,6 +282,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing)
 
 <details>
 <summary>Validation</summary>
