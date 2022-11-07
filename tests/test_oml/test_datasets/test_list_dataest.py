@@ -1,7 +1,7 @@
-import csv
 from pathlib import Path
 from typing import Iterator, List, Tuple
 
+import pandas as pd
 import pytest
 import torch
 from torch.utils.data import DataLoader
@@ -16,15 +16,10 @@ def images() -> Iterator[List[Path]]:
 
 
 def get_images_and_boxes() -> List[Tuple[Path, int, int, int, int]]:
-    lines = []
-    with (MOCK_DATASET_PATH / "df_with_bboxes.csv").open() as f:
-        reader = csv.reader(f)
-        next(reader)
-        for line in reader:
-            im_path = line[1]
-            x1, x2, y1, y2 = map(int, line[-4:])
-            lines.append((MOCK_DATASET_PATH / im_path, x1, x2, y1, y2))
-
+    df = pd.read_csv(MOCK_DATASET_PATH / "df_with_bboxes.csv")
+    sub_df = df[["path", "x_1", "y_1", "x_2", "y_2"]]
+    sub_df["path"] = sub_df.path.apply(lambda p: MOCK_DATASET_PATH / p)
+    lines: List[Tuple[Path, int, int, int, int]] = [tuple(line[1]) for line in sub_df.iterrows()]  # type: ignore
     return lines
 
 
@@ -49,9 +44,27 @@ def test_dataloader_iter(images: List[Path]) -> None:
         assert im.ndim == 4
 
 
-@pytest.mark.parametrize("im_path,x1,x2,y1,y2", get_images_and_boxes())
+@pytest.mark.parametrize("im_path,x1,y1,x2,y2", get_images_and_boxes())
 def test_mock_dataset_iter(im_path: Path, x1: int, x2: int, y1: int, y2: int) -> None:
-    dataloader = DataLoader(ListDataset([im_path], {0: (x1, y1, x2, y2)}))
+    dataloader = DataLoader(ListDataset([im_path], [(x1, y1, x2, y2)]))
 
     image = next(iter(dataloader))
     assert image.size() == (1, 3, x2 - x1, y2 - y1)
+
+
+def test_mock_dataset_iter_with_nones() -> None:
+    import random
+
+    random.seed(42)
+    paths = []
+    bboxes = []
+    for row in get_images_and_boxes():
+        paths.append(row[0])
+        bboxes.append((row[1], row[2], row[3], row[4]))
+        if random.random() > 0.5:
+            paths.append(row[0])
+            bboxes.append(None)
+
+    dataloader = DataLoader(ListDataset(paths, bboxes))
+    for image in dataloader:
+        assert image.ndim == 4
