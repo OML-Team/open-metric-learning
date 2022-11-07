@@ -423,7 +423,6 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 </p>
 </details>
 
-
 ## Usage with PyTorch Metric Learning
 
 You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
