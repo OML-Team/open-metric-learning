@@ -9,6 +9,22 @@ from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
 from oml.miners.miner_with_bank import MinerWithBank
 
 
+def get_features_and_labels(
+    n_labels: int, n_instances: int, max_unq_labels: int, feat_dim: int, num_batches: int
+) -> List[Tuple[torch.Tensor, torch.Tensor]]:
+    assert max_unq_labels >= n_labels
+
+    features_out = [torch.randn((n_labels * n_instances, feat_dim)) for _ in range(num_batches)]
+
+    labels_out = []
+    for _ in range(num_batches):
+        labels = [[label] * n_instances for label in sample(range(max_unq_labels), k=n_labels)]
+        labels = torch.tensor(list(chain(*labels))).long()
+        labels_out.append(labels)
+
+    return list(zip(features_out, labels_out))
+
+
 @pytest.mark.parametrize("bank_size_in_batches", [1, 3])
 @pytest.mark.parametrize("num_batches", [7, 10])
 @pytest.mark.parametrize("n_labels", [2, 5])
@@ -78,19 +94,3 @@ def test_top_miner_with_bank(
             counter_same_triplets += torch.any(torch.isclose(bank_triplet.unsqueeze(0), miner_triplets, atol=1e-6))
 
         assert len_triplet_bank == counter_same_triplets
-
-
-def get_features_and_labels(
-    n_labels: int, n_instances: int, max_unq_labels: int, feat_dim: int, num_batches: int
-) -> List[Tuple[torch.Tensor, torch.Tensor]]:
-    assert max_unq_labels >= n_labels
-
-    features_out = [torch.randn((n_labels * n_instances, feat_dim)) for _ in range(num_batches)]
-
-    labels_out = []
-    for _ in range(num_batches):
-        labels = [[label] * n_instances for label in sample(range(max_unq_labels), k=n_labels)]
-        labels = torch.tensor(list(chain(*labels))).long()
-        labels_out.append(labels)
-
-    return list(zip(features_out, labels_out))
