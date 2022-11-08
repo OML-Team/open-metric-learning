@@ -70,13 +70,6 @@ class ListDataset(Dataset):
         with open(str(path), "rb") as fin:
             return fin.read()
 
-    def crop(self, img: Union[Image.Image, np.ndarray], bbox: TBBox) -> np.ndarray:
-        if isinstance(img, Image.Image):
-            return np.array(img.crop(bbox))
-        else:
-            x1, y1, x2, y2 = bbox
-            return img[y1:y2, x1:x2, :]
-
     def __getitem__(self, idx: int) -> torch.Tensor:
         im_path = self.filenames_list[idx]
         img_bytes = self.read_bytes_image_cached(im_path)
@@ -88,11 +81,14 @@ class ListDataset(Dataset):
 
         if bbox is None:
             im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
-            # img_arr = np.array(img)
-            # im_h, im_w = img_arr.shape[:2]
             bbox = (0, 0, im_w, im_h)
 
-        img = self.crop(img, bbox)  # todo: since albu may handle bboxes we should move it to augs
+        if isinstance(img, Image.Image):
+            img = np.array(img.crop(bbox))
+        else:
+            x1, y1, x2, y2 = bbox
+            img = img[y1:y2, x1:x2, :]
+
         if isinstance(self.transform, albu.Compose):
             image_tensor = self.transform(image=img)["image"]
         else:

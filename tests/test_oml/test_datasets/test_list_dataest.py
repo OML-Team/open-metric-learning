@@ -66,5 +66,10 @@ def test_mock_dataset_iter_with_nones() -> None:
             bboxes.append(None)
 
     dataloader = DataLoader(ListDataset(paths, bboxes))
-    for image in dataloader:
+    for image, box in zip(dataloader, bboxes):
+        if box is not None:
+            x1, y1, x2, y2 = box
+        else:
+            x1, y1, x2, y2 = 0, 0, image.size()[2], image.size()[3]
         assert image.ndim == 4
+        assert image.size() == (1, 3, x2 - x1, y2 - y1)
