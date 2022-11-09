@@ -89,10 +89,6 @@ def pl_train(cfg: TCfg) -> None:
     criterion = get_criterion_by_cfg(cfg["criterion"])
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
 
-    # todo
-    # opt_state_dict = torch.load(cfg["model"]["args"]["weights"], map_location="cuda:0")["optimizer_states"][0]
-    # optimizer.load_state_dict(opt_state_dict)
-
     # unpack scheduler to the Lightning format
     if cfg.get("scheduling"):
         scheduler_kwargs = {

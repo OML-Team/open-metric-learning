@@ -10,6 +10,12 @@ from oml.utils.misc_torch import OnlineAvgDict
 
 
 class MinerWithBank(ITripletsMiner):
+    """
+    This is a class for cross-batch memory. This implementation uses only samples from the current batch as anchors
+    and finds positive and negative pairs from the bank and the current batch using miner.
+
+    """
+
     def __init__(
         self,
         bank_size_in_batches: int,
@@ -17,9 +23,14 @@ class MinerWithBank(ITripletsMiner):
         need_logs: bool = True,
     ):
         """
-        Bank accumulates batches from several steps. Bank uses only data from batch as anchor, and finds top
-        positives and negatives from bank and current batch using miner.
+
+        Args:
+            bank_size_in_batches: Size of the bank.
+            miner: Miner, for now we only support ``NHardTripletsMiner``
+            need_logs: Set ``True`` if you want to track logs.
+
         """
+
         assert isinstance(bank_size_in_batches, int)
         assert bank_size_in_batches >= 1
         assert isinstance(miner, NHardTripletsMiner)
@@ -59,6 +70,16 @@ class MinerWithBank(ITripletsMiner):
         self.ptr = (self.ptr + bs) % self.bank_size
 
     def sample(self, features: Tensor, labels: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+        """
+
+        Args:
+            features: Features with the shape ``[batch_size, features_dim]``
+            labels: Labels with the size of ``batch_size``
+
+        Returns:
+            Batch of triplets in the following order: anchor, positive, negative
+
+        """
         if isinstance(labels, (list, tuple)):
             labels = torch.tensor(labels, dtype=torch.long, device=features.device)
 
