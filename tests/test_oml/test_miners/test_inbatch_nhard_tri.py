@@ -62,6 +62,17 @@ def test_all_and_hard_are_specific_cases(
         assert set(triplets_from_miner) == set(triplets_from_nhard_miner)
 
 
+@pytest.mark.parametrize("n_positive,n_negative", [((2, 4), (2, 5)), ((1, 2), (1, 2))])
+def test_expected_batch_size(n_positive: Tuple[int, int], n_negative: Tuple[int, int]) -> None:
+    miner = NHardTripletsMiner(n_positive=n_positive, n_negative=n_negative)
+    data = get_features_and_labels(
+        num_batches=3, range_labels=(2, 10), range_instances=(n_positive[1] + 1, n_positive[1] + 6)
+    )
+    for features, labels in data:
+        a, p, n = miner.sample(features=features, labels=labels)
+        assert len(labels) * (n_positive[1] - n_positive[0] + 1) * (n_negative[1] - n_negative[0] + 1) == len(a)
+
+
 def get_features_and_labels(
     num_batches: int, range_labels: Tuple[int, int], range_instances: Tuple[int, int], feat_dim: int = 10
 ) -> List[TFeaturesAndLabels]:
