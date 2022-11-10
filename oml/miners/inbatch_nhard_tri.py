@@ -17,7 +17,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
     - hard `negative` samples have small distance to the anchor sample
 
     Toward the end of the training, annotation errors can affect final metric. If you are not sure about the quality of
-    your dataset, you can use range instead of integer value for paramters and exclude combinations with the largest
+    your dataset, you can use range instead of integer value for parameters and exclude combinations with the largest
     distances. For example instead picking 5 positive examples, you can use examples from the 2nd hardest
     to the 5th one.
 

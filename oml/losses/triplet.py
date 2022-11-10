@@ -228,6 +228,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
         self.last_logs.update(self.tri_loss.last_logs)
+        self.last_logs.update(getattr(self.miner, "last_logs", {}))
 
         if self.reduction == "mean":
             loss = loss.mean()
