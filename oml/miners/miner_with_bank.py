@@ -39,9 +39,11 @@ class MinerWithBank(ITripletsMiner):
         self.bank_size_in_batches = bank_size_in_batches
         self.bank_features: Optional[Tensor] = None
         self.bank_labels: Optional[Tensor] = None
-        self.bank_size = -1
+        self.bank_size = -1  # bank size in the number of vectors
+        self.is_accumulated = False  # indicates if we filled out the bank
+        # We maintain a queue of feature vectors and ptr indicates the place to insert another batch.
+        # After the batch has been inserted, we move the pointer.
         self.ptr = 0
-        self.is_accumulated = False
 
         self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
@@ -60,7 +62,7 @@ class MinerWithBank(ITripletsMiner):
             )
 
     @no_grad()
-    def update_bank(self, features: Tensor, labels: Tensor) -> None:
+    def _update_bank(self, features: Tensor, labels: Tensor) -> None:
         bs = features.shape[0]
         if not self.is_accumulated:
             self.is_accumulated = self.ptr + bs >= self.bank_size
@@ -105,7 +107,7 @@ class MinerWithBank(ITripletsMiner):
                 ids_a=ids_a, ids_p=ids_p, ids_n=ids_n, ignore_anchor_mask=ignore_anchor_mask
             )
 
-        self.update_bank(features=features, labels=labels)
+        self._update_bank(features=features, labels=labels)
 
         return features_miner[ids_a], features_miner[ids_p], features_miner[ids_n]
 

@@ -94,3 +94,20 @@ def test_top_miner_with_bank(
             counter_same_triplets += torch.any(torch.isclose(bank_triplet.unsqueeze(0), miner_triplets, atol=1e-6))
 
         assert len_triplet_bank == counter_same_triplets
+
+
+def test_logs() -> None:
+    ids_a = [0, 3, 6]
+    ids_p = [1, 4, 7]
+    ids_n = [2, 5, 8]
+    ignore_mask = torch.Tensor([0, 1, 1, 0, 1, 1, 0, 1, 1])
+
+    logs = MinerWithBank._prepare_logs(ids_a, ids_p, ids_n, ignore_anchor_mask=ignore_mask)
+
+    expected_logs = {
+        "positives_from_bank": 1.0,
+        "positives_from_batch": 0.0,
+        "negatives_from_bank": 1.0,
+        "negatives_from_batch": 0.0,
+    }
+    assert logs == expected_logs
