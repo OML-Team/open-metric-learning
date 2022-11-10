@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 2
 
 dataframe_name: df_no_bboxes.csv
-dataset_root: data/DeepFashion_InShop/
-logs_root: logs/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -25,9 +25,9 @@ transforms_val:
     crop_size: 224
 
 sampler:
-  name: category_balance
+  name: balance
   args:
-    n_labels: 30
+    n_labels: 150
     n_instances: 4
     n_categories: 5
     resample_labels: True
@@ -85,6 +85,8 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
+  - no_category_sampling
+  - as_best
 
 hydra:
   run:
