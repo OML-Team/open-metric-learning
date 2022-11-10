@@ -14,8 +14,8 @@ MINERS_REGISTRY = {
     "hard_cluster": HardClusterMiner,
     "hard_triplets": HardTripletsMiner,
     "triplets_with_memory": TripletMinerWithMemory,
-    "nhard_triplets": NHardTripletsMiner,
     "miner_with_bank": MinerWithBank,
+    "n_hard_triplets": NHardTripletsMiner,
 }
 
 
