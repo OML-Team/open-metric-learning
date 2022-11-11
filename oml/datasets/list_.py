@@ -84,7 +84,7 @@ class ListDataset(Dataset):
             bbox = (0, 0, im_w, im_h)
 
         if isinstance(img, Image.Image):
-            img = np.array(img.crop(bbox))
+            img = img.crop(bbox)
         else:
             x1, y1, x2, y2 = bbox
             img = img[y1:y2, x1:x2, :]
