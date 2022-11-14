@@ -33,3 +33,12 @@ DatasetQueryGallery
 
     .. automethod:: __init__
     .. automethod:: __getitem__
+
+ListDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.list_.ListDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
