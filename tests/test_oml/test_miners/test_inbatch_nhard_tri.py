@@ -37,21 +37,21 @@ def test_nhard_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union[
 
 
 @pytest.mark.parametrize(
-    "miner,nhard_miner",
+    "miner,n_hard_miner",
     [
         (HardTripletsMiner(), NHardTripletsMiner(n_positive=1, n_negative=1)),
         (AllTripletsMiner(), NHardTripletsMiner(n_positive=1000000, n_negative=1000000)),
     ],
 )
 def test_all_and_hard_are_specific_cases(
-    miner: Union[AllTripletsMiner, HardTripletsMiner], nhard_miner: NHardTripletsMiner
+    miner: Union[AllTripletsMiner, HardTripletsMiner], n_hard_miner: NHardTripletsMiner
 ) -> None:
     num_batches = 100
     for features, labels in get_features_and_labels(
         num_batches=num_batches, range_labels=(2, 10), range_instances=(3, 7)
     ):
         ids_from_miner = miner._sample(features, labels=labels)
-        ids_from_nhard_miner = nhard_miner._sample(features, labels=labels)
+        ids_from_nhard_miner = n_hard_miner._sample(features, labels=labels)
 
         triplets_from_miner = list(zip(*ids_from_miner))
         triplets_from_nhard_miner = list(zip(*ids_from_nhard_miner))
@@ -60,6 +60,17 @@ def test_all_and_hard_are_specific_cases(
         assert len(triplets_from_nhard_miner) > 0
 
         assert set(triplets_from_miner) == set(triplets_from_nhard_miner)
+
+
+@pytest.mark.parametrize("n_positive,n_negative", [((2, 4), (2, 5)), ((1, 2), (1, 2))])
+def test_expected_batch_size(n_positive: Tuple[int, int], n_negative: Tuple[int, int]) -> None:
+    miner = NHardTripletsMiner(n_positive=n_positive, n_negative=n_negative)
+    data = get_features_and_labels(
+        num_batches=3, range_labels=(2, 10), range_instances=(n_positive[1] + 1, n_positive[1] + 6)
+    )
+    for features, labels in data:
+        a, p, n = miner.sample(features=features, labels=labels)
+        assert len(labels) * (n_positive[1] - n_positive[0] + 1) * (n_negative[1] - n_negative[0] + 1) == len(a)
 
 
 def get_features_and_labels(
@@ -79,7 +90,7 @@ def get_features_and_labels(
 
 
 def check_miner(
-    nhard_miner: NHardTripletsMiner,
+    n_hard_miner: NHardTripletsMiner,
     features_and_labels: TFeaturesAndLabels,
 ) -> None:
     features, labels = features_and_labels
@@ -90,7 +101,7 @@ def check_miner(
     ignore_ids = sample(range(len(labels)), k=len(labels) // 2)
     ignore_anchor_mask[ignore_ids] = True
 
-    ids_a, ids_p, ids_n = nhard_miner._sample_from_distmat(
+    ids_a, ids_p, ids_n = n_hard_miner._sample_from_distmat(
         distmat=distmat, labels=labels, ignore_anchor_mask=ignore_anchor_mask
     )
     triplets = list(zip(ids_a, ids_p, ids_n))
@@ -98,7 +109,7 @@ def check_miner(
     expected_anchors = (ignore_anchor_mask == 0).nonzero().squeeze().tolist()
     assert set(ids_a) == set(expected_anchors)
 
-    check_triplets_are_hardest(distmat=distmat, labels=labels, nhard_miner=nhard_miner, triplets=triplets)
+    check_triplets_are_hardest(distmat=distmat, labels=labels, nhard_miner=n_hard_miner, triplets=triplets)
 
     check_triplets_consistency(ids_anchor=ids_a, ids_pos=ids_p, ids_neg=ids_n, labels=labels)
 

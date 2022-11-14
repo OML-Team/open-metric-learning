@@ -51,3 +51,12 @@ NHardTripletsMiner
 
     .. automethod:: __init__
     .. automethod:: sample
+
+MinerWithBank
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.miners.miner_with_bank.MinerWithBank
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: sample
