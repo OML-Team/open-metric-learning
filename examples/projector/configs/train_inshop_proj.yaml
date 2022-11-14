@@ -1,0 +1,77 @@
+postfix: metric_learning
+
+seed: 42
+precision: 32
+accelerator: gpu
+devices: 2
+
+dataset_root: /nydl/data/DeepFashion_InShop/
+dataframe_name: df_no_bboxes.csv
+emb_name: embeddings_vits16_inshop.pkl
+logs_root: /nydl/logs/DeepFashion_InShop/
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+num_workers: 20
+
+sampler:
+  name: balance
+  args:
+    n_labels: 2000
+    n_instances: 4
+
+bs_val: 256
+max_epochs: 10000
+valid_period: 15 # todo
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1]
+  map_top_k: [5]
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+log_images: False
+
+metric_for_checkpointing: OVERALL/cmc/1
+
+model:
+  name: mlp
+  args:
+    {}
+
+criterion:
+  name: triplet_with_miner
+  args:
+    need_logs: True
+    margin: null
+    reduction: mean
+    miner:
+      name: hard_triplets
+      args: {}
+
+optimizer:
+  name: adamw
+  args:
+    lr: 1e-3
+
+
+scheduling: null
+
+
+# To use neptune you should also specify NEPTUNE_API_TOKEN in
+# .env file or via `export NEPTUNE_API_TOKEN=...`
+neptune_project: NEWYORKER/similarity-api
+
+
+hydra_dir: ${logs_root}/${logs_folder}/
+
+tags:
+  - ${postfix}
+  - deepfashion
+  - projector
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+   - pkg://oml.configs

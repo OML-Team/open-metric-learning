@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 from pprint import pprint
 
-import albumentations as albu
+import hydra
 import pytorch_lightning as pl
+from omegaconf import DictConfig
 from pytorch_lightning.loggers import NeptuneLogger
+from source import get_datasets  # type: ignore
 from torch.utils.data import DataLoader
 
 from oml.const import (
@@ -14,7 +16,6 @@ from oml.const import (
     PROJECT_ROOT,
     TCfg,
 )
-from oml.datasets.base import get_retrieval_datasets
 from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import (
@@ -28,7 +29,6 @@ from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
@@ -37,7 +37,7 @@ from oml.utils.misc import (
 )
 
 
-def pl_train(cfg: TCfg) -> None:
+def pl_train_proj(cfg: TCfg) -> None:
     """
     This is an entrypoint for the model training in metric learning setup.
 
@@ -55,36 +55,22 @@ def pl_train(cfg: TCfg) -> None:
 
     cwd = Path.cwd()
 
-    transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
-    transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
-
-    train_dataset, valid_dataset = get_retrieval_datasets(
-        dataset_root=Path(cfg["dataset_root"]),
-        transforms_train=transforms_train,
-        transforms_val=transforms_val,
-        dataframe_name=cfg["dataframe_name"],
-        cache_size=cfg["cache_size"],
+    train_dataset, valid_dataset = get_datasets(
+        dataset_root=Path(cfg["dataset_root"]), dataframe_name=cfg["dataframe_name"], emb_name=cfg["emb_name"]
     )
 
-    if isinstance(transforms_train, albu.Compose):
-        augs_file = ".hydra/augs_cfg.yaml" if Path(".hydra").exists() else "augs_cfg.yaml"
-        albu.save(filepath=augs_file, transform=transforms_train, data_format="yaml")
-    else:
-        augs_file = None
-
-    if (not train_dataset.categories_key) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
+    if (getattr(train_dataset, "categories_key", False)) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
         raise ValueError(
             "NOTE! You are trying to use Sampler which works with the information related"
             "to categories, but there is no <categories_key> in your Dataset."
         )
 
     sampler_runtime_args = {"labels": train_dataset.get_labels()}
-    if train_dataset.categories_key:
+    if getattr(train_dataset, "categories_key", False):
         df = train_dataset.df
         sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
-    print(sampler)
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
@@ -143,7 +129,6 @@ def pl_train(cfg: TCfg) -> None:
         labels_key=valid_dataset.labels_key,
         is_query_key=valid_dataset.is_query_key,
         is_gallery_key=valid_dataset.is_gallery_key,
-        extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         **cfg.get("metric_args", {}),
     )
 
@@ -175,8 +160,6 @@ def pl_train(cfg: TCfg) -> None:
         dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
         logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
         logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
-        if augs_file is not None:
-            logger.run["augs_cfg"].upload(augs_file)
         # log source code
         source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
             map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
@@ -206,4 +189,10 @@ def pl_train(cfg: TCfg) -> None:
         trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
 
-__all__ = ["pl_train"]
+@hydra.main(config_path="configs", config_name="train_inshop_proj.yaml")
+def main_hydra(cfg: DictConfig) -> None:
+    pl_train_proj(cfg)
+
+
+if __name__ == "__main__":
+    main_hydra()
