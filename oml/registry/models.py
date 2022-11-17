@@ -24,7 +24,10 @@ def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:
         if extractor_cfg.get("weights", None) and kwargs.get("weights", None):
             raise ValueError("You should only provide one weight for extractor_with_mlp.")
         elif extractor_cfg.get("weights", 0) is None and kwargs.get("weights", None):
-            warn(f"There are weights provided for {model_name}. They can overwrite internal extractor's weights.")
+            warn(
+                f"There are weights provided for {model_name}. They can overwrite internal extractor's "
+                f"weights or even the extractor if it is a pretrained model."
+            )
     else:
         extractor = MODELS_REGISTRY[model_name](**kwargs)  # type: ignore
     return extractor
