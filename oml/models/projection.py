@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -5,10 +6,33 @@ import torch
 from torch import nn
 from torchvision.ops import MLP
 
+from oml.const import STORAGE_CKPTS
 from oml.interfaces.models import IExtractor
-from oml.models.resnet import ResnetExtractor
-from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
+from oml.utils.io import download_checkpoint
+
+
+def get_mlp(input_dim: int, mlp_features: List[int]) -> nn.Module:
+    return MLP(in_channels=input_dim, hidden_channels=mlp_features)
+
+
+def get_vit_and_mlp(
+    arch_vit: str,
+    normalise_features_vit: bool,
+    mlp_features: List[int],
+    use_multi_scale_vit: bool = False,
+) -> nn.Module:
+    """
+    Function for creation of ViT model and MLP projection.
+    """
+    vit = ViTExtractor(
+        weights=None,
+        arch=arch_vit,
+        normalise_features=normalise_features_vit,
+        use_multi_scale=use_multi_scale_vit,
+    )
+    mlp = get_mlp(vit.feat_dim, mlp_features)
+    return vit, mlp
 
 
 class ExtractorWithMLP(IExtractor):
@@ -17,12 +41,31 @@ class ExtractorWithMLP(IExtractor):
 
     """
 
+    constructors = {
+        "vits16_224_mlp_384": partial(
+            get_vit_and_mlp,
+            arch_vit_clip="vits16",
+            normalise_features_vit_clip=False,
+            mlp_features=[384],
+        )
+    }
+
+    pretrained_models = {
+        "vits16_224_mlp_384_inshop": (
+            f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
+            "35244966",
+            "vits16_224_mlp_384_inshop.ckpt",
+            "vits16_224_mlp_384",
+        )
+    }
+
     def __init__(
         self,
         extractor: IExtractor,
         mlp_features: List[int],
         weights: Optional[Union[str, Path]] = None,
         strict_load: bool = True,
+        train_backbone: bool = False,
     ):
         """
         Args:
@@ -33,87 +76,31 @@ class ExtractorWithMLP(IExtractor):
         """
         super().__init__()
         self.extractor = extractor
-        self.projection = MLP(self.extractor.feat_dim, mlp_features)
-        if weights:
+        self.projection = get_mlp(self.extractor.feat_dim, mlp_features)
+        self.train_backbone = train_backbone
+        if weights in self.pretrained_models:
+            url_or_fid, hash_md5, fname, constructor_key = self.pretrained_models[weights]  # type: ignore
+            checkpoint = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            _extractor, _mlp = self.constructors[constructor_key]()
+            self.mlp = _mlp
+            self.extractor = _extractor
+            loaded = torch.load(checkpoint)
+            self.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
+        elif weights:
             loaded = torch.load(weights)
             self.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.projection(self.extractor(x))
+        if self.train_backbone:
+            features = self.extractor(x)
+        else:
+            with torch.no_grad():
+                features = self.extractor(x)
+        return self.projection(features)
 
     @property
     def feat_dim(self) -> int:
         return self.projection.out_features
 
 
-def vit_with_mlp(
-    weights_vit: Optional[Union[Path, str]],
-    arch_vit: str,
-    normalise_features_vit: bool,
-    mlp_features: List[int],
-    use_multi_scale_vit: bool = False,
-    strict_load_vit: bool = True,
-    weights_mlp: Optional[Union[str, Path]] = None,
-    strict_load_mlp: bool = True,
-) -> nn.Module:
-    """
-    Function for creation of ViT model with additional MLP projection.
-    """
-    vit = ViTExtractor(
-        weights=weights_vit,
-        arch=arch_vit,
-        normalise_features=normalise_features_vit,
-        use_multi_scale=use_multi_scale_vit,
-        strict_load=strict_load_vit,
-    )
-    return ExtractorWithMLP(extractor=vit, mlp_features=mlp_features, weights=weights_mlp, strict_load=strict_load_mlp)
-
-
-def vit_clip_with_mlp(
-    weights_vit_clip: Optional[str],
-    arch_vit_clip: str,
-    normalise_features_vit_clip: bool,
-    mlp_features: List[int],
-    strict_load_vit_clip: bool = True,
-    weights_mlp: Optional[Union[str, Path]] = None,
-    strict_load_mlp: bool = True,
-) -> nn.Module:
-    """
-    Function for creation of ViT-CLIP model with additional MLP projection.
-    """
-    vit_clip = ViTCLIPExtractor(
-        weights=weights_vit_clip,
-        arch=arch_vit_clip,
-        normalise_features=normalise_features_vit_clip,
-        strict_load=strict_load_vit_clip,
-    )
-    return ExtractorWithMLP(
-        extractor=vit_clip, mlp_features=mlp_features, weights=weights_mlp, strict_load=strict_load_mlp
-    )
-
-
-def resnet_with_mlp(
-    weights_resnet: Optional[Union[Path, str]],
-    arch_resnet: str,
-    normalise_features_resnet: bool,
-    mlp_features: List[int],
-    remove_fc_resnet: bool = False,
-    gem_p_resnet: Optional[float] = None,
-    strict_load_resnet: bool = True,
-    weights_mlp: Optional[Union[str, Path]] = None,
-    strict_load_mlp: bool = True,
-) -> nn.Module:
-    """
-    Function for creation of ResNet model with additional MLP projection.
-    """
-    resnet = ResnetExtractor(
-        weights=weights_resnet,
-        arch=arch_resnet,
-        normalise_features=normalise_features_resnet,
-        gem_p=gem_p_resnet,
-        remove_fc=remove_fc_resnet,
-        strict_load=strict_load_resnet,
-    )
-    return ExtractorWithMLP(
-        extractor=resnet, mlp_features=mlp_features, weights=weights_mlp, strict_load=strict_load_mlp
-    )
+__all__ = ["ExtractorWithMLP", "vit_clip_with_mlp"]

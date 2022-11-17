@@ -6,7 +6,7 @@ import torch
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
-from oml.const import MEAN, STD, STORAGE_URL, TNormParam
+from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.models.vit.hubconf import (  # type: ignore
@@ -19,7 +19,6 @@ from oml.transforms.images.albumentations.transforms import get_normalisation_al
 from oml.utils.io import download_checkpoint_one_of
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
-_STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 
 class ViTExtractor(IExtractor):
@@ -38,22 +37,22 @@ class ViTExtractor(IExtractor):
         "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
         # our pretrained checkpoints
         "vits16_inshop": (
-            [f"{_STORAGE_CKPTS}/inshop/vits16_inshop.ckpt", "1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste"],
+            [f"{STORAGE_CKPTS}/inshop/vits16_inshop.ckpt", "1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste"],
             "e1017d",
             "vits16_inshop.ckpt",
         ),
         "vits16_sop": (
-            [f"{_STORAGE_CKPTS}/sop/vits16_sop.ckpt", "1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt"],
+            [f"{STORAGE_CKPTS}/sop/vits16_sop.ckpt", "1IXDQoHUCDIcpyKMA_QrcyXdz3dXaYXCt"],
             "85cfa5",
             "vits16_sop.ckpt",
         ),
         "vits16_cub": (
-            [f"{_STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
+            [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
             "e82633",
             "vits16_cub.ckpt",
         ),
         "vits16_cars": (
-            [f"{_STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
+            [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
             "9f1e59",
             "vits16_cars.ckpt",
         ),

@@ -43,15 +43,3 @@ ExtractorWithMLP
     :show-inheritance:
 
     .. automethod:: __init__
-
-vit_with_mlp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.models.projection.vit_with_mlp
-
-vit_clip_with_mlp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.models.projection.vit_clip_with_mlp
-
-resnet_with_mlp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.models.projection.resnet_with_mlp
