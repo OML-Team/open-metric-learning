@@ -82,7 +82,7 @@ class ExtractorWithMLP(IExtractor):
             url_or_fid, hash_md5, fname, constructor_key = self.pretrained_models[weights]  # type: ignore
             checkpoint = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
             _extractor, _mlp = self.constructors[constructor_key]()
-            self.mlp = _mlp
+            self.projection = _mlp
             self.extractor = _extractor
             loaded = torch.load(checkpoint)
             self.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
