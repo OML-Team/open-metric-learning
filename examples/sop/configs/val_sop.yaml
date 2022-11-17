@@ -1,10 +1,10 @@
 accelerator: gpu
 devices: 1
 
-dataset_root: data/Stanford_Online_Products/
+dataset_root: /nydl/data/Stanford_Online_Products/
 dataframe_name: df.csv
 
-logs_root: logs/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 
 bs_val: 512
 num_workers: 20

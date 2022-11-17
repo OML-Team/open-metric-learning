@@ -25,9 +25,9 @@ transforms_val:
     crop_size: 224
 
 sampler:
-  name: balance
+  name: category_balance
   args:
-    n_labels: 150
+    n_labels: 30
     n_instances: 4
     n_categories: 5
     resample_labels: True
@@ -85,8 +85,6 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
-  - no_category_sampling
-  - as_best
 
 hydra:
   run:

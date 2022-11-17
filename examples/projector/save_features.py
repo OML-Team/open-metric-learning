@@ -10,17 +10,17 @@ from oml.models.vit.vit import ViTExtractor
 from oml.transforms.images.torchvision.transforms import get_normalisation_resize_hypvit
 from oml.transforms.images.utils import get_im_reader_for_transforms
 
-dataset_root = Path("/nydl/data/DeepFashion_InShop/")
+dataset_root = Path("/nydl/data/Stanford_Online_Products/")
 batch_size = 1024
-weights = "vits16_inshop"
+weights = "vits16_sop"
 
-df = pd.read_csv(dataset_root / "df_no_bboxes.csv")
+df = pd.read_csv(dataset_root / "df.csv")
 
 transform = get_normalisation_resize_hypvit(im_size=224, crop_size=224)
 im_reader = get_im_reader_for_transforms(transform)
 
 dataset = BaseDataset(df=df, transform=transform, f_imread=im_reader)
-model = ViTExtractor(weights, arch="vits16", normalise_features=False).eval().cuda()
+model = ViTExtractor(weights, arch="vits16", normalise_features=True).eval().cuda()
 train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=20)
 
 embeddings = torch.zeros((len(df), model.feat_dim))

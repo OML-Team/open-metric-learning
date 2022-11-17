@@ -16,12 +16,12 @@ num_workers: 20
 sampler:
   name: balance
   args:
-    n_labels: 2000
+    n_labels: 3700
     n_instances: 4
 
 bs_val: 256
 max_epochs: 10000
-valid_period: 15 # todo
+valid_period: 10
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
@@ -37,17 +37,19 @@ metric_for_checkpointing: OVERALL/cmc/1
 model:
   name: mlp
   args:
-    {}
+    normalise_features: True
 
 criterion:
   name: triplet_with_miner
   args:
     need_logs: True
-    margin: null
+    margin: 0.2
     reduction: mean
     miner:
-      name: hard_triplets
-      args: {}
+      name: n_hard_triplets
+      args:
+        n_positive: 1
+        n_negative: 1
 
 optimizer:
   name: adamw

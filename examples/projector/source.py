@@ -1,16 +1,19 @@
 # type: ignore
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 import torch
-import torchvision.ops
+from sklearn.model_selection import train_test_split
 
+from oml.functional.metrics import calc_gt_mask
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.interfaces.models import IExtractor
-from oml.registry.models import MODELS_REGISTRY
+from oml.utils.misc_torch import pairwise_dist
 
 
 class TensorsWithLabels(IDatasetWithLabels):
-    def __init__(self, df, embeddings, input_tensors_key="input_tensors", labels_key="label"):
+    def __init__(self, df, embeddings, input_tensors_key="input_tensors", labels_key="labels"):
         super(TensorsWithLabels, self).__init__()
         assert len(df) == len(embeddings)
 
@@ -31,14 +34,14 @@ class TensorsWithLabels(IDatasetWithLabels):
 
 class TensorsQueryGallery(IDatasetQueryGallery):
     def __init__(
-        self,
-        df,
-        embeddings,
-        labels_key="label",
-        categories_key="category",
-        is_query_key="is_query",
-        is_gallery_key="is_gallery",
-        paths_key="path",
+            self,
+            df,
+            embeddings,
+            labels_key="labels",
+            categories_key="category",
+            is_query_key="is_query",
+            is_gallery_key="is_gallery",
+            paths_key="path",
     ):
         super(TensorsQueryGallery, self).__init__()
         assert len(df) == len(embeddings)
@@ -85,16 +88,76 @@ def get_datasets(dataset_root, dataframe_name, emb_name):
 
 
 class ProjExtractor(IExtractor):
-    def __init__(self):
+    def __init__(self, normalise_features):
         super(ProjExtractor, self).__init__()
-        self.mlp = torchvision.ops.MLP(in_channels=384, hidden_channels=[64])
+        self.normalise_features = normalise_features
+
+        self.fc1 = torch.nn.Linear(in_features=384, out_features=384, bias=False)
+        self.fc1.load_state_dict({"weight": torch.eye(384)})  # todo: add noise
+
+    #         self.fc2 = torch.nn.Linear(in_features=384, out_features=384, bias=False)
+    #         self.fc2.load_state_dict({"weight": torch.eye(384)})
 
     def forward(self, x):
-        x = self.mlp(x)
+        x = self.fc1(x)
+
+        #         x = torch.nn.ReLU()(x)
+        #         x = self.fc2(x)
+
+        if self.normalise_features:
+            xn = torch.linalg.norm(x, 2, dim=1).detach()
+            x = x.div(xn.unsqueeze(1))
+
         return x
 
     def feat_dim(self):
-        return 64
+        return 384
 
 
-MODELS_REGISTRY["mlp"] = ProjExtractor
+def f_labels2ids(labels):
+    labels2ids = defaultdict(list)
+
+    for idx, label in enumerate(labels):
+        labels2ids[label].append(idx)
+
+    return labels2ids
+
+
+def split_labels(labels):
+    labels2ids = f_labels2ids(labels)
+
+    is_query = torch.zeros(len(labels)).bool()
+
+    for label in labels2ids:
+        ids = labels2ids[label]
+
+        query_ids, _ = train_test_split(ids, test_size=0.5)
+        is_query[query_ids] = True
+
+    return is_query, ~is_query
+
+
+def sigmoid(x, temperature):
+    return torch.sigmoid(x / temperature)
+
+
+def precision_approx(distances, mask_gt, k, temperature1=1, temperature2=0.01):
+    distances_diff = distances - distances.unsqueeze(0).T
+    rank = sigmoid(distances_diff, temperature2).sum(dim=0)
+    precision = (sigmoid(k - rank, temperature1) * mask_gt).sum(dim=1) / torch.clip(mask_gt.sum(dim=1), max=k)
+    return precision.mean()
+
+
+class PrecisionCriterion(torch.nn.Module):
+
+    def __init__(self):
+        super(PrecisionCriterion, self).__init__()
+
+    def forward(self, emb, labels):
+        is_query, is_gallery = split_labels(tuple(labels.tolist()))
+
+        distances = pairwise_dist(emb[is_query], emb[is_gallery])
+        mask_gt = calc_gt_mask(is_query=is_query, is_gallery=is_gallery, labels=labels).to(emb.device)
+
+        loss = -1 * precision_approx(distances, mask_gt, k=5)
+        return loss

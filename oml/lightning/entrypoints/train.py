@@ -84,7 +84,6 @@ def pl_train(cfg: TCfg) -> None:
         sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
-    print(sampler)
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
