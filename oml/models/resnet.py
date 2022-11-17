@@ -49,8 +49,8 @@ class ResnetExtractor(IExtractor):
         """
 
         Args:
-            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly initialize
-             model's weights or ``default`` to use the checkpoint pretrained on ImageNet.
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly
+             initialize model's weights or ``default`` to use the checkpoint pretrained on ImageNet.
              You can check the available pretrained checkpoints in ``self.pretrained_models``.
             arch: Different types of ResNet, please, check ``self.constructors``
             normalise_features: Set ``True`` to normalise output features

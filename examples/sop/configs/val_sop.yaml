@@ -10,9 +10,10 @@ bs_val: 512
 num_workers: 20
 
 transforms_val:
-  name: norm_resize_albu
+  name: norm_resize_hypvit_torch
   args:
     im_size: 224
+    crop_size: 224
 
 model:
   name: vit

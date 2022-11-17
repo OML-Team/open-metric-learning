@@ -30,7 +30,7 @@ def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = T
 
     for _ in range(num):
         unique_labels_number = randint(35, 55)
-        n_labels, n_instances = randint(3, 7), randint(5, 10)
+        n_labels, _ = randint(3, 7), randint(5, 10)
         unique_labels = list(range(unique_labels_number))
         shuffle(unique_labels)
         label2category = {}

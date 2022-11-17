@@ -42,3 +42,21 @@ HardClusterMiner
 
     .. automethod:: __init__
     .. automethod:: sample
+
+NHardTripletsMiner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.miners.inbatch_nhard_tri.NHardTripletsMiner
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: sample
+
+MinerWithBank
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.miners.miner_with_bank.MinerWithBank
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: sample

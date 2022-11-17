@@ -87,8 +87,10 @@ class EmbeddingMetrics(IMetricVisualisable):
             map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
-            metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not affect calculations.
-            check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the gallery set
+            metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
+             affect calculations.
+            check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the
+             gallery set
             return_only_main_category: Whether you want to return only the main category from ``.compute_metrics()``
             visualize_only_main_category: Whether you want to visualize only the main category with ``.visualize()``
             verbose: Set ``True`` if you want to print metrics
@@ -201,7 +203,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
         if self.return_only_main_category:
-            metric_to_return = {self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])}  # type: ignore
+            metric_to_return = {
+                self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])  # type: ignore
+            }
         else:
             metric_to_return = deepcopy(self.metrics)
 

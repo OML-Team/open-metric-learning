@@ -12,8 +12,20 @@ from oml.models.vit.vit import ViTExtractor
 from oml.utils.io import download_checkpoint
 
 
-def get_mlp(input_dim: int, mlp_features: List[int]) -> nn.Module:
-    return MLP(in_channels=input_dim, hidden_channels=mlp_features)
+def get_mlp(
+    input_dim: int,
+    mlp_features: List[int],
+    weights: Optional[str] = None,
+    strict_load: bool = True,
+) -> nn.Module:
+    """
+    Function which creates MLP and possibly loads weights.
+    """
+    mlp = MLP(in_channels=input_dim, hidden_channels=mlp_features)
+    if weights:
+        loaded = torch.load(weights)
+        mlp.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
+    return mlp
 
 
 def get_vit_and_mlp(
@@ -75,8 +87,6 @@ class ExtractorWithMLP(IExtractor):
             strict_load: Whether to use ``self.load_state_dict`` with strict argument
         """
         super().__init__()
-        self.extractor = extractor
-        self.projection = get_mlp(self.extractor.feat_dim, mlp_features)
         self.train_backbone = train_backbone
         if weights in self.pretrained_models:
             url_or_fid, hash_md5, fname, constructor_key = self.pretrained_models[weights]  # type: ignore
@@ -87,6 +97,8 @@ class ExtractorWithMLP(IExtractor):
             loaded = torch.load(checkpoint)
             self.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
         elif weights:
+            self.extractor = extractor
+            self.projection = get_mlp(self.extractor.feat_dim, mlp_features)
             loaded = torch.load(weights)
             self.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
 
@@ -103,4 +115,4 @@ class ExtractorWithMLP(IExtractor):
         return self.projection.out_features
 
 
-__all__ = ["ExtractorWithMLP", "vit_clip_with_mlp"]
+__all__ = ["ExtractorWithMLP", "get_vit_and_mlp"]

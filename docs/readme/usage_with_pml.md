@@ -44,6 +44,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1m66v1qhCyAUciEcXsJlIJtjF6nz6ZLI7?usp=sharing)
 
 <details>
 <summary>Training with distance, reducer, miner and loss from PML</summary>
@@ -90,7 +91,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
-ㅤ
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MbVmSnQvO16eVgAqy1kcOd1XysgaYVBo?usp=sharing)
 
 Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
 we recommend you to pick `distances.LpDistance(p=2)`.

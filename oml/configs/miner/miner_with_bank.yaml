@@ -1,0 +1,9 @@
+name: miner_with_bank
+args:
+  bank_size_in_batches: 3
+  need_logs: True
+  miner:
+    name: n_hard_triplets
+    args:
+      n_positive: 1
+      n_negative: 1

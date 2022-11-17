@@ -1,7 +1,6 @@
 from math import ceil
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 from neptune.new.types import File

@@ -282,6 +282,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing)
 
 <details>
 <summary>Validation</summary>
@@ -318,6 +319,8 @@ metrics = calculator.compute_metrics()
 [comment]:vanilla-validation-end
 </p>
 </details>
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1O2o3k8I8jN5hRin3dKnAS3WsgG04tmIT?usp=sharing)
 
 <details>
 <summary>Training + Validation [Lightning]</summary>
@@ -468,6 +471,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1m66v1qhCyAUciEcXsJlIJtjF6nz6ZLI7?usp=sharing)
 
 <details>
 <summary>Training with distance, reducer, miner and loss from PML</summary>
@@ -514,7 +518,7 @@ for batch in tqdm(train_loader):
 </p>
 </details>
 
-ㅤ
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MbVmSnQvO16eVgAqy1kcOd1XysgaYVBo?usp=sharing)
 
 Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
 we recommend you to pick `distances.LpDistance(p=2)`.
@@ -529,12 +533,12 @@ Below are the models trained with OML on 4 public datasets.
 For more details about the training process, please, visit *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 
-|                            model                            | cmc1  |         dataset          |                                           weights                                            |                                           configs                                            | hash (the beginning) |
-|:-----------------------------------------------------------:|:-----:|:------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
-| `ViTExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.903 |    DeepFashion Inshop    | [link](https://drive.google.com/file/d/1wjjwBC6VomVZQF-JeXepEMk9CtV0Nste/view?usp=sharing)   | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/inshop/configs)   |        e1017d        |
-|  `ViTExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.830 | Stanford Online Products | [link](https://drive.google.com/drive/folders/1WfPqCKbZ2KjRRQURGOOwrlQ87EUb7Zra?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/sop/configs)      |        85cfa5        |
-|  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         | [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     |        9f1e59        |
-|  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       | [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing) | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      |        e82633        |
+|                            model                            | cmc1  |         dataset          |                                              weights                                              |                                           configs                                            | hash (the beginning) |
+|:-----------------------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------:|
+| `ViTExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/inshop/configs)   |        e1017d        |
+|  `ViTExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/sop/configs)      |        85cfa5        |
+|  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     |        9f1e59        |
+|  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      |        e82633        |
 
 We also provide an integration with the models pretrained by other researchers:
 

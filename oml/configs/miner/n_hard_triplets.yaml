@@ -1,0 +1,4 @@
+name: n_hard_triplets
+args:
+  n_positive: 2
+  n_negative: 2
