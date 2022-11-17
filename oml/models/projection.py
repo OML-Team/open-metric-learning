@@ -25,7 +25,7 @@ def get_mlp(
     """
     mlp = MLP(in_channels=input_dim, hidden_channels=mlp_features)
     if weights:
-        loaded = torch.load(weights)
+        loaded = torch.load(weights, map_location="cpu")
         mlp.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
     return mlp
 
@@ -104,7 +104,7 @@ class ExtractorWithMLP(IExtractor):
                 self.projection = _mlp
                 self.extractor = _extractor
                 weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
-            loaded = torch.load(weights)
+            loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
             self.load_state_dict(loaded, strict=strict_load)
