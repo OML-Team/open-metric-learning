@@ -8,7 +8,7 @@ from torch import nn
 from torchvision.ops import MLP
 
 from oml.const import STORAGE_CKPTS
-from oml.interfaces.models import IExtractor
+from oml.interfaces.models import IExtractor, IFreezable
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.io import download_checkpoint
@@ -49,7 +49,7 @@ def get_vit_and_mlp(
     return vit, mlp
 
 
-class ExtractorWithMLP(IExtractor):
+class ExtractorWithMLP(IExtractor, IFreezable):
     """
     Class-wrapper for extractors which adds additional MLP (may be useful for classification losses).
 
@@ -86,7 +86,7 @@ class ExtractorWithMLP(IExtractor):
         Args:
             extractor: Instance of IExtractor (e.g. ViTExtractor)
             mlp_features: Sizes of projection layers
-            weights: Path to weights file or None for random initialization
+            weights: Path to weights file or ``None`` for random initialization
             strict_load: Whether to use ``self.load_state_dict`` with strict argument
         """
         super().__init__()
@@ -120,6 +120,12 @@ class ExtractorWithMLP(IExtractor):
     @property
     def feat_dim(self) -> int:
         return self.projection.out_features
+
+    def freeze(self) -> None:
+        self.train_backbone = False
+
+    def unfreeze(self) -> None:
+        self.train_backbone = True
 
 
 __all__ = ["ExtractorWithMLP", "get_vit_and_mlp", "get_mlp"]
