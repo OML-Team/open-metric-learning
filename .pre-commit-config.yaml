@@ -35,12 +35,12 @@ repos:
     args: ["--profile", "black"]
 
 
-# check code style
-- repo: https://gitlab.com/pycqa/flake8
-  rev: 3.8.4
-  hooks:
-  - id: flake8
-    exclude: __init__.py
+# check code style  # todo: there are some problmes with this repo, we need to fix it later
+#- repo: https://gitlab.com/pycqa/flake8
+#  rev: 3.8.4
+#  hooks:
+#  - id: flake8
+#    exclude: __init__.py
 
 
 # static type checking

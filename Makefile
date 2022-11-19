@@ -32,6 +32,8 @@ build_readme:
 	cat docs/readme/zoo.md >> ${README_FILE}
 	echo "\n## Contributing guide\n" >> ${README_FILE}
 	cat docs/readme/contributing.md >> ${README_FILE}
+	echo "\n## Extra materials\n" >> ${README_FILE}
+	cat docs/readme/extra_materials.md >> ${README_FILE}
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
 	cat docs/readme/acknowledgments.md >> ${README_FILE}
 
