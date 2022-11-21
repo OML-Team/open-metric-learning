@@ -132,7 +132,7 @@ Here are a few examples of such tasks from the computer vision sphere:
 
 
 <details>
-<summary>How accurate may be a model trained with OML? </summary>
+<summary>How good may be a model trained with OML? </summary>
 <p>
 
 It may be comparable with the current (2022 year) [SotA](https://paperswithcode.com/task/metric-learning) methods,
