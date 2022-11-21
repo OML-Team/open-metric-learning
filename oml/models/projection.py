@@ -1,7 +1,6 @@
 from functools import partial
 from pathlib import Path
 from typing import List, Optional, Union
-from warnings import warn
 
 import torch
 from torch import nn
@@ -12,22 +11,6 @@ from oml.interfaces.models import IExtractor, IFreezable
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.io import download_checkpoint
-
-
-def get_mlp(
-    input_dim: int,
-    mlp_features: List[int],
-    weights: Optional[str] = None,
-    strict_load: bool = True,
-) -> nn.Module:
-    """
-    Function which creates MLP and possibly loads weights.
-    """
-    mlp = MLP(in_channels=input_dim, hidden_channels=mlp_features)
-    if weights:
-        loaded = torch.load(weights, map_location="cpu")
-        mlp.load_state_dict(loaded.get("state_dict", loaded), strict=strict_load)
-    return mlp
 
 
 def get_vit_and_mlp(
@@ -45,7 +28,7 @@ def get_vit_and_mlp(
         normalise_features=normalise_features_vit,
         use_multi_scale=use_multi_scale_vit,
     )
-    mlp = get_mlp(vit.feat_dim, mlp_features)
+    mlp = MLP(vit.feat_dim, mlp_features)
     return vit, mlp
 
 
@@ -70,7 +53,6 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
             "35244966",
             "vits16_224_mlp_384_inshop.ckpt",
-            "vits16_224_mlp_384",
         )
     }
 
@@ -89,20 +71,13 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             weights: Path to weights file or ``None`` for random initialization
             strict_load: Whether to use ``self.load_state_dict`` with strict argument
         """
-        super().__init__()
+        IExtractor.__init__(self)
         self.train_backbone = train_backbone
         self.extractor = extractor
-        self.projection = get_mlp(self.extractor.feat_dim, mlp_features)
+        self.projection = MLP(self.extractor.feat_dim, mlp_features)
         if weights:
-            if weights in self.pretrained_models:  # override extractor and MLP
-                url_or_fid, hash_md5, fname, constructor_key = self.pretrained_models[weights]  # type: ignore
-                _extractor, _mlp = self.constructors[constructor_key]()
-                warn(
-                    f"Extractor and MLP are overrided with those created by "
-                    f'ExtractorWithMLP.constructors["{constructor_key}"]!'
-                )
-                self.projection = _mlp
-                self.extractor = _extractor
+            if weights in self.pretrained_models:
+                url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
                 weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
@@ -128,4 +103,4 @@ class ExtractorWithMLP(IExtractor, IFreezable):
         self.train_backbone = True
 
 
-__all__ = ["ExtractorWithMLP", "get_vit_and_mlp", "get_mlp"]
+__all__ = ["ExtractorWithMLP", "get_vit_and_mlp"]

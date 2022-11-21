@@ -45,7 +45,8 @@ class RetrievalModule(pl.LightningModule):
             embeddings_key: Key to get embeddings from the batches
             scheduler_monitor_metric: Metric to monitor for the schedulers that depend on the metric value
             freeze_n_epochs: number of epochs to freeze model (for n > 0 model has to be an successor of IFreezable
-                interface)
+                interface). If ``epoch_number >= freeze_n_epochs``: model will be unfreezed. Note that epochs are
+                starting with 0.
 
         """
         pl.LightningModule.__init__(self)
@@ -64,7 +65,9 @@ class RetrievalModule(pl.LightningModule):
         self.embeddings_key = embeddings_key
 
         self.freeze_n_epochs = freeze_n_epochs
-        assert freeze_n_epochs == 0 or isinstance(model, IFreezable), "Model must be IFreezable to use this."
+        assert freeze_n_epochs == 0 or isinstance(
+            model, IFreezable
+        ), f"Model must be {IFreezable.__name__} to use this."
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         embeddings = self.model(x)
@@ -110,7 +113,7 @@ class RetrievalModule(pl.LightningModule):
 
     def on_epoch_start(self) -> None:
         if self.freeze_n_epochs and isinstance(self.model, IFreezable):
-            if self.current_epoch > self.freeze_n_epochs:
+            if self.current_epoch >= self.freeze_n_epochs:
                 self.model.unfreeze()
             else:
                 self.model.freeze()
@@ -127,7 +130,7 @@ class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
         loaders_val: Optional[EVAL_DATALOADERS] = None,
         *args: Any,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
         RetrievalModule.__init__(self, *args, **kwargs)

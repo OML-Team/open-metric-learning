@@ -48,7 +48,7 @@ log_images: True
 
 metric_for_checkpointing: OVERALL/cmc/1
 
-freeze_n_epochs: 4
+freeze_n_epochs: 5
 
 model:
   name: extractor_with_mlp

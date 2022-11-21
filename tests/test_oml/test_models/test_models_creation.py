@@ -66,7 +66,7 @@ def test_extractor_with_mlp(constructor: IExtractor, args: Dict[str, Any], defau
 
     net = constructor(weights=None, arch=default_arch, **args)
     extractor = ExtractorWithMLP(extractor=net, mlp_features=[128])
-    features1 = extractor.forward(im)
+    features1 = extractor(im)
 
     fname = f"{default_arch}_with_mlp_random.pth"
     torch.save({"state_dict": extractor.state_dict()}, fname)
