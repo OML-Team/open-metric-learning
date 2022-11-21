@@ -1,13 +1,14 @@
 Below are the models trained with OML on 4 public datasets.
-For more details about the training process, please, visit *examples* submodule and it's
+For more details about the training process and configs, please, visit *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+All figures below were obtained on the images with the sizes of 224 x 224:
 
-|                            model                            | cmc1  |         dataset          |                                              weights                                              | hash (the beginning) | Transforms |
-|:-----------------------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------------:|:----------:|
-| `ViTExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     |        e1017d        |  [link]()  |
-|  `ViTExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      |        85cfa5        |  [link]()  |
-|  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    |        9f1e59        |  [link]()  |
-|  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |        e82633        |  [link]()  |
+|                            model                            | cmc1  |         dataset          |                                              weights                                              |                                           configs                                            |                                                                               Transforms                                                                               | hash (the beginning) |
+|:-----------------------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------:|
+| `ViTExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/inshop/configs)   |       [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/torchvision/transforms.py#L32)       |        e1017d        |
+|  `ViTExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/sop/configs)      |       [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/torchvision/transforms.py#L32)       |        85cfa5        |
+|  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     |     [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128)     |        9f1e59        |
+|  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      |         [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |        e82633        |
 
 We also provide an integration with the models pretrained by other researchers.
 All figures below were obtained on the images with the sizes of 224 x 224:
@@ -43,9 +44,4 @@ print(list(ViTExtractor.pretrained_models.keys()))
 # To load checkpoint saved on a disk:
 model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.ckpt", arch="vits16", normalise_features=False)
 ```
-
-### How to perform inference on my data?
-
-
-
 [comment]:checkpoint-end
