@@ -30,7 +30,7 @@ def get_augs_hypvit(im_size: int = 224, mean: TNormParam = MEAN, std: TNormParam
 
 
 def get_normalisation_resize_hypvit(
-    im_size: int = 256, crop_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD
+    im_size: int = 224, crop_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> t.Compose:
     transforms = t.Compose(
         [
