@@ -24,14 +24,12 @@ class IFreezable(ABC):
     def freeze(self) -> None:
         """
         Function for freezing. You can use it to partially freeze a model.
-        Expected to be used with ``freeze_n_epochs`` in training config.
         """
         raise NotImplementedError()
 
     def unfreeze(self) -> None:
         """
         Function for unfreezing. You can use it to unfreeze a model.
-        Expected to be used with ``freeze_n_epochs`` in training config.
         """
         raise NotImplementedError()
 

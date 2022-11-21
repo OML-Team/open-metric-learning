@@ -87,11 +87,7 @@ def pl_train(cfg: TCfg) -> None:
 
     extractor = get_extractor_by_cfg(cfg["model"])
     criterion = get_criterion_by_cfg(cfg["criterion"])
-    optimizable_parameters = [
-        {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
-        {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
-    ]
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=optimizable_parameters)  # type: ignore
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
 
     # unpack scheduler to the Lightning format
     if cfg.get("scheduling"):

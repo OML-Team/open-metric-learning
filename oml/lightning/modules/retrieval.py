@@ -44,7 +44,8 @@ class RetrievalModule(pl.LightningModule):
             labels_key: Key to get labels from the batches
             embeddings_key: Key to get embeddings from the batches
             scheduler_monitor_metric: Metric to monitor for the schedulers that depend on the metric value
-            freeze_n_epochs: number of epochs to freeze model (model should be instance of IFreezable)
+            freeze_n_epochs: number of epochs to freeze model (for n > 0 model has to be an successor of IFreezable
+                interface)
 
         """
         pl.LightningModule.__init__(self)
@@ -63,7 +64,7 @@ class RetrievalModule(pl.LightningModule):
         self.embeddings_key = embeddings_key
 
         self.freeze_n_epochs = freeze_n_epochs
-        assert freeze_n_epochs == 0 or isinstance(model, IFreezable), "Model should be IFreezable to use this."
+        assert freeze_n_epochs == 0 or isinstance(model, IFreezable), "Model must be IFreezable to use this."
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         embeddings = self.model(x)
