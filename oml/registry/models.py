@@ -20,10 +20,7 @@ def raise_if_needed(extractor_cfg: TCfg, kwargs: Dict[str, Any], model_name: str
     if extractor_cfg.get("weights", False) and kwargs.get("weights", False):
         raise ValueError("You should only provide one weight for extractor_with_mlp.")
     elif extractor_cfg.get("weights", "") is None and kwargs.get("weights", False):
-        warn(
-            f"There are weights provided for {model_name}. They can overwrite internal extractor's "
-            f"weights or even the extractor if it is a pretrained model."
-        )
+        warn(f"There are weights provided for {model_name}. They can overwrite internal extractor's weights.")
 
 
 def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:
