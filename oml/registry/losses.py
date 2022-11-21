@@ -15,15 +15,16 @@ LOSSES_REGISTRY = {
 
 def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
     if "miner" in kwargs:
-        miner = get_miner_by_cfg(kwargs["miner"].copy())
-        del kwargs["miner"]
+        miner = get_miner_by_cfg(kwargs.pop("miner"))
         return LOSSES_REGISTRY[name](miner=miner, **kwargs)
     else:
         return LOSSES_REGISTRY[name](**kwargs)
 
 
-def get_criterion_by_cfg(cfg: TCfg) -> nn.Module:
+def get_criterion_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> nn.Module:
     cfg = dictconfig_to_dict(cfg)
+    cfg.setdefault("args", {})
+    cfg["args"].update(**kwargs_runtime)
     return get_criterion(name=cfg["name"], **cfg["args"])
 
 

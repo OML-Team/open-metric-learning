@@ -79,8 +79,8 @@ def pl_train(cfg: TCfg) -> None:
         )
 
     sampler_runtime_args = {"labels": train_dataset.get_labels()}
+    df = train_dataset.df
     if train_dataset.categories_key:
-        df = train_dataset.df
         sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
@@ -132,6 +132,7 @@ def pl_train(cfg: TCfg) -> None:
         optimizer=optimizer,
         input_tensors_key=train_dataset.input_tensors_key,
         labels_key=train_dataset.labels_key,
+        freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs,
     )
 

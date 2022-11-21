@@ -37,6 +37,7 @@ LOG_TOPK_IMAGES_PER_ROW = 5
 N_GT_SHOW_EMBEDDING_METRICS = 2
 
 STORAGE_URL = "https://oml.daloroserver.com"
+STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
