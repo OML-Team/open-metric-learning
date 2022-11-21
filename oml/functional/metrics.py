@@ -9,7 +9,7 @@ from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import clip_max
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
-TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
+TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, torch.Tensor]]]
 
 
 def calc_retrieval_metrics(
@@ -19,6 +19,7 @@ def calc_retrieval_metrics(
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
+    fmr_vals: Tuple[float, ...] = (1.0e-3,),
     reduce: bool = True,
     check_dataset_validity: bool = False,
 ) -> TMetricsDict:
@@ -33,6 +34,7 @@ def calc_retrieval_metrics(
         cmc_top_k: Tuple of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Tuple of  ``k`` values to calculate ``precision@k``
         map_top_k: Tuple of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
+        fmr_vals: Tuple of ``fmr`` values to calculate ``fnmr@fmr`` (`False Non Match Rate at given False Match Rate`)
         reduce: If ``False`` return metrics for each query without averaging
         check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
          each of the queries
@@ -106,6 +108,9 @@ def calc_retrieval_metrics(
         positions = torch.arange(1, k_map + 1).unsqueeze(0)
         mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
         metrics["map"][k_map_show] = mean_ap
+
+    for fmr_val in fmr_vals:
+        metrics["fnmr@fmr"][fmr_val] = calc_fnmr_at_fmr(distances, mask_gt, fmr_val)
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -207,6 +212,14 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc.mean()
     else:
         return acc
+
+
+def calc_fnmr_at_fmr(distances: torch.Tensor, mask_gt: torch.Tensor, fmr_val: float) -> torch.Tensor:
+    pos_dist = distances[mask_gt]
+    neg_dist = distances[~mask_gt]
+    threshold = np.nanquantile(neg_dist.numpy(), fmr_val, interpolation="midpoint")
+    fnmr_at_fmr = (pos_dist >= threshold).sum() / len(pos_dist)
+    return fnmr_at_fmr
 
 
 def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:

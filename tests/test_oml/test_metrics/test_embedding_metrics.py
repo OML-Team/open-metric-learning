@@ -156,6 +156,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
+        fmr_vals=tuple(),
     )
 
     calc.setup(num_samples=num_samples)
@@ -189,6 +190,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
+        fmr_vals=tuple(),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
@@ -251,6 +253,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         cmc_top_k=(),
         precision_top_k=(),
         map_top_k=(2,),
+        fmr_vals=tuple(),
     )
 
     calc.setup(num_samples=num_samples)
@@ -274,6 +277,7 @@ def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
         cmc_top_k=(1,),
         precision_top_k=(),
         map_top_k=(),
+        fmr_vals=tuple(),
     )
 
     assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys

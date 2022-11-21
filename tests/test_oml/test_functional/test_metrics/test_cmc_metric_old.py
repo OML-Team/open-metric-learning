@@ -38,26 +38,27 @@ EPS = 1e-4
 
 TEST_DATA_SIMPLE = (
     # (distance_matrix, mask_gt,  topk, expected_value)
-    (torch.tensor([[1, 2], [2, 1]]), torch.tensor([[0, 1], [1, 0]]), 1, 0.0),
-    (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]]), 1, 0.5),
-    (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]]), 2, 1),
+    (torch.tensor([[1, 2], [2, 1]]), torch.tensor([[0, 1], [1, 0]], dtype=torch.bool), 1, 0.0),
+    (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]], dtype=torch.bool), 1, 0.5),
+    (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]], dtype=torch.bool), 2, 1),
     (
         torch.tensor([[1, 0.5, 0.2], [2, 3, 4], [0.4, 3, 4]]),
-        torch.tensor([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+        torch.tensor([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=torch.bool),
         2,
         1 / 3,
     ),
-    (torch.randn((10, 10)), torch.ones((10, 10)), 1, 1),
+    (torch.randn((10, 10)), torch.ones((10, 10), dtype=torch.bool), 1, 1),
 )
 
 TEST_DATA_LESS_SMALL = (
-    (torch.rand((10, 10)) + torch.tril(torch.ones((10, 10))), torch.eye(10), i, i / 10) for i in range(1, 10)
+    (torch.rand((10, 10)) + torch.tril(torch.ones((10, 10))), torch.eye(10, dtype=torch.bool), i, i / 10)
+    for i in range(1, 10)
 )
 
 TEST_DATA_GREATER_SMALL = (
     (
         torch.rand((10, 10)) + torch.triu(torch.ones((10, 10)), diagonal=1),
-        torch.eye(10),
+        torch.eye(10, dtype=torch.bool),
         i,
         i / 10,
     )
@@ -67,7 +68,7 @@ TEST_DATA_GREATER_SMALL = (
 TEST_DATA_LESS_BIG = (
     (
         torch.rand((100, 100)) + torch.tril(torch.ones((100, 100))),
-        torch.eye(100),
+        torch.eye(100, dtype=torch.bool),
         i,
         i / 100,
     )

@@ -7,6 +7,7 @@ import torch
 
 from oml.functional.metrics import (
     TMetricsDict,
+    calc_fnmr_at_fmr,
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
@@ -42,6 +43,30 @@ def naive_precision(positions: TPositions, k: int) -> torch.Tensor:
         values[query_idx] = sum(1 for idx in pos if idx < k) / num_gt
     metric = torch.mean(values.float())
     return metric
+
+
+@pytest.fixture()
+def distances() -> torch.Tensor:
+    # fmt: off
+    distances = torch.tensor([[float("inf"), 1, 2, 3, 4],
+                              [1, float("inf"), 5, 6, 7],
+                              [2, 5, float("inf"), 8, 9],
+                              [3, 6, 8, float("inf"), 0],
+                              [4, 7, 9, 0, float("inf")]])
+    # fmt: on
+    return distances
+
+
+@pytest.fixture()
+def mask_gt() -> torch.Tensor:
+    # fmt: off
+    mask_gt = torch.tensor([[False, True, True, False, False],
+                            [True, False, True, False, False],
+                            [True, True, False, False, True],
+                            [False, False, False, False, True],
+                            [False, False, True, True, False]])
+    # fmt: on
+    return mask_gt
 
 
 def test_on_exact_case() -> None:
@@ -162,3 +187,14 @@ def compare_metrics(
             values_expected = metrics_expected[metric_name][k]
             values_calculated = metrics_calculated[metric_name][k]
             assert torch.all(torch.isclose(values_expected, values_calculated, atol=1e-4)), [metric_name, k]
+
+
+def test_calc_fnmr_at_fmr(distances: torch.Tensor, mask_gt: torch.Tensor) -> None:
+    fmr_val = 0.1
+    fnmr_at_fmr = calc_fnmr_at_fmr(distances, mask_gt, fmr_val)
+    # positive distances are 0 0 1 1 2 2 5 5 9 9
+    # negative distances are 3 3 4 4 6 6 7 7 8 8 inf inf inf inf inf
+    # 0.1 quantile of negative distances is 3.5
+    # number of positive distances that are greater or equal than 3.5 is 4
+    # so FNMR@FMR-0.1 is 4 / 10
+    assert torch.isclose(fnmr_at_fmr, torch.tensor([0.4]))
