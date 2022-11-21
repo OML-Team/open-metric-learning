@@ -132,6 +132,37 @@ Here are a few examples of such tasks from the computer vision sphere:
 
 
 <details>
+<summary>How accurate may be a model trained with OML? </summary>
+<p>
+
+It may be comparable with the current (2022 year) [SotA](https://paperswithcode.com/task/metric-learning) methods,
+for example, [Hyp-ViT](https://arxiv.org/pdf/2203.10833.pdf).
+*(Few words about this approach: it's a ViT architecture trained with contrastive loss,
+but the embeddings were projected into some hyperbolic space.
+As the authors claimed, such a space is able to describe the nested structure of real-world data.
+So, the paper requires some heavy math to adapt the usual operations for the hyperbolical space.)*
+
+We trained the same architecture with triplet loss, fixing the rest of the parameters:
+training and test transformations, image size, and optimizer. See configs in [Models Zoo](https://github.com/OML-Team/open-metric-learning#zoo).
+The trick was in heuristics in our miner and sampler:
+
+* [Category Balance Sampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html#categorybalancesampler)
+  forms the batches limiting the number of categories *C* in it.
+  For instance, when *C = 1* it puts only jackets in one batch and only jeans into another one (just an example).
+  It automatically makes the negative pairs harder: it's more meaningful for a model to realise why two jackets
+  are different than to understand the same about a jacket and a t-shirt.
+
+* [Hard Triplets Miner](https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html#hardtripletsminer)
+  makes the task even harder keeping only the hardest triplets (with maximal positive and minimal negative distances).
+
+Here are *CMC@1* scores for 2 popular benchmarks.
+SOP dataset: Hyp-ViT — 85.9, ours — 86.6. DeepFashion dataset: Hyp-ViT — 92.5, ours — 92.1.
+Thus, utilising simple heuristics and avoiding heavy math we are able to perform on SotA level.
+
+</p>
+</details>
+
+<details>
 <summary>How does OML work under the hood? </summary>
 <p>
 
