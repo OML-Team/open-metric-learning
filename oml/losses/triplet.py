@@ -20,7 +20,7 @@ class TripletLoss(Module):
     instead of using the classical formula
     ``loss = relu(margin + positive_distance - negative_distance)``
     we use
-    ``loss = log1p(positive_distance - negative_distance)``.
+    ``loss = log1p(exp(positive_distance - negative_distance))``.
     It may help to solve the often problem when `TripletMarginLoss` converges to it's
     margin value (also known as `dimension collapse`).
 
@@ -228,6 +228,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
         self.last_logs.update(self.tri_loss.last_logs)
+        self.last_logs.update(getattr(self.miner, "last_logs", {}))
 
         if self.reduction == "mean":
             loss = loss.mean()

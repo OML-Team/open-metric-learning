@@ -1,15 +1,15 @@
 # type: ignore
-from typing import Any
+from typing import Any, Dict
 
 import pytest
 from omegaconf import OmegaConf
 from torch import nn
 from torch.optim import Optimizer
 
-from oml.const import CONFIGS_PATH
+from oml.const import CONFIGS_PATH, TCfg
 from oml.registry.losses import LOSSES_REGISTRY, get_criterion
 from oml.registry.miners import MINERS_REGISTRY, get_miner
-from oml.registry.models import MODELS_REGISTRY, get_extractor
+from oml.registry.models import MODELS_REGISTRY, get_extractor, raise_if_needed
 from oml.registry.optimizers import (
     OPTIMIZERS_REGISTRY,
     get_optimizer,
@@ -60,3 +60,20 @@ def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
         factory_fun(cfg["name"], **args)
 
     assert True
+
+
+@pytest.mark.parametrize(
+    "extractor_cfg,kwargs,raises",
+    [
+        ({"weights": None}, {"weights": "some_weights"}, False),
+        ({"weights": None}, {"weights": None}, False),
+        ({"weights": "some_weights"}, {"weights": None}, False),
+        ({"weights": "some_weights"}, {"weights": "some_other_weights"}, True),
+    ],
+)
+def test_model_raises(extractor_cfg: TCfg, kwargs: Dict[str, Any], raises: bool, model_name: str = "default") -> None:
+    if raises:
+        with pytest.raises(ValueError):
+            raise_if_needed(extractor_cfg=extractor_cfg, kwargs=kwargs, model_name=model_name)
+    else:
+        raise_if_needed(extractor_cfg=extractor_cfg, kwargs=kwargs, model_name=model_name)

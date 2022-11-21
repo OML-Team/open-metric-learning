@@ -16,15 +16,19 @@ MODELS_REGISTRY = {
 }
 
 
+def raise_if_needed(extractor_cfg: TCfg, kwargs: Dict[str, Any], model_name: str) -> None:
+    if extractor_cfg.get("weights", False) and kwargs.get("weights", False):
+        raise ValueError("You should only provide one weight for extractor_with_mlp.")
+    elif extractor_cfg.get("weights", "") is None and kwargs.get("weights", False):
+        warn(f"There are weights provided for {model_name}. They can overwrite internal extractor's weights.")
+
+
 def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:
     if "extractor" in kwargs:
         extractor_cfg = kwargs.pop("extractor")
         inside_extractor = get_extractor_by_cfg(extractor_cfg)
         extractor = MODELS_REGISTRY[model_name](extractor=inside_extractor, **kwargs)  # type: ignore
-        if extractor_cfg.get("weights", None) and kwargs.get("weights", None):
-            raise ValueError("You should only provide one weight for extractor_with_mlp.")
-        elif extractor_cfg.get("weights", 0) is None and kwargs.get("weights", None):
-            warn(f"There are weights provided for {model_name}. They can overwrite internal extractor's weights.")
+        raise_if_needed(extractor_cfg, kwargs, model_name)
     else:
         extractor = MODELS_REGISTRY[model_name](**kwargs)  # type: ignore
     return extractor

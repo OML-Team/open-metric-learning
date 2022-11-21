@@ -148,6 +148,7 @@ def pl_train(cfg: TCfg) -> None:
         optimizer=optimizer,
         input_tensors_key=train_dataset.input_tensors_key,
         labels_key=train_dataset.labels_key,
+        freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs,
     )
 

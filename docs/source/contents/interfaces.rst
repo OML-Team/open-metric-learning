@@ -16,6 +16,15 @@ IExtractor
     .. automethod:: extract
     .. autoproperty:: feat_dim
 
+IFreezable
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.models.IFreezable
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: freeze
+    .. automethod:: unfreeze
+
 IBatchSampler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.samplers.IBatchSampler

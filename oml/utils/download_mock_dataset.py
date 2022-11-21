@@ -35,7 +35,7 @@ def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame,
     if not check_mock_dataset_exists(dataset_root):
         try:
             download_folder_from_remote_storage(remote_folder=MOCK_DATASET_PATH.name, local_folder=str(dataset_root))
-        except:
+        except Exception:
             gdown.download_folder(url=MOCK_DATASET_URL_GDRIVE, output=str(dataset_root))
     else:
         print("Mock dataset has been downloaded already.")
