@@ -78,7 +78,7 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         loss = self.criterion(embeddings, batch[self.labels_key])
-        loss_name = (getattr(self.criterion, "crit_name", "") + " loss").strip()
+        loss_name = (getattr(self.criterion, "crit_name", "") + "_loss").strip("_")
         self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
