@@ -23,14 +23,8 @@ transforms_val:
   args:
     im_size: 224
 
-sampler:
-  name: category_balance
-  args:
-    n_labels: 13
-    n_instances: 6
-    n_categories: 3
-    resample_labels: True
-    weight_categories: True
+sampler: null
+bs_train: 256
 
 bs_val: 256
 max_epochs: 10000
@@ -50,7 +44,7 @@ metric_for_checkpointing: OVERALL/cmc/1
 model:
   name: extractor_with_mlp
   args:
-    mlp_features: [512]
+    mlp_features: [384, 256]
     extractor:
       name: vit
       args:
@@ -59,13 +53,14 @@ model:
         weights: vits16_dino
         arch: vits16
 
+map_labels: True
 criterion:
   name: arcface
   args:
     label_smoothing: null
     m: 0.4
     s: 64
-    in_features: 384
+    in_features: 256
     num_classes: 3985
 
 optimizer:
