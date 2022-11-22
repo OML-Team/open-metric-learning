@@ -17,6 +17,8 @@ class ArcFaceLoss(nn.Module):
     ``num_classes`` yourself.
     """
 
+    crit_name = "arcface"  # for better logging
+
     def __init__(
         self,
         in_features: int,
