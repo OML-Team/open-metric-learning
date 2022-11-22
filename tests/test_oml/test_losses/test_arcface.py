@@ -81,7 +81,6 @@ def arcface_functional_for_comarison(
 
 
 def check_arcface_trainable(X: Any, y: Any) -> None:
-    # X, y = dataset(dataset_seed)
     loss = ArcFaceLoss(X.shape[-1], len(torch.unique(y)))
 
     l0 = loss(X, y).item()

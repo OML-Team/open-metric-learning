@@ -43,9 +43,8 @@ class ArcFaceLoss(nn.Module):
         """
         super(ArcFaceLoss, self).__init__()
 
-        assert label2category is None or label_smoothing is not None, "You should provide `label_smoothing`!"
         assert (
-            label_smoothing is None or label_smoothing > 0 and label_smoothing < 1
+            label_smoothing is None or 0 < label_smoothing < 1
         ), f"Choose another label_smoothing parametrization, got {label_smoothing}"
 
         self.criterion = criterion or nn.CrossEntropyLoss()
@@ -72,6 +71,8 @@ class ArcFaceLoss(nn.Module):
         return label_smoothing(y, self.num_classes, self.label_smoothing, self.label2category)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        assert torch.all(y < self.num_classes), "You should provide labels between 0 and num_classes - 1."
+
         cos = self.fc(x)
 
         self._log_accuracy_on_batch(cos, y)
@@ -89,6 +90,7 @@ class ArcFaceLoss(nn.Module):
 
         return self.criterion(logit, y)
 
+    @torch.no_grad()
     def _log_accuracy_on_batch(self, logits: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         accuracy = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
         self.last_logs.update(

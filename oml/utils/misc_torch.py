@@ -80,6 +80,7 @@ def label_smoothing(
             category-based label smoothing. In that case the biggest value in OHE-vector will be
             ``1 - label_smoothing + 1 / num_classes_of_the_same_category``
     """
+    assert label_smoothing < 1, "`label_smoothing` must be less than 1."
     ohe = F.one_hot(y, num_classes).float()
     if isinstance(label2category, torch.Tensor):
         with torch.no_grad():
