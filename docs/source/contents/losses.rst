@@ -42,7 +42,7 @@ ArcFaceLoss
 
     .. automethod:: __init__
 
-ArcFaceLoss
+ArcFaceLossWithMLP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.losses.arcface.ArcFaceLossWithMLP
     :undoc-members:
