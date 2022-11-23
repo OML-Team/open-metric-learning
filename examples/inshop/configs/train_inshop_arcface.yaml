@@ -54,7 +54,6 @@ model:
         weights: vits16_dino
         arch: vits16
 
-map_labels: True
 criterion:
   name: arcface
   args:

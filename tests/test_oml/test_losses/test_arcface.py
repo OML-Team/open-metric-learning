@@ -71,7 +71,7 @@ def arcface_functional_for_comarison(
     phi = cosine * cos_m - sine * sin_m
     phi = torch.where(cosine > th, phi, cosine - mm)
     # --------------------------- convert label to one-hot ---------------------------
-    one_hot = torch.zeros(cosine.size(), device="cuda")
+    one_hot = torch.zeros(cosine.size())
     one_hot.scatter_(1, label.view(-1, 1).long(), 1)
     # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
     output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
@@ -152,3 +152,18 @@ def test_label_smoothing_fuzzy(
 def test_label_smoothing_raises_bad_ls(label_smoothing: float) -> None:
     with pytest.raises(AssertionError):
         ArcFaceLoss(1, 1, label_smoothing=label_smoothing, label2category={1: 1})
+
+
+@pytest.mark.parametrize("seed", [0, 1])
+@pytest.mark.parametrize("m,s", [(0.4, 64), (0.5, 64), (0.5, 48)])
+def test_arface(m: float, s: float, seed: int) -> None:
+    set_global_seed(seed)
+    loss = ArcFaceLoss(3, 3, m=m, s=s).cpu()
+
+    x = torch.randn((3, 3)).cpu()
+    y = torch.tensor([0, 1, 2]).cpu()
+
+    loss_value = loss(x, y)
+    loss_value2 = arcface_functional_for_comarison(x, y, weight=loss.weight, criterion=loss.criterion, m=m, s=s)
+
+    assert torch.allclose(loss_value, loss_value2)

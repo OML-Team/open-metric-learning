@@ -261,21 +261,19 @@ def get_retrieval_datasets(
     dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
     verbose: bool = True,
-    map_categories: bool = False,
-    map_labels: bool = False,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
-    if map_categories:
-        mapper = {l: i for i, l in enumerate(sorted(df[CATEGORIES_COLUMN].unique()))}
-        df[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].map(mapper)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
 
     # train
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
-    if map_labels:
-        mapper = {l: i for i, l in enumerate(df_train[LABELS_COLUMN].unique())}
-        df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
+    # Note that if you want to have propper mapping you should make label encoding differently:
+    # 1) Take unique values of labels such that fist half from train and only then from val
+    # 2) Enumerate them like below
+    # but for now we decided to leave it like this ¯\_(ツ)_/¯
+    mapper = {l: i for i, l in enumerate(df_train[LABELS_COLUMN].unique())}
+    df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
 
     train_dataset = DatasetWithLabels(
         df=df_train,

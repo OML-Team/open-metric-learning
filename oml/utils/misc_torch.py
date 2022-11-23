@@ -82,7 +82,7 @@ def label_smoothing(
     """
     assert label_smoothing < 1, "`label_smoothing` must be less than 1."
     ohe = F.one_hot(y, num_classes).float()
-    if isinstance(label2category, torch.Tensor):
+    if label2category is not None:
         with torch.no_grad():
             ohe *= 1 - label_smoothing
             mask_l2c = label2category[y].tile(num_classes, 1).t() == label2category

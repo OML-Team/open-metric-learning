@@ -65,8 +65,6 @@ def pl_train(cfg: TCfg) -> None:
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
         verbose=cfg.get("show_dataset_warnings", True),
-        map_categories=cfg.get("map_categories", False),
-        map_labels=cfg.get("map_labels", False),
     )
 
     if isinstance(transforms_train, albu.Compose):

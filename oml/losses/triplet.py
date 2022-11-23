@@ -26,7 +26,7 @@ class TripletLoss(Module):
 
     """
 
-    crit_name = "triplet"  # for better logging
+    criterion_name = "triplet"  # for better logging
 
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
@@ -118,7 +118,7 @@ class TripletLossPlain(Module):
 
     """
 
-    crit_name = "triplet"  # for better logging
+    criterion_name = "triplet"  # for better logging
 
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
@@ -164,7 +164,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
 
     """
 
-    crit_name = "triplet"  # for better logging
+    criterion_name = "triplet"  # for better logging
 
     def __init__(
         self,
