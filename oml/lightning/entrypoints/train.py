@@ -91,8 +91,7 @@ def pl_train(cfg: TCfg) -> None:
     extractor = get_extractor_by_cfg(cfg["model"])
 
     criterion_runtime_args = {}
-    if cfg["criterion"].get("args", {}).get("label2category", None):
-        criterion_runtime_args["label2category"] = label2category
+    criterion_runtime_args["label2category"] = label2category
     criterion = get_criterion_by_cfg(
         cfg["criterion"],
         **criterion_runtime_args,
