@@ -1,3 +1,4 @@
+import inspect
 from typing import Any, Dict
 
 from torch import nn
@@ -17,11 +18,14 @@ LOSSES_REGISTRY = {
 
 
 def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
+    constructor = LOSSES_REGISTRY[name]
     if "miner" in kwargs:
         miner = get_miner_by_cfg(kwargs.pop("miner"))
-        return LOSSES_REGISTRY[name](miner=miner, **kwargs)
+        kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
+        return constructor(miner=miner, **kwargs)
     else:
-        return LOSSES_REGISTRY[name](**kwargs)
+        kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
+        return constructor(**kwargs)
 
 
 def get_criterion_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> nn.Module:
