@@ -98,7 +98,10 @@ class ArcFaceLoss(nn.Module):
 class ArcFaceLossWithMLP(nn.Module):
     """
     Almost the same as ``ArcFaceLoss``, but also has MLP projector before the loss.
-    We need this because all layers will be removed from loss at test time.
+    You may want to use `ArcFaceLossWithMLP` to boost the expressive power of ArcFace loss during the training
+    (for example, in a multi-head setup it may be a good idea to have task-specific projectors in each of the losses).
+    Note, the criterion does not exist during the validation time.
+    Thus, if you want to keep your MLP layers, you should create them as a part of the model you train.
     """
 
     def __init__(

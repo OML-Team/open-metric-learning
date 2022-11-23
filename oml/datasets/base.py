@@ -266,13 +266,12 @@ def get_retrieval_datasets(
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
 
+    # first half will consist of "train" split, second one of "val"
+    # so labels in train will be from 0 to N-1 and labels in test will be from N to K
+    mapper = {l: i for i, l in enumerate(df.sort_values(by=[SPLIT_COLUMN])[LABELS_COLUMN].unique())}
+
     # train
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
-    # Note that if you want to have propper mapping you should make label encoding differently:
-    # 1) Take unique values of labels such that fist half from train and only then from val
-    # 2) Enumerate them like below
-    # but for now we decided to leave it like this ¯\_(ツ)_/¯
-    mapper = {l: i for i, l in enumerate(df_train[LABELS_COLUMN].unique())}
     df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
 
     train_dataset = DatasetWithLabels(
