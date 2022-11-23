@@ -88,7 +88,7 @@ class RetrievalModule(pl.LightningModule):
 
         return loss
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model.extract(batch[self.input_tensors_key])
         return {**batch, **{self.embeddings_key: embeddings}}
 
