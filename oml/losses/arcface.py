@@ -6,7 +6,6 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import MLP
 
-from oml.const import ACCURACY_KEY
 from oml.utils.misc_torch import label_smoothing
 
 
@@ -93,7 +92,7 @@ class ArcFaceLoss(nn.Module):
 
     @torch.no_grad()
     def _log_accuracy_on_batch(self, logits: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        self.last_logs[ACCURACY_KEY] = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
+        self.last_logs["accuracy"] = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
 
 
 class ArcFaceLossWithMLP(nn.Module):
