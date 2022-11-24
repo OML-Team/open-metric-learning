@@ -70,7 +70,7 @@ class DummyModule(ModuleDDP):
         self.model = nn.Sequential(nn.AvgPool2d((10, 10)), nn.Flatten(), nn.Linear(3, 3, bias=False))
         self.criterion = TripletLossWithMiner(margin=None)
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model(batch[DummyDataset.input_name])
         return {**batch, **{"embeddings": embeddings}}
 
