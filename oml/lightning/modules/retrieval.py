@@ -23,8 +23,10 @@ class RetrievalModule(pl.LightningModule):
     def __init__(
         self,
         model: IExtractor,
-        criterion: ICriterion,
+        clf_criterion: Optional[ICriterion],
+        emb_criterion: Optional[ICriterion],
         optimizer: torch.optim.Optimizer,
+        clf_loss_weight: float = 0.1,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
@@ -50,8 +52,17 @@ class RetrievalModule(pl.LightningModule):
         """
         pl.LightningModule.__init__(self)
 
+        assert clf_criterion or emb_criterion, "You need at least one criterion!"
+
         self.model = model
-        self.criterion = criterion
+        self.clf_criterion = clf_criterion
+        self.emb_criterion = emb_criterion
+        if emb_criterion and clf_criterion:
+            self.clf_loss_weight = clf_loss_weight  # TODO: DOCSTRING!!!
+        elif emb_criterion:
+            self.clf_loss_weight = 0
+        else:  # if clf_criterion
+            self.clf_loss_weight = 1
         self.optimizer = optimizer
 
         self.monitor_metric = scheduler_monitor_metric
@@ -71,20 +82,30 @@ class RetrievalModule(pl.LightningModule):
         embeddings = self.model(batch[self.input_tensors_key])
         bs = len(embeddings)
 
-        loss = self.criterion(embeddings, batch[self.labels_key])
-        loss_name = (getattr(self.criterion, "crit_name", "") + " loss").strip()
-        self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        loss_emb = loss_clf = 0
+        if self.current_epoch > 10 and self.clf_criterion and hasattr(self.clf_criterion, "detach"):
+            self.clf_criterion.detach = False
+        if self.clf_criterion:
+            loss_clf = self.clf_criterion(embeddings, batch[self.labels_key])
+            loss_name = (getattr(self.clf_criterion, "crit_name", "") + " loss").strip()
+            self.log(loss_name, loss_clf.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        if self.emb_criterion:
+            loss_emb = self.emb_criterion(embeddings, batch[self.labels_key])
+            loss_name = (getattr(self.emb_criterion, "crit_name", "") + " loss").strip()
+            self.log(loss_name, loss_emb.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
-        if hasattr(self.criterion, "last_logs"):
-            if "accuracy" in self.criterion.last_logs:
-                self.log(
-                    "accuracy", self.criterion.last_logs.pop("accuracy"), prog_bar=False, on_step=False, on_epoch=True
-                )
-            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
+        for criterion in [self.clf_criterion, self.emb_criterion]:
+            if hasattr(criterion, "last_logs"):
+                if "accuracy" in criterion.last_logs:
+                    self.log(
+                        "accuracy", criterion.last_logs.pop("accuracy"), prog_bar=False, on_step=False, on_epoch=True
+                    )
+                self.log_dict(criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
 
         if self.scheduler is not None:
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
+        loss = self.clf_loss_weight * loss_clf + (1 - self.clf_loss_weight) * loss_emb
         return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:

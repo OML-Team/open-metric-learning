@@ -3,6 +3,8 @@ from typing import Any, Dict, Optional
 from torch import nn
 
 from oml.losses.arcface import ArcFaceLoss, ArcFaceLossWithMLP
+from oml.losses.center import CenterLoss
+from oml.losses.regularface import RegularFace
 from oml.losses.triplet import TripletLoss, TripletLossPlain, TripletLossWithMiner
 from oml.registry.miners import get_miner_by_cfg
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -13,6 +15,8 @@ LOSSES_REGISTRY = {
     "triplet_with_miner": TripletLossWithMiner,
     "arcface": ArcFaceLoss,
     "mlp_arcface": ArcFaceLossWithMLP,
+    "center": CenterLoss,
+    "regularface": RegularFace,
 }
 
 

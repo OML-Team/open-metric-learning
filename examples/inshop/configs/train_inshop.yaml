@@ -6,34 +6,34 @@ hydra:
     dir: ${hydra_dir}
   searchpath:
    - pkg://oml.configs
-  sweeper:
-    optim:
-      # optimizer: OnePlusOne
-      optimizer: NGOpt
-      budget: 40
-      num_workers: 1
-      maximize: true
-      noisy: true
-    parametrization:
-      optimizer.args.lr:
-        init: 0.00005
-        step: 1.5
-        lower: 0.00001
-        upper: 0.0001
-        log: true
-      bs_train:
-        init: 256
-        lower: 128
-        upper: 384
-        integer: true
-      criterion.args.m:
-        init: 0.4
-        lower: 0.1
-        upper: 0.75
-      criterion.args.s:
-        init: 64
-        lower: 8
-        upper: 128
+  # sweeper:
+  #   optim:
+  #     # optimizer: OnePlusOne
+  #     optimizer: NGOpt
+  #     budget: 40
+  #     num_workers: 1
+  #     maximize: true
+  #     noisy: true
+  #   parametrization:
+  #     optimizer.args.lr:
+  #       init: 0.00005
+  #       step: 1.5
+  #       lower: 0.00001
+  #       upper: 0.0001
+  #       log: true
+  #     bs_train:
+  #       init: 256
+  #       lower: 128
+  #       upper: 384
+  #       integer: true
+  #     criterion.args.m:
+  #       init: 0.4
+  #       lower: 0.1
+  #       upper: 0.75
+  #     criterion.args.s:
+  #       init: 64
+  #       lower: 8
+  #       upper: 128
 
 remove_this_hack_later: True
 
@@ -63,11 +63,20 @@ transforms_val:
   args:
     im_size: 224
 
+# sampler:
+#   name: category_balance
+#   args:
+#     n_labels: 13
+#     n_instances: 6
+#     n_categories: 3
+#     resample_labels: True
+#     weight_categories: True
+
 sampler: null
 bs_train: 256
 
 bs_val: 256
-max_epochs: 35
+max_epochs: 60
 valid_period: 1
 
 metric_args:
@@ -92,29 +101,40 @@ metric_for_checkpointing: OVERALL/cmc/1
 #     normalise_features: False
 
 model:
-  # name: vit
-  name: vit_with_projection
+  name: vit
+  # name: vit_with_projection
   args:
     normalise_features: False
     # use_multi_scale: False
     weights: vits16_dino
     arch: vits16
-    feature_size: 512
+    # feature_size: 512
 
 map_labels: True
 # map_categories: True
-criterion:
-  name: arcface
+
+
+# clf_loss_weight: 0.05
+clf_criterion:
+  name: regularface
   args:
-    label_smoothing: null
-    m: 0.4
-    s: 64
-    # mlp_features: [512, 256]
+    in_features: 384
+    num_classes: 3985
+# emb_criterion:
+#   name: triplet_with_miner
+#   args:
+#     need_logs: True
+#     margin: null
+#     reduction: mean
+#     miner:
+#       name: hard_triplets
+#       args:
+#         norm_required: False
 
 optimizer:
-  name: adam
+  name: adamw
   args:
-    lr: 1e-5
+    lr: 1
     weight_decay: 1e-5
 
 
@@ -124,8 +144,8 @@ scheduling:
   scheduler:
     name: multi_step
     args:
-      milestones: [20, 40, 60]
-      gamma: 0.5
+      milestones: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 20, 40, 60]
+      gamma: 0.4
 
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
@@ -140,5 +160,4 @@ tags:
   - deepfashion
   - arcface_fix2
   - classification_only
-  - multirun
 

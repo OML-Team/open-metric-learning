@@ -101,16 +101,28 @@ def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    criterion = get_criterion_by_cfg(
-        cfg["criterion"],
-        in_features=extractor.feat_dim,
-        num_classes=df[LABELS_COLUMN].nunique(),
-        label2category=label2category,
-    )
-    optimizable_parameters = [
-        {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
-        {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
-    ]
+    if "clf_criterion" in cfg:
+        clf_criterion = get_criterion_by_cfg(
+            cfg["clf_criterion"],
+            in_features=extractor.feat_dim,
+            num_classes=df[LABELS_COLUMN].nunique(),
+            label2category=label2category,
+        )
+    else:
+        clf_criterion = None
+    if "emb_criterion" in cfg:
+        emb_criterion = get_criterion_by_cfg(
+            cfg["emb_criterion"],
+            in_features=extractor.feat_dim,
+            num_classes=df[LABELS_COLUMN].nunique(),
+            label2category=label2category,
+        )
+    else:
+        emb_criterion = None
+    optimizable_parameters = [{"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()}]
+    if clf_criterion:
+        optimizable_parameters.append({"lr": cfg["optimizer"]["args"]["lr"], "params": clf_criterion.parameters()})
+    
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=optimizable_parameters)  # type: ignore
 
     # unpack scheduler to the Lightning format
@@ -144,6 +156,8 @@ def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
     loaders_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     module_kwargs = scheduler_kwargs
+    if "clf_loss_weight" in cfg:
+        module_kwargs["clf_loss_weight"] = cfg.pop("clf_loss_weight")
     if is_ddp:
         module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
         module_constructor = RetrievalModuleDDP
@@ -152,7 +166,8 @@ def pl_train_return_trainer(cfg: TCfg) -> pl.Trainer:
 
     pl_model = module_constructor(
         model=extractor,
-        criterion=criterion,
+        clf_criterion=clf_criterion,
+        emb_criterion=emb_criterion,
         optimizer=optimizer,
         input_tensors_key=train_dataset.input_tensors_key,
         labels_key=train_dataset.labels_key,
