@@ -255,10 +255,12 @@ def extract_pos_neg_dists(
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
     """
-    pos_dist = distances[mask_gt]
     if mask_to_ignore is not None:
-        neg_dist = distances[~mask_gt & ~mask_to_ignore]
+        mask_to_not_ignore = ~mask_to_ignore
+        pos_dist = distances[mask_gt & mask_to_not_ignore]
+        neg_dist = distances[~mask_gt & mask_to_not_ignore]
     else:
+        pos_dist = distances[mask_gt]
         neg_dist = distances[~mask_gt]
     return pos_dist, neg_dist
 
