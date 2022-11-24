@@ -115,7 +115,7 @@ def test_label_smoothing_working(
         X.shape[-1],
         len(torch.unique(y)),
         label2category=label2category,
-        label_smoothing=label_smoothing,
+        smoothing_epsilon=label_smoothing,
     )
 
     l0 = loss(X, y).item()
@@ -137,7 +137,7 @@ def test_label_smoothing_fuzzy(
 ) -> None:
     (X, y), label2category = dataset3
 
-    loss_ls = ArcFaceLoss(3, 3, label2category=label2category, label_smoothing=label_smoothing)
+    loss_ls = ArcFaceLoss(3, 3, label2category=label2category, smoothing_epsilon=label_smoothing)
     loss = ArcFaceLoss(3, 3)
 
     w = torch.eye(3).float()
@@ -148,10 +148,10 @@ def test_label_smoothing_fuzzy(
     assert loss(X, y).item() > loss_ls(X, y).item()
 
 
-@pytest.mark.parametrize("label_smoothing", [0, -1, 1])
+@pytest.mark.parametrize("label_smoothing", [-1, 1])
 def test_label_smoothing_raises_bad_ls(label_smoothing: float) -> None:
     with pytest.raises(AssertionError):
-        ArcFaceLoss(1, 1, label_smoothing=label_smoothing, label2category={1: 1})
+        ArcFaceLoss(1, 1, smoothing_epsilon=label_smoothing, label2category={1: 1})
 
 
 @pytest.mark.parametrize("seed", [0, 1])

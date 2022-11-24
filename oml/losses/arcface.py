@@ -6,7 +6,7 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import MLP
 
-from oml.utils.misc_torch import label_smoothing
+from oml.functional.label_smoothing import label_smoothing
 
 
 class ArcFaceLoss(nn.Module):
@@ -22,28 +22,30 @@ class ArcFaceLoss(nn.Module):
         self,
         in_features: int,
         num_classes: int,
-        label2category: Optional[Dict[Any, Any]] = None,
-        label_smoothing: Optional[float] = None,
         m: float = 0.5,
         s: float = 64,
+        smoothing_epsilon: float = 0,
+        label2category: Optional[Dict[Any, Any]] = None,
+        reduction: str = "mean",
     ):
         """
         Args:
             in_features: Input feature size
             num_classes: Number of classes in train set
-            label2category: Optional, for label smoothing. If you will not provide it label smoothing will be global and
-                not category-wise
-            label_smoothing: Label smoothing effect strength
             m: Margin parameter for ArcFace loss. Usually you should use 0.3-0.5 values for it
             s: Scaling parameter for ArcFace loss. Usually you should use 30-64 values for it
+            smoothing_epsilon: Label smoothing effect strength
+            label2category: Optional, mapping from label to its category. If provided, label smoothing will redistribute
+                 ``smoothing_epsilon`` only inside the category corresponding to the sample's ground truth label
+            reduction: CrossEntropyLoss reduction
         """
         super(ArcFaceLoss, self).__init__()
 
         assert (
-            label_smoothing is None or 0 < label_smoothing < 1
-        ), f"Choose another label_smoothing parametrization, got {label_smoothing}"
+            smoothing_epsilon is None or 0 <= smoothing_epsilon < 1
+        ), f"Choose another smoothing_epsilon parametrization, got {smoothing_epsilon}"
 
-        self.criterion = nn.CrossEntropyLoss()
+        self.criterion = nn.CrossEntropyLoss(reduction=reduction)
         self.num_classes = num_classes
         if label2category is not None:
             mapper = {l: i for i, l in enumerate(sorted(list(set(label2category.values()))))}
@@ -51,7 +53,7 @@ class ArcFaceLoss(nn.Module):
             self.label2category = torch.arange(num_classes).apply_(label2category.get)
         else:
             self.label2category = None
-        self.label_smoothing = label_smoothing
+        self.smoothing_epsilon = smoothing_epsilon
         self.weight = nn.Parameter(torch.FloatTensor(num_classes, in_features))
         nn.init.xavier_uniform_(self.weight)
         self.rescale = s
@@ -68,7 +70,7 @@ class ArcFaceLoss(nn.Module):
     def smooth_labels(self, y: torch.Tensor) -> torch.Tensor:
         if self.label2category is not None:
             self.label2category = self.label2category.to(self.weight.device)
-        return label_smoothing(y, self.num_classes, self.label_smoothing, self.label2category)
+        return label_smoothing(y, self.num_classes, self.smoothing_epsilon, self.label2category)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         assert torch.all(y < self.num_classes), "You should provide labels between 0 and num_classes - 1."
@@ -85,7 +87,7 @@ class ArcFaceLoss(nn.Module):
         ohe = F.one_hot(y, self.num_classes)
         logit = torch.where(ohe.bool(), cos_w_margin, cos) * self.rescale
 
-        if self.label_smoothing:
+        if self.smoothing_epsilon:
             y = self.smooth_labels(y)
 
         return self.criterion(logit, y)
@@ -98,7 +100,7 @@ class ArcFaceLoss(nn.Module):
 class ArcFaceLossWithMLP(nn.Module):
     """
     Almost the same as ``ArcFaceLoss``, but also has MLP projector before the loss.
-    You may want to use `ArcFaceLossWithMLP` to boost the expressive power of ArcFace loss during the training
+    You may want to use ``ArcFaceLossWithMLP`` to boost the expressive power of ArcFace loss during the training
     (for example, in a multi-head setup it may be a good idea to have task-specific projectors in each of the losses).
     Note, the criterion does not exist during the validation time.
     Thus, if you want to keep your MLP layers, you should create them as a part of the model you train.
@@ -109,25 +111,34 @@ class ArcFaceLossWithMLP(nn.Module):
         in_features: int,
         num_classes: int,
         mlp_features: List[int],
-        label2category: Optional[Dict[str, Any]] = None,
-        label_smoothing: Optional[float] = None,
         m: float = 0.5,
         s: float = 64,
+        smoothing_epsilon: float = 0,
+        label2category: Optional[Dict[Any, Any]] = None,
+        reduction: str = "mean",
     ):
         """
         Args:
             in_features: Input feature size
             num_classes: Number of classes in train set
             mlp_features: Layers sizes for MLP before ArcFace
-            label2category: Optional, for label smoothing. If you will not provide it label smoothing will be global and
-                not category-wise
-            label_smoothing: Label smoothing effect strength
             m: Margin parameter for ArcFace loss. Usually you should use 0.3-0.5 values for it
             s: Scaling parameter for ArcFace loss. Usually you should use 30-64 values for it
+            smoothing_epsilon: Label smoothing effect strength
+            label2category: Optional, mapping from label to its category. If provided, label smoothing will redistribute
+                 ``smoothing_epsilon`` only inside the category corresponding to the sample's ground truth label
+            reduction: CrossEntropyLoss reduction
         """
         super().__init__()
         self.mlp = MLP(in_features, mlp_features)
-        self.arcface = ArcFaceLoss(mlp_features[-1], num_classes, label2category, label_smoothing, m, s)
+        self.arcface = ArcFaceLoss(
+            mlp_features[-1],
+            num_classes=num_classes,
+            label2category=label2category,
+            smoothing_epsilon=smoothing_epsilon,
+            m=m,
+            s=s,
+        )
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.arcface(self.mlp(x), y)

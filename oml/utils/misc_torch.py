@@ -4,7 +4,6 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch import Tensor, cdist
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
@@ -57,41 +56,6 @@ def _check_is_sequence(val: Any) -> bool:
         return True
     except Exception:
         return False
-
-
-def label_smoothing(
-    y: torch.Tensor,
-    num_classes: int,
-    label_smoothing: float = 0.2,
-    label2category: Optional[torch.Tensor] = None,
-) -> torch.Tensor:
-    """
-    This function is doing `label smoothing <https://arxiv.org/pdf/1512.00567v3.pdf>`_.
-    You can also use modified version, where the label is smoothed only for the same category.
-    To use this, you should provide the ``label2category`` argument: vector, for which i-th entry
-    is a corresponding category for label ``i``.
-
-    Args:
-        y: GT labels
-        num_classes: Number of classes in total
-        label_smoothing: Power of smoothing. The biggest value in OHE-vector will be
-            ``1 - label_smoothing + 1 / num_classes`` after the transformation
-        label2category: Vector for which i-th entry is a corresponding category for label ``i``. Optional, used for
-            category-based label smoothing. In that case the biggest value in OHE-vector will be
-            ``1 - label_smoothing + 1 / num_classes_of_the_same_category``
-    """
-    assert label_smoothing < 1, "`label_smoothing` must be less than 1."
-    ohe = F.one_hot(y, num_classes).float()
-    if label2category is not None:
-        with torch.no_grad():
-            ohe *= 1 - label_smoothing
-            mask_l2c = label2category[y].tile(num_classes, 1).t() == label2category
-        return torch.where(mask_l2c, label_smoothing / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
-    else:
-        with torch.no_grad():
-            ohe *= 1 - label_smoothing
-            ohe += label_smoothing / num_classes
-        return ohe
 
 
 class OnlineCalc(ABC):

@@ -10,6 +10,8 @@ dataset_root: data/DeepFashion_InShop/
 logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
+show_dataset_warnings: False
+
 num_workers: 20
 cache_size: 100000
 
@@ -43,24 +45,19 @@ log_images: True
 metric_for_checkpointing: OVERALL/cmc/1
 
 model:
-  name: extractor_with_mlp
+  name: vit_clip
   args:
-    mlp_features: [384, 256]
-    extractor:
-      name: vit
-      args:
-        normalise_features: False
-        use_multi_scale: False
-        weights: vits16_dino
-        arch: vits16
+    arch: vitb32_224
+    weights: openai_vitb32_224
+    normalise_features: False
 
 criterion:
   name: arcface
   args:
-    label_smoothing: null
+    smoothing_epsilon: 0
     m: 0.4
     s: 64
-    in_features: 256
+    in_features: 512
     num_classes: 3985
 
 optimizer:

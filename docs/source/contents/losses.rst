@@ -49,3 +49,7 @@ ArcFaceLossWithMLP
     :show-inheritance:
 
     .. automethod:: __init__
+
+label_smoothing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.functional.label_smoothing.label_smoothing

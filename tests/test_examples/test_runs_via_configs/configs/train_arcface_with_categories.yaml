@@ -25,7 +25,7 @@ transforms_val:
 criterion:
   name: arcface
   args:
-    label_smoothing: 0.2
+    smoothing_epsilon: 0.2
     m: 0.4
     s: 64
     in_features: 384
