@@ -9,12 +9,12 @@ on:
 jobs:
   build_and_publish_on_pypi:
     name: Build and publish Python distribution to PyPI and TestPyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: "3.8.0"
 
