@@ -9,7 +9,7 @@ from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import clip_max
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
-TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, torch.Tensor]]]
+TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
 
 
 def calc_retrieval_metrics(
@@ -19,7 +19,7 @@ def calc_retrieval_metrics(
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
-    fmr_vals: Tuple[float, ...] = (1.0e-3,),
+    fmr_vals: Tuple[int, ...] = (1,),
     reduce: bool = True,
     check_dataset_validity: bool = False,
 ) -> TMetricsDict:
@@ -109,8 +109,11 @@ def calc_retrieval_metrics(
         mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
         metrics["map"][k_map_show] = mean_ap
 
-    for fmr_val in fmr_vals:
-        metrics["fnmr@fmr"][fmr_val] = calc_fnmr_at_fmr(distances, mask_gt, fmr_val)
+    if len(fmr_vals) > 0:
+        pos_dist, neg_dist = extract_pos_neg_dists(distances, mask_gt, mask_to_ignore)
+        metric_vals = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+        for fmr_val, metric_val in zip(fmr_vals, metric_vals):
+            metrics["fnmr@fmr"][fmr_val] = metric_val
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -214,12 +217,50 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc
 
 
-def calc_fnmr_at_fmr(distances: torch.Tensor, mask_gt: torch.Tensor, fmr_val: float) -> torch.Tensor:
-    pos_dist = distances[mask_gt]
-    neg_dist = distances[~mask_gt]
-    threshold = np.nanquantile(neg_dist.numpy(), fmr_val, interpolation="midpoint")
-    fnmr_at_fmr = (pos_dist >= threshold).sum() / len(pos_dist)
+def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> torch.Tensor:
+    """
+    Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
+    is equal to ``fmr_val``.
+
+    Args:
+        pos_dist: distances between samples from the same class
+        neg_dist: distances between samples from different classes
+        fmr_vals: the values of FMR (in per cent) for which FNMR is required to be evaluated
+
+    See:
+        https://en.wikipedia.org/wiki/Biometrics#Performance
+        https://www.researchgate.net/publication/50315614_BIOMETRIC_RECOGNITION_A_MODERN_ERA_FOR_SECURITY
+
+    For instance, for the following distances arrays
+        pos_dist: 0 0 1 1 2 2 5 5 9 9
+        neg_dist: 3 3 4 4 6 6 7 7 8 8
+        10 percentile of negative distances is 3
+    The number of positive distances that are greater or equal than 3 is 4, therefore FNMR@FMR(10%) is 4 / 10
+    """
+    thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
+    fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
+
+
+def extract_pos_neg_dists(
+    distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: Optional[torch.Tensor]
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Extract distances between samples from the same class, and distances between samples
+    in different classes.
+
+    Args:
+        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
+        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
+        mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
+                     as answers and must be ignored
+    """
+    pos_dist = distances[mask_gt]
+    if mask_to_ignore is not None:
+        neg_dist = distances[~mask_gt & ~mask_to_ignore]
+    else:
+        neg_dist = distances[~mask_gt]
+    return pos_dist, neg_dist
 
 
 def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:

@@ -69,6 +69,18 @@ def mask_gt() -> torch.Tensor:
     return mask_gt
 
 
+@pytest.fixture()
+def mask_to_ignore() -> torch.Tensor:
+    # fmt: off
+    mask_to_ignore = torch.tensor([[True, False, False, False, False],
+                                   [False, True, False, False, False],
+                                   [False, False, True, False, False],
+                                   [False, False, False, True, False],
+                                   [False, False, False, False, True]])
+    # fmt: on
+    return mask_to_ignore
+
+
 def test_on_exact_case() -> None:
     """
     label 0:
@@ -189,12 +201,17 @@ def compare_metrics(
             assert torch.all(torch.isclose(values_expected, values_calculated, atol=1e-4)), [metric_name, k]
 
 
-def test_calc_fnmr_at_fmr(distances: torch.Tensor, mask_gt: torch.Tensor) -> None:
-    fmr_val = 0.1
-    fnmr_at_fmr = calc_fnmr_at_fmr(distances, mask_gt, fmr_val)
+def test_calc_fnmr_at_fmr(distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
+    fmr_vals = (10, 50)
+    pos_dist = distances[mask_gt]
+    neg_dist = distances[~mask_gt & ~mask_to_ignore]
+    fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
     # positive distances are 0 0 1 1 2 2 5 5 9 9
-    # negative distances are 3 3 4 4 6 6 7 7 8 8 inf inf inf inf inf
-    # 0.1 quantile of negative distances is 3.5
-    # number of positive distances that are greater or equal than 3.5 is 4
-    # so FNMR@FMR-0.1 is 4 / 10
-    assert torch.isclose(fnmr_at_fmr, torch.tensor([0.4]))
+    # negative distances are 3 3 4 4 6 6 7 7 8 8
+    # 10 percentile of negative distances is 3 and
+    # the number of positive distances that are greater than
+    # or equal to 3 is 4 so FNMR@FMR(10%) is 4 / 10
+    # 50 percentile of negative distances is 6 and
+    # the number of positive distances that are greater than
+    # or equal to 6 is 2 so FNMR@FMR(50%) is 2 / 10
+    assert torch.all(torch.isclose(fnmr_at_fmr, torch.tensor([0.4, 0.2])))
