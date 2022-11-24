@@ -55,7 +55,7 @@ class DummyModule(ModuleDDP):
         )
         self.criterion = TripletLossPlain(margin=None)
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
         return {**batch, **{"embeddings": embeddings}}
 
