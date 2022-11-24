@@ -4,3 +4,7 @@ class BaseOMLException(Exception):
 
 class InvalidBBoxesException(BaseOMLException):
     pass
+
+
+class InferenceConfigError(BaseOMLException):
+    pass
