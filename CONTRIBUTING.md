@@ -4,8 +4,9 @@
   and [config examples](https://github.com/OML-Team/open-metric-learning/tree/main/examples).
 
 ## Choosing a task
-* You can work on one of the [existing issues](https://github.com/OML-Team/open-metric-learning/issues)
-  or create the new one. Especially pay attention to the issues marked with the `good_first_issue` flag.
+* Check out our [Kanban board](https://github.com/OML-Team/open-metric-learning/projects/1).
+  You can work on one of the existing issues or create the new one.
+  Especially pay attention to the issues marked with the `good_first_issue` flag.
 * Start the conversation under the issue that you picked. We will discuss the design and content of the pull request, and
   then you can start working on it.
 
