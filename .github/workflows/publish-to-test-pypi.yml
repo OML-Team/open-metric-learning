@@ -1,0 +1,51 @@
+name: Publish to PyPI and TestPyPI
+
+on:
+  push:
+    tag:
+      - release.*
+
+
+jobs:
+  build_and_publish_on_pypi:
+    name: Build and publish Python distribution to PyPI and TestPyPI
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8.0"
+
+    - name: Build a binary wheel
+      run: |
+        make build_wheel
+
+    - name: Publish distribution to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+
+#    - name: Publish distribution to PyPI
+#      uses: pypa/gh-action-pypi-publish@release/v1
+#      with:
+#        password: ${{ secrets.PYPI_API_TOKEN }}
+
+
+#  test_installation_from_pypi:
+#    needs: build_and_publish_on_pypi
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@master
+#
+#    - name: Set up Python
+#      uses: actions/setup-python@v4
+#      with:
+#        python-version: "3.8.0"
+#
+#    - name: Install and import
+#      run: |
+#        make pip_install_actual_oml
+#        python3 -c "from oml.losses.triplet import TripletLoss"
