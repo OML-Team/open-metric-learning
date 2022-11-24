@@ -34,7 +34,8 @@ def calc_retrieval_metrics(
         cmc_top_k: Tuple of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Tuple of  ``k`` values to calculate ``precision@k``
         map_top_k: Tuple of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
-        fmr_vals: Tuple of ``fmr`` values to calculate ``fnmr@fmr`` (`False Non Match Rate at given False Match Rate`)
+        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
+                  For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
         reduce: If ``False`` return metrics for each query without averaging
         check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
          each of the queries
@@ -225,7 +226,8 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     Args:
         pos_dist: distances between samples from the same class
         neg_dist: distances between samples from different classes
-        fmr_vals: the values of FMR (in per cent) for which FNMR is required to be evaluated
+        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
+                  For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
 
     See:
         https://en.wikipedia.org/wiki/Biometrics#Performance

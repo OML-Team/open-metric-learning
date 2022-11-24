@@ -86,8 +86,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             cmc_top_k: Values of ``k`` to compute ``CMC@k`` metrics
             precision_top_k: Values of ``k`` to compute ``Precision@k`` metrics
             map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
-            fmr_vals: Values of fmr (measured in percents) for which we compute the corresponding FNMR.
-                      For example, if fmr_values = (20, 40) we will calculate FNMR@FMR=20 and FNMR@FMR=40
+            fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
+                      For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
