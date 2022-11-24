@@ -11,7 +11,7 @@ jobs:
     name: Build and publish Python distribution to PyPI and TestPyPI
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
