@@ -66,6 +66,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
+        fmr_vals: Tuple[int, ...] = (1,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
@@ -85,6 +86,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             cmc_top_k: Values of ``k`` to compute ``CMC@k`` metrics
             precision_top_k: Values of ``k`` to compute ``Precision@k`` metrics
             map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
+            fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
+                      For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
@@ -104,6 +107,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.cmc_top_k = cmc_top_k
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
+        self.fmr_vals = fmr_vals
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -117,7 +121,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
 
-        self.metrics_to_exclude_from_visualization = metrics_to_exclude_from_visualization
+        self.metrics_to_exclude_from_visualization = ["fnmr@fmr"] + list(metrics_to_exclude_from_visualization)
         self.verbose = verbose
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
@@ -169,6 +173,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             "cmc_top_k": self.cmc_top_k,
             "precision_top_k": self.precision_top_k,
             "map_top_k": self.map_top_k,
+            "fmr_vals": self.fmr_vals,
         }
 
         metrics: TMetricsDict_ByLabels = dict()
