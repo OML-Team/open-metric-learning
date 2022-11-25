@@ -56,6 +56,8 @@ def calc_retrieval_metrics(
         if top_k_arg:
             assert all([isinstance(x, int) and (x > 0) for x in top_k_arg])
 
+    assert all(0 <= x <= 100 for x in fmr_vals)
+
     if distances.shape != mask_gt.shape:
         raise ValueError(
             f"Distances matrix has the shape of {distances.shape}, "
@@ -228,9 +230,19 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
         neg_dist: distances between samples from different classes
         fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
+    Returns:
+        Tensor of ``FNMR@FMR`` values.
 
     See:
+
+    `Biometrics Performance`_.
+
+    `BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`_.
+
+    .. _Biometrics Performance:
         https://en.wikipedia.org/wiki/Biometrics#Performance
+
+    .. _`BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`:
         https://www.researchgate.net/publication/50315614_BIOMETRIC_RECOGNITION_A_MODERN_ERA_FOR_SECURITY
 
     For instance, for the following distances arrays
@@ -256,6 +268,9 @@ def extract_pos_neg_dists(
         mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
+    Return:
+        pos_dist: Tensor of distances between samples from the same class
+        neg_dist: Tensor of distances between samples from diffetent classes
     """
     if mask_to_ignore is not None:
         mask_to_not_ignore = ~mask_to_ignore

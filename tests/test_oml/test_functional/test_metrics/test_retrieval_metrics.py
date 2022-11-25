@@ -45,42 +45,6 @@ def naive_precision(positions: TPositions, k: int) -> torch.Tensor:
     return metric
 
 
-@pytest.fixture()
-def distances() -> torch.Tensor:
-    # fmt: off
-    distances = torch.tensor([[float("inf"), 1, 2, 3, 4],
-                              [1, float("inf"), 5, 6, 7],
-                              [2, 5, float("inf"), 8, 9],
-                              [3, 6, 8, float("inf"), 0],
-                              [4, 7, 9, 0, float("inf")]])
-    # fmt: on
-    return distances
-
-
-@pytest.fixture()
-def mask_gt() -> torch.Tensor:
-    # fmt: off
-    mask_gt = torch.tensor([[False, True, True, False, False],
-                            [True, False, True, False, False],
-                            [True, True, False, False, True],
-                            [False, False, False, False, True],
-                            [False, False, True, True, False]])
-    # fmt: on
-    return mask_gt
-
-
-@pytest.fixture()
-def mask_to_ignore() -> torch.Tensor:
-    # fmt: off
-    mask_to_ignore = torch.tensor([[True, False, False, False, False],
-                                   [False, True, False, False, False],
-                                   [False, False, True, False, False],
-                                   [False, False, False, True, False],
-                                   [False, False, False, False, True]])
-    # fmt: on
-    return mask_to_ignore
-
-
 def test_on_exact_case() -> None:
     """
     label 0:
@@ -201,13 +165,11 @@ def compare_metrics(
             assert torch.all(torch.isclose(values_expected, values_calculated, atol=1e-4)), [metric_name, k]
 
 
-def test_calc_fnmr_at_fmr(distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
+def test_calc_fnmr_at_fmr() -> None:
     fmr_vals = (10, 50)
-    pos_dist = distances[mask_gt]
-    neg_dist = distances[~mask_gt & ~mask_to_ignore]
+    pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
+    neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
     fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
-    # positive distances are 0 0 1 1 2 2 5 5 9 9
-    # negative distances are 3 3 4 4 6 6 7 7 8 8
     # 10 percentile of negative distances is 3 and
     # the number of positive distances that are greater than
     # or equal to 3 is 4 so FNMR@FMR(10%) is 4 / 10
