@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 
 
+@torch.no_grad()
 def label_smoothing(
     y: torch.Tensor,
     num_classes: int,
@@ -17,23 +18,21 @@ def label_smoothing(
     is a corresponding category for label ``i``.
 
     Args:
-        y: GT labels
+        y: Ground truth labels with the size of batch_size where each element is in the range of (0, num_classes - 1)
         num_classes: Number of classes in total
         epsilon: Power of smoothing. The biggest value in OHE-vector will be
             ``1 - epsilon + 1 / num_classes`` after the transformation
         categories: Vector for which i-th entry is a corresponding category for label ``i``. Optional, used for
             category-based label smoothing. In that case the biggest value in OHE-vector will be
-            ``1 - epsilon + 1 / num_classes_of_the_same_category``, labels outside of the categories will not change
+            ``1 - epsilon + 1 / num_classes_of_the_same_category``, labels outside of the category will not change
     """
     assert epsilon < 1, "`epsilon` must be less than 1."
     ohe = F.one_hot(y, num_classes).float()
     if categories is not None:
-        with torch.no_grad():
-            ohe *= 1 - epsilon
-            mask_l2c = categories[y].tile(num_classes, 1).t() == categories
-        return torch.where(mask_l2c, epsilon / mask_l2c.sum(-1).view(-1, 1), 0) + ohe
+        ohe *= 1 - epsilon
+        same_category_mask = categories[y].tile(num_classes, 1).t() == categories
+        return torch.where(same_category_mask, epsilon / same_category_mask.sum(-1).view(-1, 1), 0) + ohe
     else:
-        with torch.no_grad():
-            ohe *= 1 - epsilon
-            ohe += epsilon / num_classes
+        ohe *= 1 - epsilon
+        ohe += epsilon / num_classes
         return ohe

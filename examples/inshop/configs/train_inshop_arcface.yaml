@@ -27,7 +27,7 @@ transforms_val:
     crop_size: 224
 
 sampler: null
-bs_train: 256
+bs_train: 128
 
 bs_val: 256
 max_epochs: 10000
@@ -47,8 +47,8 @@ metric_for_checkpointing: OVERALL/cmc/1
 model:
   name: vit_clip
   args:
-    arch: vitb32_224
-    weights: openai_vitb32_224
+    arch: vitb16_224
+    weights: openai_vitb16_224
     normalise_features: False
 
 criterion:

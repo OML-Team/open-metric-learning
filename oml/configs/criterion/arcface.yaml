@@ -1,6 +1,6 @@
 name: arcface
 args:
-  smoothing_epsilon: 0
+  smoothing_epsilon: 0.0
   m: 0.4
   s: 64
   in_features: 384
