@@ -1,0 +1,32 @@
+accelerator: cpu
+devices: 1
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df.csv
+images_folder: ${dataset_root}
+features_file: ${dataset_root}/features.json
+
+transforms:
+  name: norm_resize_torch
+  args:
+    im_size: 48
+
+logs_root: logs
+
+num_workers: 0
+
+bs_val: 2
+
+log_images: False
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: True
+    weights: vits16_dino
+
+hydra:
+  run:
+    dir: ${logs_root}

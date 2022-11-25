@@ -59,3 +59,18 @@ def test_train_with_categories(accelerator: str, devices: int) -> None:
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_val(accelerator: str, devices: int) -> None:
     run("val_mock.py", accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_error_two_sources_provided(accelerator: str, devices: int) -> None:
+    try:
+        run("inference_images_mock.py", accelerator, devices)
+    except subprocess.CalledProcessError:
+        pass
+    else:
+        raise AssertionError("This test should raise exeption for two input sources provided")
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_images_list(accelerator: str, devices: int) -> None:
+    run(f"inference_images_mock.py ~dataframe_name dataset_root={SCRIPTS_PATH}", accelerator, devices)

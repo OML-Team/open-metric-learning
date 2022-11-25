@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import PATHS_COLUMN, X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, TCfg
 from oml.datasets.list_ import ListDataset
-from oml.exeptions import InferenceConfigError
+from oml.exceptions import InferenceConfigError
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
@@ -28,8 +28,8 @@ def pl_infer(cfg: TCfg) -> None:
 
     pprint(cfg)
 
-    images_folder = Path(cfg["images_folder"])
-    dataframe_name = cfg["dataframe_name"]
+    images_folder = Path(cfg["images_folder"]) if cfg.get("images_folder") else None
+    dataframe_name = cfg.get("dataframe_name")
     # Check if either images_folder present or dataframe_name but not both
     if images_folder is not None and dataframe_name is not None:
         raise InferenceConfigError("images_folder and dataframe_name cannot be provided both at the same time")
