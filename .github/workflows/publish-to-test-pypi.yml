@@ -9,6 +9,7 @@ on:
 jobs:
   get_repository_and_branch:
     name: Get the owner and repository name, and the branch on which event happened
+    runs-on: ubuntu-latest
     outputs:
       repository: ${{ github.repository }}
       branch: ${{ steps.check_step.outputs.branch }}
