@@ -20,12 +20,12 @@ jobs:
         id: check_step
         run: |
           repository=${{ github.repository }}
-          echo "repository=repository" >> $GITHUB_OUTPUTS
+          echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "Current repository: '$repository'"
 
           raw=$(git branch -r --contains ${{ github.ref }})
           branch=${raw##*/}
-          echo "branch=$branch" >> $GITHUB_OUTPUTS
+          echo "branch=$branch" >> $GITHUB_OUTPUT
           echo "Current branch: '$branch'"
 
   build_and_publish_on_pypi:
