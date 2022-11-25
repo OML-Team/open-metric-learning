@@ -10,9 +10,6 @@ jobs:
   get_repository_and_branch:
     name: Get the owner and repository name, and the branch on which event happened
     runs-on: ubuntu-latest
-    outputs:
-      repository: ${{ github.repository }}
-      branch: ${{ steps.check_step.outputs.branch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -22,9 +19,13 @@ jobs:
       - name: Get current branch
         id: check_step
         run: |
+          repository=${{ github.repository }}
+          echo "repository=repository" >> $GITHUB_OUTPUTS
+          echo "Current repository: '$repository'"
+
           raw=$(git branch -r --contains ${{ github.ref }})
           branch=${raw##*/}
-          echo "::set-output name=branch::$branch"
+          echo "branch=$branch" >> $GITHUB_OUTPUTS
           echo "Current branch: '$branch'"
 
   build_and_publish_on_pypi:
