@@ -2,8 +2,10 @@ name: Publish to PyPI and TestPyPI
 
 on:
   push:
+    branches:
+      - automatic-publish-to-pypi
     tag:
-      - release.*
+      - v*
 
 
 jobs:
