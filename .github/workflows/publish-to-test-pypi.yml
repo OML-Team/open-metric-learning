@@ -9,13 +9,10 @@ on:
 jobs:
   build_and_publish_on_pypi:
     name: Build and publish Python distribution to PyPI and TestPyPI
+    if: endsWith(github.ref, 'automatic-publish-to-pypi') == false
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
-
-    - name: Exit if not on main branch
-      if: endsWith(github.ref, 'automatic-publish-to-pypi') == true
-      run: exit 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
