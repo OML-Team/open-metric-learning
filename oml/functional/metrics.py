@@ -223,7 +223,7 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
 def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> torch.Tensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
-    is equal to ``fmr_val``.
+    is equal to ``fmr_vals``.
 
     Args:
         pos_dist: distances between samples from the same class
@@ -232,6 +232,35 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
     Returns:
         Tensor of ``FNMR@FMR`` values.
+
+    Given a vector of :math:`N` distances between samples from the same classes, :math:`u`,
+    the false non-match rate (:math:`\\textrm{FNMR}`) is computed as the proportion below some threshold, :math:`T`:
+
+    .. math::
+
+        \\textrm{FNMR}(T) = \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(u_i - T\\right) =
+        1 - \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - u_i\\right)
+
+    where :math:`H(x)` is the unit step function, and :math:`H(0)` taken to be :math:`1`.
+
+    Similarly, given a vector of :math:`N` distances between samples from different classes, :math:`v`,
+    the false match rate (:math:`\\textrm{FMR}`) is computed as the proportion above :math:`T`:
+
+    .. math::
+
+        \\textrm{FMR}(T) = 1 - \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(v_i - T\\right) =
+        \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - v_i\\right)
+
+    Given some interesting false match rate values :math:`\\textrm{FMR}_k` one can find thresholds :math:`T_k`
+    corresponding to :math:`\\textrm{FMR}` measurements
+
+    .. math::
+
+        T_k = Q_v\\left(\\textrm{FMR}_k\\right)
+
+    where :math:`Q` is the quantile function, and evaluate the corresponding values of
+    :math:`\\textrm{FNMR}@\\textrm{FMR}\\left(T_k\\right) \\stackrel{\\text{def}}{=} \\textrm{FNMR}\\left(T_k\\right)`.
+
 
     See:
 
@@ -245,11 +274,14 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     .. _`BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`:
         https://www.researchgate.net/publication/50315614_BIOMETRIC_RECOGNITION_A_MODERN_ERA_FOR_SECURITY
 
-    For instance, for the following distances arrays
-        pos_dist: 0 0 1 1 2 2 5 5 9 9
-        neg_dist: 3 3 4 4 6 6 7 7 8 8
-        10 percentile of negative distances is 3
-    The number of positive distances that are greater or equal than 3 is 4, therefore FNMR@FMR(10%) is 4 / 10
+
+    Example:
+        >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
+        >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
+        >>> fmr_vals = (10, 50)
+        >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+        tensor([0.4000, 0.2000])
+
     """
     thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
