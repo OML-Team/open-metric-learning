@@ -283,6 +283,11 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
         tensor([0.4000, 0.2000])
 
     """
+    if len(fmr_vals) == 0:
+        raise ValueError(f"fmr_vals are expected have at least one value, but got {fmr_vals}")
+    for fmr_val in fmr_vals:
+        if not 0 <= fmr_val <= 100:
+            raise ValueError(f"fmr_vals are expected to be integers in range [0, 100] but got {fmr_vals}")
     thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr

@@ -177,3 +177,11 @@ def test_calc_fnmr_at_fmr() -> None:
     # the number of positive distances that are greater than
     # or equal to 6 is 2 so FNMR@FMR(50%) is 2 / 10
     assert torch.all(torch.isclose(fnmr_at_fmr, torch.tensor([0.4, 0.2])))
+
+
+@pytest.mark.parametrize("fmr_vals", (tuple(), (0, -1), (101,)))
+def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
+    with pytest.raises(ValueError):
+        pos_dist = torch.zeros(10)
+        neg_dist = torch.ones(10)
+        calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
