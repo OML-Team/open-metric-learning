@@ -17,7 +17,7 @@ class AllTripletsMiner(ITripletsMinerInBatch):
 
     """
 
-    def __init__(self, max_output_triplets: int = maxsize, device: str = "cuda"):
+    def __init__(self, max_output_triplets: int = maxsize, device: str = "cpu"):
         """
         Args:
             max_output_triplets: Number of all of the possible triplets
