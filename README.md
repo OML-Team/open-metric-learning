@@ -15,9 +15,7 @@
 <div align="left">
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
-
-## FAQ
-
+\n## FAQ\n
 <details>
 <summary>Why do I need OML?</summary>
 <p>
@@ -233,13 +231,9 @@ Probably we already have a suitable pre-trained model for your domain
 in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
-
-## Documentation
-
+\n## Documentation\n
 Documentation is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/index.html).
-
-## Installation
-
+\n## Installation\n
 OML is available in PyPI:
 
 ```shell
@@ -259,15 +253,11 @@ docker pull omlteam/oml:cpu
 make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
-
-## Get started using Config API
-
+\n## Get started using Config API\n
 Using configs is the best option if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the
 [examples](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
-
-## Get started using Python
-
+\n## Get started using Python\n
 The most flexible, but knowledge-requiring approach.
 You are not limited by our project structure and you can use only that part of the functionality which you need.
 You can start with fully working code snippets below that train and validate the model
@@ -453,9 +443,7 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 [comment]:lightning-ddp-end
 </p>
 </details>
-
-## Usage with PyTorch Metric Learning
-
+\n## Usage with PyTorch Metric Learning\n
 You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
 with our library. You can see that the examples below are different from the basic ones only in a few lines of code:
 
@@ -557,9 +545,7 @@ we recommend you to pick `distances.LpDistance(p=2)`.
 To use content from PyTorch Metric Learning with our Config API just follow the standard
 [tutorial](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc)
 of adding custom loss.
-
-## Zoo
-
+\n## Zoo\n
 Below are the models trained with OML on 4 public datasets.
 For more details about the training process and configs, please, visit *examples* submodule and it's
 [Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
@@ -607,15 +593,11 @@ print(list(ViTExtractor.pretrained_models.keys()))
 model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.ckpt", arch="vits16", normalise_features=False)
 ```
 [comment]:checkpoint-end
-
-## Contributing guide
-
+\n## Contributing guide\n
 We welcome new contributors! Please, see our:
 * [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/from_readme/contributing.html)
 * [Kanban board](https://github.com/OML-Team/open-metric-learning/projects/1)
-
-## Extra materials
-
+\n## Extra materials\n
 You can also read some extra materials related to OML:
 
 * Theory and practice of metric learning with the usage of OML.
@@ -625,9 +607,7 @@ You can also read some extra materials related to OML:
 
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
-
-## Acknowledgments
-
+\n## Acknowledgments\n
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
 
 The project was started in 2020 as a module for [Catalyst](https://github.com/catalyst-team/catalyst) library.

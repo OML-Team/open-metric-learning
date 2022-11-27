@@ -12,6 +12,7 @@ from oml.functional.metrics import (
     calc_cmc,
     calc_fnmr_at_fmr,
     calc_gt_mask,
+    calc_map,
     calc_mask_to_ignore,
     calc_precision,
     calc_retrieval_metrics,
@@ -271,6 +272,36 @@ def test_calc_precision_check_params(top_k: Tuple[int, ...]) -> None:
         gt_tops = torch.ones((10, 5), dtype=torch.bool)
         n_gt = torch.ones(10)
         calc_precision(gt_tops, n_gt, top_k)
+
+
+def test_calc_map(exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict]) -> None:
+    mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
+    n_gt = _calc_n_gt(mask_gt)
+    map = calc_map(gt_tops, n_gt, top_k)
+    for k, map_val in zip(top_k, map):
+        assert torch.all(
+            torch.isclose(map_val, metrics_expected["map"][k], atol=1.0e-4)
+        ), f"map@{k} expected: {metrics_expected['map'][k]}; evaluated: {map_val}."
+
+
+@pytest.mark.parametrize("top_k", (1, 2, 3, 4, 5, 10))
+def test_calc_map_individual(
+    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict], top_k: int
+) -> None:
+    mask_gt, gt_tops, _, metrics_expected = exact_test_case
+    n_gt = _calc_n_gt(mask_gt)
+    map = calc_map(gt_tops, n_gt, (top_k,))[0]
+    assert torch.all(
+        torch.isclose(map, metrics_expected["map"][top_k], atol=1.0e-4)
+    ), f"map@{top_k} expected: {metrics_expected['map'][top_k]}; evaluated: {map}."
+
+
+@pytest.mark.parametrize("top_k", (tuple(), (0, -1), (0,), (1.5, 2), (1.0, 2.0)))
+def test_calc_map_check_params(top_k: Tuple[int, ...]) -> None:
+    with pytest.raises(ValueError):
+        gt_tops = torch.ones((10, 5), dtype=torch.bool)
+        n_gt = torch.ones(10)
+        calc_map(gt_tops, n_gt, top_k)
 
 
 def test_calc_fnmr_at_fmr() -> None:

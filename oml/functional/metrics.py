@@ -93,28 +93,25 @@ def calc_retrieval_metrics(
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
     ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
     gt_tops = mask_gt[ii_arange, ii_top_k]
+    n_gt = mask_gt.sum(dim=1)
 
     metrics: TMetricsDict = defaultdict(dict)
 
-    cmc = calc_cmc(gt_tops, cmc_top_k_clipped)
-    metrics["cmc"] = dict(zip(cmc_top_k, cmc))
+    if cmc_top_k:
+        cmc = calc_cmc(gt_tops, cmc_top_k_clipped)
+        metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
-    n_gt = mask_gt.sum(dim=1)
-    precision = calc_precision(gt_tops, n_gt, precision_top_k_clipped)
-    metrics["precision"] = dict(zip(precision_top_k, precision))
+    if precision_top_k:
+        precision = calc_precision(gt_tops, n_gt, precision_top_k_clipped)
+        metrics["precision"] = dict(zip(precision_top_k, precision))
+    if map_top_k:
+        map = calc_map(gt_tops, n_gt, map_top_k_clipped)
+        metrics["map"] = dict(zip(map_top_k, map))
 
-    for k_map, k_map_show in zip(map_top_k_clipped, map_top_k):
-        n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_map).unsqueeze(0))
-        correct_preds = torch.cumsum(gt_tops[:, :k_map], dim=1)
-        positions = torch.arange(1, k_map + 1).unsqueeze(0)
-        mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
-        metrics["map"][k_map_show] = mean_ap
-
-    if len(fmr_vals) > 0:
+    if fmr_vals:
         pos_dist, neg_dist = extract_pos_neg_dists(distances, mask_gt, mask_to_ignore)
-        metric_vals = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
-        for fmr_val, metric_val in zip(fmr_vals, metric_vals):
-            metrics["fnmr@fmr"][fmr_val] = metric_val
+        fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+        metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -231,6 +228,10 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
     Returns:
         List of ``cmc@k`` tensors.
 
+    Example:
+        >>> gt_tops = torch.tensor([[1, 0, 0], [0, 1, 1], [0, 0, 1]], dtype=torch.bool)
+        >>> calc_cmc(gt_tops, (1, 2, 3))
+        [tensor([1., 0., 0.]), tensor([1., 1., 0.]), tensor([1., 1., 1.])]
     """
     _check_if_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
@@ -244,7 +245,7 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
     """
     Function to compute Precision for each sample.
 
-    ``precision@k`` is a proportion of relevant elements out from the ``k`` elements.
+    ``precision@k`` is a proportion of relevant elements out from the top ``k`` elements.
 
     Args:
         gt_tops: ground truth of the at ``max(top_k)`` distances.
@@ -253,6 +254,19 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
 
     Returns:
         List of ``precision@k`` tensors.
+
+    See:
+        `Evaluation_measures_(information_retrieval)`_.
+
+
+        .. _`Evaluation_measures_(information_retrieval)`:
+            https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Precision
+
+    Example:
+        >>> gt_tops = torch.tensor([[1, 0, 0], [0, 1, 1], [0, 0, 1]], dtype=torch.bool)
+        >>> n_gt = torch.tensor([2, 100, 5])
+        >>> calc_precision(gt_tops, n_gt, (1, 2, 3))
+        [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000]), tensor([0.5000, 0.6667, 0.3333])]
     """
     _check_if_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
@@ -261,6 +275,44 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
         n_gt_matrix = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
         precision.append(torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix)
     return precision
+
+
+def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+    """
+    Function to compute Mean Average Precision (MAP) for each sample.
+
+    ``map@k`` is mean of the ``precision@1``, ``precision@2``, ..., ``precision@k``.
+
+    Args:
+        gt_tops: ground truth of the at ``max(top_k)`` distances.
+        n_gt: total number of samples from the same class as a query sample.
+        top_k: Tuple of ``k`` values to calculate ``cmc@k`` for.
+
+    Returns:
+        List of ``map@k`` tensors.
+
+    See:
+        `Evaluation_measures_(information_retrieval)`_.
+
+
+        .. _`Evaluation_measures_(information_retrieval)`:
+            https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision
+
+    Example:
+        >>> gt_tops = torch.tensor([[1, 0, 0], [0, 1, 1], [0, 0, 1]], dtype=torch.bool)
+        >>> n_gt = torch.tensor([2, 100, 5])
+        >>> calc_map(gt_tops, n_gt, (1, 2, 3))
+        [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000]), tensor([0.5000, 0.3889, 0.1111])]
+    """
+    _check_if_integers_and_positive(top_k, "top_k")
+    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+    map = []
+    for k in top_k:
+        n_gt_matrix = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
+        correct_preds = torch.cumsum(gt_tops[:, :k], dim=1)
+        positions = torch.arange(1, k + 1).unsqueeze(0)
+        map.append(torch.sum((correct_preds / positions) * gt_tops[:, :k], dim=1) / n_gt_matrix)
+    return map
 
 
 def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> torch.Tensor:
@@ -314,7 +366,7 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
 
     `BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`_.
 
-    .. _Biometrics Performance:
+    .. _`Biometrics Performance`:
         https://en.wikipedia.org/wiki/Biometrics#Performance
 
     .. _`BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`:
@@ -331,9 +383,8 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     """
     if len(fmr_vals) == 0:
         raise ValueError(f"fmr_vals are expected have at least one value, but got {fmr_vals}")
-    for fmr_val in fmr_vals:
-        if not 0 <= fmr_val <= 100:
-            raise ValueError(f"fmr_vals are expected to be integers in range [0, 100] but got {fmr_vals}")
+    if not all(0 <= f <= 100 for f in fmr_vals):
+        raise ValueError(f"fmr_vals are expected to be integers in range [0, 100] but got {fmr_vals}")
     thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
