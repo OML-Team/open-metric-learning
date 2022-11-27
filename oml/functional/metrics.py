@@ -1,6 +1,6 @@
 import warnings
 from collections import defaultdict
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -96,14 +96,12 @@ def calc_retrieval_metrics(
 
     metrics: TMetricsDict = defaultdict(dict)
 
-    for k_cmc, k_cmc_show in zip(cmc_top_k_clipped, cmc_top_k):
-        cmc = torch.any(gt_tops[:, :k_cmc], dim=1).float()
-        metrics["cmc"][k_cmc_show] = cmc
+    cmc = calc_cmc(gt_tops, cmc_top_k_clipped)
+    metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
-    for k_precision, k_precision_show in zip(precision_top_k_clipped, precision_top_k):
-        n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_precision).unsqueeze(0))
-        precision = torch.sum(gt_tops[:, :k_precision].float(), dim=1) / n_gt_matrix
-        metrics["precision"][k_precision_show] = precision
+    n_gt = mask_gt.sum(dim=1)
+    precision = calc_precision(gt_tops, n_gt, precision_top_k_clipped)
+    metrics["precision"] = dict(zip(precision_top_k, precision))
 
     for k_map, k_map_show in zip(map_top_k_clipped, map_top_k):
         n_gt_matrix = torch.min(mask_gt.sum(dim=1), torch.tensor(k_map).unsqueeze(0))
@@ -220,18 +218,66 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc
 
 
+def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+    """
+    Function to compute Cumulative Matching Characteristics (CMC) for each sample.
+
+    ``cmc@k`` is 1 if ``top_k`` distances contain an element from the same class, and 0 otherwise.
+
+    Args:
+        gt_tops: ground truth of the ``max(top_k)`` distances.
+        top_k: Tuple of ``k`` values to calculate ``cmc@k`` for.
+
+    Returns:
+        List of ``cmc@k`` tensors.
+
+    """
+    _check_if_integers_and_positive(top_k, "top_k")
+    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+    cmc = []
+    for k in top_k:
+        cmc.append(torch.any(gt_tops[:, :k], dim=1).float())
+    return cmc
+
+
+def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+    """
+    Function to compute Precision for each sample.
+
+    ``precision@k`` is a proportion of relevant elements out from the ``k`` elements.
+
+    Args:
+        gt_tops: ground truth of the at ``max(top_k)`` distances.
+        n_gt: total number of samples from the same class as a query sample.
+        top_k: Tuple of ``k`` values to calculate ``cmc@k`` for.
+
+    Returns:
+        List of ``precision@k`` tensors.
+    """
+    _check_if_integers_and_positive(top_k, "top_k")
+    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+    precision = []
+    for k in top_k:
+        n_gt_matrix = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
+        precision.append(torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix)
+    return precision
+
+
 def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> torch.Tensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
 
+    The metric calculates the percentage of positive distances higher than a given :math:`q`-th percentile
+    of negative distances.
+
     Args:
         pos_dist: distances between samples from the same class
         neg_dist: distances between samples from different classes
-        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
-                  For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
+        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``fnmr``.
+                  For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
     Returns:
-        Tensor of ``FNMR@FMR`` values.
+        Tensor of ``fnmr@fmr`` values.
 
     Given a vector of :math:`N` distances between samples from the same classes, :math:`u`,
     the false non-match rate (:math:`\\textrm{FNMR}`) is computed as the proportion below some threshold, :math:`T`:
@@ -293,6 +339,19 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     return fnmr_at_fmr
 
 
+def _calc_n_gt(mask_gt: torch.Tensor) -> torch.Tensor:
+    """
+    For each query evaluate the number of elements from the same class from the gallery.
+
+    Args:
+        mask_gt: query to gallery ground truth mask.
+
+    Returns:
+        tensor with the number of elements from the same class as a query.
+    """
+    return mask_gt.sum(dim=1)
+
+
 def extract_pos_neg_dists(
     distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: Optional[torch.Tensor]
 ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -305,7 +364,7 @@ def extract_pos_neg_dists(
         mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
-    Return:
+    Returns:
         pos_dist: Tensor of distances between samples from the same class
         neg_dist: Tensor of distances between samples from diffetent classes
     """
@@ -332,6 +391,38 @@ def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         return torch.from_numpy(array)
     else:
         raise TypeError("Wrong type")
+
+
+def _check_if_integers_and_positive(seq: Sequence[int], name: str) -> None:
+    """
+    Check whether ``args`` is not empty and all its elements are positive integers.
+
+    Args:
+        seq: a sequence
+        name: a name of the sequence in case of exception should be raised.
+
+    """
+    if not len(seq) > 0 or not all([isinstance(x, int) and (x > 0) for x in seq]):
+        raise ValueError(f"{name} is expected to be a tuple with positive integers, but got {seq}")
+
+
+def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
+    """
+    Clip ``arr`` by upper bound ``max_el`` and raise warning if required.
+
+    Args:
+        arr: integer to check and clip
+        max_el: the upper limit
+
+    Returns:
+        Clipped value of ``arr``
+    """
+    if any(a > max_el for a in arr):
+        warnings.warn(
+            f"The desired value of top_k can't be larger than {max_el}, but got {arr}. "
+            f"The value of top_k will be clipped to {max_el}."
+        )
+    return clip_max(arr, max_el)
 
 
 __all__ = [

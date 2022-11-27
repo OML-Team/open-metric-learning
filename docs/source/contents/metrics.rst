@@ -24,4 +24,8 @@ calc_retrieval_metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.functional.metrics.calc_retrieval_metrics
 
+.. autofunction:: oml.functional.metrics.calc_cmc
+
+.. autofunction:: oml.functional.metrics.calc_precision
+
 .. autofunction:: oml.functional.metrics.calc_fnmr_at_fmr
