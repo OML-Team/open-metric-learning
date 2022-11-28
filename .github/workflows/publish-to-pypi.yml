@@ -6,29 +6,22 @@ on:
       - release.*
 
 jobs:
-  get_current_branch_name:
-    name: Get current branch name
+  check_tag_status:
+    name: Check if the tag is in the main branch commit history
     runs-on: ubuntu-latest
-    outputs:
-      branch: ${{ steps.get_branch_name.outputs.branch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Get branch name
-        id: get_branch_name
+      - name: Check if the tag is in the main branch commit history
         run: |
-          raw=$(git branch -r --contains ${{ github.ref }})
-          branch=${raw##*/}
-          echo "branch=$branch" >> $GITHUB_OUTPUT
-          echo "Current branch: '$branch'"
+          git merge-base --is-ancestor ${{ github.ref }} main
 
   build_and_publish_to_pypi:
     name: Build and publish Python distribution to PyPI
-    needs: get_current_branch_name
-    if: needs.get_current_branch_name.outputs.branch == 'automatic-publish-to-pypi'
+    needs: check_tag_status
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
