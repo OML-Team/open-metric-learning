@@ -6,14 +6,14 @@ accelerator: cpu
 devices: 1
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df.csv
+dataframe_name: df_with_category.csv
 logs_root: logs
 
 num_workers: 0
-cache_size: 10
+cache_size: 0
 
 transforms_train:
-  name: augs_torch
+  name: augs_albu
   args:
     im_size: 64
 
@@ -25,16 +25,15 @@ transforms_val:
 criterion:
   name: arcface
   args:
-    smoothing_epsilon: 0
+    smoothing_epsilon: 0.2
     m: 0.4
     s: 64
     in_features: 384
     num_classes: 4
 
-
 defaults:
-  - optimizer: sgd
-  - sampler: balance
+  - optimizer: adam
+  - sampler: category_balance
 
 model:
   name: vit
@@ -44,30 +43,18 @@ model:
     use_multi_scale: False
     weights: null
 
-scheduling:
-  scheduler_interval: epoch
-  scheduler_frequency: 1
-  scheduler:
-    name: multi_step
-    args:
-      milestones:
-        - 1
-        - 2
-        - 3
+scheduling: null
 
 bs_val: 2
 
 metric_args:
-  metrics_to_exclude_from_visualization: [cmc, precision]
   cmc_top_k: [1, 5]
-  map_top_k: [5]
-  precision_top_k: [1, 5]
-  return_only_main_category: False
+  return_only_main_category: True
   visualize_only_main_category: True
 
 log_images: False
 
-metric_for_checkpointing: OVERALL/precision/5
+metric_for_checkpointing: OVERALL/cmc/1
 
 max_epochs: 2
 valid_period: 1

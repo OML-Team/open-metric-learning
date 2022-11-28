@@ -1,3 +1,4 @@
+import inspect
 import os
 import random
 from typing import Any, Dict, Iterable, List, Tuple
@@ -112,6 +113,10 @@ def smart_sample(array: List[Any], k: int) -> List[Any]:
 
 def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     return tuple(min(x, max_el) for x in arr)
+
+
+def remove_unused_kargs(kwargs: Dict[str, Any], constructor: Any) -> Dict[str, Any]:
+    return {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
 
 
 __all__ = [
