@@ -1,13 +1,12 @@
-name: Publish to PyPI and TestPyPI
+name: Publish to PyPI
 
 on:
   push:
     tags:
-      - v*
-
+      - release.*
 
 jobs:
-  get_branch:
+  get_current_branch:
     name: Get current branch name
     runs-on: ubuntu-latest
     outputs:
@@ -18,18 +17,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get current branch
-        id: get_branch
+      - name: Get current branch name
+        id: get_branch_name
         run: |
           raw=$(git branch -r --contains ${{ github.ref }})
           branch=${raw##*/}
           echo "branch=$branch" >> $GITHUB_OUTPUT
           echo "Current branch: '$branch'"
 
-  build_and_publish_on_pypi:
-    name: Build and publish Python distribution to PyPI and TestPyPI
-    needs: get_branch
-    if: ${{ needs.get_branch.outputs.branch == 'automatic-publish-to-pypi' }}
+  build_and_publish_to_pypi:
+    name: Build and publish Python distribution to PyPI
+    needs: get_current_branch
+    if: ${{ needs.get_current_branch.outputs.branch == 'automatic-publish-to-pypi' }}
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
@@ -43,30 +42,23 @@ jobs:
       run: |
         make build_wheel
 
-    - name: Publish distribution to Test PyPI
+    - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
-#    - name: Publish distribution to PyPI
-#      uses: pypa/gh-action-pypi-publish@release/v1
-#      with:
-#        password: ${{ secrets.PYPI_API_TOKEN }}
+  test_installation_from_pypi:
+    needs: build_and_publish_to_pypi
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8.0"
 
-#  test_installation_from_pypi:
-#    needs: build_and_publish_on_pypi
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@master
-#
-#    - name: Set up Python
-#      uses: actions/setup-python@v4
-#      with:
-#        python-version: "3.8.0"
-#
-#    - name: Install and import
-#      run: |
-#        make pip_install_actual_oml
-#        python3 -c "from oml.losses.triplet import TripletLoss"
+    - name: Install and import open-metric-learning package
+      run: |
+        make pip_install_actual_oml
+        python3 -c "from oml.losses.triplet import TripletLoss"
