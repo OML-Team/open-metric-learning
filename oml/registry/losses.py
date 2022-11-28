@@ -1,4 +1,3 @@
-import inspect
 from typing import Any, Dict
 
 from torch import nn
@@ -6,7 +5,7 @@ from torch import nn
 from oml.losses.arcface import ArcFaceLoss, ArcFaceLossWithMLP
 from oml.losses.triplet import TripletLoss, TripletLossPlain, TripletLossWithMiner
 from oml.registry.miners import get_miner_by_cfg
-from oml.utils.misc import TCfg, dictconfig_to_dict
+from oml.utils.misc import TCfg, dictconfig_to_dict, remove_unused_kargs
 
 LOSSES_REGISTRY = {
     "triplet": TripletLoss,
@@ -21,10 +20,10 @@ def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
     constructor = LOSSES_REGISTRY[name]
     if "miner" in kwargs:
         miner = get_miner_by_cfg(kwargs.pop("miner"))
-        kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
+        kwargs = remove_unused_kargs(kwargs, constructor)
         return constructor(miner=miner, **kwargs)
     else:
-        kwargs = {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
+        kwargs = remove_unused_kargs(kwargs, constructor)
         return constructor(**kwargs)
 
 

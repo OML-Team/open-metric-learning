@@ -12,8 +12,8 @@ from oml.functional.label_smoothing import label_smoothing
 class ArcFaceLoss(nn.Module):
     """
     ArcFace loss from `paper <https://arxiv.org/abs/1801.07698>`_ with possibility to use label smoothing.
-    It contains projection (num_features x num_classes) inside itself so you don't have to produce output of
-    ``num_classes`` yourself. Please make sure that class labels started with 0 and ended as ``num_classes - 1``.
+    It contains projection size of ``num_features x num_classes`` inside itself. Please make sure that class labels
+    started with 0 and ended as ``num_classes`` - 1.
     """
 
     criterion_name = "arcface"  # for better logging

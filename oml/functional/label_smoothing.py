@@ -18,7 +18,8 @@ def label_smoothing(
     is a corresponding category for label ``i``.
 
     Args:
-        y: Ground truth labels with the size of batch_size where each element is in the range of (0, num_classes - 1)
+        y: Ground truth labels with the size of batch_size where each element is from 0 (inclusive) to
+            num_classes (exclusive).
         num_classes: Number of classes in total
         epsilon: Power of smoothing. The biggest value in OHE-vector will be
             ``1 - epsilon + 1 / num_classes`` after the transformation
