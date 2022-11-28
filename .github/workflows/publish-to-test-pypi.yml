@@ -7,24 +7,16 @@ on:
 
 
 jobs:
-  get_repository_and_branch:
-    name: Get the owner and repository name, and the branch on which event happened
+  get_branch:
+    name: Get current branch name
     runs-on: ubuntu-latest
     outputs:
-      repository: ${{ steps.get_repository.outputs.repository }}
       branch: ${{ steps.get_branch.outputs.branch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Get current owner and repository name
-        id: get_repository
-        run: |
-          repository=${{ github.repository }}
-          echo "repository=$repository" >> $GITHUB_OUTPUT
-          echo "Current repository: '$repository'"
 
       - name: Get current branch
         id: get_branch
@@ -36,8 +28,8 @@ jobs:
 
   build_and_publish_on_pypi:
     name: Build and publish Python distribution to PyPI and TestPyPI
-    needs: get_repository_and_branch
-    if: ${{ needs.get_repository_and_branch.outputs.repository == 'Illumaria/open-metric-learning' && needs.get_repository_and_branch.outputs.branch == 'automatic-publish-to-pypi' }} # only run on main branch
+    needs: get_branch
+    if: ${{ needs.get_branch.outputs.branch == 'automatic-publish-to-pypi' }}
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
