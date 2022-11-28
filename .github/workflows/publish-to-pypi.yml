@@ -28,7 +28,7 @@ jobs:
   build_and_publish_to_pypi:
     name: Build and publish Python distribution to PyPI
     needs: get_current_branch
-    if: ${{ needs.get_current_branch.outputs.branch == 'automatic-publish-to-pypi' }}
+    if: needs.get_current_branch.outputs.branch == 'automatic-publish-to-pypi'
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
