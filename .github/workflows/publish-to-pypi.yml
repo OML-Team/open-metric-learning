@@ -17,8 +17,7 @@ jobs:
 
       - name: Check if the tag is in the main branch commit history
         run: |
-          echo $(git branch -a)
-          git merge-base --is-ancestor ${{ github.ref }} main
+          git merge-base --is-ancestor ${{ github.ref }} remotes/origin/main
 
   build_and_publish_to_pypi:
     name: Build and publish Python distribution to PyPI
