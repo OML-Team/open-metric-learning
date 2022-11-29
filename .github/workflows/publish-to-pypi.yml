@@ -39,19 +39,3 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
-
-  test_installation_from_pypi:
-    needs: build_and_publish_to_pypi
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.8.0"
-
-    - name: Install and import open-metric-learning package
-      run: |
-        make pip_install_actual_oml
-        python3 -c "from oml.losses.triplet import TripletLoss"
