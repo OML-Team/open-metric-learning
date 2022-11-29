@@ -104,6 +104,7 @@ def calc_retrieval_metrics(
     if precision_top_k:
         precision = calc_precision(gt_tops, n_gt, precision_top_k_clipped)
         metrics["precision"] = dict(zip(precision_top_k, precision))
+
     if map_top_k:
         map = calc_map(gt_tops, n_gt, map_top_k_clipped)
         metrics["map"] = dict(zip(map_top_k, map))
@@ -233,7 +234,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
         >>> calc_cmc(gt_tops, (1, 2, 3))
         [tensor([1., 0., 0.]), tensor([1., 1., 0.]), tensor([1., 1., 1.])]
     """
-    _check_if_integers_and_positive(top_k, "top_k")
+    _check_if_nonempty_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     cmc = []
     for k in top_k:
@@ -243,9 +244,10 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
 
 def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
-    Function to compute Precision for each sample.
+    Function to compute Precision@k for each sample.
 
-    ``precision@k`` is a proportion of relevant elements out from the top ``k`` elements.
+    ``precision@k`` is a proportion of the ``top_k`` elements from the same class to total number of the elements
+    from that class.
 
     Args:
         gt_tops: ground truth of the at ``max(top_k)`` distances.
@@ -255,11 +257,18 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
     Returns:
         List of ``precision@k`` tensors.
 
+    Given a list of ground truth top :math:`k` elements from the gallery :math:`[g_1, \\ldots, g_k]` and
+    total number of elements from the same class in the gallery :math:`n`
+    the :math:`\\textrm{Precision}@k` for the element is defined as
+
+    .. math::
+        \\textrm{Precition}@k = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k g_i
+
     See:
-        `Evaluation_measures_(information_retrieval)`_.
+        `Evaluation measures (information retrieval). Precision`_
 
 
-        .. _`Evaluation_measures_(information_retrieval)`:
+        .. _`Evaluation measures (information retrieval). Precision`:
             https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Precision
 
     Example:
@@ -268,12 +277,13 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
         >>> calc_precision(gt_tops, n_gt, (1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000]), tensor([0.5000, 0.6667, 0.3333])]
     """
-    _check_if_integers_and_positive(top_k, "top_k")
+    _check_if_nonempty_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     precision = []
+    correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        n_gt_matrix = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
-        precision.append(torch.sum(gt_tops[:, :k].float(), dim=1) / n_gt_matrix)
+        _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
+        precision.append(correct_preds[:, k - 1] / _n_gt)
     return precision
 
 
@@ -281,7 +291,8 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
     """
     Function to compute Mean Average Precision (MAP) for each sample.
 
-    ``map@k`` is mean of the ``precision@1``, ``precision@2``, ..., ``precision@k``.
+    ``map@k`` is the mean value of the ``precision@1``, ``precision@2``, ..., ``precision@k``
+    that are from the same class as the sample.
 
     Args:
         gt_tops: ground truth of the at ``max(top_k)`` distances.
@@ -292,11 +303,16 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
         List of ``map@k`` tensors.
 
     See:
-        `Evaluation_measures_(information_retrieval)`_.
 
+        `Evaluation measures (information retrieval). Mean Average Precision`_
 
-        .. _`Evaluation_measures_(information_retrieval)`:
-            https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision
+        `Mean Average Precision (MAP) For Recommender Systems`_
+
+    .. _`Evaluation measures (information retrieval). Mean Average Precision`:
+        https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision
+
+    .. _`Mean Average Precision (MAP) For Recommender Systems`:
+        https://sdsawtelle.github.io/blog/output/mean-average-precision-MAP-for-recommender-systems.html
 
     Example:
         >>> gt_tops = torch.tensor([[1, 0, 0], [0, 1, 1], [0, 0, 1]], dtype=torch.bool)
@@ -304,14 +320,14 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
         >>> calc_map(gt_tops, n_gt, (1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000]), tensor([0.5000, 0.3889, 0.1111])]
     """
-    _check_if_integers_and_positive(top_k, "top_k")
+    _check_if_nonempty_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     map = []
+    correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        n_gt_matrix = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
-        correct_preds = torch.cumsum(gt_tops[:, :k], dim=1)
+        _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
         positions = torch.arange(1, k + 1).unsqueeze(0)
-        map.append(torch.sum((correct_preds / positions) * gt_tops[:, :k], dim=1) / n_gt_matrix)
+        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / _n_gt)
     return map
 
 
@@ -362,9 +378,9 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
 
     See:
 
-    `Biometrics Performance`_.
+        `Biometrics Performance`_
 
-    `BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`_.
+        `BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`_
 
     .. _`Biometrics Performance`:
         https://en.wikipedia.org/wiki/Biometrics#Performance
@@ -444,7 +460,7 @@ def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         raise TypeError("Wrong type")
 
 
-def _check_if_integers_and_positive(seq: Sequence[int], name: str) -> None:
+def _check_if_nonempty_integers_and_positive(seq: Sequence[int], name: str) -> None:
     """
     Check whether ``args`` is not empty and all its elements are positive integers.
 
