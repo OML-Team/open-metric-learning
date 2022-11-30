@@ -138,6 +138,7 @@ class ArcFaceLossWithMLP(nn.Module):
             smoothing_epsilon=smoothing_epsilon,
             m=m,
             s=s,
+            reduction=reduction
         )
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
