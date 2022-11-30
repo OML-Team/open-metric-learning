@@ -11,7 +11,7 @@ LOSSES_REGISTRY = {
     "triplet": TripletLoss,
     "triplet_plain": TripletLossPlain,
     "triplet_with_miner": TripletLossWithMiner,
-    "surrogate_precision": SurrogatePrecision
+    "surrogate_precision": SurrogatePrecision,
 }
 
 

@@ -1,27 +1,41 @@
 postfix: metric_learning
 
 seed: 42
-precision: 32
+precision: 16
 accelerator: gpu
 devices: 2
 
-dataset_root: /nydl/data/DeepFashion_InShop/
-dataframe_name: df_no_bboxes.csv
-emb_name: embeddings_vits16_inshop.pkl
-logs_root: /nydl/logs/DeepFashion_InShop/
+dataframe_name: df.csv
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
+cache_size: 100000
+
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 224
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
 
 sampler:
-  name: balance
+  name: category_balance
   args:
-    n_labels: 3700
-    n_instances: 4
+    n_labels: 32
+    n_instances: 5
+    n_categories: 3
+    resample_labels: True
+    weight_categories: True
 
 bs_val: 256
 max_epochs: 10000
-valid_period: 10
+valid_period: 1
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
@@ -35,27 +49,24 @@ log_images: False
 metric_for_checkpointing: OVERALL/cmc/1
 
 model:
-  name: mlp
+  name: vit
   args:
     normalise_features: True
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
 
 criterion:
-  name: triplet_with_miner
+  name: surrogate_precision
   args:
-    need_logs: True
-    margin: 0.2
-    reduction: mean
-    miner:
-      name: n_hard_triplets
-      args:
-        n_positive: 1
-        n_negative: 1
+    k: 5
+    temperature1: 1
+    temperature2: 0.01
 
 optimizer:
-  name: adamw
+  name: adam
   args:
-    lr: 1e-3
-
+    lr: 1e-5  # if you provide scheduler this parameter will be ignored
 
 scheduling: null
 
@@ -69,8 +80,8 @@ hydra_dir: ${logs_root}/${logs_folder}/
 
 tags:
   - ${postfix}
-  - deepfashion
-  - projector
+  - sop
+  - surrogate_precision
 
 hydra:
   run:

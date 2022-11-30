@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 import torch
 
+from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
     TMetricsDict,
     calc_gt_mask,
@@ -42,6 +43,29 @@ def naive_precision(positions: TPositions, k: int) -> torch.Tensor:
         values[query_idx] = sum(1 for idx in pos if idx < k) / num_gt
     metric = torch.mean(values.float())
     return metric
+
+
+def compare_with_approx_precision(
+    positions: TPositions,
+    labels: torch.Tensor,
+    is_query: torch.Tensor,
+    is_gallery: torch.Tensor,
+    expected_metrics: TMetricsDict,
+    top_k: Tuple[int, ...],
+    reduction: str,
+) -> None:
+    expected_precision = expected_metrics["precision"]
+    distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery)
+    mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+
+    mask_to_ignore = calc_mask_to_ignore(is_query, is_gallery)
+    # we use this custom code instead of `apply_mask_to_ignore` to avoid having inf values
+    distances[mask_to_ignore] = 1_000_000
+    mask_gt[mask_to_ignore] = False
+
+    for k in top_k:
+        metrics_approx = surrogate_precision(distances, mask_gt, k, t1=1e-6, t2=1e-6, reduction=reduction)
+        assert torch.isclose(metrics_approx, expected_precision[k], atol=1e-3).all()
 
 
 def test_on_exact_case() -> None:
@@ -82,6 +106,7 @@ def test_on_exact_case() -> None:
     metrics_expected["map"][10] = metrics_expected["map"][5]
 
     compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce=False)
+    compare_with_approx_precision(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduction="none")
 
 
 @pytest.mark.parametrize("max_num_labels", list(range(5, 10)))

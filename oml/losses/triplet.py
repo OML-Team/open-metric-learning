@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from oml.functional.losses import get_reduced
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
@@ -75,14 +76,7 @@ class TripletLoss(Module):
                 "neg_dist": float(negative_dist.clone().detach().mean().item()),
             }
 
-        if self.reduction == "mean":
-            loss = loss.mean()
-        elif self.reduction == "sum":
-            loss = loss.sum()
-        elif self.reduction == "none":
-            return loss
-        else:
-            raise ValueError()
+        loss = get_reduced(loss, reduction=self.reduction)
 
         return loss
 
