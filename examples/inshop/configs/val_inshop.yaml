@@ -1,10 +1,10 @@
 accelerator: gpu
 devices: 1
 
-dataset_root: /nydl/data/DeepFashion_InShop/
+dataset_root: data/DeepFashion_InShop/
 dataframe_name: df_no_bboxes.csv
 
-logs_root: /nydl/logs/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 
 bs_val: 128
 num_workers: 20

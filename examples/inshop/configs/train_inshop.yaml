@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 2
 
 dataframe_name: df_no_bboxes.csv
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/DeepFashion_InShop/
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
