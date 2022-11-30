@@ -64,6 +64,7 @@ def pl_train(cfg: TCfg) -> None:
         transforms_val=transforms_val,
         dataframe_name=cfg["dataframe_name"],
         cache_size=cfg["cache_size"],
+        verbose=cfg.get("show_dataset_warnings", True),
     )
 
     if isinstance(transforms_train, albu.Compose):
@@ -79,15 +80,25 @@ def pl_train(cfg: TCfg) -> None:
         )
 
     sampler_runtime_args = {"labels": train_dataset.get_labels()}
+    label2category = None
     df = train_dataset.df
     if train_dataset.categories_key:
-        sampler_runtime_args["label2category"] = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
+        label2category = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
+        sampler_runtime_args["label2category"] = label2category
     # note, we pass some runtime arguments to sampler here, but not all of the samplers use all of these arguments
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     extractor = get_extractor_by_cfg(cfg["model"])
-    criterion = get_criterion_by_cfg(cfg["criterion"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=extractor.parameters())
+
+    criterion = get_criterion_by_cfg(
+        cfg["criterion"],
+        label2category=label2category,
+    )
+    optimizable_parameters = [
+        {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
+        {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
+    ]
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=optimizable_parameters)  # type: ignore
 
     # unpack scheduler to the Lightning format
     if cfg.get("scheduling"):

@@ -8,6 +8,7 @@ import torch
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
     TMetricsDict,
+    calc_fnmr_at_fmr,
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
@@ -187,3 +188,17 @@ def compare_metrics(
             values_expected = metrics_expected[metric_name][k]
             values_calculated = metrics_calculated[metric_name][k]
             assert torch.all(torch.isclose(values_expected, values_calculated, atol=1e-4)), [metric_name, k]
+
+
+def test_calc_fnmr_at_fmr() -> None:
+    fmr_vals = (10, 50)
+    pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
+    neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
+    fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+    # 10 percentile of negative distances is 3 and
+    # the number of positive distances that are greater than
+    # or equal to 3 is 4 so FNMR@FMR(10%) is 4 / 10
+    # 50 percentile of negative distances is 6 and
+    # the number of positive distances that are greater than
+    # or equal to 6 is 2 so FNMR@FMR(50%) is 2 / 10
+    assert torch.all(torch.isclose(fnmr_at_fmr, torch.tensor([0.4, 0.2])))

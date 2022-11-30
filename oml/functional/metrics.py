@@ -19,6 +19,7 @@ def calc_retrieval_metrics(
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
+    fmr_vals: Tuple[int, ...] = (1,),
     reduce: bool = True,
     check_dataset_validity: bool = False,
 ) -> TMetricsDict:
@@ -33,6 +34,8 @@ def calc_retrieval_metrics(
         cmc_top_k: Tuple of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Tuple of  ``k`` values to calculate ``precision@k``
         map_top_k: Tuple of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
+        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
+                  For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
         reduce: If ``False`` return metrics for each query without averaging
         check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
          each of the queries
@@ -52,6 +55,8 @@ def calc_retrieval_metrics(
     for top_k_arg in top_k_args:
         if top_k_arg:
             assert all([isinstance(x, int) and (x > 0) for x in top_k_arg])
+
+    assert all(0 <= x <= 100 for x in fmr_vals)
 
     if distances.shape != mask_gt.shape:
         raise ValueError(
@@ -106,6 +111,12 @@ def calc_retrieval_metrics(
         positions = torch.arange(1, k_map + 1).unsqueeze(0)
         mean_ap = torch.sum((correct_preds / positions) * gt_tops[:, :k_map], dim=1) / n_gt_matrix
         metrics["map"][k_map_show] = mean_ap
+
+    if len(fmr_vals) > 0:
+        pos_dist, neg_dist = extract_pos_neg_dists(distances, mask_gt, mask_to_ignore)
+        metric_vals = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+        for fmr_val, metric_val in zip(fmr_vals, metric_vals):
+            metrics["fnmr@fmr"][fmr_val] = metric_val
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -207,6 +218,68 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc.mean()
     else:
         return acc
+
+
+def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> torch.Tensor:
+    """
+    Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
+    is equal to ``fmr_val``.
+
+    Args:
+        pos_dist: distances between samples from the same class
+        neg_dist: distances between samples from different classes
+        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
+                  For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``
+    Returns:
+        Tensor of ``FNMR@FMR`` values.
+
+    See:
+
+    `Biometrics Performance`_.
+
+    `BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`_.
+
+    .. _Biometrics Performance:
+        https://en.wikipedia.org/wiki/Biometrics#Performance
+
+    .. _`BIOMETRIC RECOGNITION: A MODERN ERA FOR SECURITY`:
+        https://www.researchgate.net/publication/50315614_BIOMETRIC_RECOGNITION_A_MODERN_ERA_FOR_SECURITY
+
+    For instance, for the following distances arrays
+        pos_dist: 0 0 1 1 2 2 5 5 9 9
+        neg_dist: 3 3 4 4 6 6 7 7 8 8
+        10 percentile of negative distances is 3
+    The number of positive distances that are greater or equal than 3 is 4, therefore FNMR@FMR(10%) is 4 / 10
+    """
+    thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
+    fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
+    return fnmr_at_fmr
+
+
+def extract_pos_neg_dists(
+    distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: Optional[torch.Tensor]
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Extract distances between samples from the same class, and distances between samples
+    in different classes.
+
+    Args:
+        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
+        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
+        mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
+                     as answers and must be ignored
+    Return:
+        pos_dist: Tensor of distances between samples from the same class
+        neg_dist: Tensor of distances between samples from diffetent classes
+    """
+    if mask_to_ignore is not None:
+        mask_to_not_ignore = ~mask_to_ignore
+        pos_dist = distances[mask_gt & mask_to_not_ignore]
+        neg_dist = distances[~mask_gt & mask_to_not_ignore]
+    else:
+        pos_dist = distances[mask_gt]
+        neg_dist = distances[~mask_gt]
+    return pos_dist, neg_dist
 
 
 def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:

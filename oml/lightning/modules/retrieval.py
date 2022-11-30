@@ -78,7 +78,8 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         loss = self.criterion(embeddings, batch[self.labels_key])
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        loss_name = (getattr(self.criterion, "criterion_name", "") + "_loss").strip("_")
+        self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
             self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
@@ -88,7 +89,7 @@ class RetrievalModule(pl.LightningModule):
 
         return loss
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model.extract(batch[self.input_tensors_key])
         return {**batch, **{self.embeddings_key: embeddings}}
 
