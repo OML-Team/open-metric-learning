@@ -85,3 +85,6 @@ upload_to_pip: build_wheel
 .PHONY: pip_install_actual_oml
 pip_install_actual_oml:
 	pip install open-metric-learning==$(OML_VERSION)
+
+test_metrics:
+	pytest tests/test_oml/test_functional/test_metrics/test_retrieval_metrics.py

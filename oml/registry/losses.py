@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from torch import nn
 
+from oml.losses.surrogate_precision import SurrogatePrecision
 from oml.losses.triplet import TripletLoss, TripletLossPlain, TripletLossWithMiner
 from oml.registry.miners import get_miner_by_cfg
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -10,6 +11,7 @@ LOSSES_REGISTRY = {
     "triplet": TripletLoss,
     "triplet_plain": TripletLossPlain,
     "triplet_with_miner": TripletLossWithMiner,
+    "surrogate_precision": SurrogatePrecision
 }
 
 
