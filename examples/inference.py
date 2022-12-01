@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from pprint import pprint
+from typing import List
 
 import albumentations as albu
 import pandas as pd
@@ -13,10 +14,11 @@ from oml.datasets.list_ import ListDataset
 from oml.exceptions import InferenceConfigError
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
+from oml.utils.images.images import imread_pillow
 from oml.utils.misc import dictconfig_to_dict
 
 
-def pl_infer(cfg: TCfg) -> None:
+def inference(cfg: TCfg) -> None:
     """
     This is an entrypoint for the model validation in metric learning setup.
 
@@ -38,7 +40,10 @@ def pl_infer(cfg: TCfg) -> None:
 
     # Working with pure images if images folder is not None
     if images_folder is not None:
-        im_paths = list(images_folder.rglob("*"))
+        extensions = (".jpeg", ".jpg", ".png", ".JPEG", ".JPG", ".PNG")
+        im_paths: List[Path] = []
+        for ext in extensions:
+            im_paths += images_folder.rglob("*" + ext)
         bboxes = None
 
     # Working with dataframe if it's path is not None
@@ -74,22 +79,22 @@ def pl_infer(cfg: TCfg) -> None:
         assert isinstance(transform, available_augs_types), f"Type of transforms must be in {available_augs_types}"
         kwargs["transform"] = transform
 
-    dataset = ListDataset(filenames_list=im_paths, bboxes=bboxes, **kwargs)
+    dataset = ListDataset(filenames_list=im_paths, bboxes=bboxes, f_imread=imread_pillow, **kwargs)
     loader = DataLoader(dataset=dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])
     features = []
     for batch in loader:
         feats = extractor.extract(batch)
-        features += torch.split(feats, 1)
+        features += [feat.tolist() for feat in torch.split(feats, 1)]
 
     out_json_path = Path(cfg["features_file"])
     with out_json_path.open("w") as f:
         out_struct = {
-            "images_folder": cfg["images_folder"],
-            "dataframe_name": cfg["dataframe_name"],
+            "images_folder": cfg.get("images_folder"),
+            "dataframe_name": cfg.get("dataframe_name"),
             "model": cfg["model"],
-            "transforms": cfg["transforms"],
+            "transforms": cfg.get("transforms"),
             "filenames": list(map(str, im_paths)),
             "bboxes": bboxes,
             "features": features,
@@ -97,4 +102,4 @@ def pl_infer(cfg: TCfg) -> None:
         json.dump(out_struct, f)
 
 
-__all__ = ["pl_infer"]
+__all__ = ["inference"]

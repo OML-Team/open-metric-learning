@@ -2,13 +2,13 @@ import shutil
 import subprocess
 import warnings
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pytest
 import torch
 import yaml  # type: ignore
 
-from oml.const import PROJECT_ROOT
+from oml.const import MOCK_DATASET_PATH, PROJECT_ROOT
 
 warnings.filterwarnings("ignore")
 
@@ -34,11 +34,13 @@ def rm_logs(cfg_name: Path) -> None:
         shutil.rmtree(cfg["logs_root"])
 
 
-def run(file: str, accelerator: str, devices: int) -> None:
+def run(file: str, accelerator: str, devices: int, cfg_path: Optional[Path] = None) -> None:
     cmd = f"python {str(SCRIPTS_PATH / file)} ++accelerator='{accelerator}' ++devices='{devices}'"
     subprocess.run(cmd, check=True, shell=True)
 
-    rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
+    if cfg_path is None:
+        cfg_path = SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml")
+    rm_logs(cfg_name=cfg_path)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
@@ -73,4 +75,9 @@ def test_inference_error_two_sources_provided(accelerator: str, devices: int) ->
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_inference_images_list(accelerator: str, devices: int) -> None:
-    run(f"inference_images_mock.py ~dataframe_name dataset_root={SCRIPTS_PATH}", accelerator, devices)
+    run(
+        f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH}",
+        accelerator,
+        devices,
+        cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
+    )
