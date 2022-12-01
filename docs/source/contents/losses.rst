@@ -34,6 +34,15 @@ TripletLossWithMiner
     .. automethod:: __init__
     .. automethod:: forward
 
+SurrogatePrecision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.losses.surrogate_precision.SurrogatePrecision
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+
 ArcFaceLoss
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.losses.arcface.ArcFaceLoss

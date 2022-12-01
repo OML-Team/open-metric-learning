@@ -1,0 +1,5 @@
+name: surrogate_precision
+args:
+    k: 5
+    temperature1: 1
+    temperature2: 0.01
