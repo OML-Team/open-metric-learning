@@ -312,6 +312,7 @@ def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[in
     return precision
 
 
+# TODO: Write correct summary for map@k. Add external links to map@k.
 def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
     Function to compute Mean Average Precision (MAP) for each sample.
