@@ -14,15 +14,19 @@ jobs:
     name: Create tag if the commit has new version implemented
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      tagcreated: ${{ steps.autotag.outputs.tagcreated }}
     steps:
       - uses: actions/checkout@v3
 
-      - uses: butlerlogic/action-autotag@1.1.1
+      - name: Autotag
+        id: autotag
+        uses: butlerlogic/action-autotag@1.1.1
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           strategy: regex
-          root: "/oml/__init__.py"
+          root: "oml/__init__.py"
           regex_pattern: >
             ^__version__ = ['"]([^'"]*)['"]
           tag_prefix: "release."
