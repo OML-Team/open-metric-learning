@@ -29,15 +29,22 @@ class SurrogatePrecision(torch.nn.Module):
         """
 
         Args:
-            k: Parameter
+            k: Parameter of Precision@k.
             temperature1: Scaling factor for the 1st sigmoid, see docs above.
             temperature2: Scaling factor for the 2nd sigmoid, see docs above.
             reduction: ``mean``, ``sum`` or ``none``
 
         """
         super(SurrogatePrecision, self).__init__()
+        assert k > 0
 
-        self.k = k
+        """
+        Note, since we consider all the batch samples as queries and galleries simultaneously,
+        for each element we have its copy on the 1st position with the corresponding zero distance.
+        Thus, to consider it we increase parameter k by 1.
+        """
+
+        self.k = k + 1
         self.temperature1 = temperature1
         self.temperature2 = temperature2
         self.reduction = reduction
