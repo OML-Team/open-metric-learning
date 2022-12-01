@@ -312,13 +312,11 @@ def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[in
     return precision
 
 
-# TODO: Write correct summary for map@k. Add external links to map@k.
 def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
     Function to compute Mean Average Precision (MAP) for each sample.
 
-    ``map@k`` for a given query is the average among those ``precision@i`` for which top ``i``-th element
-    from the gallery relates to the query.
+    ``map@k`` for a given query is the average value of the ``precision`` considered as a function of the ``recall``.
     The final ``map@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
@@ -331,11 +329,18 @@ def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
     Returns:
         List of ``map@k`` tensors.
 
-    The :math:`\\textrm{map}@k` for a query is defined as
+    Given a list of ground truth top :math:`k` closest elements from the gallery to a given query
+    :math:`[g_1, \\ldots, g_k]` (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query),
+    and the total number of relevant elements from the gallery :math:`n`, the :math:`\\textrm{map}@k`
+    for the query is defined as
 
     .. math::
-        \\textrm{map}@k = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k \\textrm{precision}@i \\times
-        \\textrm{rel}(i)
+        \\begin{split}\\textrm{map}@k &=
+        \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
+        \\frac{\\textrm{# of relevant elements among top } i\\textrm{ elements}}{i} \\times \\textrm{rel}(i) = \\\\
+        & = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
+        \\frac{\\sum\\limits_{j = 1}^{i}g_i}{i} \\times \\textrm{rel}(i)
+        \\end{split}
 
     where :math:`\\textrm{rel}(i)` is 1 if :math:`i`-th element from the top :math:`i` clothest
     elements from the gallery to the query is relevant to the query, and 0 otherwise.
