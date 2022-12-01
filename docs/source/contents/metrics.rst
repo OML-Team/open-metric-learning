@@ -20,7 +20,7 @@ EmbeddingMetrics
     .. automethod:: visualize
     .. automethod:: get_plot_for_queries
 
-calc_retrieval_metrics
+Metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.functional.metrics.calc_retrieval_metrics
 

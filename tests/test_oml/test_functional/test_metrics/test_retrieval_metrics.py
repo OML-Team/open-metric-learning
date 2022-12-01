@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import numpy as np
 import pytest
@@ -7,7 +7,6 @@ import torch
 
 from oml.functional.metrics import (
     TMetricsDict,
-    _calc_n_gt,
     apply_mask_to_ignore,
     calc_cmc,
     calc_fnmr_at_fmr,
@@ -217,91 +216,48 @@ def exact_test_case() -> Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMet
     return mask_gt, gt_tops, top_k, metrics_expected
 
 
-def test_calc_cmc(exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict]) -> None:
+@pytest.mark.parametrize(
+    "metric_function, metric_name", [(calc_cmc, "cmc"), (calc_precision, "precision"), (calc_map, "map")]
+)
+def test_metrics(
+    metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
+    metric_name: str,
+    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict],
+) -> None:
     mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
-    cmc = calc_cmc(gt_tops, top_k)
-    for k, cmc_val in zip(top_k, cmc):
+    metric_vals = metric_function(mask_gt, gt_tops, top_k)
+    for k, metric_val in zip(top_k, metric_vals):
         assert torch.all(
-            torch.isclose(cmc_val, metrics_expected["cmc"][k], atol=1.0e-4)
-        ), f"cmc@{k} expected: {metrics_expected['cmc'][k]}; evaluated: {cmc_val}."
+            torch.isclose(metric_val, metrics_expected[metric_name][k], atol=1.0e-4)
+        ), f"{metric_name}@{k} expected: {metrics_expected[metric_name][k]}; evaluated: {metric_val}."
 
 
 @pytest.mark.parametrize("top_k", (1, 2, 3, 4, 5, 10))
-def test_calc_cmc_individual(
-    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict], top_k: int
+@pytest.mark.parametrize(
+    "metric_function, metric_name", [(calc_cmc, "cmc"), (calc_precision, "precision"), (calc_map, "map")]
+)
+def test_metrics_individual(
+    metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
+    metric_name: str,
+    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict],
+    top_k: int,
 ) -> None:
     mask_gt, gt_tops, _, metrics_expected = exact_test_case
-    cmc = calc_cmc(gt_tops, (top_k,))[0]
+    metric_val = metric_function(mask_gt, gt_tops, (top_k,))[0]
     assert torch.all(
-        torch.isclose(cmc, metrics_expected["cmc"][top_k])
-    ), f"cmc@{top_k} expected: {metrics_expected['cmc'][top_k]}; evaluated: {cmc}."
+        torch.isclose(metric_val, metrics_expected[metric_name][top_k], atol=1.0e-4)
+    ), f"{metric_name}@{top_k} expected: {metrics_expected[metric_name][top_k]}; evaluated: {metric_val}."
 
 
 @pytest.mark.parametrize("top_k", (tuple(), (0, -1), (0,), (1.5, 2), (1.0, 2.0)))
-def test_calc_cmc_check_params(top_k: Tuple[int, ...]) -> None:
-    with pytest.raises(ValueError):
-        gt_tops = torch.ones((10, 5), dtype=torch.bool)
-        calc_cmc(gt_tops, top_k)
-
-
-def test_calc_precision(exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict]) -> None:
-    mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
-    n_gt = _calc_n_gt(mask_gt)
-    precision = calc_precision(gt_tops, n_gt, top_k)
-    for k, precision_val in zip(top_k, precision):
-        assert torch.all(
-            torch.isclose(precision_val, metrics_expected["precision"][k], atol=1.0e-4)
-        ), f"precision@{k} expected: {metrics_expected['precision'][k]}; evaluated: {precision_val}."
-
-
-@pytest.mark.parametrize("top_k", (1, 2, 3, 4, 5, 10))
-def test_calc_precision_individual(
-    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict], top_k: int
+@pytest.mark.parametrize("metric_function", [calc_cmc, calc_precision, calc_map])
+def test_metrics_check_params(
+    metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor], top_k: Tuple[int, ...]
 ) -> None:
-    mask_gt, gt_tops, _, metrics_expected = exact_test_case
-    n_gt = _calc_n_gt(mask_gt)
-    precision = calc_precision(gt_tops, n_gt, (top_k,))[0]
-    assert torch.all(
-        torch.isclose(precision, metrics_expected["precision"][top_k], atol=1.0e-4)
-    ), f"precision@{top_k} expected: {metrics_expected['precision'][top_k]}; evaluated: {precision}."
-
-
-@pytest.mark.parametrize("top_k", (tuple(), (0, -1), (0,), (1.5, 2), (1.0, 2.0)))
-def test_calc_precision_check_params(top_k: Tuple[int, ...]) -> None:
     with pytest.raises(ValueError):
         gt_tops = torch.ones((10, 5), dtype=torch.bool)
-        n_gt = torch.ones(10)
-        calc_precision(gt_tops, n_gt, top_k)
-
-
-def test_calc_map(exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict]) -> None:
-    mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
-    n_gt = _calc_n_gt(mask_gt)
-    map = calc_map(gt_tops, n_gt, top_k)
-    for k, map_val in zip(top_k, map):
-        assert torch.all(
-            torch.isclose(map_val, metrics_expected["map"][k], atol=1.0e-4)
-        ), f"map@{k} expected: {metrics_expected['map'][k]}; evaluated: {map_val}."
-
-
-@pytest.mark.parametrize("top_k", (1, 2, 3, 4, 5, 10))
-def test_calc_map_individual(
-    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict], top_k: int
-) -> None:
-    mask_gt, gt_tops, _, metrics_expected = exact_test_case
-    n_gt = _calc_n_gt(mask_gt)
-    map = calc_map(gt_tops, n_gt, (top_k,))[0]
-    assert torch.all(
-        torch.isclose(map, metrics_expected["map"][top_k], atol=1.0e-4)
-    ), f"map@{top_k} expected: {metrics_expected['map'][top_k]}; evaluated: {map}."
-
-
-@pytest.mark.parametrize("top_k", (tuple(), (0, -1), (0,), (1.5, 2), (1.0, 2.0)))
-def test_calc_map_check_params(top_k: Tuple[int, ...]) -> None:
-    with pytest.raises(ValueError):
-        gt_tops = torch.ones((10, 5), dtype=torch.bool)
-        n_gt = torch.ones(10)
-        calc_map(gt_tops, n_gt, top_k)
+        mask_gt = torch.ones((10, 5), dtype=torch.bool)
+        metric_function(mask_gt, gt_tops, top_k)
 
 
 def test_calc_fnmr_at_fmr() -> None:
