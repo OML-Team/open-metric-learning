@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 import torch.optim as opt
 
-from oml.utils.misc import TCfg, dictconfig_to_dict, remove_unused_kargs
+from oml.utils.misc import TCfg, dictconfig_to_dict
 
 OPTIMIZERS_REGISTRY = {
     "adadelta": opt.Adadelta,
@@ -19,9 +19,7 @@ OPTIMIZERS_REGISTRY = {
 
 
 def get_optimizer(name: str, **kwargs: Dict[str, Any]) -> opt.Optimizer:
-    constructor = OPTIMIZERS_REGISTRY[name]
-    kwargs = remove_unused_kargs(kwargs, constructor)
-    return constructor(**kwargs)
+    return OPTIMIZERS_REGISTRY[name](**kwargs)
 
 
 def get_optimizer_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> opt.Optimizer:
