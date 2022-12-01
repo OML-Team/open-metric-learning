@@ -1,27 +1,36 @@
 name: Publish to PyPI
 
 on:
-  push:
-    tags:
-      - release.*
+  workflow_run:
+    workflows:
+      - Tests
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
-  check_tag_status:
-    name: Check if the tag is in the main branch commit history
+  autotag:
+    name: Create tag if the commit has new version implemented
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v3
 
-      - name: Check if the tag is in the main branch commit history
-        run: |
-          git merge-base --is-ancestor ${{ github.ref }} remotes/origin/main
+      - uses: butlerlogic/action-autotag@1.1.1
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          strategy: regex
+          root: "/oml/__init__.py"
+          regex_pattern: >
+            ^__version__ = ['"]([^'"]*)['"]
+          tag_prefix: "release."
 
   build_and_publish_to_pypi:
     name: Build and publish Python distribution to PyPI
-    needs: check_tag_status
+    needs: autotag
+    if: ${{ needs.autotag.outputs.tagcreated == 'yes' }}
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
