@@ -17,6 +17,7 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
     validate_dataset,
 )
+from oml.utils.misc import remove_unused_kargs
 
 from .synthetic import generate_distance_matrix, generate_retrieval_case
 
@@ -225,7 +226,9 @@ def test_metrics(
     exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict],
 ) -> None:
     mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
-    metric_vals = metric_function(mask_gt, gt_tops, top_k)
+    kwargs = {"mask_gt": mask_gt, "gt_tops": gt_tops, "top_k": top_k}
+    kwargs = remove_unused_kargs(kwargs, metric_function)
+    metric_vals = metric_function(**kwargs)  # type: ignore
     for k, metric_val in zip(top_k, metric_vals):
         assert torch.all(
             torch.isclose(metric_val, metrics_expected[metric_name][k], atol=1.0e-4)
@@ -243,7 +246,9 @@ def test_metrics_individual(
     top_k: int,
 ) -> None:
     mask_gt, gt_tops, _, metrics_expected = exact_test_case
-    metric_val = metric_function(mask_gt, gt_tops, (top_k,))[0]
+    kwargs = {"mask_gt": mask_gt, "gt_tops": gt_tops, "top_k": (top_k,)}
+    kwargs = remove_unused_kargs(kwargs, metric_function)
+    metric_val = metric_function(**kwargs)[0]  # type: ignore
     assert torch.all(
         torch.isclose(metric_val, metrics_expected[metric_name][top_k], atol=1.0e-4)
     ), f"{metric_name}@{top_k} expected: {metrics_expected[metric_name][top_k]}; evaluated: {metric_val}."
@@ -257,7 +262,9 @@ def test_metrics_check_params(
     with pytest.raises(ValueError):
         gt_tops = torch.ones((10, 5), dtype=torch.bool)
         mask_gt = torch.ones((10, 5), dtype=torch.bool)
-        metric_function(mask_gt, gt_tops, top_k)
+        kwargs = {"mask_gt": mask_gt, "gt_tops": gt_tops, "top_k": top_k}
+        kwargs = remove_unused_kargs(kwargs, metric_function)
+        metric_function(**kwargs)  # type: ignore
 
 
 def test_calc_fnmr_at_fmr() -> None:

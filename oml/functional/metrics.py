@@ -98,7 +98,7 @@ def calc_retrieval_metrics(
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
-        cmc = calc_cmc(mask_gt, gt_tops, cmc_top_k_clipped)
+        cmc = calc_cmc(gt_tops, cmc_top_k_clipped)
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
@@ -217,7 +217,7 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
 
 
 # mask_gt is not required to compute cmc, but it is added as an argument for consistency.
-def calc_cmc(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffes ``top_k``.
 
@@ -226,7 +226,6 @@ def calc_cmc(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
     The final ``cmc@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
         gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
                  Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
                  distances to the corresponding queries.
