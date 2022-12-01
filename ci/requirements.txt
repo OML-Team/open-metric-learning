@@ -15,6 +15,7 @@ jupyter>=1.0.0
 grad-cam>=1.2.*
 python-dotenv>=0.17.0
 validators>=0.18.0
+gdown>=4.*
 #Albu
 albumentations>=1.*
 opencv-python>=4.1.1
