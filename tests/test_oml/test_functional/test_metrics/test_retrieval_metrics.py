@@ -272,15 +272,15 @@ def test_calc_fnmr_at_fmr() -> None:
     pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
     neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
     fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
-    fnmr_at_fmr_expected = torch.tensor([0.4, 0.2])
+    fnmr_at_fmr_expected = torch.tensor([4, 2])
     # 10 percentile of negative distances is 3 and
     # the number of positive distances that are greater than
-    # or equal to 3 is 4 so FNMR@FMR(10%) is 4 / 10
+    # or equal to 3 is 4 so FNMR@FMR(10%) is 40%
     # 50 percentile of negative distances is 6 and
     # the number of positive distances that are greater than
-    # or equal to 6 is 2 so FNMR@FMR(50%) is 2 / 10
+    # or equal to 6 is 2 so FNMR@FMR(50%) is 20%
     assert torch.all(
-        torch.isclose(fnmr_at_fmr, torch.tensor([0.4, 0.2]))
+        torch.isclose(fnmr_at_fmr, torch.tensor([40, 20]))
     ), f"fnmr@fmr({fmr_vals}),  expected: {fnmr_at_fmr_expected}; evaluated: {fnmr_at_fmr}."
 
 

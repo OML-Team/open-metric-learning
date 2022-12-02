@@ -31,10 +31,10 @@ def calc_retrieval_metrics(
         mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
         mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
                      as answers and must be ignored
-        cmc_top_k: Tuple of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
-        precision_top_k: Tuple of  ``k`` values to calculate ``precision@k``
-        map_top_k: Tuple of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
-        fmr_vals: Tuple of ``fmr`` values (measured in percents) to calculate ``fnmr@fmr`` (False Non Match Rate
+        cmc_top_k: Values of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
+        precision_top_k: Values of  ``k`` values to calculate ``precision@k``
+        map_top_k: Values of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
+        fmr_vals: Values of ``fmr`` values (measured in percents) to calculate ``fnmr@fmr`` (False Non Match Rate
                   at the given False Match Rate).
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
         reduce: If ``False`` return metrics for each query without averaging
@@ -216,10 +216,9 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc
 
 
-# mask_gt is not required to compute cmc, but it is added as an argument for consistency.
 def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
-    Function to compute Cumulative Matching Characteristics (CMC) at cutoffes ``top_k``.
+    Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
     ``cmc@k`` for a given query equals to 1 if there is at least 1 instance related to this query in top ``k``
     gallery instances sorted by distances to the query, and 0 otherwise.
@@ -229,14 +228,14 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
         gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
                  Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
                  distances to the corresponding queries.
-        top_k: Tuple of ``k`` values to calculate ``cmc@k`` for.
+        top_k: Values of ``k`` values to calculate ``cmc@k`` for.
 
     Returns:
         List of ``cmc@k`` tensors.
 
     .. math::
         \\textrm{cmc}@k = \\begin{cases}
-        1, & \\textrm{if top-}k \\textrm{ ranked gallery samples contain the query identity}, \\\\
+        1, & \\textrm{if top-}k \\textrm{ ranked gallery samples include an output relevant to the query}, \\\\
         0, & \\textrm{otherwise}.
         \\end{cases}
 
@@ -246,7 +245,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
         ...                         [0, 1, 1],
         ...                         [0, 0, 1]
         ... ], dtype=torch.bool)
-        >>> calc_cmc(gt_tops, (1, 2, 3))
+        >>> calc_cmc(gt_tops, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([1., 1., 0.]), tensor([1., 1., 1.])]
     """
     _check_if_nonempty_integers_and_positive(top_k, "top_k")
@@ -259,7 +258,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
 
 def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
-    Function to compute Precision at cutoffes ``top_k``.
+    Function to compute Precision at cutoffs ``top_k``.
 
     ``precision@k`` for a given query is a fraction of the relevant gallery instances among the top ``k`` instances
     sorted by distances from the query to the gallery.
@@ -270,34 +269,64 @@ def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[in
         gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
                  Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
                  distances to the corresponding queries.
-        top_k: Tuple of ``k`` values to calculate ``precision@k`` for.
+        top_k: Values of ``k`` values to calculate ``precision@k`` for.
 
     Returns:
         List of ``precision@k`` tensors.
 
     Given a list of ground truth top :math:`k` closest elements from the gallery to a given query
-    :math:`[g_1, \\ldots, g_k]` (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query),
-    and the total number of relevant elements from the gallery :math:`n`, the :math:`\\textrm{precision}@k`
-    for the query is defined as
+    :math:`g = [g_1, \\ldots, g_k]` (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant
+    to the query), and the total number of relevant elements from the gallery :math:`n`,
+    the :math:`\\textrm{precision}@k` for the query is defined as
 
     .. math::
         \\textrm{precision}@k = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k g_i
 
+    It's worth mentioning that OML version of :math:`\\textrm{precision}@k` differs from the commonly used by
+    the denominator of the fraction. The OML version takes into account the total amount of relevant elements in
+    the gallery, so it will not penalize the ideal model if :math:`n < k`.
+
+    For instance, let :math:`n = 3` and :math:`g = [1, 1, 1, 0, 0]`. Then by using the common definition of
+    :math:`\\textrm{precision}@k` we get
+
+    .. math::
+        \\begin{align}
+            \\textrm{precision}@1 &= \\frac{1}{1}, \\textrm{precision}@2 = \\frac{2}{2},
+            \\textrm{precision}@3 = \\frac{3}{3}, \\\\
+            \\textrm{precision}@4 &= \\frac{3}{4}, \\textrm{precision}@5 = \\frac{3}{5},
+            \\textrm{precision}@6 = \\frac{3}{6} \\\\
+        \\end{align}
+
+    But with OML definition of :math:`\\textrm{precision}@k` we get
+
+
+    .. math::
+        \\begin{align}
+            \\textrm{precision}@1 &= \\frac{1}{1}, \\textrm{precision}@2 = \\frac{2}{2},
+            \\textrm{precision}@3 = \\frac{3}{3} \\\\
+            \\textrm{precision}@4 &= \\frac{3}{3}, \\textrm{precision}@5 = \\frac{3}{3},
+            \\textrm{precision}@6 = \\frac{3}{3} \\\\
+        \\end{align}
+
     See:
-        `Evaluation measures (information retrieval). Precision`_
+        `Evaluation measures (information retrieval). Precision@k`_
 
 
         .. _`Evaluation measures (information retrieval). Precision@k`:
             https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Precision_at_k
 
     Example:
+        >>> mask_gt = torch.tensor([
+        ...                         [1, 0, 1, 0, 0],
+        ...                         [0, 1, 1, 0, 1],
+        ...                         [1, 1, 1, 1, 1]
+        ... ], dtype=torch.bool)
         >>> gt_tops = torch.tensor([
         ...                         [1, 0, 0],
         ...                         [0, 1, 1],
         ...                         [0, 0, 1]
         ... ], dtype=torch.bool)
-        >>> n_gt = torch.tensor([2, 100, 5])
-        >>> calc_precision(gt_tops, n_gt, (1, 2, 3))
+        >>> calc_precision(mask_gt, gt_tops, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000]), tensor([0.5000, 0.6667, 0.3333])]
     """
     _check_if_nonempty_integers_and_positive(top_k, "top_k")
@@ -313,7 +342,7 @@ def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[in
 
 def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
-    Function to compute Mean Average Precision (MAP) for each sample.
+    Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
     ``map@k`` for a given query is the average value of the ``precision`` considered as a function of the ``recall``.
     The final ``map@k`` could be obtained by averaging the results calculated for each query.
@@ -323,7 +352,7 @@ def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
         gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
                  Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
                  distances to the corresponding queries.
-        top_k: Tuple of ``k`` values to calculate ``map@k`` for.
+        top_k: Values of ``k`` values to calculate ``map@k`` for.
 
     Returns:
         List of ``map@k`` tensors.
@@ -341,7 +370,7 @@ def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
         \\frac{\\sum\\limits_{j = 1}^{i}g_i}{i} \\times \\textrm{rel}(i)
         \\end{split}
 
-    where :math:`\\textrm{rel}(i)` is 1 if :math:`i`-th element from the top :math:`i` clothest
+    where :math:`\\textrm{rel}(i)` is 1 if :math:`i`-th element from the top :math:`i` closest
     elements from the gallery to the query is relevant to the query, and 0 otherwise.
 
     See:
@@ -357,13 +386,17 @@ def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
         https://sdsawtelle.github.io/blog/output/mean-average-precision-MAP-for-recommender-systems.html
 
     Example:
+        >>> mask_gt = torch.tensor([
+        ...                         [1, 0, 1, 0, 0],
+        ...                         [0, 1, 1, 0, 1],
+        ...                         [1, 1, 1, 1, 1]
+        ... ], dtype=torch.bool)
         >>> gt_tops = torch.tensor([
         ...                         [1, 0, 0],
         ...                         [0, 1, 1],
         ...                         [0, 0, 1]
         ... ], dtype=torch.bool)
-        >>> n_gt = torch.tensor([2, 100, 5])
-        >>> calc_map(gt_tops, n_gt, (1, 2, 3))
+        >>> calc_map(mask_gt, gt_tops, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000]), tensor([0.5000, 0.3889, 0.1111])]
     """
     _check_if_nonempty_integers_and_positive(top_k, "top_k")
@@ -439,9 +472,8 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     Example:
         >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
         >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
-        >>> fmr_vals = (10, 50)
-        >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
-        tensor([0.4000, 0.2000])
+        >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(10, 50))
+        tensor([40., 20.])
 
     """
     if len(fmr_vals) == 0:
@@ -449,7 +481,7 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     if not all(0 <= f <= 100 for f in fmr_vals):
         raise ValueError(f"fmr_vals are expected to be integers in range [0, 100] but got {fmr_vals}")
     thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
-    fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
+    fnmr_at_fmr = 100 * (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
 
 
