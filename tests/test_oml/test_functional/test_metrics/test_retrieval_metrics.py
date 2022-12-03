@@ -226,7 +226,7 @@ def test_metrics(
     exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict],
 ) -> None:
     mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
-    kwargs = {"mask_gt": mask_gt, "gt_tops": gt_tops, "top_k": top_k}
+    kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": top_k}
     kwargs = remove_unused_kargs(kwargs, metric_function)
     metric_vals = metric_function(**kwargs)  # type: ignore
     for k, metric_val in zip(top_k, metric_vals):
@@ -246,7 +246,7 @@ def test_metrics_individual(
     top_k: int,
 ) -> None:
     mask_gt, gt_tops, _, metrics_expected = exact_test_case
-    kwargs = {"mask_gt": mask_gt, "gt_tops": gt_tops, "top_k": (top_k,)}
+    kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": (top_k,)}
     kwargs = remove_unused_kargs(kwargs, metric_function)
     metric_val = metric_function(**kwargs)[0]  # type: ignore
     assert torch.all(
@@ -261,8 +261,8 @@ def test_metrics_check_params(
 ) -> None:
     with pytest.raises(ValueError):
         gt_tops = torch.ones((10, 5), dtype=torch.bool)
-        mask_gt = torch.ones((10, 5), dtype=torch.bool)
-        kwargs = {"mask_gt": mask_gt, "gt_tops": gt_tops, "top_k": top_k}
+        n_gt = torch.ones(10)
+        kwargs = {"gt_tops": gt_tops, "n_gt": n_gt, "top_k": (top_k,)}
         kwargs = remove_unused_kargs(kwargs, metric_function)
         metric_function(**kwargs)  # type: ignore
 
@@ -280,7 +280,7 @@ def test_calc_fnmr_at_fmr() -> None:
     # the number of positive distances that are greater than
     # or equal to 6 is 2 so FNMR@FMR(50%) is 20%
     assert torch.all(
-        torch.isclose(fnmr_at_fmr, torch.tensor([40, 20]))
+        torch.isclose(fnmr_at_fmr, torch.tensor([40.0, 20.0]))
     ), f"fnmr@fmr({fmr_vals}),  expected: {fnmr_at_fmr_expected}; evaluated: {fnmr_at_fmr}."
 
 

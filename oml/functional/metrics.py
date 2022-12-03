@@ -94,6 +94,7 @@ def calc_retrieval_metrics(
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
     ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
     gt_tops = mask_gt[ii_arange, ii_top_k]
+    n_gt = mask_gt.sum(dim=1)
 
     metrics: TMetricsDict = defaultdict(dict)
 
@@ -102,11 +103,11 @@ def calc_retrieval_metrics(
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
-        precision = calc_precision(mask_gt, gt_tops, precision_top_k_clipped)
+        precision = calc_precision(gt_tops, n_gt, precision_top_k_clipped)
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map = calc_map(mask_gt, gt_tops, map_top_k_clipped)
+        map = calc_map(gt_tops, n_gt, map_top_k_clipped)
         metrics["map"] = dict(zip(map_top_k, map))
 
     if fmr_vals:
@@ -225,9 +226,9 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
     The final ``cmc@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
-                 Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
-                 distances to the corresponding queries.
+        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
+                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
+                 with the smallest distances to the corresponding queries.
         top_k: Values of ``k`` values to calculate ``cmc@k`` for.
 
     Returns:
@@ -256,7 +257,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
     return cmc
 
 
-def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -265,10 +266,11 @@ def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[in
     The final ``precision@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
-        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
-                 Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
-                 distances to the corresponding queries.
+        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
+                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
+                 with the smallest distances to the corresponding queries.
+        n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
+              to ``i``-th query.
         top_k: Values of ``k`` values to calculate ``precision@k`` for.
 
     Returns:
@@ -316,31 +318,26 @@ def calc_precision(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[in
             https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Precision_at_k
 
     Example:
-        >>> mask_gt = torch.tensor([
-        ...                         [1, 0, 1, 0, 0],
-        ...                         [0, 1, 1, 0, 1],
-        ...                         [1, 1, 1, 1, 1]
-        ... ], dtype=torch.bool)
         >>> gt_tops = torch.tensor([
         ...                         [1, 0, 0],
         ...                         [0, 1, 1],
         ...                         [0, 0, 1]
         ... ], dtype=torch.bool)
-        >>> calc_precision(mask_gt, gt_tops, top_k=(1, 2, 3))
+        >>> n_gt = torch.tensor([2, 3, 5])
+        >>> calc_precision(gt_tops, n_gt, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000]), tensor([0.5000, 0.6667, 0.3333])]
     """
     _check_if_nonempty_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     precision = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
-    n_gt = mask_gt.float().sum(dim=1)
     for k in top_k:
         _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
         precision.append(correct_preds[:, k - 1] / _n_gt)
     return precision
 
 
-def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -348,10 +345,11 @@ def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
     The final ``map@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
-        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery is related to ``i``-th query or not.
-                 Obtained from the full ground truth matrix by taking ``max(top_k)`` elements with the smallest
-                 distances to the corresponding queries.
+        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
+                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
+                 with the smallest distances to the corresponding queries.
+        n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
+              to ``i``-th query.
         top_k: Values of ``k`` values to calculate ``map@k`` for.
 
     Returns:
@@ -386,24 +384,19 @@ def calc_map(mask_gt: torch.Tensor, gt_tops: torch.Tensor, top_k: Tuple[int, ...
         https://sdsawtelle.github.io/blog/output/mean-average-precision-MAP-for-recommender-systems.html
 
     Example:
-        >>> mask_gt = torch.tensor([
-        ...                         [1, 0, 1, 0, 0],
-        ...                         [0, 1, 1, 0, 1],
-        ...                         [1, 1, 1, 1, 1]
-        ... ], dtype=torch.bool)
         >>> gt_tops = torch.tensor([
         ...                         [1, 0, 0],
         ...                         [0, 1, 1],
         ...                         [0, 0, 1]
         ... ], dtype=torch.bool)
-        >>> calc_map(mask_gt, gt_tops, top_k=(1, 2, 3))
+        >>> n_gt = torch.tensor([2, 3, 5])
+        >>> calc_map(gt_tops, n_gt, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000]), tensor([0.5000, 0.3889, 0.1111])]
     """
     _check_if_nonempty_integers_and_positive(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     map = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
-    n_gt = mask_gt.float().sum(dim=1)
     for k in top_k:
         _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
         positions = torch.arange(1, k + 1).unsqueeze(0)
@@ -536,7 +529,7 @@ def _check_if_nonempty_integers_and_positive(seq: Sequence[int], name: str) -> N
 
     """
     if not len(seq) > 0 or not all([isinstance(x, int) and (x > 0) for x in seq]):
-        raise ValueError(f"{name} is expected to be a tuple with positive integers, but got {seq}")
+        raise ValueError(f"{name} is expected to be non-empty and contain positive integers, but got {seq}")
 
 
 def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:

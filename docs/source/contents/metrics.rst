@@ -7,8 +7,6 @@ Metrics
 .. contents::
    :local:
 
-EmbeddingMetrics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.metrics.embeddings.EmbeddingMetrics
     :undoc-members:
     :show-inheritance:

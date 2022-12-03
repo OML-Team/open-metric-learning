@@ -252,19 +252,14 @@ class EmbeddingMetrics(IMetricVisualisable):
         query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
 
-    def get_plot_for_queries(
-        self,
-        query_ids: List[int],
-        n_instances: int,
-        verbose: bool = True,
-    ) -> plt.Figure:
+    def get_plot_for_queries(self, query_ids: List[int], n_instances: int, verbose: bool = True) -> plt.Figure:
         """
         Visualize the predictions for the query with the indicies <query_ids>.
 
         Args:
             query_ids: Index of the query
             n_instances: Amount of the predictions to show
-            verbose: wether to show image paths or not
+            verbose: whether to show image paths or not
 
         """
         assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
