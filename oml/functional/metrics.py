@@ -1,12 +1,12 @@
 import warnings
 from collections import defaultdict
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
-from oml.utils.misc import clip_max
+from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
 TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
@@ -29,12 +29,12 @@ def calc_retrieval_metrics(
     Args:
         distances: Distance matrix with the shape of ``[query_size, gallery_size]``
         mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
-        mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
+        mask_to_ignore: Binary matrix to indicate that some elements in the gallery cannot be used
                      as answers and must be ignored
-        cmc_top_k: Values of ``k`` values to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
-        precision_top_k: Values of  ``k`` values to calculate ``precision@k``
-        map_top_k: Values of ``k`` values to calculate ``map@k`` (`Mean Average Precision`)
-        fmr_vals: Values of ``fmr`` values (measured in percents) to calculate ``fnmr@fmr`` (False Non Match Rate
+        cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
+        precision_top_k: Values of ``k`` to calculate ``precision@k``
+        map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
+        fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (False Non Match Rate
                   at the given False Match Rate).
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
         reduce: If ``False`` return metrics for each query without averaging
@@ -47,17 +47,11 @@ def calc_retrieval_metrics(
     """
     top_k_args = [cmc_top_k, precision_top_k, map_top_k]
 
-    if not any(top_k_args):
+    if not any(top_k_args + [fmr_vals]):
         raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
 
     if check_dataset_validity:
         validate_dataset(mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
-
-    for top_k_arg in top_k_args:
-        if top_k_arg:
-            assert all([isinstance(x, int) and (x > 0) for x in top_k_arg])
-
-    assert all(0 <= x <= 100 for x in fmr_vals)
 
     if distances.shape != mask_gt.shape:
         raise ValueError(
@@ -229,7 +223,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
         gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
                  ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
                  with the smallest distances to the corresponding queries.
-        top_k: Values of ``k`` values to calculate ``cmc@k`` for.
+        top_k: Values of ``k`` to calculate ``cmc@k``.
 
     Returns:
         List of ``cmc@k`` tensors.
@@ -249,7 +243,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
         >>> calc_cmc(gt_tops, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([1., 1., 0.]), tensor([1., 1., 1.])]
     """
-    _check_if_nonempty_integers_and_positive(top_k, "top_k")
+    check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     cmc = []
     for k in top_k:
@@ -271,15 +265,15 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
                  with the smallest distances to the corresponding queries.
         n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
               to ``i``-th query.
-        top_k: Values of ``k`` values to calculate ``precision@k`` for.
+        top_k: Values of ``k`` to calculate ``precision@k``.
 
     Returns:
         List of ``precision@k`` tensors.
 
-    Given a list of ground truth top :math:`k` closest elements from the gallery to a given query
-    :math:`g = [g_1, \\ldots, g_k]` (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant
-    to the query), and the total number of relevant elements from the gallery :math:`n`,
-    the :math:`\\textrm{precision}@k` for the query is defined as
+    Given a list :math:`g=[g_1, \\ldots, g_k]` of ground truth top :math:`k` closest elements from the gallery to
+    a given query (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query and 0 otherwise),
+    and the total number of relevant elements from the gallery :math:`n`, the :math:`\\textrm{precision}@k`
+    for the query is defined as
 
     .. math::
         \\textrm{precision}@k = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k g_i
@@ -327,7 +321,7 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
         >>> calc_precision(gt_tops, n_gt, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000]), tensor([0.5000, 0.6667, 0.3333])]
     """
-    _check_if_nonempty_integers_and_positive(top_k, "top_k")
+    check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     precision = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
@@ -350,13 +344,13 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
                  with the smallest distances to the corresponding queries.
         n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
               to ``i``-th query.
-        top_k: Values of ``k`` values to calculate ``map@k`` for.
+        top_k: Values of ``k`` to calculate ``map@k``.
 
     Returns:
         List of ``map@k`` tensors.
 
-    Given a list of ground truth top :math:`k` closest elements from the gallery to a given query
-    :math:`[g_1, \\ldots, g_k]` (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query),
+    Given a list :math:`g=[g_1, \\ldots, g_k]` of ground truth top :math:`k` closest elements from the gallery to
+    a given query (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query and 0 otherwise),
     and the total number of relevant elements from the gallery :math:`n`, the :math:`\\textrm{map}@k`
     for the query is defined as
 
@@ -393,7 +387,7 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
         >>> calc_map(gt_tops, n_gt, top_k=(1, 2, 3))
         [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000]), tensor([0.5000, 0.3889, 0.1111])]
     """
-    _check_if_nonempty_integers_and_positive(top_k, "top_k")
+    check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     map = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
@@ -415,28 +409,30 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     Args:
         pos_dist: Distances between relevant samples.
         neg_dist: Distances between non-relevant samples.
-        fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``fnmr``.
+        fmr_vals: Values of ``fmr`` (measured in percents) to compute the corresponding ``fnmr``.
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
     Returns:
         Tensor of ``fnmr@fmr`` values.
 
-    Given a vector of :math:`N` distances between samples from the same classes, :math:`u`,
-    the false non-match rate (:math:`\\textrm{FNMR}`) is computed as the proportion below some threshold, :math:`T`:
+    Given a vector of :math:`N` distances between relevant samples, :math:`u`,
+    the false non-match rate (:math:`\\textrm{FNMR}`) is computed as the proportion of :math:`u` below some threshold,
+    :math:`T`:
 
     .. math::
 
-        \\textrm{FNMR}(T) = \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(u_i - T\\right) =
-        1 - \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - u_i\\right)
+        \\textrm{FNMR}(T) = \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(u_i - T\\right) =
+        100 - \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - u_i\\right)
 
     where :math:`H(x)` is the unit step function, and :math:`H(0)` taken to be :math:`1`.
 
-    Similarly, given a vector of :math:`N` distances between samples from different classes, :math:`v`,
-    the false match rate (:math:`\\textrm{FMR}`) is computed as the proportion above :math:`T`:
+    Similarly, given a vector of :math:`N` distances between non-relevant samples, :math:`v`,
+    the false match rate (:math:`\\textrm{FMR}`) is computed as the proportion of :math:`v` above some threshold,
+    :math:`T`:
 
     .. math::
 
-        \\textrm{FMR}(T) = 1 - \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(v_i - T\\right) =
-        \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - v_i\\right)
+        \\textrm{FMR}(T) = 100 - \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(v_i - T\\right) =
+        \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - v_i\\right)
 
     Given some interesting false match rate values :math:`\\textrm{FMR}_k` one can find thresholds :math:`T_k`
     corresponding to :math:`\\textrm{FMR}` measurements
@@ -445,7 +441,7 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
 
         T_k = Q_v\\left(\\textrm{FMR}_k\\right)
 
-    where :math:`Q` is the quantile function, and evaluate the corresponding values of
+    where :math:`Q` is the percentile function, and evaluate the corresponding values of
     :math:`\\textrm{FNMR}@\\textrm{FMR}\\left(T_k\\right) \\stackrel{\\text{def}}{=} \\textrm{FNMR}\\left(T_k\\right)`.
 
 
@@ -482,17 +478,16 @@ def extract_pos_neg_dists(
     distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: Optional[torch.Tensor]
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    Extract distances between samples from the same class, and distances between samples
-    in different classes.
+    Extract distances between relevant samples, and distances between non-relevant samples.
 
     Args:
         distances: Distance matrix with the shape of ``[query_size, gallery_size]``
         mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
-        mask_to_ignore: Binary matrix to indicate that some of the elements in gallery cannot be used
+        mask_to_ignore: Binary matrix to indicate that some elements in gallery cannot be used
                      as answers and must be ignored
     Returns:
-        pos_dist: Tensor of distances between samples from the same class
-        neg_dist: Tensor of distances between samples from diffetent classes
+        pos_dist: Tensor of distances between relevant samples
+        neg_dist: Tensor of distances between non-relevant samples
     """
     if mask_to_ignore is not None:
         mask_to_not_ignore = ~mask_to_ignore
@@ -519,25 +514,12 @@ def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         raise TypeError("Wrong type")
 
 
-def _check_if_nonempty_integers_and_positive(seq: Sequence[int], name: str) -> None:
-    """
-    Check whether ``args`` is not empty and all its elements are positive integers.
-
-    Args:
-        seq: A sequence.
-        name: A name of the sequence in case of exception should be raised.
-
-    """
-    if not len(seq) > 0 or not all([isinstance(x, int) and (x > 0) for x in seq]):
-        raise ValueError(f"{name} is expected to be non-empty and contain positive integers, but got {seq}")
-
-
 def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     """
     Clip ``arr`` by upper bound ``max_el`` and raise warning if required.
 
     Args:
-        arr: Integer to check and clip.
+        arr: Array to check and clip.
         max_el: The upper limit.
 
     Returns:
@@ -546,7 +528,7 @@ def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]
     if any(a > max_el for a in arr):
         warnings.warn(
             f"The desired value of top_k can't be larger than {max_el}, but got {arr}. "
-            f"The value of top_k will be clipped to {max_el}."
+            f"The values of top_k will be clipped to {max_el}."
         )
     return clip_max(arr, max_el)
 

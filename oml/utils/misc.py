@@ -1,7 +1,7 @@
 import inspect
 import os
 import random
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 
 import dotenv
 import numpy as np
@@ -119,6 +119,25 @@ def remove_unused_kargs(kwargs: Dict[str, Any], constructor: Any) -> Dict[str, A
     return {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
 
 
+def check_if_nonempty_positive_integers(var: Union[int, Sequence[int]], name: str) -> None:
+    """
+    Check whether ``var`` is a positive integer or a non-empty Iterable of positive integers.
+
+    Args:
+        var: A sequence.
+        name: A name of the sequence in case of exception should be raised.
+
+    """
+    if isinstance(var, Sequence):
+        if not len(var) > 0 or not all([isinstance(x, int) and (x > 0) for x in var]):
+            raise ValueError(f"{name} is expected to be non-empty and contain positive integers, but got {var}")
+    elif isinstance(var, int):
+        if var <= 0:
+            raise ValueError(f"{name} is expected to be a positive integer, but got {var}")
+    else:
+        raise ValueError(f"Unsupported argument type. Expected int or Iterable[int], but got {type(var)}")
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -128,4 +147,5 @@ __all__ = [
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",
+    "check_if_nonempty_positive_integers",
 ]
