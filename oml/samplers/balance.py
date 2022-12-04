@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Any, Dict, Iterator, List, Union
+from typing import Iterator, List, Union
 
 import numpy as np
 
@@ -42,10 +42,10 @@ class BalanceSampler(IBatchSampler):
 
     """
 
-    def __init__(self, labels: Union[List[int], np.ndarray], n_labels: int, n_instances: int, **kwargs: Dict[str, Any]):
+    def __init__(self, labels: Union[List[int], np.ndarray], n_labels: int, n_instances: int):
         """
         Args:
-            labels: List of the labels labels for each element in the dataset
+            labels: List of the labels for each element in the dataset
             n_labels: The desired number of labels in a batch, should be > 1
             n_instances: The desired number of instances of each label in a batch, should be > 1
 
