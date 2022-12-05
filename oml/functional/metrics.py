@@ -34,8 +34,8 @@ def calc_retrieval_metrics(
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
-        fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (False Non Match Rate
-                  at the given False Match Rate).
+        fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (`False Non Match Rate
+                  at the given False Match Rate`).
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
         reduce: If ``False`` return metrics for each query without averaging
         check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
@@ -236,12 +236,12 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
 
     Example:
         >>> gt_tops = torch.tensor([
-        ...                         [1, 0, 0],
-        ...                         [0, 1, 1],
-        ...                         [0, 0, 1]
+        ...                         [1, 0],
+        ...                         [0, 1],
+        ...                         [0, 0]
         ... ], dtype=torch.bool)
-        >>> calc_cmc(gt_tops, top_k=(1, 2, 3))
-        [tensor([1., 0., 0.]), tensor([1., 1., 0.]), tensor([1., 1., 1.])]
+        >>> calc_cmc(gt_tops, top_k=(1, 2))
+        [tensor([1., 0., 0.]), tensor([1., 1., 0.])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
@@ -313,13 +313,13 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
 
     Example:
         >>> gt_tops = torch.tensor([
-        ...                         [1, 0, 0],
-        ...                         [0, 1, 1],
-        ...                         [0, 0, 1]
+        ...                         [1, 0],
+        ...                         [0, 1],
+        ...                         [0, 0]
         ... ], dtype=torch.bool)
         >>> n_gt = torch.tensor([2, 3, 5])
-        >>> calc_precision(gt_tops, n_gt, top_k=(1, 2, 3))
-        [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000]), tensor([0.5000, 0.6667, 0.3333])]
+        >>> calc_precision(gt_tops, n_gt, top_k=(1, 2))
+        [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
@@ -379,13 +379,13 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
 
     Example:
         >>> gt_tops = torch.tensor([
-        ...                         [1, 0, 0],
-        ...                         [0, 1, 1],
-        ...                         [0, 0, 1]
+        ...                         [1, 0],
+        ...                         [0, 1],
+        ...                         [0, 0]
         ... ], dtype=torch.bool)
         >>> n_gt = torch.tensor([2, 3, 5])
-        >>> calc_map(gt_tops, n_gt, top_k=(1, 2, 3))
-        [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000]), tensor([0.5000, 0.3889, 0.1111])]
+        >>> calc_map(gt_tops, n_gt, top_k=(1, 2))
+        [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])

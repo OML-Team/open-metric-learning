@@ -83,11 +83,12 @@ class EmbeddingMetrics(IMetricVisualisable):
             is_query_key: Key to take the information whether every batch sample belongs to the query
             is_gallery_key: Key to take the information whether every batch sample belongs to the gallery
             extra_keys: Keys to accumulate some additional information from the batches
-            cmc_top_k: Values of ``k`` to compute ``CMC@k`` metrics
-            precision_top_k: Values of ``k`` to compute ``Precision@k`` metrics
-            map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
-            fmr_vals: Values of ``fmr`` (measured in percents) for which we compute the corresponding ``FNMR``.
-                      For example, if ``fmr_values`` is (20, 40) we will calculate ``FNMR@FMR=20`` and ``FNMR@FMR=40``.
+            cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
+            precision_top_k: Values of ``k`` to calculate ``precision@k``
+            map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
+            fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (`False Non Match Rate
+                      at the given False Match Rate`).
+                      For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
                       Note, computing this metric requires additional memory overhead,
                       that is why it's turned off by default.
             categories_key: Key to take the samples' categories from the batches (if you have ones)

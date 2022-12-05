@@ -74,7 +74,13 @@ def compare_with_approx_precision(
         assert torch.isclose(metrics_approx, expected_precision[k], atol=1e-3).all()
 
 
-def test_on_exact_case() -> None:
+TExactTestCase = Tuple[
+    List[List[int]], torch.Tensor, torch.Tensor, torch.Tensor, TMetricsDict, Tuple[int, ...], torch.Tensor, torch.Tensor
+]
+
+
+@pytest.fixture()
+def exact_test_case() -> TExactTestCase:
     """
     label 0:
     VVXVX
@@ -90,27 +96,48 @@ def test_on_exact_case() -> None:
     is_gallery = torch.tensor([True] * len(labels))
     positions = [[0, 1, 3], [0, 3, 4], [1, 2, 4], [2, 3, 4], [0], [3]]
     top_k = (1, 2, 3, 4, 5, 10)
+    max_k = min(len(labels), max(top_k))
+
+    distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery)
+    mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+    mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+    distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
+    _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
+    query_sz, gallery_sz = distances.shape
+    ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
+    gt_tops = mask_gt[ii_arange, ii_top_k]
 
     metrics_expected = defaultdict(dict)  # type: ignore
 
+    metrics_expected["cmc"][1] = torch.tensor([1, 1, 0, 0, 1, 0]).float()
     metrics_expected["precision"][1] = torch.tensor([1, 1, 0, 0, 1, 0]).float()
     metrics_expected["map"][1] = torch.tensor([1, 1, 0, 0, 1, 0]).float()
 
+    metrics_expected["cmc"][2] = torch.tensor([1, 1, 1, 0, 1, 0]).float()
     metrics_expected["precision"][2] = torch.tensor([1, 0.5, 0.5, 0, 1, 0]).float()
     metrics_expected["map"][2] = torch.tensor([1, 0.5, 0.25, 0, 1, 0]).float()
 
+    metrics_expected["cmc"][3] = torch.tensor([1, 1, 1, 1, 1, 0]).float()
     metrics_expected["precision"][3] = torch.tensor([0.6666, 0.3333, 0.6666, 0.3333, 1, 0]).float()
     metrics_expected["map"][3] = torch.tensor([0.6666, 0.3333, 0.3888, 0.1111, 1, 0]).float()
 
+    metrics_expected["cmc"][4] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["precision"][4] = torch.tensor([1, 0.6666, 0.6666, 0.6666, 1, 1]).float()
     metrics_expected["map"][4] = torch.tensor([0.9166, 0.5, 0.3888, 0.2777, 1, 0.25]).float()
 
+    metrics_expected["cmc"][5] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["precision"][5] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["map"][5] = torch.tensor([0.9166, 0.7, 0.5888, 0.4777, 1, 0.25]).float()
 
+    metrics_expected["cmc"][10] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["precision"][10] = metrics_expected["precision"][5]
     metrics_expected["map"][10] = metrics_expected["map"][5]
 
+    return positions, labels, is_query, is_gallery, metrics_expected, top_k, mask_gt, gt_tops
+
+
+def test_on_exact_case(exact_test_case: TExactTestCase) -> None:
+    positions, labels, is_query, is_gallery, metrics_expected, top_k, mask_gt, gt_tops = exact_test_case
     compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce=False)
     compare_with_approx_precision(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduction="none")
 
@@ -195,62 +222,15 @@ def compare_metrics(
             assert torch.all(torch.isclose(values_expected, values_calculated, atol=1e-4)), [metric_name, k]
 
 
-@pytest.fixture()
-def exact_test_case() -> Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict]:
-    labels = torch.tensor([0, 0, 0, 0, 1, 1])
-    is_query = torch.tensor([True] * len(labels))
-    is_gallery = torch.tensor([True] * len(labels))
-    positions = [[0, 1, 3], [0, 3, 4], [1, 2, 4], [2, 3, 4], [0], [3]]
-    top_k = (1, 2, 3, 4, 5, 10)
-    max_k = min(len(labels), max(top_k))
-
-    distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery)
-    mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-    mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
-    distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
-    _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
-    query_sz, gallery_sz = distances.shape
-    ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
-    gt_tops = mask_gt[ii_arange, ii_top_k]
-
-    metrics_expected = defaultdict(dict)  # type: ignore
-
-    metrics_expected["cmc"][1] = torch.tensor([1, 1, 0, 0, 1, 0]).float()
-    metrics_expected["precision"][1] = torch.tensor([1, 1, 0, 0, 1, 0]).float()
-    metrics_expected["map"][1] = torch.tensor([1, 1, 0, 0, 1, 0]).float()
-
-    metrics_expected["cmc"][2] = torch.tensor([1, 1, 1, 0, 1, 0]).float()
-    metrics_expected["precision"][2] = torch.tensor([1, 0.5, 0.5, 0, 1, 0]).float()
-    metrics_expected["map"][2] = torch.tensor([1, 0.5, 0.25, 0, 1, 0]).float()
-
-    metrics_expected["cmc"][3] = torch.tensor([1, 1, 1, 1, 1, 0]).float()
-    metrics_expected["precision"][3] = torch.tensor([0.6666, 0.3333, 0.6666, 0.3333, 1, 0]).float()
-    metrics_expected["map"][3] = torch.tensor([0.6666, 0.3333, 0.3888, 0.1111, 1, 0]).float()
-
-    metrics_expected["cmc"][4] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
-    metrics_expected["precision"][4] = torch.tensor([1, 0.6666, 0.6666, 0.6666, 1, 1]).float()
-    metrics_expected["map"][4] = torch.tensor([0.9166, 0.5, 0.3888, 0.2777, 1, 0.25]).float()
-
-    metrics_expected["cmc"][5] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
-    metrics_expected["precision"][5] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
-    metrics_expected["map"][5] = torch.tensor([0.9166, 0.7, 0.5888, 0.4777, 1, 0.25]).float()
-
-    metrics_expected["cmc"][10] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
-    metrics_expected["precision"][10] = metrics_expected["precision"][5]
-    metrics_expected["map"][10] = metrics_expected["map"][5]
-
-    return mask_gt, gt_tops, top_k, metrics_expected
-
-
 @pytest.mark.parametrize(
     "metric_function, metric_name", [(calc_cmc, "cmc"), (calc_precision, "precision"), (calc_map, "map")]
 )
 def test_metrics(
     metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
     metric_name: str,
-    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict],
+    exact_test_case: TExactTestCase,
 ) -> None:
-    mask_gt, gt_tops, top_k, metrics_expected = exact_test_case
+    _, _, _, _, metrics_expected, top_k, mask_gt, gt_tops = exact_test_case
     kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": top_k}
     kwargs = remove_unused_kargs(kwargs, metric_function)
     metric_vals = metric_function(**kwargs)  # type: ignore
@@ -267,10 +247,10 @@ def test_metrics(
 def test_metrics_individual(
     metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
     metric_name: str,
-    exact_test_case: Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], TMetricsDict],
+    exact_test_case: TExactTestCase,
     top_k: int,
 ) -> None:
-    mask_gt, gt_tops, _, metrics_expected = exact_test_case
+    _, _, _, _, metrics_expected, _, mask_gt, gt_tops = exact_test_case
     kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": (top_k,)}
     kwargs = remove_unused_kargs(kwargs, metric_function)
     metric_val = metric_function(**kwargs)[0]  # type: ignore
