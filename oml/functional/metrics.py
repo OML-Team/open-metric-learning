@@ -359,7 +359,7 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
         \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
         \\frac{\\textrm{# of relevant elements among top } i\\textrm{ elements}}{i} \\times \\textrm{rel}(i) = \\\\
         & = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
-        \\frac{\\sum\\limits_{j = 1}^{i}g_i}{i} \\times \\textrm{rel}(i)
+        \\frac{\\sum\\limits_{j = 1}^{i}g_j}{i} \\times \\textrm{rel}(i)
         \\end{split}
 
     where :math:`\\textrm{rel}(i)` is 1 if :math:`i`-th element from the top :math:`i` closest
