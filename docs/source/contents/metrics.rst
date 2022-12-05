@@ -7,8 +7,6 @@ Metrics
 .. contents::
    :local:
 
-EmbeddingMetrics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.metrics.embeddings.EmbeddingMetrics
     :undoc-members:
     :show-inheritance:
@@ -20,6 +18,12 @@ EmbeddingMetrics
     .. automethod:: visualize
     .. automethod:: get_plot_for_queries
 
-calc_retrieval_metrics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.functional.metrics.calc_retrieval_metrics
+
+.. autofunction:: oml.functional.metrics.calc_cmc
+
+.. autofunction:: oml.functional.metrics.calc_precision
+
+.. autofunction:: oml.functional.metrics.calc_map
+
+.. autofunction:: oml.functional.metrics.calc_fnmr_at_fmr
