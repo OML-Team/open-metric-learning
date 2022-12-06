@@ -42,6 +42,7 @@ metric_args:
   cmc_top_k: [1]
   map_top_k: [5]
   fmr_vals: []  # Since SOP is a big dataset you should be careful with increasing of the memory footprint, which is needed to calculate fmr
+  explained_variance_to_keep: [50, 90, 99]
   return_only_main_category: True
   visualize_only_main_category: True
 

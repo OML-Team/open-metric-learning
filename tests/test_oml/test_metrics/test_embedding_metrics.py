@@ -157,6 +157,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         precision_top_k=tuple(),
         map_top_k=tuple(),
         fmr_vals=tuple(),
+        explained_variance_to_keep=tuple(),
     )
 
     calc.setup(num_samples=num_samples)
@@ -191,6 +192,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         precision_top_k=tuple(),
         map_top_k=tuple(),
         fmr_vals=tuple(),
+        explained_variance_to_keep=tuple(),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore

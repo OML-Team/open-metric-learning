@@ -20,6 +20,8 @@ Metrics
 
 .. autofunction:: oml.functional.metrics.calc_retrieval_metrics
 
+.. autofunction:: oml.functional.metrics.calc_topological_metrics
+
 .. autofunction:: oml.functional.metrics.calc_cmc
 
 .. autofunction:: oml.functional.metrics.calc_precision
@@ -27,3 +29,5 @@ Metrics
 .. autofunction:: oml.functional.metrics.calc_map
 
 .. autofunction:: oml.functional.metrics.calc_fnmr_at_fmr
+
+.. autofunction:: oml.functional.metrics.calc_main_components_percentage

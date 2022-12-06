@@ -28,6 +28,7 @@ metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
   fmr_vals: [1]
+  explained_variance_to_keep: [50, 90, 99]
   return_only_main_category: False
   visualize_only_main_category: True
 

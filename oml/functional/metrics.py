@@ -1,6 +1,6 @@
 import warnings
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -111,6 +111,27 @@ def calc_retrieval_metrics(
 
     if reduce:
         metrics = reduce_metrics(metrics)
+
+    return metrics
+
+
+def calc_topological_metrics(embeddings: torch.Tensor, explained_variance_to_keep: Tuple[int, ...]) -> TMetricsDict:
+    """
+    Function to evaluate different topological metrics.
+
+    Args:
+        embeddings: Embeddings matrix with the shape of [n_embeddings, embeddings_dim]
+        explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
+                                    of variance that needs to be explained is greater than the percentage specified
+                                    by ``explained_variance_to_keep``.
+    Returns:
+        Metrics dictionary.
+    """
+    metrics: TMetricsDict = dict()
+
+    if explained_variance_to_keep:
+        main_components = calc_main_components_percentage(embeddings, explained_variance_to_keep)
+        metrics["main_components"] = dict(zip(explained_variance_to_keep, main_components))
 
     return metrics
 
@@ -465,13 +486,71 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
         tensor([40., 20.])
 
     """
-    if len(fmr_vals) == 0:
-        raise ValueError(f"fmr_vals are expected have at least one value, but got {fmr_vals}")
-    if not all(0 <= f <= 100 for f in fmr_vals):
-        raise ValueError(f"fmr_vals are expected to be integers in range [0, 100] but got {fmr_vals}")
+    _check_if_in_range(fmr_vals, 0, 100, "fmr_vals")
     thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = 100 * (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
+
+
+def calc_main_components_percentage(
+    embeddings: torch.Tensor, explained_variance_to_keep: Tuple[int, ...]
+) -> List[torch.Tensor]:
+    """
+    Function estimates the number of main components of embeddings using Principal Component Analysis of the embeddings.
+    The number of components is estimated as a percentage of the embeddings dimension.
+
+    Args:
+        embeddings: Embeddings matrix with the shape of [n_embeddings, embeddings_dim]
+        explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
+                                    of variance that needs to be explained is greater than the percentage specified
+                                    by ``explained_variance_to_keep``.
+    Returns:
+        List of linear dimensions  as percentages of the embeddings dimension.
+
+    Let :matn:`X` be a set of :math:`d` dimensional embeddings.
+    Let :math:`\\lambda_1, \\ldots, \\lambda_d\\in\\mathbb{R}` be a set of eigenvalues
+    of the covariance matrix of :math:`X` sorted in descendant order.
+    Then for a given value of desired explained variance :math:`r`,
+    the number of main components that explaines :math:`r\\cdot 100\\%%` variance is the largest integer
+    :math:`n` such that
+
+    .. math::
+        \\frac{\\sum\\limits_{i = 1}^{n - 1}\\lambda_i}{\\sum\\limits_{i = 1}^{d}\\lambda_i} \\leq r
+
+    The function returns
+
+    .. math::
+        \\frac{n}{d}\\cdot 100\\%%
+
+    See:
+
+        `Principal Components Analysis`_
+
+    .. _`Principal Components Analysis`:
+        https://en.wikipedia.org/wiki/Principal_component_analysis
+
+    Example:
+        >>> embeddings = torch.tensor([
+        ...                            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ...                            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        ...                            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        ... ], dtype=torch.float)
+        >>> calc_main_components_percentage(embeddings, explained_variance_to_keep=(50, 100))
+        tensor([10., 40.])
+
+    """
+    # The code below mirrors code from scikit-learn repository:
+    # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L491
+    _check_if_in_range(explained_variance_to_keep, 0, 100, "explained_variance_to_keep")
+    n_samples, n_dims = embeddings.shape
+    embeddings = embeddings - embeddings.mean(dim=0).unsqueeze(0)
+    svdvals = torch.linalg.svdvals(embeddings)
+    explained_variance_ = svdvals**2 / (n_samples - 1)
+    explained_variance_ratio_ = explained_variance_ / explained_variance_.sum()
+    ratio_cumsum = torch.cumsum(explained_variance_ratio_, dim=0)
+    explained_variance_to_keep_ = torch.tensor(explained_variance_to_keep).to(embeddings) / 100.0
+    n_components = torch.searchsorted(ratio_cumsum, explained_variance_to_keep_, side="right") + 1
+    return 100.0 * n_components / n_dims
 
 
 def extract_pos_neg_dists(
@@ -533,9 +612,26 @@ def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]
     return clip_max(arr, max_el)
 
 
+def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: str) -> None:
+    """
+    Check whether the ``vals`` are in the range ``[min_, max_]``. Throw the ValueError if not.
+
+    Args:
+        vals: Sequence to check.
+        min_: Minimal value of the range.
+        max_: Maximal value of the range.
+        name: name of the variable to throw the ValueError for.
+    """
+    if len(vals) == 0:
+        raise ValueError(f"{name} is expected to be not empty, but got {vals}")
+    if not all(min_ <= x <= max_ for x in vals):
+        raise ValueError(f"{name} is expected to contain numbers in range [{min_}, {max_}], but got {vals}")
+
+
 __all__ = [
     "TMetricsDict",
     "calc_retrieval_metrics",
+    "calc_topological_metrics",
     "apply_mask_to_ignore",
     "calc_gt_mask",
     "calc_mask_to_ignore",

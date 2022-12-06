@@ -33,6 +33,7 @@ from oml.functional.metrics import (
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
+    calc_topological_metrics,
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
@@ -67,6 +68,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         fmr_vals: Tuple[int, ...] = tuple(),
+        explained_variance_to_keep: Tuple[int, ...] = (50,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
@@ -91,6 +93,9 @@ class EmbeddingMetrics(IMetricVisualisable):
                       For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
                       Note, computing this metric requires additional memory overhead,
                       that is why it's turned off by default.
+            explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
+                                        of variance that needs to be explained is greater than the percentage specified
+                                        by ``explained_variance_to_keep``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
@@ -111,6 +116,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
+        self.explained_variance_to_keep = explained_variance_to_keep
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -124,7 +130,11 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
 
-        self.metrics_to_exclude_from_visualization = ["fnmr@fmr"] + list(metrics_to_exclude_from_visualization)
+        self.metrics_to_exclude_from_visualization = [
+            "fnmr@fmr",
+            "main_components",
+            *metrics_to_exclude_from_visualization,
+        ]
         self.verbose = verbose
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
@@ -172,12 +182,13 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self._calc_matrices()
 
-        args = {
+        args_retrieval_metrics = {
             "cmc_top_k": self.cmc_top_k,
             "precision_top_k": self.precision_top_k,
             "map_top_k": self.map_top_k,
             "fmr_vals": self.fmr_vals,
         }
+        args_topological_metrics = {"explained_variance_to_keep": self.explained_variance_to_keep}
 
         metrics: TMetricsDict_ByLabels = dict()
 
@@ -188,8 +199,11 @@ class EmbeddingMetrics(IMetricVisualisable):
             mask_to_ignore=self.mask_to_ignore,
             check_dataset_validity=self.check_dataset_validity,
             reduce=False,
-            **args,  # type: ignore
+            **args_retrieval_metrics,  # type: ignore
         )
+
+        embeddings = self.acc.storage[self.embeddings_key]
+        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
 
         if self.categories_key is not None:
             categories = np.array(self.acc.storage[self.categories_key])
@@ -204,8 +218,11 @@ class EmbeddingMetrics(IMetricVisualisable):
                     mask_gt=self.mask_gt[mask],  # type: ignore
                     mask_to_ignore=self.mask_to_ignore[mask],  # type: ignore
                     reduce=False,
-                    **args,  # type: ignore
+                    **args_retrieval_metrics,  # type: ignore
                 )
+
+                mask = categories == category
+                metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
 
         self.metrics_unreduced = metrics
         self.metrics = reduce_metrics(metrics)  # type: ignore
