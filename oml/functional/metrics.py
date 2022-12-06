@@ -120,7 +120,7 @@ def calc_topological_metrics(embeddings: torch.Tensor, explained_variance_to_kee
     Function to evaluate different topological metrics.
 
     Args:
-        embeddings: Embeddings matrix with the shape of [n_embeddings, embeddings_dim]
+        embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
         explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
                                     of variance that needs to be explained is greater than the percentage specified
                                     by ``explained_variance_to_keep``.
@@ -496,20 +496,20 @@ def calc_main_components_percentage(
     embeddings: torch.Tensor, explained_variance_to_keep: Tuple[int, ...]
 ) -> List[torch.Tensor]:
     """
-    Function estimates the number of main components of embeddings using Principal Component Analysis of the embeddings.
+    Function estimates the number of main components of embeddings using Principal Component Analysis.
     The number of components is estimated as a percentage of the embeddings dimension.
 
     Args:
-        embeddings: Embeddings matrix with the shape of [n_embeddings, embeddings_dim]
+        embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
         explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
                                     of variance that needs to be explained is greater than the percentage specified
                                     by ``explained_variance_to_keep``.
     Returns:
         List of linear dimensions  as percentages of the embeddings dimension.
 
-    Let :matn:`X` be a set of :math:`d` dimensional embeddings.
+    Let :math:`X` be a set of :math:`d` dimensional embeddings.
     Let :math:`\\lambda_1, \\ldots, \\lambda_d\\in\\mathbb{R}` be a set of eigenvalues
-    of the covariance matrix of :math:`X` sorted in descendant order.
+    of the covariance matrix of :math:`X` sorted in descending order.
     Then for a given value of desired explained variance :math:`r`,
     the number of main components that explaines :math:`r\\cdot 100\\%%` variance is the largest integer
     :math:`n` such that
