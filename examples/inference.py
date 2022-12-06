@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import PATHS_COLUMN, X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, TCfg
 from oml.datasets.list_ import ListDataset
-from oml.exceptions import InferenceConfigError
+from oml.exceptions import InferenceConfigError, InvalidDataFrameColumnsException
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.images.images import imread_pillow
@@ -50,9 +50,26 @@ def inference(cfg: TCfg) -> None:
     if dataframe_name is not None:
         # read dataframe and get boxes. Use BaseDataset for inspiration
         df = pd.read_csv(dataframe_name)
-        assert PATHS_COLUMN in df.columns
-
-        bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
+        # begin check that columns are correct
+        is_path_column_ok = PATHS_COLUMN in df.columns
+        correct_column_names = (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN)
+        coord_names_in_df = [coord in df.columns for coord in correct_column_names]
+        bboxes_exist = all(coord_names_in_df)
+        are_bad_boxes = not bboxes_exist and any(coord_names_in_df)
+        if not is_path_column_ok or are_bad_boxes:
+            bad_path_message = (
+                f"Path column not found. Please set it to {PATHS_COLUMN} " if not is_path_column_ok else ""
+            )
+            bad_columns_message = (
+                (
+                    f"Boxes are invalid: {df.columns}, please check that all of them exist and have "
+                    "correct names like this: {correct_column_names}"
+                )
+                if are_bad_boxes
+                else ""
+            )
+            raise InvalidDataFrameColumnsException(bad_path_message + bad_columns_message)
+        # end columns check
         if bboxes_exist:
             bboxes = []
             for row in df[[X1_COLUMN, Y1_COLUMN, X2_COLUMN, Y2_COLUMN]].iterrows():
@@ -68,6 +85,16 @@ def inference(cfg: TCfg) -> None:
         else:
             df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
         im_paths = df[PATHS_COLUMN].tolist()
+
+        # Check that files from dataframe exist
+        for i, path in enumerate(im_paths):
+            if not path.exists():
+                raise FileExistsError(f"Could not find image on line {i+1}: {str(path)} in dataframe {dataframe_name}")
+
+    # Check that files could be opened
+    for path in im_paths:
+        with path.open("rb"):
+            pass
 
     kwargs = {}
     # Loading transformations

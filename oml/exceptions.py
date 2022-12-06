@@ -8,3 +8,7 @@ class InvalidBBoxesException(BaseOMLException):
 
 class InferenceConfigError(BaseOMLException):
     pass
+
+
+class InvalidDataFrameColumnsException(BaseOMLException):
+    pass
