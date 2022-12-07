@@ -9,7 +9,7 @@ from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import elementwise_dist, pairwise_dist
 
-TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
+TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, torch.Tensor]]]
 
 
 def calc_retrieval_metrics(
@@ -115,23 +115,25 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_topological_metrics(embeddings: torch.Tensor, explained_variance_to_keep: Tuple[int, ...]) -> TMetricsDict:
+def calc_topological_metrics(embeddings: torch.Tensor, explained_variance_ths: Tuple[float, ...]) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
-        explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
+        explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
                                     of variance that needs to be explained is greater than the percentage specified
-                                    by ``explained_variance_to_keep``.
+                                    by ``explained_variance_ths``.
+
     Returns:
         Metrics dictionary.
+
     """
     metrics: TMetricsDict = dict()
 
-    if explained_variance_to_keep:
-        main_components = calc_main_components_percentage(embeddings, explained_variance_to_keep)
-        metrics["main_components"] = dict(zip(explained_variance_to_keep, main_components))
+    if explained_variance_ths:
+        main_components = calc_pcf(embeddings, explained_variance_ths)
+        metrics["pcf"] = dict(zip(explained_variance_ths, main_components))
 
     return metrics
 
@@ -432,6 +434,7 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
         neg_dist: Distances between non-relevant samples.
         fmr_vals: Values of ``fmr`` (measured in percents) to compute the corresponding ``fnmr``.
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
+
     Returns:
         Tensor of ``fnmr@fmr`` values.
 
@@ -492,26 +495,24 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     return fnmr_at_fmr
 
 
-def calc_main_components_percentage(
-    embeddings: torch.Tensor, explained_variance_to_keep: Tuple[int, ...]
-) -> List[torch.Tensor]:
+def calc_pcf(embeddings: torch.Tensor, explained_variance_ths: Tuple[float, ...]) -> List[torch.Tensor]:
     """
-    Function estimates the number of main components of embeddings using Principal Component Analysis.
-    The number of components is estimated as a percentage of the embeddings dimension.
+    Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
+    The number of components is estimated as a fraction of the embeddings dimension.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
-        explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
-                                    of variance that needs to be explained is greater than the percentage specified
-                                    by ``explained_variance_to_keep``.
+        explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
+                                    of variance that needs to be explained is greater than the fraction specified
+                                    by ``explained_variance_ths``.
     Returns:
-        List of linear dimensions  as percentages of the embeddings dimension.
+        List of linear dimensions as a fractions of the embeddings dimension.
 
     Let :math:`X` be a set of :math:`d` dimensional embeddings.
     Let :math:`\\lambda_1, \\ldots, \\lambda_d\\in\\mathbb{R}` be a set of eigenvalues
     of the covariance matrix of :math:`X` sorted in descending order.
     Then for a given value of desired explained variance :math:`r`,
-    the number of main components that explaines :math:`r\\cdot 100\\%%` variance is the largest integer
+    the number of principal components that explaines :math:`r\\cdot 100\\%%` variance is the largest integer
     :math:`n` such that
 
     .. math::
@@ -520,7 +521,7 @@ def calc_main_components_percentage(
     The function returns
 
     .. math::
-        \\frac{n}{d}\\cdot 100\\%%
+        \\frac{n}{d}
 
     See:
 
@@ -530,27 +531,169 @@ def calc_main_components_percentage(
         https://en.wikipedia.org/wiki/Principal_component_analysis
 
     Example:
-        >>> embeddings = torch.tensor([
-        ...                            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ...                            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        ...                            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        ... ], dtype=torch.float)
-        >>> calc_main_components_percentage(embeddings, explained_variance_to_keep=(50, 100))
-        tensor([10., 40.])
+        In the example bellow there are 4 vectors of length 10, and only first 4 dimensions have non-zero values.
+        Its covariance matrix will have only 4 eigenvalues, that are greater than 0, i.e. there are only 4 principal
+        axis. So, in order to keep at least 50% of the information from the set, we need to keep just 2 dimensions
+        (i.e. 20% of the dimension of the original embeddings). And in order to keep all the information we need to
+        keep 50% of the dimension of the original embeddings.
+
+        >>> embeddings = torch.eye(4, 10, dtype=torch.float)
+        >>> calc_pcf(embeddings, explained_variance_ths=(0.5, 1))
+        tensor([0.2000, 0.5000])
 
     """
     # The code below mirrors code from scikit-learn repository:
     # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L491
-    _check_if_in_range(explained_variance_to_keep, 0, 100, "explained_variance_to_keep")
-    n_samples, n_dims = embeddings.shape
-    embeddings = embeddings - embeddings.mean(dim=0).unsqueeze(0)
-    svdvals = torch.linalg.svdvals(embeddings)
-    explained_variance_ = svdvals**2 / (n_samples - 1)
-    explained_variance_ratio_ = explained_variance_ / explained_variance_.sum()
-    ratio_cumsum = torch.cumsum(explained_variance_ratio_, dim=0)
-    explained_variance_to_keep_ = torch.tensor(explained_variance_to_keep).to(embeddings) / 100.0
-    n_components = torch.searchsorted(ratio_cumsum, explained_variance_to_keep_, side="right") + 1
-    return 100.0 * n_components / n_dims
+    _check_if_in_range(explained_variance_ths, 0, 1, "explained_variance_ths")
+    pca = PCA(embeddings)
+    ratio_cumsum = torch.cumsum(pca.explained_variance_ratio, dim=0)
+    n_components = (
+        torch.searchsorted(ratio_cumsum, torch.tensor(explained_variance_ths).to(embeddings), side="right") + 1
+    )
+    return n_components / embeddings.shape[1]
+
+
+class PCA:
+    """
+    Principal component analysis (PCA).
+
+    Estimate principal axes, and perform vectors transformation.
+
+    Attributes:
+        components: Matrix of shape ``[embeddings_dim, embeddings_dim]``. Principal axes in embeddings space,
+            representing the directions of maximum variance in the data. Equivalently, the right singular
+            vectors of the centered input data, parallel to its eigenvectors. The components are sorted by
+            ``explained_variance``.
+        explained_variance: Array of size ``embeddings_dim``
+            The amount of variance explained by each of the selected components.
+            The variance estimation uses ``n_embeddings - 1`` degrees of freedom.
+            Equal to  eigenvalues of the covariance matrix of ``embeddings``.
+        explained_variance_ratio: Array of size ``embeddings_dim``.
+            Percentage of variance explained by each of the components.
+        singular_values: Array of size ``embeddings_dim``.
+            The singular values corresponding to each of the selected components.
+        mean: Array of size ``embeddings_dim``.
+            Per-feature empirical mean, estimated from the training set.
+            Equal to ``embeddings.mean(dim=0)``.
+
+    For an embeddings matrix :math:`X` of shape :math:`n\\times d` the principal axis could be found by
+    performing Singular Value Decomposition
+
+    .. math::
+        X = U\\Sigma V^T
+
+    where :math:`U` is an :math:`n\\times n` orthogonal matrix, :math:`\\Sigma` is an :math:`n\\times d` rectangular
+    diagonal matrix with non-negative real numbers on the diagonal, :math:`V` is an :math:`d\\times d` orthogonal
+    matrix.
+
+    Rows of the :math:`V` form an orthonormal basis, and could be used to project embeddings to a new space, possible
+    of lower dimension:
+
+    .. math::
+        X' = X\\cdot V^T
+
+    The inverse transform is done by
+
+    .. math::
+        X = X'\\cdot V
+
+    See:
+
+        `Principal Components Analysis`_
+
+    .. _`Principal Components Analysis`:
+        https://en.wikipedia.org/wiki/Principal_component_analysis
+
+    Example:
+        >>> embeddings = torch.rand(100, 5)
+        >>> pca = PCA(embeddings)
+        >>> embeddings_transformed = pca.transform(embeddings)
+        >>> embeddings_recovered = pca.inverse_transform(embeddings_transformed)
+        >>> torch.all(torch.isclose(embeddings, embeddings_recovered, atol=1.e-6))
+        tensor(True)
+    """
+
+    components: torch.Tensor
+    mean: torch.Tensor
+    singular_values: torch.Tensor
+    explained_variance: torch.Tensor
+    explained_variance_ratio: torch.Tensor
+
+    def __init__(self, embeddings: torch.Tensor):
+        """
+        Args:
+            embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+
+        """
+        self._fit(embeddings)
+
+    def _fit(self, embeddings: torch.Tensor) -> None:
+        """
+        Perform the PCA. Evaluate ``components``, ``expoained_variance``, ``explained_variance_ratio``,
+        ``singular_values``, ``mean``.
+
+        Args:
+            embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+        """
+        # The code below mirrors code from scikit-learn repository:
+        # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L491
+        n_samples = embeddings.shape[0]
+        self.mean = embeddings.mean(dim=0).unsqueeze(0)
+        embeddings = embeddings - self.mean
+        # if there are more embeddings than its dimension, then we will not perform full matrices evaluation
+        full_matrices = embeddings.shape[0] < embeddings.shape[1]
+        _, self.singular_values, self.components = torch.linalg.svd(embeddings, full_matrices=full_matrices)
+        self.explained_variance = self.singular_values**2 / (n_samples - 1)
+        self.explained_variance_ratio = self.explained_variance / self.explained_variance.sum()
+
+        # Make components deterministic.
+        # Note. In sklearn this operation is done based on the U matrix of SVD decomposition, and
+        # here V matrix is used. So, the components of this class and sklearn.decomposition.PCA could differ in sign.
+        # See the following for details:
+        # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L520
+        n_components = self.components.shape[0]
+        max_abs_rows = torch.argmax(torch.abs(self.components), dim=1)
+        signs = torch.sign(self.components[torch.arange(n_components), max_abs_rows])
+        self.components *= signs.unsqueeze(1)
+
+    def transform(self, embeddings: torch.Tensor, n_components: Optional[int] = None) -> torch.Tensor:
+        """
+        Apply fitted PCA to transform embeddings.
+
+        Args:
+            embeddings: Matrix of shape ``[n_embeddings, embeddings_dim]``.
+            n_components: The desired dimension of the output.
+
+        Returns:
+            Transformed embeddings.
+        """
+        if not n_components:
+            n_components = embeddings.shape[1]
+        self._check_dimensions(n_components)
+        embeddings_ = embeddings.to(self.mean) - self.mean
+        return torch.matmul(embeddings_, self.components[:n_components, :].T).to(embeddings)
+
+    def inverse_transform(self, embeddings: torch.Tensor) -> torch.Tensor:
+        """
+        Apply inverse transform to embeddings.
+
+        Args:
+            embeddings: Matrix of shape ``[n_embeddings, N]`` where ``N <= embeddings_dim`` is the new dimension of
+                        embeddings.
+
+        Returns:
+            Original embeddings but with loss due to information loss during the ``transform`` stage.
+        """
+        n_components = embeddings.shape[1]
+        self._check_dimensions(n_components)
+        return torch.matmul(embeddings, self.components[:n_components, :]) + self.mean
+
+    def _check_dimensions(self, n_components: int) -> None:
+        if n_components > self.components.shape[0]:
+            raise ValueError(
+                "The embeddings couldn't be transformed, due to dimensions mismatch. "
+                f"Expected dimension less than or equal to {self.components.shape[0]}, but got {n_components}"
+            )
 
 
 def extract_pos_neg_dists(

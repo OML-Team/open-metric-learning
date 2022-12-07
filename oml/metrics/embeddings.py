@@ -68,7 +68,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         fmr_vals: Tuple[int, ...] = tuple(),
-        explained_variance_to_keep: Tuple[int, ...] = (50,),
+        explained_variance_ths: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
@@ -93,9 +93,9 @@ class EmbeddingMetrics(IMetricVisualisable):
                       For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
                       Note, computing this metric requires additional memory overhead,
                       that is why it's turned off by default.
-            explained_variance_to_keep: Values in range [0, 100]. Find the number of components such that the amount
-                                        of variance that needs to be explained is greater than the percentage specified
-                                        by ``explained_variance_to_keep``.
+            explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
+                                    of variance that needs to be explained is greater than the percentage specified
+                                    by ``explained_variance_ths``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
@@ -116,7 +116,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
-        self.explained_variance_to_keep = explained_variance_to_keep
+        self.explained_variance_ths = explained_variance_ths
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -130,11 +130,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
 
-        self.metrics_to_exclude_from_visualization = [
-            "fnmr@fmr",
-            "main_components",
-            *metrics_to_exclude_from_visualization,
-        ]
+        self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
@@ -188,7 +184,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             "map_top_k": self.map_top_k,
             "fmr_vals": self.fmr_vals,
         }
-        args_topological_metrics = {"explained_variance_to_keep": self.explained_variance_to_keep}
+        args_topological_metrics = {"explained_variance_ths": self.explained_variance_ths}
 
         metrics: TMetricsDict_ByLabels = dict()
 

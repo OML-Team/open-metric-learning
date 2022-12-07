@@ -30,4 +30,4 @@ Metrics
 
 .. autofunction:: oml.functional.metrics.calc_fnmr_at_fmr
 
-.. autofunction:: oml.functional.metrics.calc_main_components_percentage
+.. autofunction:: oml.functional.metrics.calc_pcf
