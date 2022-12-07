@@ -73,11 +73,54 @@ def test_inference_error_two_sources_provided(accelerator: str, devices: int) ->
         raise AssertionError("This test should raise exeption for two input sources provided")
 
 
-@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_inference_images_list(accelerator: str, devices: int) -> None:
+def extract_features_from_path(accelerator: str, devices: int, cleanup: bool = True) -> None:
     run(
-        f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH}",
+        (
+            f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH} "
+            "features_path={MOCK_DATASET_PATH / 'features1.json'}"
+        ),
         accelerator,
         devices,
         cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
     )
+
+
+def extract_features_from_df(accelerator: str, devices: int, cleanup: bool = True) -> None:
+    run(
+        (
+            f"inference_images_mock.py dataframe_name={MOCK_DATASET_PATH / 'df.csv'} "
+            f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_path={MOCK_DATASET_PATH / 'features2.json'}"
+        ),
+        accelerator,
+        devices,
+        cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
+    )
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_images_list(accelerator: str, devices: int) -> None:
+    extract_features_from_path(accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_dataframe_w_boxes(accelerator: str, devices: int) -> None:
+    run(
+        (
+            f"inference_images_mock.py dataframe_name={MOCK_DATASET_PATH / 'df_with_bboxes.csv'} "
+            f"dataset_root={MOCK_DATASET_PATH} ~images_folder"
+        ),
+        accelerator,
+        devices,
+        cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
+    )
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_dataframe_without_boxes(accelerator: str, devices: int) -> None:
+    extract_features_from_df(accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_compare_features_from_df_and_path(accelerator: str, devices: int) -> None:
+    extract_features_from_df(accelerator, devices, cleanup=False)
+    extract_features_from_path(accelerator, devices, cleanup=False)

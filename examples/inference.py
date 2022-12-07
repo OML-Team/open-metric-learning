@@ -81,9 +81,9 @@ def inference(cfg: TCfg) -> None:
         dataset_root = cfg["dataset_root"]
         if dataset_root is not None:
             dataset_root = Path(dataset_root)
-            df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: str(dataset_root / x))
+            df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: dataset_root / x)
         else:
-            df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
+            df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(x))
         im_paths = df[PATHS_COLUMN].tolist()
 
         # Check that files from dataframe exist
