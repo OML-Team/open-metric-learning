@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 2
 
 dataframe_name: df.csv
-dataset_root: data/Stanford_Online_Products/
-logs_root: logs/Stanford_Online_Products/
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -25,16 +25,15 @@ transforms_val:
     crop_size: 224
 
 sampler:
-  name: category_balance
+  name: distinct_category_balance
   args:
-    n_labels: 32
-    n_instances: 6
+    n_labels: 48
+    n_instances: 4
     n_categories: 3
-    resample_labels: True
-    weight_categories: True
+    epoch_size: 350
 
 bs_val: 256
-max_epochs: 10000
+max_epochs: 50
 valid_period: 1
 
 metric_args:
@@ -77,7 +76,7 @@ scheduling: null
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
 # .env file or via `export NEPTUNE_API_TOKEN=...`
-neptune_project: null
+neptune_project: NEWYORKER/similarity-api
 
 
 hydra_dir: ${logs_root}/${logs_folder}/
@@ -85,6 +84,10 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - sop
+  - c-${sampler.args.n_categories}
+  - i-${sampler.args.n_instances}
+  - distinct_sampler
+  - weighted_categories_sampling
 
 hydra:
   run:

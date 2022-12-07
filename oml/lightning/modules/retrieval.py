@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional, Union
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
+from sklearn.preprocessing import LabelEncoder
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
@@ -77,7 +78,8 @@ class RetrievalModule(pl.LightningModule):
         embeddings = self.model(batch[self.input_tensors_key])
         bs = len(embeddings)
 
-        loss = self.criterion(embeddings, batch[self.labels_key])
+        categories = torch.tensor(LabelEncoder().fit_transform(batch["categories"])).float()
+        loss = self.criterion(embeddings, batch[self.labels_key], categories)
         loss_name = (getattr(self.criterion, "criterion_name", "") + "_loss").strip("_")
         self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 

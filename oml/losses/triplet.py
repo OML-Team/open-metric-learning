@@ -48,7 +48,7 @@ class TripletLoss(Module):
         self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
 
-    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> Tensor:
+    def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor, weights) -> Tensor:
         """
 
         Args:
@@ -78,7 +78,7 @@ class TripletLoss(Module):
                 "neg_dist": float(negative_dist.clone().detach().mean().item()),
             }
 
-        loss = get_reduced(loss, reduction=self.reduction)
+        loss = get_reduced(weights * loss, reduction=self.reduction)
 
         return loss
 
@@ -187,7 +187,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
 
         self.last_logs: Dict[str, float] = {}
 
-    def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
+    def forward(self, features: Tensor, labels: Union[Tensor, List[int]], categories) -> Tensor:
         """
         Args:
             features: Features with the shape ``[batch_size, feat]``
@@ -225,7 +225,11 @@ class TripletLossWithMiner(ITripletLossWithMiner):
 
         else:
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
-            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
+
+            weights = torch.ones(len(anchor)).to(anchor.device)
+            weights[categories[self.miner.ids_anchor] != categories[self.miner.ids_neg]] = 2
+
+            loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative, weights=weights)
 
         self.last_logs.update(self.tri_loss.last_logs)
         self.last_logs.update(getattr(self.miner, "last_logs", {}))

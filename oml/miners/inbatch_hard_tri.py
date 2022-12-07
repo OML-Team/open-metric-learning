@@ -39,6 +39,10 @@ class HardTripletsMiner(ITripletsMinerInBatch):
 
         ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(distmat=dist_mat, labels=labels)
 
+        self.ids_anchor = ids_anchor
+        self.ids_pos = ids_pos
+        self.ids_neg = ids_neg
+
         return ids_anchor, ids_pos, ids_neg
 
     @staticmethod
