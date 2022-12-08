@@ -11,11 +11,15 @@ from torch.utils.data import DataLoader
 
 from oml.const import PATHS_COLUMN, X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, TCfg
 from oml.datasets.list_ import ListDataset
-from oml.exceptions import InferenceConfigError, InvalidDataFrameColumnsException
+from oml.exceptions import (
+    InferenceConfigError,
+    InvalidDataFrameColumnsException,
+    InvalidImageException,
+)
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.images.images import imread_pillow
-from oml.utils.misc import dictconfig_to_dict
+from oml.utils.misc import dictconfig_to_dict, verify_image_readable
 
 
 def inference(cfg: TCfg) -> None:
@@ -93,8 +97,9 @@ def inference(cfg: TCfg) -> None:
 
     # Check that files could be opened
     for path in im_paths:
-        with path.open("rb"):
-            pass
+        with path.open("rb") as fimage:
+            if not verify_image_readable(fimage.read()):
+                raise InvalidImageException(f"While checking images encountered bad image: {path}")
 
     kwargs = {}
     # Loading transformations

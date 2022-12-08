@@ -1,11 +1,13 @@
 import os
 import random
+from io import BytesIO
 from typing import Any, Dict, Iterable, List, Tuple
 
 import dotenv
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
+from PIL.Image import Image
 
 from oml.const import DOTENV_PATH, TCfg
 
@@ -114,6 +116,14 @@ def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     return tuple(min(x, max_el) for x in arr)
 
 
+def verify_image_readable(image: bytes) -> bool:
+    try:
+        Image.open(BytesIO(image)).verify()
+        return True
+    except Exception:
+        return False
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -123,4 +133,5 @@ __all__ = [
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",
+    "verify_image_readable",
 ]

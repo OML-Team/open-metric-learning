@@ -12,3 +12,7 @@ class InferenceConfigError(BaseOMLException):
 
 class InvalidDataFrameColumnsException(BaseOMLException):
     pass
+
+
+class InvalidImageException(BaseOMLException):
+    pass
