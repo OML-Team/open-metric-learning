@@ -138,6 +138,25 @@ def check_if_nonempty_positive_integers(var: Union[int, Sequence[int]], name: st
         raise ValueError(f"Unsupported argument type. Expected int or Iterable[int], but got {type(var)}")
 
 
+def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
+    """
+    The function compares dictionaries and prints the exact information where they differ. By using the built-in
+    dictionary comparison one can get just a plain 'True' or 'False' as result of the comparison, without any hints
+    on where the dictionaries differ.
+    """
+    assert set(d1.keys()) == set(
+        d2.keys()
+    ), f"The dictionaries keys are different.\nDict_1 keys: {set(d1.keys())}\nDict_2 keys: {set(d2.keys())}"
+    for k, v in d1.items():
+        if isinstance(v, dict):
+            assert compare_dicts_recursively(
+                v, d2[k]
+            ), f"The dictionaries differs at key {k}.\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
+        else:
+            assert d2[k] == v, f"Key name: {k}\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
+    return True
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -148,4 +167,5 @@ __all__ = [
     "smart_sample",
     "clip_max",
     "check_if_nonempty_positive_integers",
+    "compare_dicts_recursively",
 ]
