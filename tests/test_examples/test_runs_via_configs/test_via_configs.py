@@ -1,9 +1,11 @@
+import json
 import shutil
 import subprocess
 import warnings
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
+import numpy as np
 import pytest
 import torch
 import yaml  # type: ignore
@@ -73,54 +75,87 @@ def test_inference_error_two_sources_provided(accelerator: str, devices: int) ->
         raise AssertionError("This test should raise exeption for two input sources provided")
 
 
-def extract_features_from_path(accelerator: str, devices: int, cleanup: bool = True) -> None:
+@pytest.fixture()
+def features_from_path_command_and_paths(
+    accelerator: str, devices: int, cleanup: bool = True
+) -> Iterator[Tuple[str, Path, Path]]:
+    features_path: Path = MOCK_DATASET_PATH / "features1.json"
+    command = (
+        f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH} " f"features_file={features_path}"
+    )
+    cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
+    yield command, features_path, cfg_path
+    features_path.unlink()
+
+
+@pytest.fixture()
+def features_from_df_command_and_paths(
+    accelerator: str, devices: int, cleanup: bool = True
+) -> Iterator[Tuple[str, Path, Path]]:
+    cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
+    features_path = MOCK_DATASET_PATH / "features2.json"
+
+    command_df_part = "inference_images_mock.py dataframe_name={df_name} "
+    command_features_path_part = f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_file={str(features_path)}"
+    command = command_df_part + command_features_path_part
+    yield command, features_path, cfg_path
+    features_path.unlink()
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_images_list(
+    accelerator: str, devices: int, features_from_path_command_and_paths: Tuple[str, Path, Path]
+) -> None:
+    command, features_path, cfg_path = features_from_path_command_and_paths
+    run(command, accelerator, devices, cfg_path=cfg_path)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_dataframe_w_boxes(
+    accelerator: str, devices: int, features_from_df_command_and_paths: Tuple[str, Path, Path]
+) -> None:
+    command, features_path, cfg_path = features_from_df_command_and_paths
+    command = command.format(df_name=MOCK_DATASET_PATH / "df_with_bboxes.csv")
     run(
-        (
-            f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH} "
-            "features_path={MOCK_DATASET_PATH / 'features1.json'}"
-        ),
+        command,
         accelerator,
         devices,
-        cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
+        cfg_path=cfg_path,
     )
 
 
-def extract_features_from_df(accelerator: str, devices: int, cleanup: bool = True) -> None:
-    run(
-        (
-            f"inference_images_mock.py dataframe_name={MOCK_DATASET_PATH / 'df.csv'} "
-            f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_path={MOCK_DATASET_PATH / 'features2.json'}"
-        ),
-        accelerator,
-        devices,
-        cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_dataframe_without_boxes(
+    accelerator: str, devices: int, features_from_df_command_and_paths: Tuple[str, Path, Path]
+) -> None:
+    command, features_path, cfg_path = features_from_df_command_and_paths
+    command = command.format(df_name=MOCK_DATASET_PATH / "df.csv")
+    run(command, accelerator, devices, cfg_path=cfg_path)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_inference_compare_features_from_df_and_path(
+    accelerator: str,
+    devices: int,
+    features_from_df_command_and_paths: Tuple[str, Path, Path],
+    features_from_path_command_and_paths: Tuple[str, Path, Path],
+) -> None:
+    command_df, features_df_path, cfg_df_path = features_from_df_command_and_paths
+    command_df = command_df.format(df_name=MOCK_DATASET_PATH / "df.csv")
+    command_w_path, features_w_path_path, cfg_w_path_path = features_from_path_command_and_paths
+    run(command_df, accelerator, devices, cfg_df_path)
+    run(command_w_path, accelerator, devices, cfg_w_path_path)
+
+    with features_df_path.open() as f, features_w_path_path.open() as f1:
+        features_df = json.load(f)
+        features_from_path = json.load(f1)
+
+    sorted_paths_feats_df = sorted(
+        zip(features_df["filenames"], features_df["features"]), key=lambda path_feat: path_feat[0]
+    )
+    sorted_paths_feats_from_path = sorted(
+        zip(features_from_path["filenames"], features_from_path["features"]), key=lambda path_feat: path_feat[0]
     )
 
-
-@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_inference_images_list(accelerator: str, devices: int) -> None:
-    extract_features_from_path(accelerator, devices)
-
-
-@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_inference_dataframe_w_boxes(accelerator: str, devices: int) -> None:
-    run(
-        (
-            f"inference_images_mock.py dataframe_name={MOCK_DATASET_PATH / 'df_with_bboxes.csv'} "
-            f"dataset_root={MOCK_DATASET_PATH} ~images_folder"
-        ),
-        accelerator,
-        devices,
-        cfg_path=SCRIPTS_PATH / "configs" / "inference_images_mock.yaml",
-    )
-
-
-@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_inference_dataframe_without_boxes(accelerator: str, devices: int) -> None:
-    extract_features_from_df(accelerator, devices)
-
-
-@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_inference_compare_features_from_df_and_path(accelerator: str, devices: int) -> None:
-    extract_features_from_df(accelerator, devices, cleanup=False)
-    extract_features_from_path(accelerator, devices, cleanup=False)
+    for (_, feats1), (_, feats2) in zip(sorted_paths_feats_df, sorted_paths_feats_from_path):
+        assert np.isclose(feats1, feats2).all()
