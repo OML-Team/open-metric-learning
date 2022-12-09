@@ -19,4 +19,3 @@ gdown>=4.*
 #Albu
 albumentations>=1.*
 opencv-python>=4.1.1
-

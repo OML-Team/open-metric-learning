@@ -1,12 +1,12 @@
 ARG RUNTIME=cpu
 
-
 FROM nvidia/cuda:11.1.1-devel-ubuntu18.04 AS gpu_base
 
-ENV TORCH_POSTFIX=cu111
+ENV EXTRA_INDEX=''
 
 FROM ubuntu:18.04 AS cpu_base
-ENV TORCH_POSTFIX=cpu
+
+ENV EXTRA_INDEX="--extra-index-url https://download.pytorch.org/whl/cpu"
 
 
 FROM ${RUNTIME}_base
@@ -23,15 +23,13 @@ RUN ln -sf /usr/bin/python3.8 /usr/bin/python && ln -sf /usr/bin/python3.8 /usr/
 ENV LD_LIBRARY_PATH "/usr/local/lib:$LD_LIBRARY_PATH"
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade pip wheel setuptools
 RUN pip install Cython==0.29.28
 
 ### Python libs
-# todo: can we move it to requirements.txt?
-#RUN pip install torch==1.12.0 torchvision==0.13.0 --extra-index-url https://download.pytorch.org/whl/${TORCH_POSTFIX}
-
 COPY ci/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . /oml
-WORKDIR /oml/
-RUN pip install -e .
+RUN pip install --no-cache-dir -r requirements.txt ${EXTRA_INDEX}
+
+WORKDIR /open-metric-learning-lib
+COPY . /open-metric-learning-lib
+RUN pip install .
