@@ -1,15 +1,15 @@
 import warnings
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import elementwise_dist, pairwise_dist
+from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist
 
-TMetricsDict = Dict[str, Dict[int, Union[float, torch.Tensor]]]
+TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, torch.Tensor]]]
 
 
 def calc_retrieval_metrics(
@@ -111,6 +111,29 @@ def calc_retrieval_metrics(
 
     if reduce:
         metrics = reduce_metrics(metrics)
+
+    return metrics
+
+
+def calc_topological_metrics(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> TMetricsDict:
+    """
+    Function to evaluate different topological metrics.
+
+    Args:
+        embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+        pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                      of variance that needs to be explained is greater than the percentage specified
+                      by ``pfc_variance``.
+
+    Returns:
+        Metrics dictionary.
+
+    """
+    metrics: TMetricsDict = dict()
+
+    if pfc_variance:
+        main_components = calc_pcf(embeddings, pfc_variance)
+        metrics["pcf"] = dict(zip(pfc_variance, main_components))
 
     return metrics
 
@@ -411,6 +434,7 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
         neg_dist: Distances between non-relevant samples.
         fmr_vals: Values of ``fmr`` (measured in percents) to compute the corresponding ``fnmr``.
                   For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
+
     Returns:
         Tensor of ``fnmr@fmr`` values.
 
@@ -465,13 +489,65 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
         tensor([40., 20.])
 
     """
-    if len(fmr_vals) == 0:
-        raise ValueError(f"fmr_vals are expected have at least one value, but got {fmr_vals}")
-    if not all(0 <= f <= 100 for f in fmr_vals):
-        raise ValueError(f"fmr_vals are expected to be integers in range [0, 100] but got {fmr_vals}")
+    _check_if_in_range(fmr_vals, 0, 100, "fmr_vals")
     thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = 100 * (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
+
+
+def calc_pcf(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> List[torch.Tensor]:
+    """
+    Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
+    The metric is defined as a fraction of components needed to explain the required variance in data.
+
+    Args:
+        embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+        pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                      of variance that needs to be explained is greater than the fraction specified
+                      by ``pfc_variance``.
+    Returns:
+        List of linear dimensions as a fractions of the embeddings dimension.
+
+    Let :math:`X` be a set of :math:`d` dimensional embeddings.
+    Let :math:`\\lambda_1, \\ldots, \\lambda_d\\in\\mathbb{R}` be a set of eigenvalues
+    of the covariance matrix of :math:`X` sorted in descending order.
+    Then for a given value of desired explained variance :math:`r`,
+    the number of principal components that explaines :math:`r\\cdot 100\\%%` variance is the largest integer
+    :math:`n` such that
+
+    .. math::
+        \\frac{\\sum\\limits_{i = 1}^{n - 1}\\lambda_i}{\\sum\\limits_{i = 1}^{d}\\lambda_i} \\leq r
+
+    The function returns
+
+    .. math::
+        \\frac{n}{d}
+
+    See:
+
+        `Principal Components Analysis`_
+
+    .. _`Principal Components Analysis`:
+        https://en.wikipedia.org/wiki/Principal_component_analysis
+
+    Example:
+        In the example bellow there are 4 vectors of length 10, and only first 4 dimensions have non-zero values.
+        Its covariance matrix will have only 4 eigenvalues that are greater than 0, i.e. there are only 4 principal
+        axes. So, in order to keep at least 50% of the information from the set, we need to keep 2 principal
+        axes, and in order to keep all the information we need to keep 5 principal axes (one additional axis appears
+        because the number of principal axes is superior to the desired explained variance threshold).
+
+        >>> embeddings = torch.eye(4, 10, dtype=torch.float)
+        >>> calc_pcf(embeddings, pfc_variance=(0.5, 1))
+        tensor([0.2000, 0.5000])
+
+    """
+    # The code below mirrors code from scikit-learn repository:
+    # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L491
+    _check_if_in_range(pfc_variance, 0, 1, "pfc_variance")
+    pca = PCA(embeddings)
+    n_components = pca.calc_principal_axes_number(pfc_variance).to(embeddings)
+    return n_components / embeddings.shape[1]
 
 
 def extract_pos_neg_dists(
@@ -533,9 +609,26 @@ def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]
     return clip_max(arr, max_el)
 
 
+def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: str) -> None:
+    """
+    Check whether the ``vals`` are in the range ``[min_, max_]``. Throw the ValueError if not.
+
+    Args:
+        vals: Sequence to check.
+        min_: Minimal value of the range.
+        max_: Maximal value of the range.
+        name: Name of the variable to throw the ValueError for.
+    """
+    if len(vals) == 0:
+        raise ValueError(f"{name} is expected to be not empty, but got {vals}")
+    if not all(min_ <= x <= max_ for x in vals):
+        raise ValueError(f"{name} is expected to contain numbers in range [{min_}, {max_}], but got {vals}")
+
+
 __all__ = [
     "TMetricsDict",
     "calc_retrieval_metrics",
+    "calc_topological_metrics",
     "apply_mask_to_ignore",
     "calc_gt_mask",
     "calc_mask_to_ignore",

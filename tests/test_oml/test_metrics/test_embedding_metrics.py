@@ -16,19 +16,9 @@ from oml.const import (
     PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.utils.misc import one_hot
+from oml.utils.misc import compare_dicts_recursively, one_hot
 
 oh = partial(one_hot, dim=8)
-
-
-def check_dicts_of_dicts_are_equal(dict1: Any, dict2: Any) -> None:
-    for key1 in dict1:
-        for key2 in dict1[key1]:
-            assert dict1[key1][key2] == dict2[key1][key2]
-
-    for key1 in dict2:
-        for key2 in dict2[key1]:
-            assert dict2[key1][key2] == dict1[key1][key2]
 
 
 @pytest.fixture()
@@ -157,6 +147,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         precision_top_k=tuple(),
         map_top_k=tuple(),
         fmr_vals=tuple(),
+        pfc_variance=tuple(),
     )
 
     calc.setup(num_samples=num_samples)
@@ -165,7 +156,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
 
     metrics = calc.compute_metrics()
 
-    check_dicts_of_dicts_are_equal(gt_metrics, metrics)
+    compare_dicts_recursively(gt_metrics, metrics)
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
     assert torch.isclose(calc.distance_matrix.unique(), torch.tensor([0, math.sqrt(2)])).all()  # type: ignore
@@ -191,6 +182,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         precision_top_k=tuple(),
         map_top_k=tuple(),
         fmr_vals=tuple(),
+        pfc_variance=tuple(),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
@@ -200,7 +192,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         calc.update_data(batch_b)
         metrics = calc.compute_metrics()
 
-        check_dicts_of_dicts_are_equal(metrics, ground_truth_metrics)
+        compare_dicts_recursively(metrics, ground_truth_metrics)
 
         # the euclidean distance between any one-hots is always sqrt(2) or 0
         assert torch.isclose(calc.distance_matrix.unique(), torch.tensor([0, math.sqrt(2)])).all()  # type: ignore
