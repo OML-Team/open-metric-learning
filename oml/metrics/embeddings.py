@@ -68,7 +68,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         fmr_vals: Tuple[int, ...] = tuple(),
-        pfc_explained_variance_ths: Tuple[float, ...] = (0.5,),
+        pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
@@ -93,9 +93,9 @@ class EmbeddingMetrics(IMetricVisualisable):
                       For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
                       Note, computing this metric requires additional memory overhead,
                       that is why it's turned off by default.
-            pfc_explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
-                                    of variance that needs to be explained is greater than the percentage specified
-                                    by ``pfc_explained_variance_ths``.
+            pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                          of variance that needs to be explained is greater than the percentage specified
+                          by ``pfc_variance``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
@@ -116,7 +116,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
-        self.pfc_explained_variance_ths = pfc_explained_variance_ths
+        self.pfc_variance = pfc_variance
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -184,7 +184,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             "map_top_k": self.map_top_k,
             "fmr_vals": self.fmr_vals,
         }
-        args_topological_metrics = {"pfc_explained_variance_ths": self.pfc_explained_variance_ths}
+        args_topological_metrics = {"pfc_variance": self.pfc_variance}
 
         metrics: TMetricsDict_ByLabels = dict()
 

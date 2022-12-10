@@ -315,15 +315,15 @@ class PCA:
         self._check_dimensions(n_components)
         return torch.matmul(embeddings, self.components[:n_components, :]) + self.mean
 
-    def calc_principal_axes_number(self, explained_variance_ths: Tuple[float, ...]) -> torch.Tensor:
+    def calc_principal_axes_number(self, pfc_variance: Tuple[float, ...]) -> torch.Tensor:
         """
         Function estimates the number of principal axes that are required to explain the `explained_variance_ths`
         variance.
 
         Args:
-            explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
-                                        of variance that needs to be explained is greater than the fraction specified
-                                        by ``pfc_explained_variance_ths``.
+            pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                          of variance that needs to be explained is greater than the fraction specified
+                          by ``pfc_variance``.
         Returns:
             List of amount of principal axes.
 
@@ -346,12 +346,12 @@ class PCA:
 
             >>> embeddings = torch.eye(4, 10, dtype=torch.float)
             >>> pca = PCA(embeddings)
-            >>> pca.calc_principal_axes_number(explained_variance_ths=(0.5, 1))
+            >>> pca.calc_principal_axes_number(pfc_variance=(0.5, 1))
             tensor([2, 5])
 
         """
         ratio_cumsum = torch.cumsum(self.explained_variance_ratio, dim=0)
-        n_components = torch.searchsorted(ratio_cumsum, torch.tensor(explained_variance_ths), side="right") + 1
+        n_components = torch.searchsorted(ratio_cumsum, torch.tensor(pfc_variance), side="right") + 1
         return n_components
 
     def _check_dimensions(self, n_components: int) -> None:

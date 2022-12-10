@@ -19,7 +19,7 @@ def eye_case() -> Tuple[torch.Tensor, TMetricsDict]:
 
 def test_calc_topological_metrics(eye_case: Tuple[torch.Tensor, TMetricsDict]) -> None:
     embeddings, metrics_expected = eye_case
-    args = {"pfc_explained_variance_ths": tuple(metrics_expected["pcf"].keys())}
+    args = {"pfc_variance": tuple(metrics_expected["pcf"].keys())}
     metrics_evaluated = calc_topological_metrics(embeddings, **args)
     compare_dicts_recursively(metrics_evaluated, metrics_expected)
 
@@ -31,12 +31,12 @@ def test_calc_functions(
     metric_func: Callable[[torch.Tensor, Tuple[int, ...]], torch.Tensor],
 ) -> None:
     embeddings, metrics_expected = eye_case
-    explained_variance_to_keep = tuple(metrics_expected[metric_name].keys())
-    kwargs = {"embeddings": embeddings, "pfc_explained_variance_ths": explained_variance_to_keep}
+    pfc_variance = tuple(metrics_expected[metric_name].keys())
+    kwargs = {"embeddings": embeddings, "pfc_variance": pfc_variance}
 
     kwargs = remove_unused_kargs(kwargs, metric_func)
     main_components_percentage = metric_func(**kwargs)  # type: ignore
-    metrics_calculated = dict(zip(explained_variance_to_keep, main_components_percentage))
+    metrics_calculated = dict(zip(pfc_variance, main_components_percentage))
     for p in metrics_expected[metric_name].keys():
         values_expected = metrics_expected[metric_name][p]
         values_calculated = metrics_calculated[p]

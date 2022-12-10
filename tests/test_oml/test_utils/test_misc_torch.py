@@ -70,7 +70,7 @@ def test_pca_inverse_transform() -> None:
     assert torch.all(torch.isclose(embeddings, embeddings_it, atol=1.0e-6))
 
 
-def test_components_orthogonality() -> None:
+def test_pca_components_orthogonality() -> None:
     embeddings = torch.eye(300, 2, dtype=torch.float)
     embeddings = torch.cat((embeddings, embeddings), dim=1)
     pca = PCA(embeddings)

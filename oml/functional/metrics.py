@@ -115,15 +115,15 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_topological_metrics(embeddings: torch.Tensor, pfc_explained_variance_ths: Tuple[float, ...]) -> TMetricsDict:
+def calc_topological_metrics(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
-        pfc_explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
-                                    of variance that needs to be explained is greater than the percentage specified
-                                    by ``pfc_explained_variance_ths``.
+        pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                      of variance that needs to be explained is greater than the percentage specified
+                      by ``pfc_variance``.
 
     Returns:
         Metrics dictionary.
@@ -131,9 +131,9 @@ def calc_topological_metrics(embeddings: torch.Tensor, pfc_explained_variance_th
     """
     metrics: TMetricsDict = dict()
 
-    if pfc_explained_variance_ths:
-        main_components = calc_pcf(embeddings, pfc_explained_variance_ths)
-        metrics["pcf"] = dict(zip(pfc_explained_variance_ths, main_components))
+    if pfc_variance:
+        main_components = calc_pcf(embeddings, pfc_variance)
+        metrics["pcf"] = dict(zip(pfc_variance, main_components))
 
     return metrics
 
@@ -495,16 +495,16 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     return fnmr_at_fmr
 
 
-def calc_pcf(embeddings: torch.Tensor, pfc_explained_variance_ths: Tuple[float, ...]) -> List[torch.Tensor]:
+def calc_pcf(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> List[torch.Tensor]:
     """
     Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
     The metric is defined as a fraction of components needed to explain the required variance in data.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
-        pfc_explained_variance_ths: Values in range [0, 1]. Find the number of components such that the amount
-                                    of variance that needs to be explained is greater than the fraction specified
-                                    by ``pfc_explained_variance_ths``.
+        pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                      of variance that needs to be explained is greater than the fraction specified
+                      by ``pfc_variance``.
     Returns:
         List of linear dimensions as a fractions of the embeddings dimension.
 
@@ -538,15 +538,15 @@ def calc_pcf(embeddings: torch.Tensor, pfc_explained_variance_ths: Tuple[float, 
         because the number of principal axes is superior to the desired explained variance threshold).
 
         >>> embeddings = torch.eye(4, 10, dtype=torch.float)
-        >>> calc_pcf(embeddings, pfc_explained_variance_ths=(0.5, 1))
+        >>> calc_pcf(embeddings, pfc_variance=(0.5, 1))
         tensor([0.2000, 0.5000])
 
     """
     # The code below mirrors code from scikit-learn repository:
     # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L491
-    _check_if_in_range(pfc_explained_variance_ths, 0, 1, "pfc_explained_variance_ths")
+    _check_if_in_range(pfc_variance, 0, 1, "pfc_variance")
     pca = PCA(embeddings)
-    n_components = pca.calc_principal_axes_number(pfc_explained_variance_ths).to(embeddings)
+    n_components = pca.calc_principal_axes_number(pfc_variance).to(embeddings)
     return n_components / embeddings.shape[1]
 
 
