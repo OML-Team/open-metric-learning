@@ -31,6 +31,7 @@ sampler:
     n_instances: 4
     n_categories: 5
     resample_labels: True
+    weight_categories: True
 
 bs_val: 256
 max_epochs: 10000
