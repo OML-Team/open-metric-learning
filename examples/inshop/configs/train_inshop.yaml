@@ -6,8 +6,8 @@ accelerator: gpu
 devices: 2
 
 dataframe_name: df_no_bboxes.csv
-dataset_root: data/DeepFashion_InShop/
-logs_root: logs/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -31,7 +31,6 @@ sampler:
     n_instances: 4
     n_categories: 5
     resample_labels: True
-    weight_categories: True
 
 bs_val: 256
 max_epochs: 10000
@@ -78,7 +77,7 @@ scheduling: null
 
 # To use neptune you should also specify NEPTUNE_API_TOKEN in
 # .env file or via `export NEPTUNE_API_TOKEN=...`
-neptune_project: null
+neptune_project: NEWYORKER/similarity-api
 
 
 hydra_dir: ${logs_root}/${logs_folder}/
@@ -86,6 +85,9 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
+  - c-${sampler.args.n_categories}
+  - i-${sampler.args.n_instances}
+  - m-${criterion.args.margin}
 
 hydra:
   run:

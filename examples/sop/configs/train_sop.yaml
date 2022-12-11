@@ -33,7 +33,7 @@ sampler:
     epoch_size: 350
 
 bs_val: 256
-max_epochs: 50
+max_epochs: 15
 valid_period: 1
 
 metric_args:
@@ -87,7 +87,6 @@ tags:
   - c-${sampler.args.n_categories}
   - i-${sampler.args.n_instances}
   - distinct_sampler
-  - weighted_categories_sampling
 
 hydra:
   run:

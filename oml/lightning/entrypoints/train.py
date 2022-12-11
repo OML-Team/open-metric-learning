@@ -208,6 +208,7 @@ def pl_train(cfg: TCfg) -> None:
         callbacks=[metrics_clb, ckpt_clb],
         logger=logger,
         precision=cfg.get("precision", 32),
+        max_time="00:10:00:00",
         **trainer_engine_params,
     )
 

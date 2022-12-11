@@ -227,7 +227,8 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
 
             weights = torch.ones(len(anchor)).to(anchor.device)
-            weights[categories[self.miner.ids_anchor] != categories[self.miner.ids_neg]] = 2
+            # todo
+            # weights[categories[self.miner.ids_anchor] != categories[self.miner.ids_neg]] = 2
 
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative, weights=weights)
 

@@ -94,8 +94,10 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
             raise ValueError("All the labels from label2category mapping must be in the labels")
         if any(n <= 1 for n in Counter(labels).values()):
             raise ValueError("Each class must contain at least 2 instances to fit")
-        if any(len(list(labs)) < n_labels for labs in category2labels.values()):
-            raise ValueError(f"All the categories must have at least {n_labels} unique labels")
+        categories_sizes = [len(labels) for labels in category2labels.values()]
+        if any(sz < n_labels for sz in categories_sizes):
+            raise ValueError(f"All the categories must have at least {n_labels} unique labels,"
+                             f"the smallest one has {min(categories_sizes)} labels.")
 
         self._labels = np.array(labels)
         self._label2category = label2category
