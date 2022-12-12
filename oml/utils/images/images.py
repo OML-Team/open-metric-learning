@@ -2,7 +2,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import Callable, Union
 
-import albumentations as albu
+try:
+    from albumentations.augmentations.functional import pad
+except (AttributeError, ModuleNotFoundError, ImportError):
+    from albumentations.augmentations.geometric.functional import pad
+
 import cv2
 import numpy as np
 import PIL
