@@ -70,6 +70,10 @@ docker_build:
 docker_tests:
 	docker run -t $(IMAGE_NAME) make run_tests
 
+.PHONY: docker_enter
+docker_enter:
+	docker run -ti $(IMAGE_NAME) bash
+
 .PHONY: build_wheel
 build_wheel:
 	python -m pip install --upgrade pip
