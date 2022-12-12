@@ -23,13 +23,13 @@ RUN ln -sf /usr/bin/python3.8 /usr/bin/python && ln -sf /usr/bin/python3.8 /usr/
 ENV LD_LIBRARY_PATH "/usr/local/lib:$LD_LIBRARY_PATH"
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-RUN pip3 install --upgrade pip wheel setuptools<64.*
+RUN pip3 install --upgrade pip wheel setuptools
 RUN pip install Cython==0.29.28
 
 ### Python libs
 COPY ci/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt ${EXTRA_INDEX}
 
-WORKDIR /open-metric-learning-lib
-COPY . /open-metric-learning-lib
+WORKDIR /oml-lib
+COPY . /oml-lib
 RUN pip install .

@@ -45,7 +45,7 @@ download_mock_dataset:
 
 .PHONY: run_tests
 run_tests: download_mock_dataset
-	pytest --disable-warnings -sv tests/test_examples/test_runs_via_configs
+	pytest --disable-warnings -sv tests
 	#$(JUPYTER_CMD) --execute examples/visualization.ipynb  # todo: seems like some issue appeared on lightning side
 
 .PHONY: test_converters
