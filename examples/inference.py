@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from pprint import pprint
 from typing import List
@@ -8,6 +9,7 @@ import pandas as pd
 import torch
 import torchvision
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from oml.const import BBOXES_COLUMNS, PATHS_COLUMN, TCfg
 from oml.datasets.list_ import ListDataset
@@ -16,9 +18,10 @@ from oml.exceptions import (
     InvalidDataFrameColumnsException,
     InvalidImageException,
 )
+from oml.lightning.entrypoints.parser import parse_engine_params_from_config
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
-from oml.utils.images.images import imread_pillow, verify_image_readable
+from oml.utils.images.images import imread_cv2, verify_image_readable
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -31,8 +34,21 @@ def inference(cfg: TCfg) -> None:
 
     """
     cfg = dictconfig_to_dict(cfg)
-
     pprint(cfg)
+
+    engine_params = parse_engine_params_from_config(cfg)
+    accelerator = engine_params["accelerator"]
+    devices = engine_params["devices"]
+    if accelerator == "gpu":
+        if isinstance(devices, list):
+            device_idx = devices[0]
+        else:
+            # foolprof against selection of multiple devices
+            available_devices = os.getenv("CUDA_VISIBLE_DEVICES", "0")
+            device_idx = int(available_devices.split(",")[0])
+        device = f"cuda:{device_idx}"
+    else:
+        device = accelerator
 
     images_folder = Path(cfg["images_folder"]) if cfg.get("images_folder") else None
     dataframe_name = cfg.get("dataframe_name")
@@ -54,10 +70,11 @@ def inference(cfg: TCfg) -> None:
 
     # Working with dataframe if it's path is not None
     if dataframe_name is not None:
+        delimiter = cfg.get("dataframe_separator")
         # read dataframe and get boxes. Use BaseDataset for inspiration
-        df = pd.read_csv(dataframe_name)
+        df = pd.read_csv(dataframe_name, delimiter=delimiter)
         # begin check that columns are correct
-        if PATHS_COLUMN in df.columns:
+        if PATHS_COLUMN not in df.columns:
             raise InvalidDataFrameColumnsException(
                 f"Source CSV file {dataframe_name} is missing '{PATHS_COLUMN}' column."
             )
@@ -70,7 +87,7 @@ def inference(cfg: TCfg) -> None:
                 )
 
             bboxes = []
-            for row in df[[BBOXES_COLUMNS]].iterrows():
+            for row in df[BBOXES_COLUMNS].iterrows():
                 x1, x2, y1, y2 = row[1]
                 bboxes.append((x1, y1, x2, y2))
         # end columns check
@@ -86,7 +103,9 @@ def inference(cfg: TCfg) -> None:
         # Check that files from dataframe exist
         for i, path in enumerate(im_paths):
             if not path.exists():
-                raise FileExistsError(f"Could not find image on line {i+1}: {str(path)} in dataframe {dataframe_name}")
+                raise FileNotFoundError(
+                    f"Could not find image on line {i+1}: {str(path)} in dataframe {dataframe_name}"
+                )
 
     # Check if images exist
     if not im_paths:
@@ -107,20 +126,25 @@ def inference(cfg: TCfg) -> None:
         available_augs_types = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(transform, available_augs_types), f"Type of transforms must be in {available_augs_types}"
         kwargs["transform"] = transform
+    else:
+        raise InferenceConfigError("'transforms' field is missing in the config")
 
-    dataset = ListDataset(filenames_list=im_paths, bboxes=bboxes, f_imread=imread_pillow, **kwargs)
-    loader = DataLoader(dataset=dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
+    dataset = ListDataset(filenames_list=im_paths, bboxes=bboxes, f_imread=imread_cv2, **kwargs)
+    loader = DataLoader(dataset=dataset, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])
+    extractor.to(device)
     features = []
-    model_device = str(list(extractor.parameters())[0].device)
-    for batch in loader:
-        batch.to(model_device)
+    for batch in tqdm(loader):
+        batch.to(device)
         feats = extractor.extract(batch)
         features += [feat.tolist() for feat in torch.split(feats, 1)]
 
     out_json_path = Path(cfg["features_file"])
-    out_json_path.mkdir(parents=True, exist_ok=True)
+    print()
+    print(out_json_path.parent)
+    print()
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
     with out_json_path.open("w") as f:
         out_struct = {
             "images_folder": cfg.get("images_folder"),

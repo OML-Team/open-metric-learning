@@ -94,7 +94,7 @@ def square_pad(img: np.ndarray) -> np.ndarray:
 
 def verify_image_readable(image: bytes) -> bool:
     try:
-        TPILImage.open(BytesIO(image)).verify()
+        Image.open(BytesIO(image)).verify()
         return True
     except Exception:
         return False
