@@ -11,3 +11,4 @@ tests/test_examples/**/logs/
 mock_dataset/
 logs/
 docs/build
+*egg-info

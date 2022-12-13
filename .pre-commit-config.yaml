@@ -16,7 +16,6 @@ repos:
   - id: mixed-line-ending
   - id: pretty-format-json
     args: [--autofix]
-  - id: requirements-txt-fixer
 
 
 # autoformat code with black formatter
