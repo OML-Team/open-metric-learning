@@ -1,0 +1,32 @@
+accelerator: gpu
+devices: 1
+
+dataset_root: data/DeepFashion_InShop/
+dataframe_name: df_no_bboxes.csv
+features_file: ${dataset_root}/features.json
+
+logs_root: logs/DeepFashion_InShop/
+
+batch_size: 128
+num_workers: 20
+
+transforms:
+  name: norm_resize_albu
+  args:
+    im_size: 224
+    crop_size: 224
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_inshop
+
+
+log_images: False
+
+hydra:
+  searchpath:
+   - pkg://oml.configs

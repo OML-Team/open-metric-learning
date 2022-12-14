@@ -16,6 +16,7 @@ cd <example>
 python convert_<example>.py --dataset_root=/path/to/example/dataset
 python train_<example>.py
 python validate_<example>.py
+python inference_<example>.py
 ```
 
 Note, you can find our pretrained checkpoints for these datasets in the *Models zoo* section of the main readme.
