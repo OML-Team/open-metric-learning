@@ -9,7 +9,7 @@ can be implemented in any programming language.
 We've prepared the [examples](https://github.com/OML-Team/open-metric-learning/tree/main/examples)
 on 4 popular benchmarks used by researchers to evaluate metric learning models,
 see [metric learning leaderboard](https://paperswithcode.com/task/metric-learning).
-After downloading a dataset you can train or validate your model by the following commands:
+After downloading a dataset you can train or validate your model or extract features from images by the following commands:
 
 ```shell
 cd <example>
