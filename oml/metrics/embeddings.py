@@ -37,7 +37,7 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
-from oml.interfaces.post_processor import IPostprocessor
+from oml.interfaces.postprocessor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
@@ -58,24 +58,24 @@ class EmbeddingMetrics(IMetricVisualisable):
     metric_name = ""
 
     def __init__(
-        self,
-        embeddings_key: str = EMBEDDINGS_KEY,
-        labels_key: str = LABELS_KEY,
-        is_query_key: str = IS_QUERY_KEY,
-        is_gallery_key: str = IS_GALLERY_KEY,
-        extra_keys: Tuple[str, ...] = (),
-        cmc_top_k: Tuple[int, ...] = (5,),
-        precision_top_k: Tuple[int, ...] = (5,),
-        map_top_k: Tuple[int, ...] = (5,),
-        fmr_vals: Tuple[int, ...] = tuple(),
-        pfc_variance: Tuple[float, ...] = (0.5,),
-        categories_key: Optional[str] = None,
-        postprocessor: Optional[IPostprocessor] = None,
-        metrics_to_exclude_from_visualization: Iterable[str] = (),
-        check_dataset_validity: bool = True,
-        return_only_main_category: bool = False,
-        visualize_only_main_category: bool = True,
-        verbose: bool = True,
+            self,
+            embeddings_key: str = EMBEDDINGS_KEY,
+            labels_key: str = LABELS_KEY,
+            is_query_key: str = IS_QUERY_KEY,
+            is_gallery_key: str = IS_GALLERY_KEY,
+            extra_keys: Tuple[str, ...] = (),
+            cmc_top_k: Tuple[int, ...] = (5,),
+            precision_top_k: Tuple[int, ...] = (5,),
+            map_top_k: Tuple[int, ...] = (5,),
+            fmr_vals: Tuple[int, ...] = tuple(),
+            pfc_variance: Tuple[float, ...] = (0.5,),
+            categories_key: Optional[str] = None,
+            postprocessor: Optional[IPostprocessor] = None,
+            metrics_to_exclude_from_visualization: Iterable[str] = (),
+            check_dataset_validity: bool = True,
+            return_only_main_category: bool = False,
+            visualize_only_main_category: bool = True,
+            verbose: bool = True,
     ):
         """
 
@@ -121,9 +121,15 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.categories_key = categories_key
         self.postprocessor = postprocessor
 
+        # todo
+        from oml.postprocessors.pairwise_postprocessor import PairwisePostprocessor
+        from oml.models.siamese import SiameseL2
+        self.postprocessor = PairwisePostprocessor(pairwise_model=SiameseL2(feat_dim=5, init_with_identity=True), top_n=100_000)
+
         self.distance_matrix = None
         self.mask_gt = None
         self.metrics = None
+        self.metrics_unreduced = None
         self.mask_to_ignore = None
 
         self.check_dataset_validity = check_dataset_validity
@@ -158,15 +164,33 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
 
-        if self.postprocessor:
-            # we have no this functionality yet
-            self.postprocessor.process()
+        n_queries = is_query.sum()
 
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
-        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+
+        if self.postprocessor:
+            distance_matrix, picked_galleries_ids = \
+                self.postprocessor.process(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery,
+                                           distance_matrix=distance_matrix, mask_to_ignore=mask_to_ignore)
+
+            mask_to_ignore = torch.zeros_like(distance_matrix).bool()
+
+            # todo: also adjust number of gt
+            mask_gt = labels[picked_galleries_ids] == labels[is_query]
+
+            assert n_queries == is_query.sum(), \
+                "Postprocessing must not change the number of queries."
+
+            assert len(is_query) == len(is_gallery) == len(embeddings) == len(labels), \
+                "Postprocessing must only change the input sizes simultaneously"
+
+        self.mask_to_ignore = mask_to_ignore
+        self.mask_gt = mask_gt
+        self.distance_matrix = distance_matrix
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
@@ -262,7 +286,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
 
     def get_plot_for_worst_queries(
-        self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
+            self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
     ) -> plt.Figure:
         query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)

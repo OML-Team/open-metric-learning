@@ -1,6 +1,7 @@
 from abc import ABC
 
 from torch import Tensor, nn
+from typing import Any
 
 
 class IExtractor(nn.Module, ABC):
@@ -34,4 +35,10 @@ class IFreezable(ABC):
         raise NotImplementedError()
 
 
-__all__ = ["IExtractor"]
+class IPairwiseModel(nn.Module):
+
+    def forward(self, x1: Any, x2: Any) -> Tensor:
+        raise NotImplementedError()
+
+
+__all__ = ["IExtractor", "IFreezable", "IPairwiseModel"]
