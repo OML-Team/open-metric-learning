@@ -1,7 +1,7 @@
 from abc import ABC
+from typing import Any
 
 from torch import Tensor, nn
-from typing import Any
 
 
 class IExtractor(nn.Module, ABC):
@@ -36,7 +36,6 @@ class IFreezable(ABC):
 
 
 class IPairwiseModel(nn.Module):
-
     def forward(self, x1: Any, x2: Any) -> Tensor:
         raise NotImplementedError()
 

@@ -5,7 +5,6 @@ from oml.utils.misc_torch import elementwise_dist
 
 
 class SiameseL2(IPairwiseModel):
-
     def __init__(self, feat_dim: int, init_with_identity: bool):
         super(SiameseL2, self).__init__()
         self.feat_dim = feat_dim

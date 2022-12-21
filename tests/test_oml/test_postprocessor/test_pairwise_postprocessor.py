@@ -39,7 +39,7 @@ def test_pairwise_postprocessor(case):
         is_query=is_query,
         is_gallery=is_gallery,
         mask_to_ignore=mask_to_ignore,
-        distance_matrix=distance_matrix.clone()
+        distance_matrix=distance_matrix.clone(),
     )
 
     distance_matrix = distance_matrix.sort(dim=-1)[0][:, :top_n]
@@ -51,10 +51,3 @@ def test_pairwise_postprocessor(case):
             x1 = embeddings[i_q].unsqueeze(0)
             x2 = embeddings[i_gallery].unsqueeze(0)
             assert torch.isclose(elementwise_dist(x1, x2), output[i_q, j_g])
-
-
-labels = torch.tensor([9, 1, 2, 3, 4])
-
-picked = torch.tensor([[0, 1], [1, 2]]).long()
-
-print(labels[picked] == torch.tensor([9, 1]))

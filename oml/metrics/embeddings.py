@@ -58,24 +58,24 @@ class EmbeddingMetrics(IMetricVisualisable):
     metric_name = ""
 
     def __init__(
-            self,
-            embeddings_key: str = EMBEDDINGS_KEY,
-            labels_key: str = LABELS_KEY,
-            is_query_key: str = IS_QUERY_KEY,
-            is_gallery_key: str = IS_GALLERY_KEY,
-            extra_keys: Tuple[str, ...] = (),
-            cmc_top_k: Tuple[int, ...] = (5,),
-            precision_top_k: Tuple[int, ...] = (5,),
-            map_top_k: Tuple[int, ...] = (5,),
-            fmr_vals: Tuple[int, ...] = tuple(),
-            pfc_variance: Tuple[float, ...] = (0.5,),
-            categories_key: Optional[str] = None,
-            postprocessor: Optional[IPostprocessor] = None,
-            metrics_to_exclude_from_visualization: Iterable[str] = (),
-            check_dataset_validity: bool = True,
-            return_only_main_category: bool = False,
-            visualize_only_main_category: bool = True,
-            verbose: bool = True,
+        self,
+        embeddings_key: str = EMBEDDINGS_KEY,
+        labels_key: str = LABELS_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
+        extra_keys: Tuple[str, ...] = (),
+        cmc_top_k: Tuple[int, ...] = (5,),
+        precision_top_k: Tuple[int, ...] = (5,),
+        map_top_k: Tuple[int, ...] = (5,),
+        fmr_vals: Tuple[int, ...] = tuple(),
+        pfc_variance: Tuple[float, ...] = (0.5,),
+        categories_key: Optional[str] = None,
+        postprocessor: Optional[IPostprocessor] = None,
+        metrics_to_exclude_from_visualization: Iterable[str] = (),
+        check_dataset_validity: bool = True,
+        return_only_main_category: bool = False,
+        visualize_only_main_category: bool = True,
+        verbose: bool = True,
     ):
         """
 
@@ -122,9 +122,12 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.postprocessor = postprocessor
 
         # todo
-        from oml.postprocessors.pairwise_postprocessor import PairwisePostprocessor
         from oml.models.siamese import SiameseL2
-        self.postprocessor = PairwisePostprocessor(pairwise_model=SiameseL2(feat_dim=5, init_with_identity=True), top_n=100_000)
+        from oml.postprocessors.pairwise_postprocessor import PairwisePostprocessor
+
+        self.postprocessor = PairwisePostprocessor(
+            pairwise_model=SiameseL2(feat_dim=8, init_with_identity=True), top_n=1000
+        )
 
         self.distance_matrix = None
         self.mask_gt = None
@@ -172,21 +175,29 @@ class EmbeddingMetrics(IMetricVisualisable):
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
+        # print(distance_matrix)
+        # print(mask_gt)
+
+        # todo: also adjust number of gt
         if self.postprocessor:
-            distance_matrix, picked_galleries_ids = \
-                self.postprocessor.process(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery,
-                                           distance_matrix=distance_matrix, mask_to_ignore=mask_to_ignore)
+            distance_matrix, picked_galleries_ids = self.postprocessor.process(
+                embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, distance_matrix=distance_matrix
+            )
 
-            mask_to_ignore = torch.zeros_like(distance_matrix).bool()
+            ii_arange = (
+                torch.arange(n_queries)
+                .unsqueeze(-1)
+                .expand(n_queries, min(self.postprocessor.top_n, len(picked_galleries_ids)))
+            )
 
-            # todo: also adjust number of gt
-            mask_gt = labels[picked_galleries_ids] == labels[is_query]
+            mask_gt = mask_gt[ii_arange, picked_galleries_ids]
+            mask_to_ignore = mask_to_ignore[ii_arange, picked_galleries_ids]
 
-            assert n_queries == is_query.sum(), \
-                "Postprocessing must not change the number of queries."
+            assert n_queries == is_query.sum(), "Postprocessing must not change the number of queries."
 
-            assert len(is_query) == len(is_gallery) == len(embeddings) == len(labels), \
-                "Postprocessing must only change the input sizes simultaneously"
+            assert (
+                len(is_query) == len(is_gallery) == len(embeddings) == len(labels)
+            ), "Postprocessing must only change the input sizes simultaneously"
 
         self.mask_to_ignore = mask_to_ignore
         self.mask_gt = mask_gt
@@ -286,7 +297,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
 
     def get_plot_for_worst_queries(
-            self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
+        self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
     ) -> plt.Figure:
         query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
