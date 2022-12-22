@@ -38,3 +38,6 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         assert list(distances.shape) == [n_queries, n_galleries]
 
         return distances
+
+
+__all__ = ["PairwiseEmbeddingsPostprocessor"]

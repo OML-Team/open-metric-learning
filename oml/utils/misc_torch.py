@@ -208,18 +208,6 @@ class OnlineSumDict(OnlineDict):
     online_calculator = SumOnline
 
 
-__all__ = [
-    "elementwise_dist",
-    "pairwise_dist",
-    "OnlineCalc",
-    "AvgOnline",
-    "SumOnline",
-    "OnlineDict",
-    "OnlineAvgDict",
-    "OnlineSumDict",
-]
-
-
 class PCA:
     """
     Principal component analysis (PCA).
@@ -405,3 +393,18 @@ class PCA:
                 "The embeddings couldn't be transformed, due to dimensions mismatch. "
                 f"Expected dimension less than or equal to {self.components.shape[0]}, but got {n_components}"
             )
+
+
+__all__ = [
+    "elementwise_dist",
+    "pairwise_dist",
+    "OnlineCalc",
+    "AvgOnline",
+    "SumOnline",
+    "OnlineDict",
+    "OnlineAvgDict",
+    "OnlineSumDict",
+    "take_2d",
+    "assign_2d",
+    "PCA",
+]

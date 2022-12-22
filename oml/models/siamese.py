@@ -22,3 +22,6 @@ class SimpleSiamese(IPairwiseDistanceModel):
         x2 = self.proj2(x2)
         y = elementwise_dist(x1, x2, p=2)
         return y
+
+
+__all__ = ["SimpleSiamese"]
