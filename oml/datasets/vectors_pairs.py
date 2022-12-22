@@ -32,11 +32,14 @@ def pairwise_inference(
     dataset = VectorsPairsDataset(x1=x1, x2=x2)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
     model.to(device)
+
     outputs = []
-    for batch in loader:
-        output = model(x1=batch[dataset.pair_1st_key].to(device), x2=batch[dataset.pair_2nd_key].to(device))
-        outputs.append(output)
-    return torch.stack(outputs)
+    with torch.no_grad():
+        for batch in loader:
+            output = model(x1=batch[dataset.pair_1st_key].to(device), x2=batch[dataset.pair_2nd_key].to(device))
+            outputs.append(output)
+
+    return torch.stack(outputs).detach().cpu()
 
 
 __all__ = ["VectorsPairsDataset", "pairwise_inference"]

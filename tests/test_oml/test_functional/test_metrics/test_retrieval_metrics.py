@@ -19,6 +19,7 @@ from oml.functional.metrics import (
     validate_dataset,
 )
 from oml.utils.misc import remove_unused_kargs
+from oml.utils.misc_torch import take_2d
 
 from .synthetic import generate_distance_matrix, generate_retrieval_case
 
@@ -103,9 +104,7 @@ def exact_test_case() -> TExactTestCase:
     mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
     distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
-    query_sz, gallery_sz = distances.shape
-    ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
-    gt_tops = mask_gt[ii_arange, ii_top_k]
+    gt_tops = take_2d(mask_gt, ii_top_k)
 
     metrics_expected = defaultdict(dict)  # type: ignore
 
