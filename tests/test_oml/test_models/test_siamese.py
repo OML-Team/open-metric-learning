@@ -1,18 +1,19 @@
+import pytest
 import torch
 
-from oml.models.siamese import SiameseL2
+from oml.models.siamese import SimpleSiamese
 from oml.utils.misc_torch import elementwise_dist
 
 
-def test_initialisation_is_the_same_with_l2_distance() -> None:
-    feat_dim = 12
-    bs = 8
+@pytest.mark.parametrize("bs", [32, 4, 1])
+@pytest.mark.parametrize("feat_dim", [8, 1024])
+def test_simple_siamese_identity_initialisation(feat_dim: int, bs: int) -> None:
     x1 = torch.randn(bs, feat_dim)
     x2 = torch.randn(bs, feat_dim)
 
-    dists = elementwise_dist(x1, x2, p=2)
+    distances = elementwise_dist(x1=x1, x2=x2, p=2)
 
-    model = SiameseL2(feat_dim=feat_dim, init_with_identity=True)
-    output = model(x1, x2)
+    model = SimpleSiamese(feat_dim=feat_dim, identity_init=True)
+    distances_estimated = model(x1=x1, x2=x2)
 
-    assert torch.isclose(dists, output).all()
+    assert torch.isclose(distances, distances_estimated).all()

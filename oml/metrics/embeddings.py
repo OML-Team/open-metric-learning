@@ -41,7 +41,6 @@ from oml.interfaces.postprocessor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
-from oml.utils.misc_torch import take_slice_2d
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -162,22 +161,16 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
-        mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
-        # todo: also adjust number of gt
         if self.postprocessor:
-            distance_matrix, picked_galleries_ids = self.postprocessor.process(
-                embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, distance_matrix=distance_matrix
+            self.distance_matrix = self.postprocessor.process(
+                distances=self.distance_matrix,
+                emb_query=embeddings[is_query],  # type: ignore
+                emb_gallery=embeddings[is_gallery],  # type: ignore
             )
-
-            mask_gt = take_slice_2d(mask_gt, picked_galleries_ids)
-            mask_to_ignore = take_slice_2d(mask_to_ignore, picked_galleries_ids)
-
-        self.mask_to_ignore = mask_to_ignore
-        self.mask_gt = mask_gt
-        self.distance_matrix = distance_matrix
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():

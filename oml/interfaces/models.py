@@ -35,9 +35,15 @@ class IFreezable(ABC):
         raise NotImplementedError()
 
 
-class IPairwiseModel(nn.Module):
+class IPairwiseDistanceModel(nn.Module):
+    """
+    Model like this takes two inputs (for example, they may be vectors or images)
+    and returns the distance between those two inputs.
+
+    """
+
     def forward(self, x1: Any, x2: Any) -> Tensor:
         raise NotImplementedError()
 
 
-__all__ = ["IExtractor", "IFreezable", "IPairwiseModel"]
+__all__ = ["IExtractor", "IFreezable", "IPairwiseDistanceModel"]

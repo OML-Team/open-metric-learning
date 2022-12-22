@@ -7,7 +7,7 @@ import torch
 
 from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist, take_slice_2d
+from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist, take_2d
 
 TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, torch.Tensor]]]
 
@@ -86,7 +86,7 @@ def calc_retrieval_metrics(
     max_k = min(max_k, gallery_sz)
 
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
-    gt_tops = take_slice_2d(mask_gt, ii_top_k)
+    gt_tops = take_2d(mask_gt, ii_top_k)
     n_gt = mask_gt.sum(dim=1)
 
     metrics: TMetricsDict = defaultdict(dict)

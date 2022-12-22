@@ -11,15 +11,49 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
-def take_slice_2d(matrix: Tensor, indeces_matrix: Tensor) -> Tensor:
-    n = matrix.shape[0]
+def take_2d(x: Tensor, indeces: Tensor) -> Tensor:
+    """
+    Args:
+        x: Tensor with the shape of ``[N, M]``
+        indeces: Tensor of integers with the shape of ``[N, P]``
+            Note, rows in ``indeces`` may contain duplicated values.
+            It means that we can take the same element from ``x`` several times.
 
-    assert n == indeces_matrix.shape[0]
-    assert len(indeces_matrix.shape) == 2
+    Returns:
+        Tensor of the items picked from ``x`` with the shape of ``[N, P]``
 
-    ii_arange = torch.arange(n).unsqueeze(-1).expand(n, indeces_matrix.shape[1])
+    """
+    assert x.ndim == indeces.ndim == 2
+    assert x.shape[0] == indeces.shape[0]
 
-    return matrix[ii_arange, indeces_matrix]
+    n = x.shape[0]
+    ii = torch.arange(n).unsqueeze(-1).expand(n, indeces.shape[1])
+
+    return x[ii, indeces]
+
+
+def assign_2d(x: Tensor, indeces: Tensor, new_values: Tensor) -> Tensor:
+    """
+    Args:
+        x: Tensor with the shape of ``[N, M]``
+        indeces: Tensor of integers with the shape of ``[N, P]``, where ``P`` <= ``M``
+        new_values: Tensor with the shape of ``[N, P]``
+
+    Returns:
+        Tensor with the shape of ``[N, M]`` constructed by the following rule:
+        ``x[i, indeces[i, j]] = new_values[i, j]``
+
+    """
+    assert x.ndim == indeces.ndim == new_values.ndim
+    assert x.shape[0] == indeces.shape[0] == new_values.shape[0]
+    assert indeces.shape == new_values.shape
+
+    n = x.shape[0]
+    ii = torch.arange(n).unsqueeze(-1).expand(n, indeces.shape[1])
+
+    x[ii, indeces] = new_values
+
+    return x
 
 
 def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
