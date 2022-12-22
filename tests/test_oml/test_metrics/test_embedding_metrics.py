@@ -16,9 +16,18 @@ from oml.const import (
     PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
+from oml.models.siamese import SiameseL2
+from oml.postprocessors.pairwise_postprocessor import PairwisePostprocessor
 from oml.utils.misc import compare_dicts_recursively, one_hot
 
-oh = partial(one_hot, dim=8)
+FEAT_DIM = 8
+oh = partial(one_hot, dim=FEAT_DIM)
+
+
+def get_identity_postprocessor() -> PairwisePostprocessor:
+    model = SiameseL2(feat_dim=FEAT_DIM, init_with_identity=True)
+    processor = PairwisePostprocessor(pairwise_model=model, top_n=1000)
+    return processor
 
 
 @pytest.fixture()
@@ -148,6 +157,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
+        postprocessor=get_identity_postprocessor(),
     )
 
     calc.setup(num_samples=num_samples)
@@ -183,6 +193,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
+        postprocessor=get_identity_postprocessor(),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
@@ -246,6 +257,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         precision_top_k=(),
         map_top_k=(2,),
         fmr_vals=tuple(),
+        postprocessor=get_identity_postprocessor(),
     )
 
     calc.setup(num_samples=num_samples)
@@ -270,6 +282,7 @@ def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
         precision_top_k=(),
         map_top_k=(),
         fmr_vals=tuple(),
+        postprocessor=get_identity_postprocessor(),
     )
 
     assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys

@@ -1,5 +1,8 @@
+from typing import Any, Tuple
+
 import pytest
 import torch
+from torch import Tensor
 
 from oml.functional.metrics import calc_distance_matrix, calc_mask_to_ignore
 from oml.models.siamese import SiameseL2
@@ -7,14 +10,14 @@ from oml.postprocessors.pairwise_postprocessor import PairwisePostprocessor
 from oml.utils.misc_torch import elementwise_dist
 
 
-def independent_query_gallery_case():
+def independent_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     embeddings = torch.randn((7, 4))
     is_query = torch.tensor([1, 1, 1, 0, 0, 0, 0]).bool()
     is_gallery = torch.tensor([0, 0, 0, 1, 1, 1, 1]).bool()
     return embeddings, is_query, is_gallery
 
 
-def same_query_gallery_case():
+def same_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     sz = 7
     embeddings = torch.randn((sz, 4))
     is_query = torch.ones(sz).bool()
@@ -23,7 +26,7 @@ def same_query_gallery_case():
 
 
 @pytest.mark.parametrize("case", [independent_query_gallery_case(), same_query_gallery_case()])
-def test_pairwise_postprocessor(case):
+def test_pairwise_postprocessor(case: Any) -> None:
     top_n = 2
 
     embeddings, is_query, is_gallery = case
@@ -38,7 +41,6 @@ def test_pairwise_postprocessor(case):
         embeddings=embeddings,
         is_query=is_query,
         is_gallery=is_gallery,
-        mask_to_ignore=mask_to_ignore,
         distance_matrix=distance_matrix.clone(),
     )
 

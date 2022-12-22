@@ -41,6 +41,7 @@ from oml.interfaces.postprocessor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
+from oml.utils.misc_torch import take_slice_2d
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -121,14 +122,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.categories_key = categories_key
         self.postprocessor = postprocessor
 
-        # todo
-        from oml.models.siamese import SiameseL2
-        from oml.postprocessors.pairwise_postprocessor import PairwisePostprocessor
-
-        self.postprocessor = PairwisePostprocessor(
-            pairwise_model=SiameseL2(feat_dim=8, init_with_identity=True), top_n=1000
-        )
-
         self.distance_matrix = None
         self.mask_gt = None
         self.metrics = None
@@ -167,16 +160,11 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
 
-        n_queries = is_query.sum()
-
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
-
-        # print(distance_matrix)
-        # print(mask_gt)
 
         # todo: also adjust number of gt
         if self.postprocessor:
@@ -184,20 +172,8 @@ class EmbeddingMetrics(IMetricVisualisable):
                 embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, distance_matrix=distance_matrix
             )
 
-            ii_arange = (
-                torch.arange(n_queries)
-                .unsqueeze(-1)
-                .expand(n_queries, min(self.postprocessor.top_n, len(picked_galleries_ids)))
-            )
-
-            mask_gt = mask_gt[ii_arange, picked_galleries_ids]
-            mask_to_ignore = mask_to_ignore[ii_arange, picked_galleries_ids]
-
-            assert n_queries == is_query.sum(), "Postprocessing must not change the number of queries."
-
-            assert (
-                len(is_query) == len(is_gallery) == len(embeddings) == len(labels)
-            ), "Postprocessing must only change the input sizes simultaneously"
+            mask_gt = take_slice_2d(mask_gt, picked_galleries_ids)
+            mask_to_ignore = take_slice_2d(mask_to_ignore, picked_galleries_ids)
 
         self.mask_to_ignore = mask_to_ignore
         self.mask_gt = mask_gt
@@ -255,7 +231,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                 mask = categories == category
                 metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
 
-        self.metrics_unreduced = metrics
+        self.metrics_unreduced = metrics  # type: ignore
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
         if self.return_only_main_category:

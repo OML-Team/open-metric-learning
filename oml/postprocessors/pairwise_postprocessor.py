@@ -1,7 +1,11 @@
+from typing import Tuple
+
 import torch
+from torch import Tensor
 
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.postprocessor import IPostprocessor
+from oml.models.siamese import extract_pairwise
 
 
 class PairwisePostprocessor(IPostprocessor):
@@ -9,7 +13,9 @@ class PairwisePostprocessor(IPostprocessor):
         self.model = pairwise_model
         self.top_n = top_n
 
-    def process(self, embeddings, distance_matrix, is_query, is_gallery):
+    def process(  # type: ignore
+        self, embeddings: Tensor, distance_matrix: Tensor, is_query: Tensor, is_gallery: Tensor  # type: ignore
+    ) -> Tuple[Tensor, Tensor]:  # type: ignore
         ids_queries_all = torch.nonzero(is_query).squeeze()
         ids_galleries_all = torch.nonzero(is_gallery).squeeze()
 
@@ -28,8 +34,7 @@ class PairwisePostprocessor(IPostprocessor):
         embeddings_query = embeddings[ids_queries_all[ids_query_range]]
         embeddings_gallery = embeddings[picked_galleries_ids]
 
-        # pass all the top pairs into the model (todo: batch-inference)
-        output = self.model(embeddings_query, embeddings_gallery)
+        output = extract_pairwise(self.model, embeddings_query, embeddings_gallery)
 
         output = output.view(n_queries, top_n)
         ids_gallery_top = ids_gallery_top.view(n_queries, top_n)

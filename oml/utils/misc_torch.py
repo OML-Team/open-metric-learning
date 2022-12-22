@@ -11,6 +11,17 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
+def take_slice_2d(matrix: Tensor, indeces_matrix: Tensor) -> Tensor:
+    n = matrix.shape[0]
+
+    assert n == indeces_matrix.shape[0]
+    assert len(indeces_matrix.shape) == 2
+
+    ii_arange = torch.arange(n).unsqueeze(-1).expand(n, indeces_matrix.shape[1])
+
+    return matrix[ii_arange, indeces_matrix]
+
+
 def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     """
     Args:
