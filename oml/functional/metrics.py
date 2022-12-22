@@ -152,10 +152,11 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
 
 
 def apply_mask_to_ignore(
-    distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor
+    distances: torch.Tensor, mask_gt: Optional[torch.Tensor], mask_to_ignore: torch.Tensor
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     distances[mask_to_ignore] = float("inf")
-    mask_gt[mask_to_ignore] = False
+    if mask_gt is not None:
+        mask_gt[mask_to_ignore] = False
     return distances, mask_gt
 
 
