@@ -36,7 +36,7 @@ def assign_2d(x: Tensor, indeces: Tensor, new_values: Tensor) -> Tensor:
     """
     Args:
         x: Tensor with the shape of ``[N, M]``
-        indeces: Tensor of integers with the shape of ``[N, P]``, where ``P`` <= ``M``
+        indeces: Tensor of integers with the shape of ``[N, P]``, where ``P <= M``
         new_values: Tensor with the shape of ``[N, P]``
 
     Returns:

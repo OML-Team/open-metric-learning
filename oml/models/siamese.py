@@ -7,8 +7,8 @@ from oml.utils.misc_torch import elementwise_dist
 
 class SimpleSiamese(IPairwiseDistanceModel):
     """
-    Model takes two embeddings as inputs, transforms it and estimates the
-    corresponding distance after the transformation.
+    Model takes two embeddings as inputs, transforms them and estimates the
+    corresponding *distance* (not in a strictly mathematical sense) after the transformation.
 
     """
 
@@ -17,7 +17,7 @@ class SimpleSiamese(IPairwiseDistanceModel):
         Args:
             feat_dim: Expected size of each input.
             identity_init: If ``True``, models' weights initialised in a way when
-                it simply estimates L2 distance between input embeddings.
+                model simply estimates L2 distance between the original embeddings.
 
         """
         super(SimpleSiamese, self).__init__()
@@ -37,7 +37,7 @@ class SimpleSiamese(IPairwiseDistanceModel):
             x2: Embedding with the shape of ``[batch_size, feat_dim]``
 
         Returns:
-            L2 distance between transformed embeddings.
+            *Distance* between transformed inputs.
 
         """
         x1 = self.proj1(x1)

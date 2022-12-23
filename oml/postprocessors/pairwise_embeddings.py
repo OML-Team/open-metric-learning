@@ -9,10 +9,9 @@ from oml.utils.misc_torch import assign_2d
 
 class PairwiseEmbeddingsPostprocessor(IPostprocessor):
     """
-    This postprocessor allows us to re-estimate the distances between queries and gallery
-    items with the smallest distances to these queries. It creates pairs
-    of embeddings related to such queries and galleries and feeds them to a model,
-    which is able to re-estimate the distances inside these pairs.
+    This postprocessor allows us to re-estimate the distances between queries and galleries
+    closest to them. It creates pairs of embeddings which represent such queries and galleries
+    and feeds them to a pairwise model.
 
     """
 
@@ -20,12 +19,12 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         """
         Args:
             pairwise_model: Model which is able to take two embeddings as inputs
-                and re-estimate the distance between them.
+                and estimate the *distance* (not in a strictly mathematical sense) between them.
             top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
-                and ``top_n`` most relevant items from the gallery.
+                and ``top_n`` most relevant galleries.
 
         """
-        assert top_n > 0, "Number of pairs to process has to be greater than 0."
+        assert top_n > 0, "Number of galleries for each query to process has to be greater than 0."
 
         self.model = pairwise_model
         self.top_n = top_n
@@ -38,7 +37,7 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
             emb_gallery: Embeddings with the shape of ``[G, features_dim]``
 
         Returns:
-            Matrix with the shape of ``[Q, G]`` containing updated distances.
+            Matrix with the shape of ``[Q, G]`` containing updated *distances*.
 
         """
         n_queries = len(emb_query)

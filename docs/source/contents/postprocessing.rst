@@ -10,10 +10,6 @@ Pairwise Processing
 Note, this part of the library is under construction.
 
 
-Interfaces
-=============================
-
-
 IPostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.postprocessor.IPostprocessor
@@ -32,23 +28,21 @@ IPairwiseDistanceModel
     .. automethod:: forward
 
 
-Implementations
-=============================
-
-
 PairwiseEmbeddingsPostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.postprocessor.pairwise_embeddings.PairwiseEmbeddingsPostprocessor
+.. autoclass:: oml.postprocessors.pairwise_embeddings.PairwiseEmbeddingsPostprocessor
     :undoc-members:
     :show-inheritance:
 
+    .. automethod:: __init__
     .. automethod:: process
 
 
 SimpleSiamese
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.SimpleSiamese
+.. autoclass:: oml.models.siamese.SimpleSiamese
     :undoc-members:
     :show-inheritance:
 
+    .. automethod:: __init__
     .. automethod:: forward
