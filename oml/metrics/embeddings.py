@@ -39,6 +39,7 @@ from oml.functional.metrics import (
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.postprocessor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
+from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 
@@ -166,11 +167,14 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
         if self.postprocessor:
-            self.distance_matrix = self.postprocessor.process(
-                distances=self.distance_matrix,
-                emb_query=embeddings[is_query],  # type: ignore
-                emb_gallery=embeddings[is_gallery],  # type: ignore
-            )
+            if isinstance(self.postprocessor, PairwiseEmbeddingsPostprocessor):
+                self.distance_matrix = self.postprocessor.process(
+                    distances=self.distance_matrix,
+                    emb_query=embeddings[is_query],  # type: ignore
+                    emb_gallery=embeddings[is_gallery],  # type: ignore
+                )
+            else:
+                raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():

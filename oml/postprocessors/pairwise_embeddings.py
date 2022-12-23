@@ -8,13 +8,39 @@ from oml.utils.misc_torch import assign_2d
 
 
 class PairwiseEmbeddingsPostprocessor(IPostprocessor):
+    """
+    This postprocessor allows us to re-estimate the distances between queries and gallery
+    items with the smallest distances to these queries. It creates pairs
+    of embeddings related to such queries and galleries and feeds them to a model,
+    which is able to re-estimate the distances inside these pairs.
+
+    """
+
     def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int):
-        assert top_n > 0
+        """
+        Args:
+            pairwise_model: Model which is able to take two embeddings as inputs
+                and re-estimate the distance between them.
+            top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
+                and ``top_n`` most relevant items from the gallery.
+
+        """
+        assert top_n > 0, "Number of pairs to process has to be greater than 0."
 
         self.model = pairwise_model
         self.top_n = top_n
 
     def process(self, distances: Tensor, emb_query: Tensor, emb_gallery: Tensor) -> Tensor:  # type: ignore
+        """
+        Args:
+            distances: Matrix with the shape of ``[Q, G]``
+            emb_query: Embeddings with the shape of ``[Q, features_dim]``
+            emb_gallery: Embeddings with the shape of ``[G, features_dim]``
+
+        Returns:
+            Matrix with the shape of ``[Q, G]`` containing updated distances.
+
+        """
         n_queries = len(emb_query)
         n_galleries = len(emb_gallery)
 
@@ -31,7 +57,7 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         distances_upd = distances_upd.view(n_queries, top_n)
 
         # update distances for top-n galleries, keeping the order of rest of the galleries (we use offset for it)
-        offset = distances_upd.min(dim=1)[0] - distances.min(dim=1)[0] + torch.finfo(torch.float32).eps
+        offset = distances_upd.max(dim=1)[0] - distances.min(dim=1)[0] - torch.finfo(torch.float32).eps
         distances += offset.unsqueeze(-1)
         distances = assign_2d(x=distances, indeces=ii_top.view(n_queries, top_n), new_values=distances_upd)
 

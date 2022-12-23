@@ -44,7 +44,7 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
 @pytest.mark.parametrize("top_n", [1, 2, 5, 1000])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "same_query_gallery_case"])
 def test_identity_processing(request: pytest.FixtureRequest, fixture_name: str, top_n: int) -> None:
-    embeddings, is_query, is_gallery = request.getfixturevalue("independent_query_gallery_case")
+    embeddings, is_query, is_gallery = request.getfixturevalue(fixture_name)
     embeddings_query = embeddings[is_query]
     embeddings_gallery = embeddings[is_gallery]
 

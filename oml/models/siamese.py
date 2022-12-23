@@ -6,7 +6,20 @@ from oml.utils.misc_torch import elementwise_dist
 
 
 class SimpleSiamese(IPairwiseDistanceModel):
+    """
+    Model takes two embeddings as inputs, transforms it and estimates the
+    corresponding distance after the transformation.
+
+    """
+
     def __init__(self, feat_dim: int, identity_init: bool):
+        """
+        Args:
+            feat_dim: Expected size of each input.
+            identity_init: If ``True``, models' weights initialised in a way when
+                it simply estimates L2 distance between input embeddings.
+
+        """
         super(SimpleSiamese, self).__init__()
         self.feat_dim = feat_dim
 
@@ -18,6 +31,15 @@ class SimpleSiamese(IPairwiseDistanceModel):
             self.proj2.load_state_dict({"weight": torch.eye(feat_dim)})
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        """
+        Args:
+            x1: Embedding with the shape of ``[batch_size, feat_dim]``
+            x2: Embedding with the shape of ``[batch_size, feat_dim]``
+
+        Returns:
+            L2 distance between transformed embeddings.
+
+        """
         x1 = self.proj1(x1)
         x2 = self.proj2(x2)
         y = elementwise_dist(x1, x2, p=2)

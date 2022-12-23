@@ -3,7 +3,7 @@ from torch import Tensor
 
 class IPostprocessor:
     """
-    This is a parent class for the classes which apply some postprocessing
+    This is a parent class for the classes which apply some postprocessing.rst
     after the embeddings have been extracted and distance matrix was calculated.
     For example, we may want to apply some of the dimension reduction methods or
     one of query-reranking techniques.
