@@ -56,7 +56,7 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         distances_upd = distances_upd.view(n_queries, top_n)
 
         # update distances for top-n galleries, keeping the order of rest of the galleries (we use offset for it)
-        offset = distances_upd.max(dim=1)[0] - distances.min(dim=1)[0] - torch.finfo(torch.float32).eps
+        offset = distances_upd.max(dim=1)[0] - distances.min(dim=1)[0] + torch.finfo(torch.float32).eps
         distances += offset.unsqueeze(-1)
         distances = assign_2d(x=distances, indeces=ii_top.view(n_queries, top_n), new_values=distances_upd)
 
