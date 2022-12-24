@@ -40,12 +40,13 @@ def pairwise_inference(
 ) -> Tensor:
     dataset = VectorsPairsDataset(x1=x1, x2=x2)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+    device = next(model.parameters()).device
 
     outputs = []
     with torch.no_grad():
         for batch in loader:
-            x1 = batch[dataset.pair_1st_key].to(model.device)
-            x2 = batch[dataset.pair_2nd_key].to(model.device)
+            x1 = batch[dataset.pair_1st_key].to(device)
+            x2 = batch[dataset.pair_2nd_key].to(device)
             outputs.append(model(x1=x1, x2=x2))
 
     return torch.stack(outputs).detach().cpu()

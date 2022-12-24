@@ -45,18 +45,20 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
 
         assert list(distances.shape) == [n_queries, n_galleries]
 
-        # pick top n galleries for each query with the smallest distances
+        # 1. Pick top n galleries for each query with the smallest distances
         top_n = min(self.top_n, n_galleries)
         ii_top = torch.topk(distances, k=top_n, largest=False)[1].view(-1)
 
-        # create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
+        # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
         emb_query = emb_query.repeat_interleave(top_n, dim=0)
         emb_gallery = emb_gallery[ii_top]
         distances_upd = pairwise_inference(self.model, emb_query, emb_gallery)
         distances_upd = distances_upd.view(n_queries, top_n)
 
-        # update distances for top-n galleries, keeping the order of rest of the galleries (we use offset for it)
-        offset = distances_upd.max(dim=1)[0] - distances.min(dim=1)[0] + torch.finfo(torch.float32).eps
+        # 3. Update distances for top-n galleries
+        # In order of keeping the relative order with the rest of the galleries,
+        # we make all of them greater than the maximum distance among re-estimated distances
+        offset = distances_upd.max(dim=1)[0] + torch.finfo(torch.float32).eps
         distances += offset.unsqueeze(-1)
         distances = assign_2d(x=distances, indeces=ii_top.view(n_queries, top_n), new_values=distances_upd)
 
