@@ -45,17 +45,19 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
 
 @pytest.mark.parametrize("top_n", [1, 2, 5, 100])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
-def test_identity_processing(request: pytest.FixtureRequest, fixture_name: str, top_n: int) -> None:
+def test_trivial_processing_does_not_change_metric(
+    request: pytest.FixtureRequest, fixture_name: str, top_n: int
+) -> None:
     embeddings, is_query, is_gallery = request.getfixturevalue(fixture_name)
     embeddings_query = embeddings[is_query]
     embeddings_gallery = embeddings[is_gallery]
 
     distances = calc_distance_matrix(embeddings, is_query, is_gallery)
 
-    id_model = SimpleSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
-    id_processor = PairwiseEmbeddingsPostprocessor(pairwise_model=id_model, top_n=top_n)
+    model = SimpleSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
 
-    distances_processed = id_processor.process(
+    distances_processed = processor.process(
         emb_query=embeddings_query,
         emb_gallery=embeddings_gallery,
         distances=distances.clone(),
@@ -77,7 +79,7 @@ def perfect_case() -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     return query_embeddings, gallery_embeddings, query_labels, gallery_labels
 
 
-def test_processing_fixes_broken_perfect_case() -> None:
+def test_trivial_processing_fixes_broken_perfect_case() -> None:
     """
     The idea of the test is the following:
 
@@ -112,8 +114,8 @@ def test_processing_fixes_broken_perfect_case() -> None:
         metrics = flatten_dict(calc_retrieval_metrics(distances=distances, **args))
 
         # Metrics after broken distances have been fixed
-        id_model = SimpleSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
-        processor = PairwiseEmbeddingsPostprocessor(pairwise_model=id_model, top_n=top_n)
+        model = SimpleSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
+        processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
         distances_upd = processor.process(distances, query_embeddings, gallery_embeddings)
         metrics_upd = flatten_dict(calc_retrieval_metrics(distances=distances_upd, **args))
 

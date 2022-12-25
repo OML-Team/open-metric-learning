@@ -172,8 +172,8 @@ class EmbeddingMetrics(IMetricVisualisable):
                 max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
                 if max_k > self.postprocessor.top_n:
                     warn(
-                        f"One of retrieval metrics will be computed at k = {max_k},"
-                        f"but postprocessor will re-rank only {self.postprocessor.top_n} closest galleries."
+                        f"One of retrieval metrics will be computed at k = {max_k}, "
+                        f"but postprocessor will re-rank only {self.postprocessor.top_n} closest galleries. "
                         f"Make sure that this is the desired behaviour."
                     )
                     self.distance_matrix = self.postprocessor.process(
