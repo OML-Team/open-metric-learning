@@ -92,5 +92,5 @@ X2_KEY = "x2"
 Y1_KEY = "y1"
 Y2_KEY = "y2"
 
-PAIR_1ST_KEY = "x1"
-PAIR_2ND_KEY = "x2"
+PAIR_1ST_KEY = "input_tensors_1"
+PAIR_2ND_KEY = "input_tensors_2"

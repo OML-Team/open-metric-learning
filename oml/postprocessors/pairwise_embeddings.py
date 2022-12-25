@@ -60,7 +60,7 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         # we make all of them greater than the maximum distance among re-estimated distances
         offset = distances_upd.max(dim=1)[0] + torch.finfo(torch.float32).eps
         distances += offset.unsqueeze(-1)
-        distances = assign_2d(x=distances, indeces=ii_top.view(n_queries, top_n), new_values=distances_upd)
+        distances = assign_2d(x=distances, indices=ii_top.view(n_queries, top_n), new_values=distances_upd)
 
         assert list(distances.shape) == [n_queries, n_galleries]
 

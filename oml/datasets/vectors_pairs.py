@@ -3,6 +3,7 @@ from typing import Dict
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
+from tqdm.auto import tqdm
 
 from oml.const import PAIR_1ST_KEY, PAIR_2ND_KEY
 from oml.interfaces.models import IPairwiseDistanceModel
@@ -16,6 +17,7 @@ class VectorsPairsDataset(Dataset):
 
     def __init__(self, x1: Tensor, x2: Tensor, pair_1st_key: str = PAIR_1ST_KEY, pair_2nd_key: str = PAIR_2ND_KEY):
         assert x1.shape == x2.shape
+        assert x1.ndim >= 2
 
         self.pair_1st_key = pair_1st_key
         self.pair_2nd_key = pair_2nd_key
@@ -37,10 +39,14 @@ def pairwise_inference(
         x2: Tensor,
         num_workers: int = 0,
         batch_size: int = 512,
+        verbose: bool = False
 ) -> Tensor:
+    model.eval()
     dataset = VectorsPairsDataset(x1=x1, x2=x2)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
     device = next(model.parameters()).device
+
+    loader = tqdm(loader) if verbose else loader
 
     outputs = []
     with torch.no_grad():
@@ -49,7 +55,7 @@ def pairwise_inference(
             x2 = batch[dataset.pair_2nd_key].to(device)
             outputs.append(model(x1=x1, x2=x2))
 
-    return torch.stack(outputs).detach().cpu()
+    return torch.cat(outputs).detach().cpu()
 
 
 __all__ = ["VectorsPairsDataset", "pairwise_inference"]
