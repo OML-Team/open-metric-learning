@@ -164,7 +164,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
-        postprocessor=get_trivial_postprocessor(top_n=1),
+        postprocessor=get_trivial_postprocessor(top_n=2),
     )
 
     calc.setup(num_samples=num_samples)

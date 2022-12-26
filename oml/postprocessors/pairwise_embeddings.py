@@ -24,7 +24,7 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
                 and ``top_n`` most relevant galleries.
 
         """
-        assert top_n > 0, "Number of galleries for each query to process has to be greater than 0."
+        assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
 
         self.model = pairwise_model
         self.top_n = top_n

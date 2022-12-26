@@ -1,3 +1,4 @@
+import math
 from functools import partial
 from random import randint, random
 from typing import Tuple
@@ -7,12 +8,14 @@ import torch
 from torch import Tensor
 
 from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
+from oml.interfaces.models import IPairwiseDistanceModel
 from oml.models.siamese import SimpleSiamese
 from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import flatten_dict, one_hot
 from oml.utils.misc_torch import pairwise_dist
 
-oh = partial(one_hot, dim=8)
+FEAT_SIZE = 8
+oh = partial(one_hot, dim=FEAT_SIZE)
 
 
 @pytest.fixture
@@ -43,7 +46,7 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     return embeddings, is_query, is_gallery
 
 
-@pytest.mark.parametrize("top_n", [1, 2, 5, 100])
+@pytest.mark.parametrize("top_n", [2, 5, 100])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
 def test_trivial_processing_does_not_change_metric(
     request: pytest.FixtureRequest, fixture_name: str, top_n: int
@@ -106,7 +109,7 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
 
         # As mentioned before, for this test the exact values of parameters don't matter
         top_k = (randint(1, ng - 1),)
-        top_n = randint(1, 10)
+        top_n = randint(2, 10)
 
         args = {"mask_gt": mask_gt, "precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k, "fmr_vals": ()}
 
@@ -123,3 +126,39 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
             metric = metrics[key]
             metric_upd = metrics_upd[key]
             assert metric_upd >= metric, (key, metric, metric_upd)
+
+
+class DummyPairwise(IPairwiseDistanceModel):
+    def __init__(self, distances_to_return: Tensor):
+        super(DummyPairwise, self).__init__()
+        self.distances_to_return = distances_to_return
+        self.parameter = torch.nn.Linear(1, 1)
+
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return self.distances_to_return
+
+
+def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
+    """
+    The idea of the test is similar to "test_trivial_processing_fixes_broken_perfect_case",
+    but this time we check the exact metrics values.
+
+    """
+    distances = torch.tensor([[0.8, 0.3, 0.2, 0.4, 0.5]])
+    mask_gt = torch.tensor([[1, 1, 0, 1, 0]]).bool()
+
+    args = {"mask_gt": mask_gt, "precision_top_k": (1, 3)}
+
+    precisions = calc_retrieval_metrics(distances=distances, **args)["precision"]
+    assert math.isclose(precisions[1], 0)
+    assert math.isclose(precisions[3], 2 / 3, abs_tol=1e-5)
+
+    # Now let's fix the error with dummy pairwise model
+    model = DummyPairwise(distances_to_return=torch.tensor([3.5, 2.5]))
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=2)
+    distances_upd = processor.process(
+        distances, emb_query=torch.randn((1, FEAT_SIZE)), emb_gallery=torch.randn((5, FEAT_SIZE))
+    )
+    precisions_upd = calc_retrieval_metrics(distances=distances_upd, **args)["precision"]
+    assert math.isclose(precisions_upd[1], 1)
+    assert math.isclose(precisions_upd[3], 2 / 3, abs_tol=1e-5)
