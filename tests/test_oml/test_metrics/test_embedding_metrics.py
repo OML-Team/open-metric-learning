@@ -31,7 +31,7 @@ def get_trivial_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
     return processor
 
 
-def compare_tensors_as_sets(x: Tensor, y: Tensor, decimal_tol: int = 5) -> bool:
+def compare_tensors_as_sets(x: Tensor, y: Tensor, decimal_tol: int = 4) -> bool:
     set_x = torch.round(x, decimals=decimal_tol).unique()
     set_y = torch.round(y, decimals=decimal_tol).unique()
     return bool(torch.isclose(set_x, set_y).all())

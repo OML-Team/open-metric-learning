@@ -56,10 +56,20 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         distances_upd = distances_upd.view(n_queries, top_n)
 
         # 3. Update distances for top-n galleries
-        # In order of keeping the relative order with the rest of the galleries,
-        # we make all of them greater than the maximum distance among re-estimated distances
-        offset = distances_upd.max(dim=1)[0] + torch.finfo(torch.float32).eps
-        distances += offset.unsqueeze(-1)
+        # The idea is that we somehow permute top-n galleries, but rest of the galleries
+        # we keep in the end of the list as before permutation.
+        # To do so, we add an offset to these galleries (which did not participate in permutation)
+        if top_n < n_galleries:
+            # Here we use the fact that distances not participating in permutation start with top_n + 1 position
+            min_in_old_distances = torch.topk(distances, k=top_n + 1, largest=False)[0][:, -1]
+            max_in_new_distances = distances_upd.max(dim=1)[0]
+            offset = max_in_new_distances - min_in_old_distances + 1e-5  # we also need some eps if max == min
+            distances += offset.unsqueeze(-1)
+        else:
+            # Pairwise postprocessor has been applied to all possible pairs, so, there are no rest distances.
+            # Thus, we don't need to care about order and offset at all.
+            pass
+
         distances = assign_2d(x=distances, indices=ii_top.view(n_queries, top_n), new_values=distances_upd)
 
         assert list(distances.shape) == [n_queries, n_galleries]
