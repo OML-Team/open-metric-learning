@@ -25,7 +25,7 @@ FEAT_DIM = 8
 oh = partial(one_hot, dim=FEAT_DIM)
 
 
-def get_identity_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
+def get_trivial_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
     model = SimpleSiamese(feat_dim=FEAT_DIM, identity_init=True)
     processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
     return processor
@@ -164,7 +164,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
-        postprocessor=get_identity_postprocessor(top_n=1),
+        postprocessor=get_trivial_postprocessor(top_n=2),
     )
 
     calc.setup(num_samples=num_samples)
@@ -200,7 +200,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
-        postprocessor=get_identity_postprocessor(top_n=3),
+        postprocessor=get_trivial_postprocessor(top_n=3),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
@@ -264,7 +264,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         precision_top_k=(),
         map_top_k=(2,),
         fmr_vals=tuple(),
-        postprocessor=get_identity_postprocessor(top_n=1_000),
+        postprocessor=get_trivial_postprocessor(top_n=1_000),
     )
 
     calc.setup(num_samples=num_samples)
@@ -289,7 +289,7 @@ def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
         precision_top_k=(),
         map_top_k=(),
         fmr_vals=tuple(),
-        postprocessor=get_identity_postprocessor(top_n=5),
+        postprocessor=get_trivial_postprocessor(top_n=5),
     )
 
     assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys

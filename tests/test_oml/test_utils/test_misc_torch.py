@@ -21,7 +21,7 @@ def test_take_2d() -> None:
         [3, 5, 2],
     ])
 
-    indeces = torch.tensor([
+    indices = torch.tensor([
         [0, 0, 2, 1],
         [2, 0, 1, 1]
     ])
@@ -31,7 +31,7 @@ def test_take_2d() -> None:
         [2, 3, 5, 5]
     ])
 
-    assert (expected == take_2d(x=x, indeces=indeces)).all()
+    assert (expected == take_2d(x=x, indices=indices)).all()
 
 
 # fmt: off
@@ -41,7 +41,7 @@ def test_assign_2d() -> None:
         [3, 5, 2],
     ])
 
-    indeces = torch.tensor([
+    indices = torch.tensor([
         [0, 2],
         [2, 1]
     ])
@@ -56,7 +56,7 @@ def test_assign_2d() -> None:
         [3, 7, 6],
     ])
 
-    assert (expected == assign_2d(x=x, indeces=indeces, new_values=new_values)).all()
+    assert (expected == assign_2d(x=x, indices=indices, new_values=new_values)).all()
 
 
 def test_pca() -> None:

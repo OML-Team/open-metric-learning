@@ -11,47 +11,47 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
-def take_2d(x: Tensor, indeces: Tensor) -> Tensor:
+def take_2d(x: Tensor, indices: Tensor) -> Tensor:
     """
     Args:
         x: Tensor with the shape of ``[N, M]``
-        indeces: Tensor of integers with the shape of ``[N, P]``
-            Note, rows in ``indeces`` may contain duplicated values.
+        indices: Tensor of integers with the shape of ``[N, P]``
+            Note, rows in ``indices`` may contain duplicated values.
             It means that we can take the same element from ``x`` several times.
 
     Returns:
         Tensor of the items picked from ``x`` with the shape of ``[N, P]``
 
     """
-    assert x.ndim == indeces.ndim == 2
-    assert x.shape[0] == indeces.shape[0]
+    assert x.ndim == indices.ndim == 2
+    assert x.shape[0] == indices.shape[0]
 
     n = x.shape[0]
-    ii = torch.arange(n).unsqueeze(-1).expand(n, indeces.shape[1])
+    ii = torch.arange(n).unsqueeze(-1).expand(n, indices.shape[1])
 
-    return x[ii, indeces]
+    return x[ii, indices]
 
 
-def assign_2d(x: Tensor, indeces: Tensor, new_values: Tensor) -> Tensor:
+def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     """
     Args:
         x: Tensor with the shape of ``[N, M]``
-        indeces: Tensor of integers with the shape of ``[N, P]``, where ``P <= M``
+        indices: Tensor of integers with the shape of ``[N, P]``, where ``P <= M``
         new_values: Tensor with the shape of ``[N, P]``
 
     Returns:
         Tensor with the shape of ``[N, M]`` constructed by the following rule:
-        ``x[i, indeces[i, j]] = new_values[i, j]``
+        ``x[i, indices[i, j]] = new_values[i, j]``
 
     """
-    assert x.ndim == indeces.ndim == new_values.ndim
-    assert x.shape[0] == indeces.shape[0] == new_values.shape[0]
-    assert indeces.shape == new_values.shape
+    assert x.ndim == indices.ndim == new_values.ndim
+    assert x.shape[0] == indices.shape[0] == new_values.shape[0]
+    assert indices.shape == new_values.shape
 
     n = x.shape[0]
-    ii = torch.arange(n).unsqueeze(-1).expand(n, indeces.shape[1])
+    ii = torch.arange(n).unsqueeze(-1).expand(n, indices.shape[1])
 
-    x[ii, indeces] = new_values
+    x[ii, indices] = new_values
 
     return x
 
