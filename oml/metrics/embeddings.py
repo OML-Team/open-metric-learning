@@ -167,22 +167,23 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
-        if self.postprocessor:
-            if isinstance(self.postprocessor, PairwiseEmbeddingsPostprocessor):
-                max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
-                if max_k > self.postprocessor.top_n:
-                    warn(
-                        f"One of retrieval metrics will be computed at k = {max_k},"
-                        f"but postprocessor will re-rank only {self.postprocessor.top_n} closest galleries."
-                        f"Make sure that this is the desired behaviour."
-                    )
-                    self.distance_matrix = self.postprocessor.process(
-                        distances=self.distance_matrix,
-                        emb_query=embeddings[is_query],  # type: ignore
-                        emb_gallery=embeddings[is_gallery],  # type: ignore
-                    )
-            else:
-                raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")
+        if self.postprocessor is None:
+            pass
+        elif isinstance(self.postprocessor, PairwiseEmbeddingsPostprocessor):
+            max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+            if max_k > self.postprocessor.top_n:
+                warn(
+                    f"One of retrieval metrics will be computed at k = {max_k},"
+                    f"but postprocessor will re-rank only {self.postprocessor.top_n} closest galleries."
+                    f"Make sure that this is the desired behaviour."
+                )
+            self.distance_matrix = self.postprocessor.process(
+                distances=self.distance_matrix,
+                emb_query=embeddings[is_query],  # type: ignore
+                emb_gallery=embeddings[is_gallery],  # type: ignore
+            )
+        else:
+            raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
