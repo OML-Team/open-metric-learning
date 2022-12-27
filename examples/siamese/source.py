@@ -17,18 +17,20 @@ class TensorsWithLabels(IDatasetWithLabels):
         self.labels_key = labels_key
         self.category_key = category_key
 
+        self.labels = np.array(self.df["label"])
+
     def __getitem__(self, idx):
         return {
             self.input_tensors_key: self.embeddings[idx],
-            self.labels_key: self.df.iloc[idx]["label"],
-            self.category_key: self.df.iloc[idx]["category"],
+            self.labels_key: self.labels[idx],
+            # self.category_key: self.df.iloc[idx]["category"],
         }
 
     def __len__(self):
         return len(self.df)
 
     def get_labels(self):
-        return np.array(self.df["label"])
+        return self.labels
 
 
 class TensorsQueryGallery(IDatasetQueryGallery):
