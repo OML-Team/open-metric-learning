@@ -41,6 +41,7 @@ def pairwise_inference(
         batch_size: int = 512,
         verbose: bool = False
 ) -> Tensor:
+    prev_mode = model.training
     model.eval()
     dataset = VectorsPairsDataset(x1=x1, x2=x2)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
@@ -55,6 +56,7 @@ def pairwise_inference(
             x2 = batch[dataset.pair_2nd_key].to(device)
             outputs.append(model(x1=x1, x2=x2))
 
+    model.train(prev_mode)
     return torch.cat(outputs).detach().cpu()
 
 
