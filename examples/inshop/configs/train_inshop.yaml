@@ -27,15 +27,15 @@ transforms_val:
 sampler:
   name: category_balance
   args:
-    n_labels: 30
+    n_labels: 37
     n_instances: 4
-    n_categories: 5
+    n_categories: 4
     resample_labels: True
     weight_categories: True
 
 bs_val: 256
 max_epochs: 10000
-valid_period: 1
+valid_period: 4
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
@@ -52,7 +52,7 @@ metric_for_checkpointing: OVERALL/cmc/1
 model:
   name: vit
   args:
-    normalise_features: False
+    normalise_features: True
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
@@ -61,7 +61,7 @@ criterion:
   name: triplet_with_miner
   args:
     need_logs: True
-    margin: null
+    margin: 0.1
     reduction: mean
     miner:
       name: hard_triplets
@@ -86,9 +86,8 @@ hydra_dir: ${logs_root}/${logs_folder}/
 tags:
   - ${postfix}
   - deepfashion
-  - c-${sampler.args.n_categories}
-  - i-${sampler.args.n_instances}
   - m-${criterion.args.margin}
+  - margin_search
 
 hydra:
   run:
