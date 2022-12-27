@@ -48,7 +48,7 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
 
 @pytest.mark.parametrize("top_n", [2, 5, 100])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
-def test_trivial_processing_does_not_change_metric(
+def test_trivial_processing_does_not_change_distances_order(
     request: pytest.FixtureRequest, fixture_name: str, top_n: int
 ) -> None:
     embeddings, is_query, is_gallery = request.getfixturevalue(fixture_name)
