@@ -1,6 +1,7 @@
 from copy import deepcopy
 from pprint import pprint
 from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
+from warnings import warn
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,8 +38,9 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
-from oml.interfaces.post_processor import IPostprocessor
+from oml.interfaces.postprocessor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
+from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 
@@ -124,6 +126,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.distance_matrix = None
         self.mask_gt = None
         self.metrics = None
+        self.metrics_unreduced = None
         self.mask_to_ignore = None
 
         self.check_dataset_validity = check_dataset_validity
@@ -158,15 +161,29 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
 
-        if self.postprocessor:
-            # we have no this functionality yet
-            self.postprocessor.process()
-
         # Note, in some of the datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+
+        if self.postprocessor is None:
+            pass
+        elif isinstance(self.postprocessor, PairwiseEmbeddingsPostprocessor):
+            max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+            if max_k > self.postprocessor.top_n:
+                warn(
+                    f"One of retrieval metrics will be computed at k = {max_k},"
+                    f"but postprocessor will re-rank only {self.postprocessor.top_n} closest galleries."
+                    f"Make sure that this is the desired behaviour."
+                )
+            self.distance_matrix = self.postprocessor.process(
+                distances=self.distance_matrix,
+                emb_query=embeddings[is_query],  # type: ignore
+                emb_gallery=embeddings[is_gallery],  # type: ignore
+            )
+        else:
+            raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
@@ -220,7 +237,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                 mask = categories == category
                 metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
 
-        self.metrics_unreduced = metrics
+        self.metrics_unreduced = metrics  # type: ignore
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
         if self.return_only_main_category:

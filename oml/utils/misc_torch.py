@@ -11,6 +11,51 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
+def take_2d(x: Tensor, indices: Tensor) -> Tensor:
+    """
+    Args:
+        x: Tensor with the shape of ``[N, M]``
+        indices: Tensor of integers with the shape of ``[N, P]``
+            Note, rows in ``indices`` may contain duplicated values.
+            It means that we can take the same element from ``x`` several times.
+
+    Returns:
+        Tensor of the items picked from ``x`` with the shape of ``[N, P]``
+
+    """
+    assert x.ndim == indices.ndim == 2
+    assert x.shape[0] == indices.shape[0]
+
+    n = x.shape[0]
+    ii = torch.arange(n).unsqueeze(-1).expand(n, indices.shape[1])
+
+    return x[ii, indices]
+
+
+def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
+    """
+    Args:
+        x: Tensor with the shape of ``[N, M]``
+        indices: Tensor of integers with the shape of ``[N, P]``, where ``P <= M``
+        new_values: Tensor with the shape of ``[N, P]``
+
+    Returns:
+        Tensor with the shape of ``[N, M]`` constructed by the following rule:
+        ``x[i, indices[i, j]] = new_values[i, j]``
+
+    """
+    assert x.ndim == indices.ndim == new_values.ndim
+    assert x.shape[0] == indices.shape[0] == new_values.shape[0]
+    assert indices.shape == new_values.shape
+
+    n = x.shape[0]
+    ii = torch.arange(n).unsqueeze(-1).expand(n, indices.shape[1])
+
+    x[ii, indices] = new_values
+
+    return x
+
+
 def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     """
     Args:
@@ -161,18 +206,6 @@ class OnlineAvgDict(OnlineDict):
 
 class OnlineSumDict(OnlineDict):
     online_calculator = SumOnline
-
-
-__all__ = [
-    "elementwise_dist",
-    "pairwise_dist",
-    "OnlineCalc",
-    "AvgOnline",
-    "SumOnline",
-    "OnlineDict",
-    "OnlineAvgDict",
-    "OnlineSumDict",
-]
 
 
 class PCA:
@@ -360,3 +393,18 @@ class PCA:
                 "The embeddings couldn't be transformed, due to dimensions mismatch. "
                 f"Expected dimension less than or equal to {self.components.shape[0]}, but got {n_components}"
             )
+
+
+__all__ = [
+    "elementwise_dist",
+    "pairwise_dist",
+    "OnlineCalc",
+    "AvgOnline",
+    "SumOnline",
+    "OnlineDict",
+    "OnlineAvgDict",
+    "OnlineSumDict",
+    "take_2d",
+    "assign_2d",
+    "PCA",
+]

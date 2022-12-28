@@ -4,18 +4,19 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
+from torch import Tensor
 
 from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist
+from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist, take_2d
 
-TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, torch.Tensor]]]
+TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
 
 def calc_retrieval_metrics(
-    distances: torch.Tensor,
-    mask_gt: torch.Tensor,
-    mask_to_ignore: Optional[torch.Tensor] = None,
+    distances: Tensor,
+    mask_gt: Tensor,
+    mask_to_ignore: Optional[Tensor] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -86,8 +87,7 @@ def calc_retrieval_metrics(
     max_k = min(max_k, gallery_sz)
 
     _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
-    ii_arange = torch.arange(query_sz).unsqueeze(-1).expand(query_sz, max_k)
-    gt_tops = mask_gt[ii_arange, ii_top_k]
+    gt_tops = take_2d(mask_gt, ii_top_k)
     n_gt = mask_gt.sum(dim=1)
 
     metrics: TMetricsDict = defaultdict(dict)
@@ -115,7 +115,7 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_topological_metrics(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> TMetricsDict:
+def calc_topological_metrics(embeddings: Tensor, pfc_variance: Tuple[float, ...]) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
@@ -142,7 +142,7 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     output: TMetricsDict = {}
 
     for k, v in metrics_to_reduce.items():
-        if isinstance(v, (torch.Tensor, np.ndarray)):
+        if isinstance(v, (Tensor, np.ndarray)):
             output[k] = v.mean()
         elif isinstance(v, (float, int)):
             output[k] = v
@@ -152,20 +152,18 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     return output
 
 
-def apply_mask_to_ignore(
-    distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor
-) -> Tuple[torch.Tensor, torch.Tensor]:
+def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
     distances[mask_to_ignore] = float("inf")
     mask_gt[mask_to_ignore] = False
     return distances, mask_gt
 
 
 def calc_gt_mask(
-    labels: Union[np.ndarray, torch.Tensor],
-    is_query: Union[np.ndarray, torch.Tensor],
-    is_gallery: Union[np.ndarray, torch.Tensor],
-) -> torch.Tensor:
-    assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [labels, is_query, is_gallery])
+    labels: Union[np.ndarray, Tensor],
+    is_query: Union[np.ndarray, Tensor],
+    is_gallery: Union[np.ndarray, Tensor],
+) -> Tensor:
+    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [labels, is_query, is_gallery])
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
 
@@ -180,10 +178,8 @@ def calc_gt_mask(
     return gt_mask
 
 
-def calc_mask_to_ignore(
-    is_query: Union[np.ndarray, torch.Tensor], is_gallery: Union[np.ndarray, torch.Tensor]
-) -> torch.Tensor:
-    assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [is_query, is_gallery])
+def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]) -> Tensor:
+    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [is_query, is_gallery])
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
@@ -197,11 +193,11 @@ def calc_mask_to_ignore(
 
 
 def calc_distance_matrix(
-    embeddings: Union[np.ndarray, torch.Tensor],
-    is_query: Union[np.ndarray, torch.Tensor],
-    is_gallery: Union[np.ndarray, torch.Tensor],
-) -> torch.Tensor:
-    assert all(isinstance(vector, (np.ndarray, torch.Tensor)) for vector in [embeddings, is_query, is_gallery])
+    embeddings: Union[np.ndarray, Tensor],
+    is_query: Union[np.ndarray, Tensor],
+    is_gallery: Union[np.ndarray, Tensor],
+) -> Tensor:
+    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [embeddings, is_query, is_gallery])
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)
 
@@ -217,7 +213,7 @@ def calc_distance_matrix(
     return distance_matrix
 
 
-def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool = True) -> torch.Tensor:
+def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True) -> Tensor:
     assert embeddings.ndim == 2
     assert embeddings.shape[0] % 3 == 0
 
@@ -234,7 +230,7 @@ def calculate_accuracy_on_triplets(embeddings: torch.Tensor, reduce_mean: bool =
         return acc
 
 
-def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
@@ -274,7 +270,7 @@ def calc_cmc(gt_tops: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor
     return cmc
 
 
-def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -354,7 +350,7 @@ def calc_precision(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, 
     return precision
 
 
-def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) -> List[torch.Tensor]:
+def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -421,7 +417,7 @@ def calc_map(gt_tops: torch.Tensor, n_gt: torch.Tensor, top_k: Tuple[int, ...]) 
     return map
 
 
-def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> torch.Tensor:
+def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> Tensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
@@ -495,7 +491,7 @@ def calc_fnmr_at_fmr(pos_dist: torch.Tensor, neg_dist: torch.Tensor, fmr_vals: T
     return fnmr_at_fmr
 
 
-def calc_pcf(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> List[torch.Tensor]:
+def calc_pcf(embeddings: Tensor, pfc_variance: Tuple[float, ...]) -> List[Tensor]:
     """
     Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
     The metric is defined as a fraction of components needed to explain the required variance in data.
@@ -551,8 +547,8 @@ def calc_pcf(embeddings: torch.Tensor, pfc_variance: Tuple[float, ...]) -> List[
 
 
 def extract_pos_neg_dists(
-    distances: torch.Tensor, mask_gt: torch.Tensor, mask_to_ignore: Optional[torch.Tensor]
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    distances: Tensor, mask_gt: Tensor, mask_to_ignore: Optional[Tensor]
+) -> Tuple[Tensor, Tensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.
 
@@ -575,14 +571,14 @@ def extract_pos_neg_dists(
     return pos_dist, neg_dist
 
 
-def validate_dataset(mask_gt: torch.Tensor, mask_to_ignore: torch.Tensor) -> None:
+def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
     assert (
         (mask_gt & ~mask_to_ignore).any(1).all()
     ), "There are queries without available correct answers in the gallery!"
 
 
-def _to_tensor(array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
-    if isinstance(array, torch.Tensor):
+def _to_tensor(array: Union[np.ndarray, Tensor]) -> Tensor:
+    if isinstance(array, Tensor):
         return array
     elif isinstance(array, np.ndarray):
         return torch.from_numpy(array)

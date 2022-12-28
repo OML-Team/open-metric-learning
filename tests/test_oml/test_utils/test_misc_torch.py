@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from oml.utils.misc_torch import PCA, elementwise_dist
+from oml.utils.misc_torch import PCA, assign_2d, elementwise_dist, take_2d
 
 
 def test_elementwise_dist() -> None:
@@ -12,6 +12,51 @@ def test_elementwise_dist() -> None:
     val_custom = np.sqrt(((np.array(x1) - np.array(x2)) ** 2).sum(axis=1))
 
     assert torch.isclose(val_torch, torch.tensor(val_custom)).all()
+
+
+# fmt: off
+def test_take_2d() -> None:
+    x = torch.tensor([
+        [0, 1, 2],
+        [3, 5, 2],
+    ])
+
+    indices = torch.tensor([
+        [0, 0, 2, 1],
+        [2, 0, 1, 1]
+    ])
+
+    expected = torch.tensor([
+        [0, 0, 2, 1],
+        [2, 3, 5, 5]
+    ])
+
+    assert (expected == take_2d(x=x, indices=indices)).all()
+
+
+# fmt: off
+def test_assign_2d() -> None:
+    x = torch.tensor([
+        [0, 1, 2],
+        [3, 5, 2],
+    ])
+
+    indices = torch.tensor([
+        [0, 2],
+        [2, 1]
+    ])
+
+    new_values = torch.tensor([
+        [5, 3],
+        [6, 7]
+    ])
+
+    expected = torch.tensor([
+        [5, 1, 3],
+        [3, 7, 6],
+    ])
+
+    assert (expected == assign_2d(x=x, indices=indices, new_values=new_values)).all()
 
 
 def test_pca() -> None:

@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Any
 
 from torch import Tensor, nn
 
@@ -34,4 +35,25 @@ class IFreezable(ABC):
         raise NotImplementedError()
 
 
-__all__ = ["IExtractor"]
+class IPairwiseDistanceModel(nn.Module):
+    """
+    Model of this type takes two inputs (for example, they may be vectors or images)
+    and returns the *distance* (not in a strictly mathematical sense) between those two inputs.
+
+    """
+
+    def forward(self, x1: Any, x2: Any) -> Tensor:
+        """
+
+        Args:
+            x1: The first input.
+            x2: The second input.
+
+        Returns:
+            *Distances* between the inputs.
+
+        """
+        raise NotImplementedError()
+
+
+__all__ = ["IExtractor", "IFreezable", "IPairwiseDistanceModel"]

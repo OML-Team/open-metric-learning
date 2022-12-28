@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
-from oml.utils.misc_torch import pairwise_dist
+from oml.utils.misc_torch import pairwise_dist, take_2d
 
 
 class NHardTripletsMiner(ITripletsMinerInBatch):
@@ -104,15 +104,12 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
         all_ids_reduced = torch.arange(len(labels), device=distmat.device)[torch.logical_not(ignore_anchor_mask)]
 
         distmat_reduced = distmat[torch.logical_not(ignore_anchor_mask)]
-        ii_arange = (
-            torch.arange(len(distmat_reduced), device=distmat.device).unsqueeze(-1).expand(distmat_reduced.shape)
-        )
 
         ids_highest_distance = torch.argsort(distmat_reduced, descending=True, dim=1)
         mask_same_label = labels[:, None] == labels[None, :]  # type: ignore
         mask_same_label.fill_diagonal_(False)
         mask_same_label = mask_same_label[torch.logical_not(ignore_anchor_mask)]
-        mask_same_label_sorted_by_dist = mask_same_label[ii_arange, ids_highest_distance]
+        mask_same_label_sorted_by_dist = take_2d(mask_same_label, ids_highest_distance)
         idx_anch_pos_reduced, idx_pos_sorted_by_dist = torch.nonzero(mask_same_label_sorted_by_dist, as_tuple=True)
         hardest_positive = ids_highest_distance[idx_anch_pos_reduced, idx_pos_sorted_by_dist]
         idx_anch_pos = all_ids_reduced[idx_anch_pos_reduced]
@@ -120,7 +117,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
         ids_smallest_distance = torch.flip(ids_highest_distance, dims=(1,))
         mask_diff_label = labels[:, None] != labels[None, :]  # type: ignore
         mask_diff_label = mask_diff_label[torch.logical_not(ignore_anchor_mask)]
-        diff_label_sorted_by_dist = mask_diff_label[ii_arange, ids_smallest_distance]
+        diff_label_sorted_by_dist = take_2d(mask_diff_label, ids_smallest_distance)
         idx_anch_neg_reduced, idx_neg_sorted_by_dist = torch.nonzero(diff_label_sorted_by_dist, as_tuple=True)
         hardest_negative = ids_smallest_distance[idx_anch_neg_reduced, idx_neg_sorted_by_dist]
         idx_anch_neg = all_ids_reduced[idx_anch_neg_reduced]

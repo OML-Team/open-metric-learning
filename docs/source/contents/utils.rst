@@ -25,3 +25,11 @@ PCA
     .. automethod:: transform
     .. automethod:: inverse_transform
     .. automethod:: calc_principal_axes_number
+
+take_2d
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.utils.misc_torch.take_2d
+
+assign_2d
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.utils.misc_torch.assign_2d

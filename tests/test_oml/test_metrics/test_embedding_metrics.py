@@ -5,6 +5,7 @@ from typing import Any, Tuple
 
 import pytest
 import torch
+from torch import Tensor
 
 from oml.const import (
     CATEGORIES_KEY,
@@ -16,9 +17,24 @@ from oml.const import (
     PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
+from oml.models.siamese import SimpleSiamese
+from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import compare_dicts_recursively, one_hot
 
-oh = partial(one_hot, dim=8)
+FEAT_DIM = 8
+oh = partial(one_hot, dim=FEAT_DIM)
+
+
+def get_trivial_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
+    model = SimpleSiamese(feat_dim=FEAT_DIM, identity_init=True)
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
+    return processor
+
+
+def compare_tensors_as_sets(x: Tensor, y: Tensor, decimal_tol: int = 4) -> bool:
+    set_x = torch.round(x, decimals=decimal_tol).unique()
+    set_y = torch.round(y, decimals=decimal_tol).unique()
+    return bool(torch.isclose(set_x, set_y).all())
 
 
 @pytest.fixture()
@@ -148,6 +164,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
+        postprocessor=get_trivial_postprocessor(top_n=2),
     )
 
     calc.setup(num_samples=num_samples)
@@ -159,7 +176,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     compare_dicts_recursively(gt_metrics, metrics)
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
-    assert torch.isclose(calc.distance_matrix.unique(), torch.tensor([0, math.sqrt(2)])).all()  # type: ignore
+    assert compare_tensors_as_sets(calc.distance_matrix, torch.tensor([0, math.sqrt(2)]))
 
     assert (calc.mask_gt.unique() == torch.tensor([0, 1])).all()  # type: ignore
     assert calc.acc.collected_samples == num_samples  # type: ignore
@@ -183,6 +200,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         map_top_k=tuple(),
         fmr_vals=tuple(),
         pfc_variance=tuple(),
+        postprocessor=get_trivial_postprocessor(top_n=3),
     )
 
     def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
@@ -195,7 +213,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         compare_dicts_recursively(metrics, ground_truth_metrics)
 
         # the euclidean distance between any one-hots is always sqrt(2) or 0
-        assert torch.isclose(calc.distance_matrix.unique(), torch.tensor([0, math.sqrt(2)])).all()  # type: ignore
+        assert compare_tensors_as_sets(calc.distance_matrix, torch.tensor([0, math.sqrt(2)]))  # type: ignore
 
         assert (calc.mask_gt.unique() == torch.tensor([0, 1])).all()  # type: ignore
         assert calc.acc.collected_samples == num_samples
@@ -246,6 +264,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         precision_top_k=(),
         map_top_k=(2,),
         fmr_vals=tuple(),
+        postprocessor=get_trivial_postprocessor(top_n=1_000),
     )
 
     calc.setup(num_samples=num_samples)
@@ -270,6 +289,7 @@ def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
         precision_top_k=(),
         map_top_k=(),
         fmr_vals=tuple(),
+        postprocessor=get_trivial_postprocessor(top_n=5),
     )
 
     assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys
