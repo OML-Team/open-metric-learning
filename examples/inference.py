@@ -138,7 +138,7 @@ def inference(cfg: TCfg) -> None:
     for batch in tqdm(loader):
         batch.to(device)
         feats = extractor.extract(batch)
-        features += [feat.tolist() for feat in torch.split(feats, 1)]
+        features += [feat.squeeze().tolist() for feat in torch.split(feats, 1)]
 
     out_json_path = Path(cfg["features_file"])
     out_json_path.parent.mkdir(parents=True, exist_ok=True)

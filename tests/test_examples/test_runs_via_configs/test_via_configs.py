@@ -99,12 +99,20 @@ def params_for_inference_on_df(
     features_path.unlink()
 
 
+def check_features_shape(features_path: Path) -> None:
+    with features_path.open() as f:
+        features_struct = json.load(f)
+    features = np.array(features_struct["features"])
+    assert len(features.shape) == 2
+
+
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_inference_images_list(
     accelerator: str, devices: int, params_for_inference_on_folder: Tuple[str, Path, Path]
 ) -> None:
     command, features_path, cfg_path = params_for_inference_on_folder
     run(command, accelerator, devices, cfg_path=cfg_path)
+    check_features_shape(features_path)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
@@ -119,6 +127,7 @@ def test_inference_dataframe_w_boxes(
         devices,
         cfg_path=cfg_path,
     )
+    check_features_shape(features_path)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
@@ -128,6 +137,7 @@ def test_inference_dataframe_without_boxes(
     command, features_path, cfg_path = params_for_inference_on_df
     command = command.format(df_name=MOCK_DATASET_PATH / "df.csv")
     run(command, accelerator, devices, cfg_path=cfg_path)
+    check_features_shape(features_path)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
@@ -156,3 +166,6 @@ def test_inference_compare_features_from_df_and_path(
 
     for (_, feats1), (_, feats2) in zip(sorted_paths_feats_df, sorted_paths_feats_from_path):
         assert np.isclose(feats1, feats2).all()
+
+    check_features_shape(features_df_path)
+    check_features_shape(features_with_paths_location)
