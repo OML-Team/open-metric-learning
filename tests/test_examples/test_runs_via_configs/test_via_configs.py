@@ -67,12 +67,8 @@ def test_val(accelerator: str, devices: int) -> None:
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_inference_error_two_sources_provided(accelerator: str, devices: int) -> None:
-    try:
+    with pytest.raises(subprocess.CalledProcessError, match=r".returned non-zero exit status 1."):
         run("inference_images_mock.py", accelerator, devices)
-    except subprocess.CalledProcessError:
-        pass
-    else:
-        raise AssertionError("This test should raise exeption for two input sources provided")
 
 
 @pytest.fixture()
@@ -95,9 +91,10 @@ def params_for_inference_on_df(
     cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
     features_path = MOCK_DATASET_PATH / "features2.json"
 
-    command_df_part = "inference_images_mock.py dataframe_name={df_name} "
-    command_features_path_part = f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_file={str(features_path)}"
-    command = command_df_part + command_features_path_part
+    command = (
+        "inference_images_mock.py dataframe_name={df_name} "
+        f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_file={str(features_path)}"
+    )
     yield command, features_path, cfg_path
     features_path.unlink()
 
@@ -146,9 +143,9 @@ def test_inference_compare_features_from_df_and_path(
     run(command_df, accelerator, devices, cfg_df_path)
     run(command_w_path, accelerator, devices, cfg_w_path_location)
 
-    with features_df_path.open() as f, features_with_paths_location.open() as f1:
-        features_df = json.load(f)
-        features_from_path = json.load(f1)
+    with features_df_path.open() as f_df, features_with_paths_location.open() as f_folder:
+        features_df = json.load(f_df)
+        features_from_path = json.load(f_folder)
 
     sorted_paths_feats_df = sorted(
         zip(features_df["filenames"], features_df["features"]), key=lambda path_feat: path_feat[0]
