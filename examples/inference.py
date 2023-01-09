@@ -27,7 +27,7 @@ from oml.utils.misc import dictconfig_to_dict
 
 def inference(cfg: TCfg) -> None:
     """
-    This is an entrypoint for the model validation in metric learning setup.
+    This is an entrypoint for the model inference in metric learning setup.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
     For more details look at ``examples/README.md``
@@ -141,9 +141,6 @@ def inference(cfg: TCfg) -> None:
         features += [feat.tolist() for feat in torch.split(feats, 1)]
 
     out_json_path = Path(cfg["features_file"])
-    print()
-    print(out_json_path.parent)
-    print()
     out_json_path.parent.mkdir(parents=True, exist_ok=True)
     with out_json_path.open("w") as f:
         out_struct = {

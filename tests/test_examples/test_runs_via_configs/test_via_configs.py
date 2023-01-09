@@ -76,7 +76,7 @@ def test_inference_error_two_sources_provided(accelerator: str, devices: int) ->
 
 
 @pytest.fixture()
-def features_from_path_command_and_paths(
+def params_for_inference_on_folder(
     accelerator: str, devices: int, cleanup: bool = True
 ) -> Iterator[Tuple[str, Path, Path]]:
     features_path: Path = MOCK_DATASET_PATH / "features1.json"
@@ -89,7 +89,7 @@ def features_from_path_command_and_paths(
 
 
 @pytest.fixture()
-def features_from_df_command_and_paths(
+def params_for_inference_on_df(
     accelerator: str, devices: int, cleanup: bool = True
 ) -> Iterator[Tuple[str, Path, Path]]:
     cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
@@ -104,17 +104,17 @@ def features_from_df_command_and_paths(
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_inference_images_list(
-    accelerator: str, devices: int, features_from_path_command_and_paths: Tuple[str, Path, Path]
+    accelerator: str, devices: int, params_for_inference_on_folder: Tuple[str, Path, Path]
 ) -> None:
-    command, features_path, cfg_path = features_from_path_command_and_paths
+    command, features_path, cfg_path = params_for_inference_on_folder
     run(command, accelerator, devices, cfg_path=cfg_path)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_inference_dataframe_w_boxes(
-    accelerator: str, devices: int, features_from_df_command_and_paths: Tuple[str, Path, Path]
+    accelerator: str, devices: int, params_for_inference_on_df: Tuple[str, Path, Path]
 ) -> None:
-    command, features_path, cfg_path = features_from_df_command_and_paths
+    command, features_path, cfg_path = params_for_inference_on_df
     command = command.format(df_name=MOCK_DATASET_PATH / "df_with_bboxes.csv")
     run(
         command,
@@ -126,9 +126,9 @@ def test_inference_dataframe_w_boxes(
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_inference_dataframe_without_boxes(
-    accelerator: str, devices: int, features_from_df_command_and_paths: Tuple[str, Path, Path]
+    accelerator: str, devices: int, params_for_inference_on_df: Tuple[str, Path, Path]
 ) -> None:
-    command, features_path, cfg_path = features_from_df_command_and_paths
+    command, features_path, cfg_path = params_for_inference_on_df
     command = command.format(df_name=MOCK_DATASET_PATH / "df.csv")
     run(command, accelerator, devices, cfg_path=cfg_path)
 
@@ -137,16 +137,16 @@ def test_inference_dataframe_without_boxes(
 def test_inference_compare_features_from_df_and_path(
     accelerator: str,
     devices: int,
-    features_from_df_command_and_paths: Tuple[str, Path, Path],
-    features_from_path_command_and_paths: Tuple[str, Path, Path],
+    params_for_inference_on_df: Tuple[str, Path, Path],
+    params_for_inference_on_folder: Tuple[str, Path, Path],
 ) -> None:
-    command_df, features_df_path, cfg_df_path = features_from_df_command_and_paths
+    command_df, features_df_path, cfg_df_path = params_for_inference_on_df
     command_df = command_df.format(df_name=MOCK_DATASET_PATH / "df.csv")
-    command_w_path, features_w_path_path, cfg_w_path_path = features_from_path_command_and_paths
+    command_w_path, features_with_paths_location, cfg_w_path_location = params_for_inference_on_folder
     run(command_df, accelerator, devices, cfg_df_path)
-    run(command_w_path, accelerator, devices, cfg_w_path_path)
+    run(command_w_path, accelerator, devices, cfg_w_path_location)
 
-    with features_df_path.open() as f, features_w_path_path.open() as f1:
+    with features_df_path.open() as f, features_with_paths_location.open() as f1:
         features_df = json.load(f)
         features_from_path = json.load(f1)
 
