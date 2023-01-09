@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from pprint import pprint
 from typing import List
@@ -40,15 +39,10 @@ def inference(cfg: TCfg) -> None:
     accelerator = engine_params["accelerator"]
     devices = engine_params["devices"]
     if accelerator == "gpu":
-        if isinstance(devices, list):
-            device_idx = devices[0]
-        else:
-            # foolprof against selection of multiple devices
-            available_devices = os.getenv("CUDA_VISIBLE_DEVICES", "0")
-            device_idx = int(available_devices.split(",")[0])
+        device_idx = devices[0] if isinstance(devices, list) else 0
         device = f"cuda:{device_idx}"
     else:
-        device = accelerator
+        device = "cpu"
 
     images_folder = Path(cfg["images_folder"]) if cfg.get("images_folder") else None
     dataframe_name = cfg.get("dataframe_name")
@@ -82,8 +76,8 @@ def inference(cfg: TCfg) -> None:
         if set(df.columns).intersection(set(BBOXES_COLUMNS)):
             if not all(col in df.columns for col in BBOXES_COLUMNS):
                 raise InvalidDataFrameColumnsException(
-                    f"Boxes are invalid: {df.columns}, please check that all of them exist and have "
-                    f"correct names like this: {BBOXES_COLUMNS}"
+                    f"Bounding boxes in datframe {dataframe_name} are invalid. If you want to use bounding "
+                    f"boxes, you should specify them as the following columns: {BBOXES_COLUMNS}"
                 )
 
             bboxes = []
