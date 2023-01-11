@@ -35,14 +35,14 @@ class TensorsWithLabels(IDatasetWithLabels):
 
 class TensorsQueryGallery(IDatasetQueryGallery):
     def __init__(
-            self,
-            df,
-            embeddings,
-            labels_key="labels",
-            categories_key="category",
-            is_query_key="is_query",
-            is_gallery_key="is_gallery",
-            paths_key="path",
+        self,
+        df,
+        embeddings,
+        labels_key="labels",
+        categories_key="category",
+        is_query_key="is_query",
+        is_gallery_key="is_gallery",
+        paths_key="path",
     ):
         super(TensorsQueryGallery, self).__init__()
         assert len(df) == len(embeddings)

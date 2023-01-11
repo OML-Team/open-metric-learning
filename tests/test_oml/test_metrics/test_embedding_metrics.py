@@ -17,7 +17,7 @@ from oml.const import (
     PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.models.siamese import SimpleSiamese
+from oml.models.siamese import VectorsSiamese
 from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import compare_dicts_recursively, one_hot
 
@@ -26,7 +26,7 @@ oh = partial(one_hot, dim=FEAT_DIM)
 
 
 def get_trivial_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
-    model = SimpleSiamese(feat_dim=FEAT_DIM, identity_init=True)
+    model = VectorsSiamese(feat_dim=FEAT_DIM, identity_init=True)
     processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
     return processor
 

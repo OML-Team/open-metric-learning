@@ -1,47 +1,26 @@
-import torch
-from torch import Tensor
+import itertools
+from pathlib import Path
+from typing import List
 
-from oml.datasets.pairs import vectors_pairwise_inference
-from oml.interfaces.models import IPairwiseDistanceModel
+import torch
+from torch import Tensor, nn
+
+from oml.datasets.pairs import images_pairwise_inference
 from oml.interfaces.postprocessor import IPostprocessor
+from oml.transforms.images.utils import TTransforms
 from oml.utils.misc_torch import assign_2d
 
 
-class PairwiseEmbeddingsPostprocessor(IPostprocessor):
-    """
-    This postprocessor allows us to re-estimate the distances between queries and galleries
-    closest to them. It creates pairs of embeddings which represent such queries and galleries
-    and feeds them to a pairwise model.
-
-    """
-
-    def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int):
-        """
-        Args:
-            pairwise_model: Model which is able to take two embeddings as inputs
-                and estimate the *distance* (not in a strictly mathematical sense) between them.
-            top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
-                and ``top_n`` most relevant galleries.
-
-        """
-        assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
-
+class PairwiseImagesPostprocessor(IPostprocessor):
+    # todo: we need types here
+    def __init__(self, pairwise_model: nn.Module, top_n: int, image_transforms: TTransforms):
         self.model = pairwise_model
         self.top_n = top_n
+        self.image_transforms = image_transforms
 
-    def process(self, distances: Tensor, emb_query: Tensor, emb_gallery: Tensor) -> Tensor:  # type: ignore
-        """
-        Args:
-            distances: Matrix with the shape of ``[Q, G]``
-            emb_query: Embeddings with the shape of ``[Q, features_dim]``
-            emb_gallery: Embeddings with the shape of ``[G, features_dim]``
-
-        Returns:
-            Matrix with the shape of ``[Q, G]`` containing updated *distances*.
-
-        """
-        n_queries = len(emb_query)
-        n_galleries = len(emb_gallery)
+    def process(self, distances: Tensor, paths_query: List[Path], paths_gallery: List[Path]) -> Tensor:  # type: ignore
+        n_queries = len(paths_query)
+        n_galleries = len(paths_gallery)
 
         assert list(distances.shape) == [n_queries, n_galleries]
 
@@ -50,9 +29,10 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         ii_top = torch.topk(distances, k=top_n, largest=False)[1].view(-1)
 
         # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
-        emb_query = emb_query.repeat_interleave(top_n, dim=0)
-        emb_gallery = emb_gallery[ii_top]
-        distances_upd = vectors_pairwise_inference(self.model, emb_query, emb_gallery)
+        paths_query = list(itertools.chain.from_iterable(itertools.repeat(x, self.top_n) for x in paths_query))
+        paths_gallery = [paths_gallery[i] for i in ii_top]
+
+        distances_upd = images_pairwise_inference(self.model, paths_query, paths_gallery, self.image_transforms)
         distances_upd = distances_upd.view(n_queries, top_n)
 
         # 3. Update distances for top-n galleries
@@ -77,4 +57,4 @@ class PairwiseEmbeddingsPostprocessor(IPostprocessor):
         return distances
 
 
-__all__ = ["PairwiseEmbeddingsPostprocessor"]
+__all__ = ["PairwiseImagesPostprocessor"]

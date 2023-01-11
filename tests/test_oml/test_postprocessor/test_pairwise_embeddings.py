@@ -9,7 +9,7 @@ from torch import Tensor
 
 from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
 from oml.interfaces.models import IPairwiseDistanceModel
-from oml.models.siamese import SimpleSiamese
+from oml.models.siamese import VectorsSiamese
 from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import flatten_dict, one_hot
 from oml.utils.misc_torch import pairwise_dist
@@ -57,7 +57,7 @@ def test_trivial_processing_does_not_change_distances_order(
 
     distances = calc_distance_matrix(embeddings, is_query, is_gallery)
 
-    model = SimpleSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
+    model = VectorsSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
     processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
 
     distances_processed = processor.process(
@@ -117,7 +117,7 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
         metrics = flatten_dict(calc_retrieval_metrics(distances=distances, **args))
 
         # Metrics after broken distances have been fixed
-        model = SimpleSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
+        model = VectorsSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
         processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
         distances_upd = processor.process(distances, query_embeddings, gallery_embeddings)
         metrics_upd = flatten_dict(calc_retrieval_metrics(distances=distances_upd, **args))
