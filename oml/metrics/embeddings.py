@@ -41,6 +41,7 @@ from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.postprocessor import IPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
+from oml.postprocessors.pairwise_images import PairwiseImagesPostprocessor
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 
@@ -181,6 +182,19 @@ class EmbeddingMetrics(IMetricVisualisable):
                 distances=self.distance_matrix,
                 emb_query=embeddings[is_query],  # type: ignore
                 emb_gallery=embeddings[is_gallery],  # type: ignore
+            )
+        elif isinstance(self.postprocessor, PairwiseImagesPostprocessor):
+            max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+            if max_k > self.postprocessor.top_n:
+                warn(
+                    f"One of retrieval metrics will be computed at k = {max_k},"
+                    f"but postprocessor will re-rank only {self.postprocessor.top_n} closest galleries."
+                    f"Make sure that this is the desired behaviour."
+                )
+            self.distance_matrix = self.postprocessor.process(
+                distances=self.distance_matrix,
+                paths_query=np.array(self.acc.storage[PATHS_KEY])[is_query],  # type: ignore
+                paths_gallery=np.array(self.acc.storage[PATHS_KEY])[is_gallery],  # type: ignore
             )
         else:
             raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")

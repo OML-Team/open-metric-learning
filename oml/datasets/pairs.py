@@ -75,8 +75,8 @@ def images_pairwise_inference(
     paths2: List[Path],
     transform: TTransforms,
     f_imread: Optional[TImReader] = None,
-    num_workers: int = 0,
-    batch_size: int = 512,
+    num_workers: int = 20,
+    batch_size: int = 128,
     verbose: bool = False,
 ) -> Tensor:
     if f_imread is None:
@@ -100,9 +100,7 @@ def vectors_pairwise_inference(
 
 
 # todo: we need interfaces for model and dataset below
-def pairwise_inference(
-    model: nn.Module, dataset: Dataset, num_workers: int = 0, batch_size: int = 512, verbose: bool = False
-) -> Tensor:
+def pairwise_inference(model: nn.Module, dataset: Dataset, num_workers: int, batch_size: int, verbose: bool) -> Tensor:
     prev_mode = model.training
     model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
@@ -112,7 +110,7 @@ def pairwise_inference(
 
     outputs = []
     with torch.no_grad():
-        for batch in loader:
+        for batch in tqdm(loader):
             x1 = batch[dataset.pair_1st_key].to(device)
             x2 = batch[dataset.pair_2nd_key].to(device)
             outputs.append(model(x1=x1, x2=x2))
