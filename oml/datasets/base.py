@@ -145,6 +145,7 @@ class BaseDataset(Dataset):
             self.input_tensors_key: image_tensor,
             self.labels_key: row[LABELS_COLUMN],
             self.paths_key: row[PATHS_COLUMN],
+            "idx": idx,
         }
 
         if self.categories_key:
