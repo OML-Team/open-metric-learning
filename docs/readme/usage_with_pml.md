@@ -74,7 +74,7 @@ train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 # PML specific
 distance = distances.LpDistance(p=2)
 reducer = reducers.ThresholdReducer(low=0)
-criterion = losses.TripletMarginLoss()
+criterion = losses.TripletMarginLoss(reducer=reducer)
 miner = miners.TripletMarginMiner(margin=0.2, distance=distance, type_of_triplets="all")
 
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
