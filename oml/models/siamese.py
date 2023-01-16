@@ -6,7 +6,7 @@ from oml.interfaces.models import IPairwiseDistanceModel
 from oml.utils.misc_torch import elementwise_dist
 
 
-class EmbeddingsSiamese(IPairwiseDistanceModel):
+class LinearSiamese(IPairwiseDistanceModel):
     """
     Model takes two embeddings as inputs, transforms them and estimates the
     corresponding *distance* (not in a strictly mathematical sense) after the transformation.
@@ -21,7 +21,7 @@ class EmbeddingsSiamese(IPairwiseDistanceModel):
                 model simply estimates L2 distance between the original embeddings.
 
         """
-        super(EmbeddingsSiamese, self).__init__()
+        super(LinearSiamese, self).__init__()
         self.feat_dim = feat_dim
 
         self.proj = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
@@ -45,9 +45,9 @@ class EmbeddingsSiamese(IPairwiseDistanceModel):
         return y
 
 
-class ImagesSiamese(IPairwiseDistanceModel):
+class ResNet50Siamese(IPairwiseDistanceModel):
     def __init__(self) -> None:
-        super(ImagesSiamese, self).__init__()
+        super(ResNet50Siamese, self).__init__()
         self.model = resnet50(pretrained=True)
         self.fc = nn.Linear(in_features=1000 * 2, out_features=1)
 
@@ -71,4 +71,4 @@ class ImagesSiamese(IPairwiseDistanceModel):
         return x
 
 
-__all__ = ["EmbeddingsSiamese", "ImagesSiamese"]
+__all__ = ["LinearSiamese", "ResNet50Siamese"]

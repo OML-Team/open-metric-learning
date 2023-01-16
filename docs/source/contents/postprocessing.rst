@@ -71,18 +71,18 @@ PairwiseImagesPostprocessor
     .. automethod:: __init__
     .. automethod:: inference
 
-EmbeddingsSiamese
+LinearSiamese
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.EmbeddingsSiamese
+.. autoclass:: oml.models.siamese.LinearSiamese
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
     .. automethod:: forward
 
-ImagesSiamese
+ResNet50Siamese
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.ImagesSiamese
+.. autoclass:: oml.models.siamese.ResNet50Siamese
     :undoc-members:
     :show-inheritance:
 
