@@ -94,19 +94,32 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
 
 
 class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
-    def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int):
+    def __init__(
+        self,
+        top_n: int,
+        pairwise_model: IPairwiseDistanceModel,
+        num_workers: int,
+        batch_size: int,
+        verbose: bool = False,
+    ):
         """
         Args:
-            pairwise_model: Model which is able to take two embeddings as inputs
-                and estimate the *distance* (not in a strictly mathematical sense) between them.
             top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
                 and ``top_n`` most relevant galleries.
+            pairwise_model: Model which is able to take two embeddings as inputs
+                and estimate the *distance* (not in a strictly mathematical sense) between them.
+            num_workers: Number of workers in DataLoader
+            batch_size: Batch size that will be used in DataLoader
+            verbose: Set ``True`` if you want to see progress bar for an inference
 
         """
         assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
 
-        self.model = pairwise_model
         self.top_n = top_n
+        self.model = pairwise_model
+        self.num_workers = num_workers
+        self.batch_size = batch_size
+        self.verbose = verbose
 
     def inference(self, queries: Tensor, galleries: Tensor, ii_top: Tensor, top_n: int) -> Tensor:
         """
@@ -122,26 +135,47 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
         """
         queries = queries.repeat_interleave(top_n, dim=0)
         galleries = galleries[ii_top]
-        distances_upd = pairwise_inference_on_embeddings(self.model, queries, galleries)
+        distances_upd = pairwise_inference_on_embeddings(
+            model=self.model,
+            embeddings1=queries,
+            embeddings2=galleries,
+            num_workers=self.num_workers,
+            batch_size=self.batch_size,
+            verbose=self.verbose,
+        )
         return distances_upd
 
 
 class PairwiseImagesPostprocessor(PairwisePostprocessor):
-    def __init__(self, pairwise_model: IPairwiseDistanceModel, image_transforms: TTransforms, top_n: int):
+    def __init__(
+        self,
+        top_n: int,
+        pairwise_model: IPairwiseDistanceModel,
+        image_transforms: TTransforms,
+        num_workers: int,
+        batch_size: int,
+        verbose: bool = True,
+    ):
         """
         Args:
+            top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
+                and ``top_n`` most relevant galleries.
             pairwise_model: Model which is able to take two images as inputs
                 and estimate the *distance* (not in a strictly mathematical sense) between them.
             image_transforms: Transforms that will be applied to an image
-            top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
-                and ``top_n`` most relevant galleries.
+            num_workers: Number of workers in DataLoader
+            batch_size: Batch size that will be used in DataLoader
+            verbose: Set ``True`` if you want to see progress bar for an inference
 
         """
         assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
 
+        self.top_n = top_n
         self.model = pairwise_model
         self.image_transforms = image_transforms
-        self.top_n = top_n
+        self.num_workers = num_workers
+        self.batch_size = batch_size
+        self.verbose = verbose
 
     def inference(self, queries: List[Path], galleries: List[Path], ii_top: Tensor, top_n: int) -> Tensor:
         """
@@ -157,7 +191,15 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
         """
         queries = list(itertools.chain.from_iterable(itertools.repeat(x, top_n) for x in queries))
         galleries = [galleries[i] for i in ii_top]
-        distances_upd = pairwise_inference_on_images(self.model, queries, galleries, self.image_transforms)
+        distances_upd = pairwise_inference_on_images(
+            model=self.model,
+            paths1=queries,
+            paths2=galleries,
+            transform=self.image_transforms,
+            num_workers=self.num_workers,
+            batch_size=self.batch_size,
+            verbose=self.verbose,
+        )
         return distances_upd
 
 

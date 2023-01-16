@@ -179,8 +179,8 @@ class EmbeddingMetrics(IMetricVisualisable):
                 )
             self.distance_matrix = self.postprocessor.process(
                 distances=self.distance_matrix,
-                emb_query=embeddings[is_query],  # type: ignore
-                emb_gallery=embeddings[is_gallery],  # type: ignore
+                queries=embeddings[is_query],  # type: ignore
+                galleries=embeddings[is_gallery],  # type: ignore
             )
         else:
             raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")

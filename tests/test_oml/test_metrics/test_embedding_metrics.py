@@ -27,7 +27,7 @@ oh = partial(one_hot, dim=FEAT_DIM)
 
 def get_trivial_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
     model = EmbeddingsSiamese(feat_dim=FEAT_DIM, identity_init=True)
-    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
     return processor
 
 

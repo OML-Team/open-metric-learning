@@ -39,10 +39,10 @@ def pairwise_inference_on_images(
     paths1: List[Path],
     paths2: List[Path],
     transform: TTransforms,
+    num_workers: int,
+    batch_size: int,
+    verbose: bool = True,
     f_imread: Optional[TImReader] = None,
-    num_workers: int = 20,
-    batch_size: int = 128,
-    verbose: bool = False,
 ) -> Tensor:
     if f_imread is None:
         f_imread = get_im_reader_for_transforms(transform)
@@ -57,8 +57,8 @@ def pairwise_inference_on_embeddings(
     model: IPairwiseDistanceModel,
     embeddings1: Tensor,
     embeddings2: Tensor,
-    num_workers: int = 0,
-    batch_size: int = 512,
+    num_workers: int,
+    batch_size: int,
     verbose: bool = False,
 ) -> Tensor:
     dataset = EmbeddingPairsDataset(embeddings1=embeddings1, embeddings2=embeddings2)
