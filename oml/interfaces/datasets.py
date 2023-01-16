@@ -2,16 +2,17 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 import numpy as np
+from torch.utils.data import Dataset
+
 from oml.const import (  # noqa
     INPUT_TENSORS_KEY,
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
     LABELS_KEY,
     PAIR_1ST_KEY,
-    PAIR_2ND_KEY
+    PAIR_2ND_KEY,
 )
 from oml.samplers.balance import BalanceSampler  # noqa
-from torch.utils.data import Dataset
 
 
 class IDatasetWithLabels(Dataset, ABC):

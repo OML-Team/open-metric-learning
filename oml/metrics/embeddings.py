@@ -38,7 +38,7 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
-from oml.interfaces.retrieval import IPostprocessor
+from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.images.images import get_img_with_bbox, square_pad
@@ -72,7 +72,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         fmr_vals: Tuple[int, ...] = tuple(),
         pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
-        postprocessor: Optional[IPostprocessor] = None,
+        postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         check_dataset_validity: bool = True,
         return_only_main_category: bool = False,

@@ -61,8 +61,8 @@ def test_trivial_processing_does_not_change_distances_order(
     processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
 
     distances_processed = processor.process(
-        emb_query=embeddings_query,
-        emb_gallery=embeddings_gallery,
+        queries=embeddings_query,
+        galleries=embeddings_gallery,
         distances=distances.clone(),
     )
 
@@ -157,7 +157,7 @@ def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
     model = DummyPairwise(distances_to_return=torch.tensor([3.5, 2.5]))
     processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=2)
     distances_upd = processor.process(
-        distances, emb_query=torch.randn((1, FEAT_SIZE)), emb_gallery=torch.randn((5, FEAT_SIZE))
+        distances=distances, queries=torch.randn((1, FEAT_SIZE)), galleries=torch.randn((5, FEAT_SIZE))
     )
     precisions_upd = calc_retrieval_metrics(distances=distances_upd, **args)["precision"]
     assert math.isclose(precisions_upd[1], 1)

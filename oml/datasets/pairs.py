@@ -1,8 +1,14 @@
-from typing import Dict
+from pathlib import Path
+from typing import Dict, List
+
+from torch import Tensor
 
 from oml.const import PAIR_1ST_KEY, PAIR_2ND_KEY
+from oml.datasets.list_dataset import ListDataset
 from oml.interfaces.datasets import IPairsDataset
-from torch import Tensor
+from oml.transforms.images.torchvision.transforms import get_normalisation_torch
+from oml.transforms.images.utils import TTransforms
+from oml.utils.images.images import TImReader, imread_cv2
 
 
 class EmbeddingsPairsDataset(IPairsDataset):
@@ -11,12 +17,13 @@ class EmbeddingsPairsDataset(IPairsDataset):
 
     """
 
-    def __init__(self,
-                 embeddings1: Tensor,
-                 embeddings2: Tensor,
-                 pair_1st_key: str = PAIR_1ST_KEY,
-                 pair_2nd_key: str = PAIR_2ND_KEY
-                 ):
+    def __init__(
+        self,
+        embeddings1: Tensor,
+        embeddings2: Tensor,
+        pair_1st_key: str = PAIR_1ST_KEY,
+        pair_2nd_key: str = PAIR_2ND_KEY,
+    ):
         assert embeddings1.shape == embeddings2.shape
         assert embeddings1.ndim >= 2
 
@@ -27,30 +34,27 @@ class EmbeddingsPairsDataset(IPairsDataset):
         self.embeddings2 = embeddings2
 
     def __getitem__(self, idx: int) -> Dict[str, Tensor]:
-        return {
-            self.pair_1st_key: self.embeddings1[idx],
-            self.pair_2nd_key: self.embeddings2[idx]
-        }
+        return {self.pair_1st_key: self.embeddings1[idx], self.pair_2nd_key: self.embeddings2[idx]}
 
     def __len__(self) -> int:
         return len(self.embeddings1)
 
 
-class ImagePairsDataset(IPairsDataset):
+class ImagesPairsDataset(IPairsDataset):
     """
     Dataset to iterate over pairs of images.
 
     """
 
     def __init__(
-            self,
-            paths1: List[Path],
-            paths2: List[Path],
-            transform: TTransforms = get_normalisation_torch(),
-            f_imread: TImReader = imread_cv2,
-            pair_1st_key: str = PAIR_1ST_KEY,
-            pair_2nd_key: str = PAIR_2ND_KEY,
-            cache_size: int = 100_000,
+        self,
+        paths1: List[Path],
+        paths2: List[Path],
+        transform: TTransforms = get_normalisation_torch(),
+        f_imread: TImReader = imread_cv2,
+        pair_1st_key: str = PAIR_1ST_KEY,
+        pair_2nd_key: str = PAIR_2ND_KEY,
+        cache_size: int = 100_000,
     ):
         assert len(paths1) == len(paths2)
 
@@ -68,4 +72,4 @@ class ImagePairsDataset(IPairsDataset):
         return len(self.dataset1)
 
 
-__all__ = ["EmbeddingsPairsDataset", "ImagePairsDataset"]
+__all__ = ["EmbeddingsPairsDataset", "ImagesPairsDataset"]

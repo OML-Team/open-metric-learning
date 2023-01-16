@@ -1,5 +1,6 @@
 import torch
-from torch import Tensor
+from torch import Tensor, nn
+from torchvision.models import resnet50
 
 from oml.interfaces.models import IPairwiseDistanceModel
 from oml.utils.misc_torch import elementwise_dist
@@ -56,9 +57,8 @@ class ImagesSiamese(IPairwiseDistanceModel):
         x1 = self.model(x1)
         x2 = self.model(x2)
 
-        x = torch.concat([x1, x2], dim=1)
+        x = torch.concat([x1 + x2, x1 * x2], dim=1)
         x = self.fc(x)
-        x = torch.sigmoid(x)
 
         return x
 

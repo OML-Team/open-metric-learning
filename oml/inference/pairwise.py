@@ -2,23 +2,20 @@ from pathlib import Path
 from typing import List, Optional
 
 import torch
-from oml.datasets.pairs import ImagePairsDataset
+from torch import Tensor
+from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
+
+from oml.datasets.pairs import EmbeddingsPairsDataset, ImagesPairsDataset
+from oml.interfaces.datasets import IPairsDataset
+from oml.interfaces.models import IPairwiseDistanceModel
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
-from torch import Tensor, nn
-from torch.utils.data import DataLoader, Dataset
-from tqdm.auto import tqdm
-from oml.interfaces.datasets import IPairsDataset
-from oml.datasets.pairs import EmbeddingsPairsDataset
-from oml.interfaces.models import IPairwiseDistanceModel
 
 
-def pairwise_inference(model: IPairwiseDistanceModel,
-                       dataset: IPairsDataset,
-                       num_workers: int,
-                       batch_size: int,
-                       verbose: bool
-                       ) -> Tensor:
+def pairwise_inference(
+    model: IPairwiseDistanceModel, dataset: IPairsDataset, num_workers: int, batch_size: int, verbose: bool
+) -> Tensor:
     prev_mode = model.training
     model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
@@ -38,18 +35,18 @@ def pairwise_inference(model: IPairwiseDistanceModel,
 
 
 def pairwise_inference_on_images(
-        model: IPairwiseDistanceModel,
-        paths1: List[Path],
-        paths2: List[Path],
-        transform: TTransforms,
-        f_imread: Optional[TImReader] = None,
-        num_workers: int = 20,
-        batch_size: int = 128,
-        verbose: bool = False,
+    model: IPairwiseDistanceModel,
+    paths1: List[Path],
+    paths2: List[Path],
+    transform: TTransforms,
+    f_imread: Optional[TImReader] = None,
+    num_workers: int = 20,
+    batch_size: int = 128,
+    verbose: bool = False,
 ) -> Tensor:
     if f_imread is None:
         f_imread = get_im_reader_for_transforms(transform)
-    dataset = ImagePairsDataset(paths1=paths1, paths2=paths2, transform=transform, f_imread=f_imread)
+    dataset = ImagesPairsDataset(paths1=paths1, paths2=paths2, transform=transform, f_imread=f_imread)
     output = pairwise_inference(
         model=model, dataset=dataset, num_workers=num_workers, batch_size=batch_size, verbose=verbose
     )
@@ -57,12 +54,12 @@ def pairwise_inference_on_images(
 
 
 def pairwise_inference_on_embeddings(
-        model: IPairwiseDistanceModel,
-        embeddings1: Tensor,
-        embeddings2: Tensor,
-        num_workers: int = 0,
-        batch_size: int = 512,
-        verbose: bool = False
+    model: IPairwiseDistanceModel,
+    embeddings1: Tensor,
+    embeddings2: Tensor,
+    num_workers: int = 0,
+    batch_size: int = 512,
+    verbose: bool = False,
 ) -> Tensor:
     dataset = EmbeddingsPairsDataset(embeddings1=embeddings1, embeddings2=embeddings2)
     output = pairwise_inference(

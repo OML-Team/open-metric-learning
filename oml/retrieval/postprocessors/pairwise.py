@@ -1,21 +1,22 @@
 import itertools
 from abc import ABC
 from pathlib import Path
-from typing import List
-from typing import Union
+from typing import List, Union
 
 import torch
-from oml.datasets.pairs import images_pairwise_inference
-from oml.inference.pairwise import pairwise_inference_on_images, pairwise_inference_on_embeddings
+from torch import Tensor
+
+from oml.inference.pairwise import (
+    pairwise_inference_on_embeddings,
+    pairwise_inference_on_images,
+)
 from oml.interfaces.models import IPairwiseDistanceModel
-from oml.interfaces.postprocessor import IPostprocessor
+from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.transforms.images.utils import TTransforms
 from oml.utils.misc_torch import assign_2d
-from torch import Tensor, nn
-from oml.models.siamese import ImagesSiamese, SimpleSiamese
 
 
-class PairwiseProcessor(IPostprocessor, ABC):
+class PairwiseProcessor(IDistancesPostprocessor, ABC):
     """
     This postprocessor allows us to re-estimate the *distances* between queries and *top-n* galleries
     closest to them. It creates pairs of queries and galleries and feeds them to a pairwise model.
@@ -24,11 +25,9 @@ class PairwiseProcessor(IPostprocessor, ABC):
 
     top_n: int
 
-    def process(self,
-                distances: Tensor,
-                queries: Union[List[Path], Tensor],
-                galleries: Union[List[Path], Tensor]
-                ):
+    def process(
+        self, distances: Tensor, queries: Union[List[Path], Tensor], galleries: Union[List[Path], Tensor]
+    ) -> Tensor:
         """
         Args:
             distances: Matrix with the shape of ``[Q, G]``
@@ -44,11 +43,12 @@ class PairwiseProcessor(IPostprocessor, ABC):
 
         assert list(distances.shape) == [n_queries, n_galleries]
 
-        # 1. Adjust top_n with respect to the actual gallery size
+        # 1. Adjust top_n with respect to the actual gallery size and find top-n pairs
         top_n = min(self.top_n, n_galleries)
+        ii_top = torch.topk(distances, k=top_n, largest=False)[1].view(-1)
 
         # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
-        distances_upd = self.inference_on_pairs(queries=queries, galleries=galleries, distances=distances, top_n=top_n)
+        distances_upd = self.inference(queries=queries, galleries=galleries, ii_top=ii_top, top_n=top_n)
         distances_upd = distances_upd.view(n_queries, top_n)
 
         # 3. Update distances for top-n galleries
@@ -72,12 +72,9 @@ class PairwiseProcessor(IPostprocessor, ABC):
 
         return distances
 
-    def inference_on_pairs(self,
-                           queries: Union[List[Path], Tensor],
-                           galleries: Union[List[Path], Tensor],
-                           distances: Tensor,
-                           top_n: int
-                           ) -> Tensor:
+    def inference(
+        self, queries: Union[List[Path], Tensor], galleries: Union[List[Path], Tensor], ii_top: Tensor, top_n: int
+    ) -> Tensor:
         """
         Depends on the exact types of queries/galleries this method may be implemented differently.
 
@@ -86,7 +83,6 @@ class PairwiseProcessor(IPostprocessor, ABC):
 
 
 class PairwiseEmbeddingsPostprocessor(PairwiseProcessor):
-
     def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int):
         """
         Args:
@@ -101,26 +97,23 @@ class PairwiseEmbeddingsPostprocessor(PairwiseProcessor):
         self.model = pairwise_model
         self.top_n = top_n
 
-    def inference_on_pairs(self, queries: Tensor, galleries: Tensor, distances: Tensor, top_n: int) -> Tensor:
-        ii_top = torch.topk(distances, k=top_n, largest=False)[1].view(-1)
-        queries = emb_query.repeat_interleave(top_n, dim=0)
+    def inference(self, queries: Tensor, galleries: Tensor, ii_top: Tensor, top_n: int) -> Tensor:
+        queries = queries.repeat_interleave(top_n, dim=0)
         galleries = galleries[ii_top]
-        distances_upd = pairwise_inference_on_images(self.model, queries, galleries)
-        distances_upd = distances_upd.view(n_queries, top_n)
+        distances_upd = pairwise_inference_on_embeddings(self.model, queries, galleries)
         return distances_upd
 
 
-class PairwiseImagesPostprocessor(IPostprocessor):
-    def __init__(self, pairwise_model: nn.Module, top_n: int, image_transforms: TTransforms):
+class PairwiseImagesPostprocessor(PairwiseProcessor):
+    def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int, image_transforms: TTransforms):
         self.model = pairwise_model
         self.top_n = top_n
         self.image_transforms = image_transforms
 
-    def inference_on_pairs(self, queries: List[Path], galleries: List[Path], distances: Tensor, top_n: int) -> Tensor:
-        ii_top = torch.topk(distances, k=top_n, largest=False)[1].view(-1)
+    def inference(self, queries: List[Path], galleries: List[Path], ii_top: Tensor, top_n: int) -> Tensor:
         queries = list(itertools.chain.from_iterable(itertools.repeat(x, top_n) for x in queries))
         galleries = [galleries[i] for i in ii_top]
-        distances_upd = images_pairwise_inference(self.model, queries, galleries, self.image_transforms)
+        distances_upd = pairwise_inference_on_images(self.model, queries, galleries, self.image_transforms)
         return distances_upd
 
 
