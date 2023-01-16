@@ -72,6 +72,9 @@ class IPairsDataset(Dataset, ABC):
 
     """
 
+    pairs_1st_key: str
+    pairs_2nd_key: str
+
     @abstractmethod
     def __getitem__(self, item: int) -> Dict[str, Any]:
         """
@@ -81,8 +84,8 @@ class IPairsDataset(Dataset, ABC):
         Returns:
              Dictionary with the following keys:
 
-            >>> PAIR_1ST_KEY
-            >>> PAIR_2ND_KEY
+            >>> self.pairs_1st_key
+            >>> self.pairs_2nd_key
 
         """
         raise NotImplementedError()

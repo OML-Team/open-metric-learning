@@ -11,7 +11,7 @@ from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader, imread_cv2
 
 
-class EmbeddingsPairsDataset(IPairsDataset):
+class EmbeddingPairsDataset(IPairsDataset):
     """
     Dataset to iterate over pairs of embeddings.
 
@@ -24,6 +24,15 @@ class EmbeddingsPairsDataset(IPairsDataset):
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,
     ):
+        """
+
+        Args:
+            embeddings1: The first input embeddings
+            embeddings2: The second input embeddings
+            pair_1st_key: Key to put ``embeddings1`` into the batches
+            pair_2nd_key: Key to put ``embeddings2`` into the batches
+
+        """
         assert embeddings1.shape == embeddings2.shape
         assert embeddings1.ndim >= 2
 
@@ -40,7 +49,7 @@ class EmbeddingsPairsDataset(IPairsDataset):
         return len(self.embeddings1)
 
 
-class ImagesPairsDataset(IPairsDataset):
+class ImagePairsDataset(IPairsDataset):
     """
     Dataset to iterate over pairs of images.
 
@@ -56,6 +65,17 @@ class ImagesPairsDataset(IPairsDataset):
         pair_2nd_key: str = PAIR_2ND_KEY,
         cache_size: int = 100_000,
     ):
+        """
+        Args:
+            paths1: Paths to the 1st input images
+            paths2: Paths to the 2nd input images
+            transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
+            f_imread: Function to read the images
+            pair_1st_key: Key to put the 1st images into the batches
+            pair_2nd_key: Key to put the 2nd images into the batches
+            cache_size: Size of the dataset's cache
+
+        """
         assert len(paths1) == len(paths2)
 
         dataset_args = {"bboxes": None, "transform": transform, "f_imread": f_imread, "cache_size": cache_size // 2}
@@ -66,10 +86,11 @@ class ImagesPairsDataset(IPairsDataset):
         self.pair_2nd_key = pair_2nd_key
 
     def __getitem__(self, idx: int) -> Dict[str, Tensor]:
+        # todo: add support of bounding boxes
         return {self.pair_1st_key: self.dataset1[idx], self.pair_2nd_key: self.dataset2[idx]}
 
     def __len__(self) -> int:
         return len(self.dataset1)
 
 
-__all__ = ["EmbeddingsPairsDataset", "ImagesPairsDataset"]
+__all__ = ["EmbeddingPairsDataset", "ImagePairsDataset"]

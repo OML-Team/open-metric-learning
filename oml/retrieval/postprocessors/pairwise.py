@@ -16,7 +16,7 @@ from oml.transforms.images.utils import TTransforms
 from oml.utils.misc_torch import assign_2d
 
 
-class PairwiseProcessor(IDistancesPostprocessor, ABC):
+class PairwisePostprocessor(IDistancesPostprocessor, ABC):
     """
     This postprocessor allows us to re-estimate the *distances* between queries and *top-n* galleries
     closest to them. It creates pairs of queries and galleries and feeds them to a pairwise model.
@@ -35,7 +35,9 @@ class PairwiseProcessor(IDistancesPostprocessor, ABC):
             galleries: *G* galleries, they may be paths or representations.
 
         Returns:
-            Matrix with the shape of ``[Q, G]`` containing updated *distances*.
+            Distance matrix with the shape of ``[Q, G]``,
+            where ``top_n`` minimal values in each row have been updated by the pairwise model,
+            other distances are shifted to keep the relative order.
 
         """
         n_queries = len(queries)
@@ -78,11 +80,20 @@ class PairwiseProcessor(IDistancesPostprocessor, ABC):
         """
         Depends on the exact types of queries/galleries this method may be implemented differently.
 
+        Args:
+            queries: Queries with the length of ``Q``
+            galleries: Galleries with the length of ``G``
+            ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
+            top_n: Defines the number of the closest galleries to re-rank
+
+        Returns:
+            Updated distance matrix with the shape of ``[Q, G]``.
+
         """
         raise NotImplementedError()
 
 
-class PairwiseEmbeddingsPostprocessor(PairwiseProcessor):
+class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
     def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int):
         """
         Args:
@@ -98,23 +109,56 @@ class PairwiseEmbeddingsPostprocessor(PairwiseProcessor):
         self.top_n = top_n
 
     def inference(self, queries: Tensor, galleries: Tensor, ii_top: Tensor, top_n: int) -> Tensor:
+        """
+        Args:
+            queries: Queries representations with the length of ``Q``
+            galleries: Galleries representations with the length of ``G``
+            ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
+            top_n: Defines the number of the closest galleries to re-rank
+
+        Returns:
+            Updated distance matrix with the shape of ``[Q, G]``.
+
+        """
         queries = queries.repeat_interleave(top_n, dim=0)
         galleries = galleries[ii_top]
         distances_upd = pairwise_inference_on_embeddings(self.model, queries, galleries)
         return distances_upd
 
 
-class PairwiseImagesPostprocessor(PairwiseProcessor):
-    def __init__(self, pairwise_model: IPairwiseDistanceModel, top_n: int, image_transforms: TTransforms):
+class PairwiseImagesPostprocessor(PairwisePostprocessor):
+    def __init__(self, pairwise_model: IPairwiseDistanceModel, image_transforms: TTransforms, top_n: int):
+        """
+        Args:
+            pairwise_model: Model which is able to take two images as inputs
+                and estimate the *distance* (not in a strictly mathematical sense) between them.
+            image_transforms: Transforms that will be applied to an image
+            top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
+                and ``top_n`` most relevant galleries.
+
+        """
+        assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
+
         self.model = pairwise_model
-        self.top_n = top_n
         self.image_transforms = image_transforms
+        self.top_n = top_n
 
     def inference(self, queries: List[Path], galleries: List[Path], ii_top: Tensor, top_n: int) -> Tensor:
+        """
+        Args:
+            queries: Paths to queries with the length of ``Q``
+            galleries: Paths to galleries with the length of ``G``
+            ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
+            top_n: Defines the number of the closest galleries to re-rank
+
+        Returns:
+            Updated distance matrix with the shape of ``[Q, G]``.
+
+        """
         queries = list(itertools.chain.from_iterable(itertools.repeat(x, top_n) for x in queries))
         galleries = [galleries[i] for i in ii_top]
         distances_upd = pairwise_inference_on_images(self.model, queries, galleries, self.image_transforms)
         return distances_upd
 
 
-__all__ = ["PairwiseProcessor", "PairwiseEmbeddingsPostprocessor", "PairwiseImagesPostprocessor"]
+__all__ = ["PairwisePostprocessor", "PairwiseEmbeddingsPostprocessor", "PairwiseImagesPostprocessor"]

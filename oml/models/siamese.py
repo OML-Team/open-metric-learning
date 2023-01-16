@@ -6,7 +6,7 @@ from oml.interfaces.models import IPairwiseDistanceModel
 from oml.utils.misc_torch import elementwise_dist
 
 
-class SimpleSiamese(IPairwiseDistanceModel):
+class EmbeddingsSiamese(IPairwiseDistanceModel):
     """
     Model takes two embeddings as inputs, transforms them and estimates the
     corresponding *distance* (not in a strictly mathematical sense) after the transformation.
@@ -21,15 +21,13 @@ class SimpleSiamese(IPairwiseDistanceModel):
                 model simply estimates L2 distance between the original embeddings.
 
         """
-        super(SimpleSiamese, self).__init__()
+        super(EmbeddingsSiamese, self).__init__()
         self.feat_dim = feat_dim
 
-        self.proj1 = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
-        self.proj2 = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
+        self.proj = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
 
         if identity_init:
-            self.proj1.load_state_dict({"weight": torch.eye(feat_dim)})
-            self.proj2.load_state_dict({"weight": torch.eye(feat_dim)})
+            self.proj.load_state_dict({"weight": torch.eye(feat_dim)})
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         """
@@ -41,8 +39,8 @@ class SimpleSiamese(IPairwiseDistanceModel):
             *Distance* between transformed inputs.
 
         """
-        x1 = self.proj1(x1)
-        x2 = self.proj2(x2)
+        x1 = self.proj(x1)
+        x2 = self.proj(x2)
         y = elementwise_dist(x1, x2, p=2)
         return y
 
@@ -54,6 +52,16 @@ class ImagesSiamese(IPairwiseDistanceModel):
         self.fc = nn.Linear(in_features=1000 * 2, out_features=1)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        """
+
+        Args:
+            x1: The first input image.
+            x2: The second input image.
+
+        Returns:
+            *Distance* between images (a logit of it).
+
+        """
         x1 = self.model(x1)
         x2 = self.model(x2)
 
@@ -63,4 +71,4 @@ class ImagesSiamese(IPairwiseDistanceModel):
         return x
 
 
-__all__ = ["SimpleSiamese", "ImagesSiamese"]
+__all__ = ["EmbeddingsSiamese", "ImagesSiamese"]

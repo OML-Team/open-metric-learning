@@ -195,7 +195,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     the validation stage. It has to provide information
     about its `query`/`gallery` split.
 
-    Note, that some of the datasets used as benchmarks in Metric Learning
+    Note, that some datasets used as benchmarks in Metric Learning
     provide the splitting information (for example, ``DeepFashion InShop`` dataset), but some of them
     don't (for example, ``CARS196`` or ``CUB200``).
     The validation idea for the latter is to calculate the embeddings for the whole validation set,

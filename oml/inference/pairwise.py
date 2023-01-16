@@ -6,7 +6,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from oml.datasets.pairs import EmbeddingsPairsDataset, ImagesPairsDataset
+from oml.datasets.pairs import EmbeddingPairsDataset, ImagePairsDataset
 from oml.interfaces.datasets import IPairsDataset
 from oml.interfaces.models import IPairwiseDistanceModel
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
@@ -46,7 +46,7 @@ def pairwise_inference_on_images(
 ) -> Tensor:
     if f_imread is None:
         f_imread = get_im_reader_for_transforms(transform)
-    dataset = ImagesPairsDataset(paths1=paths1, paths2=paths2, transform=transform, f_imread=f_imread)
+    dataset = ImagePairsDataset(paths1=paths1, paths2=paths2, transform=transform, f_imread=f_imread)
     output = pairwise_inference(
         model=model, dataset=dataset, num_workers=num_workers, batch_size=batch_size, verbose=verbose
     )
@@ -61,7 +61,7 @@ def pairwise_inference_on_embeddings(
     batch_size: int = 512,
     verbose: bool = False,
 ) -> Tensor:
-    dataset = EmbeddingsPairsDataset(embeddings1=embeddings1, embeddings2=embeddings2)
+    dataset = EmbeddingPairsDataset(embeddings1=embeddings1, embeddings2=embeddings2)
     output = pairwise_inference(
         model=model, dataset=dataset, num_workers=num_workers, batch_size=batch_size, verbose=verbose
     )
