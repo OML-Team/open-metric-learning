@@ -46,4 +46,21 @@ class SimpleSiamese(IPairwiseDistanceModel):
         return y
 
 
-__all__ = ["SimpleSiamese"]
+class ImagesSiamese(IPairwiseDistanceModel):
+    def __init__(self) -> None:
+        super(ImagesSiamese, self).__init__()
+        self.model = resnet50(pretrained=True)
+        self.fc = nn.Linear(in_features=1000 * 2, out_features=1)
+
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        x1 = self.model(x1)
+        x2 = self.model(x2)
+
+        x = torch.concat([x1, x2], dim=1)
+        x = self.fc(x)
+        x = torch.sigmoid(x)
+
+        return x
+
+
+__all__ = ["SimpleSiamese", "ImagesSiamese"]

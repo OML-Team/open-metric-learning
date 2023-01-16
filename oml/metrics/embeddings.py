@@ -38,9 +38,9 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
-from oml.interfaces.postprocessor import IPostprocessor
+from oml.interfaces.retrieval import IPostprocessor
 from oml.metrics.accumulation import Accumulator
-from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 

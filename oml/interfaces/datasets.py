@@ -2,15 +2,16 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 import numpy as np
-from torch.utils.data import Dataset
-
 from oml.const import (  # noqa
     INPUT_TENSORS_KEY,
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
     LABELS_KEY,
+    PAIR_1ST_KEY,
+    PAIR_2ND_KEY
 )
 from oml.samplers.balance import BalanceSampler  # noqa
+from torch.utils.data import Dataset
 
 
 class IDatasetWithLabels(Dataset, ABC):
@@ -64,4 +65,26 @@ class IDatasetQueryGallery(Dataset, ABC):
         raise NotImplementedError()
 
 
-__all__ = ["IDatasetWithLabels", "IDatasetQueryGallery"]
+class IPairsDataset(Dataset, ABC):
+    """
+    This is an interface for the datasets which return pair of something.
+
+    """
+
+    @abstractmethod
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        """
+        Args:
+            item: Idx of the sample
+
+        Returns:
+             Dictionary with the following keys:
+
+            >>> PAIR_1ST_KEY
+            >>> PAIR_2ND_KEY
+
+        """
+        raise NotImplementedError()
+
+
+__all__ = ["IDatasetWithLabels", "IDatasetQueryGallery", "IPairsDataset"]

@@ -18,7 +18,7 @@ from oml.const import (
 )
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.siamese import SimpleSiamese
-from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import compare_dicts_recursively, one_hot
 
 FEAT_DIM = 8
