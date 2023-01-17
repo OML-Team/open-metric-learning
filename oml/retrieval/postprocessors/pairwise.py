@@ -151,7 +151,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
         self,
         top_n: int,
         pairwise_model: IPairwiseDistanceModel,
-        image_transforms: TTransforms,
+        transforms: TTransforms,
         num_workers: int,
         batch_size: int,
         verbose: bool = True,
@@ -162,7 +162,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
                 and ``top_n`` most relevant galleries.
             pairwise_model: Model which is able to take two images as inputs
                 and estimate the *distance* (not in a strictly mathematical sense) between them.
-            image_transforms: Transforms that will be applied to an image
+            transforms: Transforms that will be applied to an image
             num_workers: Number of workers in DataLoader
             batch_size: Batch size that will be used in DataLoader
             verbose: Set ``True`` if you want to see progress bar for an inference
@@ -172,7 +172,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
 
         self.top_n = top_n
         self.model = pairwise_model
-        self.image_transforms = image_transforms
+        self.image_transforms = transforms
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.verbose = verbose

@@ -13,6 +13,7 @@ from oml.transforms.images.utils import TTransforms, get_im_reader_for_transform
 from oml.utils.images.images import TImReader
 
 
+# todo: use lightning here to work with ddp and half precision
 # fmt: off
 def pairwise_inference(
         model: IPairwiseDistanceModel,

@@ -15,6 +15,8 @@ from oml.registry.optimizers import (
     get_optimizer,
     get_optimizer_by_cfg,
 )
+from oml.registry.pairwise_models import PAIRWISE_MODELS_REGISTRY, get_pairwise_model
+from oml.registry.postprocessors import POSTPROCESSORS_REGISTRY, get_postprocessor
 from oml.registry.samplers import SAMPLERS_REGISTRY, get_sampler
 from oml.registry.schedulers import SCHEDULERS_REGISTRY, get_scheduler
 from oml.registry.transforms import TRANSFORMS_REGISTRY, get_transforms
@@ -43,6 +45,8 @@ def get_opt() -> Optimizer:
         ("sampler", SAMPLERS_REGISTRY, get_sampler, get_sampler_kwargs_runtime()),
         ("scheduler", SCHEDULERS_REGISTRY, get_scheduler, {"optimizer": get_opt()}),
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
+        ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
+        ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
     ],
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:

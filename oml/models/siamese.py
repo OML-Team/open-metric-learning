@@ -1,6 +1,6 @@
 import torch
-from torch import Tensor, nn
-from torchvision.models import resnet50
+from torch import Tensor
+from torchvision.models import resnet18
 
 from oml.interfaces.models import IPairwiseDistanceModel
 from oml.utils.misc_torch import elementwise_dist
@@ -45,11 +45,10 @@ class LinearSiamese(IPairwiseDistanceModel):
         return y
 
 
-class ResNet50Siamese(IPairwiseDistanceModel):
-    def __init__(self) -> None:
-        super(ResNet50Siamese, self).__init__()
-        self.model = resnet50(pretrained=True)
-        self.fc = nn.Linear(in_features=1000 * 2, out_features=1)
+class ResNetSiamese(IPairwiseDistanceModel):
+    def __init__(self, pretrained: bool) -> None:
+        super(ResNetSiamese, self).__init__()
+        self.backbone = resnet18(pretrained=pretrained)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         """
@@ -62,13 +61,10 @@ class ResNet50Siamese(IPairwiseDistanceModel):
             *Distance* between images (a logit of it).
 
         """
-        x1 = self.model(x1)
-        x2 = self.model(x2)
-
-        x = torch.concat([x1 + x2, x1 * x2], dim=1)
-        x = self.fc(x)
-
+        x1 = self.backbone(x1)
+        x2 = self.backbone(x2)
+        x = elementwise_dist(x1, x2, p=2)
         return x
 
 
-__all__ = ["LinearSiamese", "ResNet50Siamese"]
+__all__ = ["LinearSiamese", "ResNetSiamese"]

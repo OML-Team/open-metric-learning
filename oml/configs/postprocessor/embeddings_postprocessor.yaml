@@ -1,0 +1,11 @@
+name: embeddings_postprocessor
+args:
+  top_n: 5
+  pairwise_model:
+    name: linear_siamese
+    args:
+      feat_dim: 16
+      identity_init: True
+  num_workers: 0
+  batch_size: 4
+  verbose: False

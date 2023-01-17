@@ -1,0 +1,14 @@
+name: images_postprocessor
+args:
+  top_n: 3
+  pairwise_model:
+    name: resnet_siamese
+    args:
+      pretrained: False
+  transforms:
+      name: norm_resize_torch
+      args:
+        im_size: 224
+  num_workers: 0
+  batch_size: 4
+  verbose: False

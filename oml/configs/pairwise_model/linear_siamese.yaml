@@ -1,0 +1,4 @@
+name: linear_siamese
+args:
+  feat_dim: 10
+  identity_init: True

@@ -80,9 +80,9 @@ LinearSiamese
     .. automethod:: __init__
     .. automethod:: forward
 
-ResNet50Siamese
+ResNetSiamese
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.ResNet50Siamese
+.. autoclass:: oml.models.siamese.ResNetSiamese
     :undoc-members:
     :show-inheritance:
 

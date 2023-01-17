@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from torch import Tensor
 
@@ -21,28 +21,4 @@ class IDistancesPostprocessor:
         raise NotImplementedError()
 
 
-class IRetrievalRunner:
-    """
-    The goal of the class is to translate representations of queries and galleries into distance matrix.
-    It's also responsible for applying post-processing (re-ranking) techniques.
-
-    """
-
-    post_processor: Optional[IDistancesPostprocessor]  # Post-processor can be passed to constructor
-
-    def setup_gallery(self, *args, **kwargs) -> Any:  # type: ignore
-        """
-        The method setups a gallery for further usage (searching index).
-
-        """
-        raise NotImplementedError()
-
-    def retrieve(self, *args, **kwargs) -> Any:  # type: ignore
-        """
-        The method returns distance matrix with the size of ``[query, gallery]``.
-
-        """
-        raise NotImplementedError()
-
-
-__all__ = ["IRetrievalRunner", "IDistancesPostprocessor"]
+__all__ = ["IDistancesPostprocessor"]
