@@ -6,8 +6,8 @@ from torch import Tensor
 class IDistancesPostprocessor:
     """
     This is a parent class for the classes which apply some postprocessing
-    after the embeddings have been extracted and distance matrix has been calculated.
-    For example, we may want to apply one of query-reranking techniques.
+    after query-to-gallery distance matrix has been calculated.
+    For example, we may want to apply one of re-ranking techniques.
 
     """
 
@@ -16,6 +16,14 @@ class IDistancesPostprocessor:
         This method takes all the needed variables and returns
         the modified matrix of distances, where some distances are
         replaced with new ones.
+
+        Args:
+            distances: Matrix with the shape of ``[Q, G]``
+            queries: Queries in the amount of ``Q``
+            galleries: Galleries in the amount of ``G``
+
+        Returns:
+            An updated distances matrix with the shape of ``[Q, G]``
 
         """
         raise NotImplementedError()

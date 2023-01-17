@@ -10,7 +10,7 @@ from oml.inference.pairwise import (
     pairwise_inference_on_embeddings,
     pairwise_inference_on_images,
 )
-from oml.interfaces.models import IPairwiseDistanceModel
+from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.transforms.images.utils import TTransforms
 from oml.utils.misc_torch import assign_2d
@@ -18,7 +18,7 @@ from oml.utils.misc_torch import assign_2d
 
 class PairwisePostprocessor(IDistancesPostprocessor, ABC):
     """
-    This postprocessor allows us to re-estimate the *distances* between queries and *top-n* galleries
+    This postprocessor allows us to re-estimate the distances between queries and ``top-n`` galleries
     closest to them. It creates pairs of queries and galleries and feeds them to a pairwise model.
 
     """
@@ -36,8 +36,8 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
 
         Returns:
             Distance matrix with the shape of ``[Q, G]``,
-            where ``top_n`` minimal values in each row have been updated by the pairwise model,
-            other distances are shifted to keep the relative order.
+                where ``top_n`` minimal values in each row have been updated by the pairwise model,
+                other distances are shifted by a margin to keep the relative order.
 
         """
         n_queries = len(queries)
@@ -47,11 +47,10 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
 
         # 1. Adjust top_n with respect to the actual gallery size and find top-n pairs
         top_n = min(self.top_n, n_galleries)
-        ii_top = torch.topk(distances, k=top_n, largest=False)[1].view(-1)
+        ii_top = torch.topk(distances, k=top_n, largest=False)[1]
 
         # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
         distances_upd = self.inference(queries=queries, galleries=galleries, ii_top=ii_top, top_n=top_n)
-        distances_upd = distances_upd.view(n_queries, top_n)
 
         # 3. Update distances for top-n galleries
         # The idea is that we somehow permute top-n galleries, but rest of the galleries
@@ -68,7 +67,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
             # Thus, we don't need to care about order and offset at all.
             pass
 
-        distances = assign_2d(x=distances, indices=ii_top.view(n_queries, top_n), new_values=distances_upd)
+        distances = assign_2d(x=distances, indices=ii_top, new_values=distances_upd)
 
         assert list(distances.shape) == [n_queries, n_galleries]
 
@@ -81,13 +80,13 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
         Depends on the exact types of queries/galleries this method may be implemented differently.
 
         Args:
-            queries: Queries with the length of ``Q``
-            galleries: Galleries with the length of ``G``
+            queries: Queries in the amount of ``Q``
+            galleries: Galleries in the amount of ``G``
             ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
-            top_n: Defines the number of the closest galleries to re-rank
+            top_n: Number of the closest galleries to re-rank
 
         Returns:
-            Updated distance matrix with the shape of ``[Q, G]``.
+            Updated distance matrix with the shape of ``[Q, G]``
 
         """
         raise NotImplementedError()
@@ -97,7 +96,7 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
     def __init__(
         self,
         top_n: int,
-        pairwise_model: IPairwiseDistanceModel,
+        pairwise_model: IPairwiseModel,
         num_workers: int,
         batch_size: int,
         verbose: bool = False,
@@ -124,17 +123,18 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
     def inference(self, queries: Tensor, galleries: Tensor, ii_top: Tensor, top_n: int) -> Tensor:
         """
         Args:
-            queries: Queries representations with the length of ``Q``
-            galleries: Galleries representations with the length of ``G``
+            queries: Queries representations with the shape of ``[Q, *]``
+            galleries: Galleries representations with the shape of ``[G, *]``
             ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
-            top_n: Defines the number of the closest galleries to re-rank
+            top_n: Number of the closest galleries to re-rank
 
         Returns:
-            Updated distance matrix with the shape of ``[Q, G]``.
+            Updated distance matrix with the shape of ``[Q, G]``
 
         """
+        n_queries = len(queries)
         queries = queries.repeat_interleave(top_n, dim=0)
-        galleries = galleries[ii_top]
+        galleries = galleries[ii_top.view(-1)]
         distances_upd = pairwise_inference_on_embeddings(
             model=self.model,
             embeddings1=queries,
@@ -143,6 +143,7 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
             batch_size=self.batch_size,
             verbose=self.verbose,
         )
+        distances_upd = distances_upd.view(n_queries, top_n)
         return distances_upd
 
 
@@ -150,7 +151,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
     def __init__(
         self,
         top_n: int,
-        pairwise_model: IPairwiseDistanceModel,
+        pairwise_model: IPairwiseModel,
         transforms: TTransforms,
         num_workers: int,
         batch_size: int,
@@ -183,14 +184,15 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
             queries: Paths to queries with the length of ``Q``
             galleries: Paths to galleries with the length of ``G``
             ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
-            top_n: Defines the number of the closest galleries to re-rank
+            top_n: Number of the closest galleries to re-rank
 
         Returns:
-            Updated distance matrix with the shape of ``[Q, G]``.
+            Updated distance matrix with the shape of ``[Q, G]``
 
         """
+        n_queries = len(queries)
         queries = list(itertools.chain.from_iterable(itertools.repeat(x, top_n) for x in queries))
-        galleries = [galleries[i] for i in ii_top]
+        galleries = [galleries[i] for i in ii_top.view(-1)]
         distances_upd = pairwise_inference_on_images(
             model=self.model,
             paths1=queries,
@@ -200,6 +202,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
             batch_size=self.batch_size,
             verbose=self.verbose,
         )
+        distances_upd = distances_upd.view(n_queries, top_n)
         return distances_upd
 
 

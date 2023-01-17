@@ -2,14 +2,14 @@ import torch
 from torch import Tensor
 from torchvision.models import resnet18
 
-from oml.interfaces.models import IPairwiseDistanceModel
+from oml.interfaces.models import IPairwiseModel
 from oml.utils.misc_torch import elementwise_dist
 
 
-class LinearSiamese(IPairwiseDistanceModel):
+class LinearSiamese(IPairwiseModel):
     """
-    Model takes two embeddings as inputs, transforms them and estimates the
-    corresponding *distance* (not in a strictly mathematical sense) after the transformation.
+    Model takes two embeddings as inputs, transforms them linearly
+    and estimates the distance between them.
 
     """
 
@@ -36,7 +36,7 @@ class LinearSiamese(IPairwiseDistanceModel):
             x2: Embedding with the shape of ``[batch_size, feat_dim]``
 
         Returns:
-            *Distance* between transformed inputs.
+            Distance between transformed inputs.
 
         """
         x1 = self.proj(x1)
@@ -45,7 +45,13 @@ class LinearSiamese(IPairwiseDistanceModel):
         return y
 
 
-class ResNetSiamese(IPairwiseDistanceModel):
+class ResNetSiamese(IPairwiseModel):
+    """
+    Model takes two images as inputs, passes them through backbone and
+    estimates the distance between them.
+
+    """
+
     def __init__(self, pretrained: bool) -> None:
         super(ResNetSiamese, self).__init__()
         self.backbone = resnet18(pretrained=pretrained)
@@ -58,7 +64,7 @@ class ResNetSiamese(IPairwiseDistanceModel):
             x2: The second input image.
 
         Returns:
-            *Distance* between images (a logit of it).
+            Distance between images.
 
         """
         x1 = self.backbone(x1)

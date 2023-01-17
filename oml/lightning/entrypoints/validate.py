@@ -15,7 +15,7 @@ from oml.lightning.entrypoints.parser import (
 from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.models import get_extractor_by_cfg
-from oml.registry.postprocessors import get_postprocessor
+from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
@@ -61,7 +61,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         **module_kwargs
     )
 
-    postprocessor = None if "postprocessor" not in cfg else get_postprocessor(cfg["postprocessor"])
+    postprocessor = None if "postprocessor" not in cfg else get_postprocessor_by_cfg(cfg["postprocessor"])
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(

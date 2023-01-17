@@ -11,8 +11,8 @@ from oml.retrieval.postprocessors.pairwise import (
 from oml.utils.misc import dictconfig_to_dict, remove_unused_kwargs
 
 POSTPROCESSORS_REGISTRY = {
-    "images_postprocessor": PairwiseImagesPostprocessor,
-    "embeddings_postprocessor": PairwiseEmbeddingsPostprocessor,
+    "pairwise_images": PairwiseImagesPostprocessor,
+    "pairwise_embeddings": PairwiseEmbeddingsPostprocessor,
 }
 
 

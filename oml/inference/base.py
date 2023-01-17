@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 from oml.datasets.list_dataset import ListDataset
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
+from oml.utils.misc_torch import get_device
 
 
 # todo: use lightning for half precision and DDP
@@ -29,7 +30,7 @@ def inference_on_images(
 
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
-    device = next(model.parameters()).device
+    device = get_device(model)
 
     loader = tqdm(loader) if verbose else loader
 

@@ -1,4 +1,4 @@
-name: embeddings_postprocessor
+name: pairwise_embeddings
 args:
   top_n: 5
   pairwise_model:

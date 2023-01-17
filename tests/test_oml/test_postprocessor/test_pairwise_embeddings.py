@@ -8,7 +8,7 @@ import torch
 from torch import Tensor
 
 from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
-from oml.interfaces.models import IPairwiseDistanceModel
+from oml.interfaces.models import IPairwiseModel
 from oml.models.siamese import LinearSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import flatten_dict, one_hot
@@ -128,7 +128,7 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
             assert metric_upd >= metric, (key, metric, metric_upd)
 
 
-class DummyPairwise(IPairwiseDistanceModel):
+class DummyPairwise(IPairwiseModel):
     def __init__(self, distances_to_return: Tensor):
         super(DummyPairwise, self).__init__()
         self.distances_to_return = distances_to_return

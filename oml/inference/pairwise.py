@@ -8,15 +8,16 @@ from tqdm.auto import tqdm
 
 from oml.datasets.pairs import EmbeddingPairsDataset, ImagePairsDataset
 from oml.interfaces.datasets import IPairsDataset
-from oml.interfaces.models import IPairwiseDistanceModel
+from oml.interfaces.models import IPairwiseModel
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
+from oml.utils.misc_torch import get_device
 
 
 # todo: use lightning here to work with ddp and half precision
 # fmt: off
 def pairwise_inference(
-        model: IPairwiseDistanceModel,
+        model: IPairwiseModel,
         dataset: IPairsDataset,
         num_workers: int,
         batch_size: int,
@@ -25,7 +26,7 @@ def pairwise_inference(
     prev_mode = model.training
     model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
-    device = next(model.parameters()).device
+    device = get_device(model)
 
     loader = tqdm(loader) if verbose else loader
 
@@ -41,7 +42,7 @@ def pairwise_inference(
 
 
 def pairwise_inference_on_images(
-        model: IPairwiseDistanceModel,
+        model: IPairwiseModel,
         paths1: List[Path],
         paths2: List[Path],
         transform: TTransforms,
@@ -60,7 +61,7 @@ def pairwise_inference_on_images(
 
 
 def pairwise_inference_on_embeddings(
-        model: IPairwiseDistanceModel,
+        model: IPairwiseModel,
         embeddings1: Tensor,
         embeddings2: Tensor,
         num_workers: int,

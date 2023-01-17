@@ -180,8 +180,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         elif isinstance(self.postprocessor, PairwiseImagesPostprocessor):
             self.distance_matrix = self.postprocessor.process(
                 distances=self.distance_matrix,
-                queries=self.acc.storage[PATHS_KEY][is_query],  # type: ignore
-                galleries=self.acc.storage[PATHS_KEY][is_gallery],  # type: ignore
+                queries=np.array(self.acc.storage[PATHS_KEY])[is_query],  # type: ignore
+                galleries=np.array(self.acc.storage[PATHS_KEY])[is_gallery],  # type: ignore
             )
         else:
             raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")

@@ -1,4 +1,4 @@
-name: images_postprocessor
+name: pairwise_images
 args:
   top_n: 3
   pairwise_model:

@@ -95,6 +95,10 @@ def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     return cdist(x1=x1, x2=x2, p=p)
 
 
+def get_device(model: torch.nn.Module) -> str:
+    return str(next(model.parameters()).device)
+
+
 def _check_is_sequence(val: Any) -> bool:
     try:
         len(val)

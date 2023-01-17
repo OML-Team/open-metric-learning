@@ -19,9 +19,9 @@ IDistancesPostprocessor
 
     .. automethod:: process
 
-IPairwiseDistanceModel
+IPairwiseModel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.models.IPairwiseDistanceModel
+.. autoclass:: oml.interfaces.models.IPairwiseModel
     :undoc-members:
     :show-inheritance:
 
