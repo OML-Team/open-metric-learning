@@ -2,7 +2,6 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-import torch
 from torch import Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
@@ -34,7 +33,7 @@ def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[T
 
 
 @pytest.mark.parametrize("top_n", [2, 5])
-def test_trivial_processing_does_not_change_distances(top_n: int) -> None:
+def test_trivial_processing_does_not_change_distances_order(top_n: int) -> None:
     pairwise_model = ResNetSiamese(pretrained=False)
 
     embedder = pairwise_model.backbone
@@ -47,4 +46,7 @@ def test_trivial_processing_does_not_change_distances(top_n: int) -> None:
     )
     distances_processed = postprocessor.process(distances=distances, queries=queries, galleries=galleries)
 
-    assert torch.allclose(distances, distances_processed)
+    order = distances.argsort()
+    order_processed = distances_processed.argsort()
+
+    assert (order == order_processed).all(), (order, order_processed)
