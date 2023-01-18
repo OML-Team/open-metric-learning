@@ -12,7 +12,7 @@ from oml.interfaces.models import IPairwiseModel
 from oml.models.siamese import LinearSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import flatten_dict, one_hot
-from oml.utils.misc_torch import pairwise_dist
+from oml.utils.misc_torch import normalise, pairwise_dist
 
 FEAT_SIZE = 8
 oh = partial(one_hot, dim=FEAT_SIZE)
@@ -24,6 +24,7 @@ def independent_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     feat_dim = 12
 
     embeddings = torch.randn((sz, feat_dim))
+    embeddings = normalise(embeddings)
 
     is_query = torch.ones(sz).bool()
     is_query[: sz // 2] = False
@@ -40,6 +41,8 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     feat_dim = 4
 
     embeddings = torch.randn((sz, feat_dim))
+    embeddings = normalise(embeddings)
+
     is_query = torch.ones(sz).bool()
     is_gallery = torch.ones(sz).bool()
 
@@ -70,6 +73,11 @@ def test_trivial_processing_does_not_change_distances_order(
     order_processed = distances_processed.argsort()
 
     assert (order == order_processed).all(), (order, order_processed)
+
+    if top_n <= is_gallery.sum():
+        min_orig_distances = torch.topk(distances, k=top_n, largest=False).values
+        min_processed_distances = torch.topk(distances_processed, k=top_n, largest=False).values
+        assert torch.allclose(min_orig_distances, min_processed_distances)
 
 
 def perfect_case() -> Tuple[Tensor, Tensor, Tensor, Tensor]:

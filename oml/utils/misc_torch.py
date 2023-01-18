@@ -95,6 +95,12 @@ def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     return cdist(x1=x1, x2=x2, p=p)
 
 
+def normalise(x: Tensor, p: int = 2) -> Tensor:
+    xn = torch.linalg.norm(x, p, dim=1).detach()
+    x = x.div(xn.unsqueeze(1))
+    return x
+
+
 def get_device(model: torch.nn.Module) -> str:
     return str(next(model.parameters()).device)
 

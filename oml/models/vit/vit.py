@@ -17,6 +17,7 @@ from oml.models.vit.hubconf import (  # type: ignore
 )
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
+from oml.utils.misc_torch import normalise
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 
@@ -109,8 +110,7 @@ class ViTExtractor(IExtractor):
             x = self.model(x)
 
         if self.normalise_features:
-            xn = torch.linalg.norm(x, 2, dim=1).detach()
-            x = x.div(xn.unsqueeze(1))
+            x = normalise(x)
 
         return x
 

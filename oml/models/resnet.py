@@ -13,6 +13,7 @@ from oml.models.pooling import GEM
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint
+from oml.utils.misc_torch import normalise
 
 
 class ResnetExtractor(IExtractor):
@@ -114,8 +115,7 @@ class ResnetExtractor(IExtractor):
         x = self.model(x)
 
         if self.normalise_features:
-            xn = torch.linalg.norm(x, 2, dim=1).detach()
-            x = x.div(xn.unsqueeze(1))
+            x = normalise(x)
 
         return x
 
