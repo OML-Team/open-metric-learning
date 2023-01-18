@@ -1,5 +1,6 @@
 from abc import ABC
 from collections.abc import MutableMapping
+from contextlib import contextmanager
 from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
 
 import numpy as np
@@ -111,6 +112,14 @@ def _check_is_sequence(val: Any) -> bool:
         return True
     except Exception:
         return False
+
+
+@contextmanager
+def temporary_setting_model_mode(model: torch.nn.Module, set_train: bool) -> torch.nn.Module:
+    prev_mode = model.training
+    model.train(set_train)
+    yield model
+    model.train(prev_mode)
 
 
 class OnlineCalc(ABC):

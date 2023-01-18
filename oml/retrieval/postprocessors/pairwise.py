@@ -1,7 +1,7 @@
 import itertools
 from abc import ABC
 from pathlib import Path
-from typing import List, Union
+from typing import Any, List
 
 import torch
 from torch import Tensor
@@ -25,14 +25,12 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
 
     top_n: int
 
-    def process(
-        self, distances: Tensor, queries: Union[List[Path], Tensor], galleries: Union[List[Path], Tensor]
-    ) -> Tensor:
+    def process(self, distances: Tensor, queries: Any, galleries: Any) -> Tensor:
         """
         Args:
             distances: Matrix with the shape of ``[Q, G]``
-            queries: *Q* queries, they may be paths or representations.
-            galleries: *G* galleries, they may be paths or representations.
+            queries: Queries in the amount of ``Q``
+            galleries: Galleries in the amount of ``G``
 
         Returns:
             Distance matrix with the shape of ``[Q, G]``,
@@ -55,7 +53,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
         # 3. Update distances for top-n galleries
         # The idea is that we somehow permute top-n galleries, but rest of the galleries
         # we keep in the end of the list as before permutation.
-        # To do so, we add an offset to these galleries (which did not participate in permutation)
+        # To do so, we add an offset to these galleries' distances (which haven't participated in the permutation)
         if top_n < n_galleries:
             # Here we use the fact that distances not participating in permutation start with top_n + 1 position
             min_in_old_distances = torch.topk(distances, k=top_n + 1, largest=False)[0][:, -1]
@@ -73,9 +71,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
 
         return distances
 
-    def inference(
-        self, queries: Union[List[Path], Tensor], galleries: Union[List[Path], Tensor], ii_top: Tensor, top_n: int
-    ) -> Tensor:
+    def inference(self, queries: Any, galleries: Any, ii_top: Tensor, top_n: int) -> Tensor:
         """
         Depends on the exact types of queries/galleries this method may be implemented differently.
 
@@ -86,7 +82,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
             top_n: Number of the closest galleries to re-rank
 
         Returns:
-            Updated distance matrix with the shape of ``[Q, G]``
+            An updated distance matrix with the shape of ``[Q, G]``
 
         """
         raise NotImplementedError()
@@ -160,7 +156,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
         """
         Args:
             top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
-                and ``top_n`` most relevant galleries.
+                and its ``top_n`` most relevant galleries.
             pairwise_model: Model which is able to take two images as inputs
                 and estimate the *distance* (not in a strictly mathematical sense) between them.
             transforms: Transforms that will be applied to an image

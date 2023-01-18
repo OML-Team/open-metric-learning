@@ -8,7 +8,7 @@ from oml.utils.misc_torch import elementwise_dist
 
 class LinearSiamese(IPairwiseModel):
     """
-    Model takes two embeddings as inputs, transforms them linearly
+    The model takes two embeddings as inputs, transforms them linearly
     and estimates the distance between them.
 
     """
@@ -18,7 +18,7 @@ class LinearSiamese(IPairwiseModel):
         Args:
             feat_dim: Expected size of each input.
             identity_init: If ``True``, models' weights initialised in a way when
-                model simply estimates L2 distance between the original embeddings.
+                the model simply estimates L2 distance between the original embeddings.
 
         """
         super(LinearSiamese, self).__init__()
@@ -47,7 +47,7 @@ class LinearSiamese(IPairwiseModel):
 
 class ResNetSiamese(IPairwiseModel):
     """
-    Model takes two images as inputs, passes them through backbone and
+    The model takes two images as inputs, passes them through backbone and
     estimates the distance between them.
 
     """

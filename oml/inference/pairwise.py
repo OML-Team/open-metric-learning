@@ -11,11 +11,12 @@ from oml.interfaces.datasets import IPairsDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
-from oml.utils.misc_torch import get_device
+from oml.utils.misc_torch import get_device, temporary_setting_model_mode
 
 
 # todo: use lightning here to work with ddp and half precision
 # fmt: off
+@torch.no_grad()
 def pairwise_inference(
         model: IPairwiseModel,
         dataset: IPairsDataset,
@@ -23,22 +24,19 @@ def pairwise_inference(
         batch_size: int,
         verbose: bool
 ) -> Tensor:
-    prev_mode = model.training
-    model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
-    device = get_device(model)
-
     loader = tqdm(loader) if verbose else loader
+    device = get_device(model)
+    outputs_list = []
 
-    outputs = []
-    with torch.no_grad():
-        for batch in tqdm(loader):
+    with temporary_setting_model_mode(model, set_train=False):
+        for batch in loader:
             x1 = batch[dataset.pair_1st_key].to(device)
             x2 = batch[dataset.pair_2nd_key].to(device)
-            outputs.append(model(x1=x1, x2=x2))
+            outputs_list.append(model(x1=x1, x2=x2))
 
-    model.train(prev_mode)
-    return torch.cat(outputs).detach().cpu()
+    outputs = torch.cat(outputs_list).detach().cpu()
+    return outputs
 
 
 def pairwise_inference_on_images(

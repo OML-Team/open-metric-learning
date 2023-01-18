@@ -9,10 +9,11 @@ from tqdm.auto import tqdm
 from oml.datasets.list_dataset import ListDataset
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
-from oml.utils.misc_torch import get_device
+from oml.utils.misc_torch import get_device, temporary_setting_model_mode
 
 
 # todo: use lightning for half precision and DDP
+@torch.no_grad()
 def inference_on_images(
     model: nn.Module,
     paths: List[Path],
@@ -25,22 +26,18 @@ def inference_on_images(
     if f_imread is None:
         f_imread = get_im_reader_for_transforms(transform)
 
-    prev_mode = model.training
-    model.eval()
-
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
-    device = get_device(model)
-
     loader = tqdm(loader) if verbose else loader
+    device = get_device(model)
+    outputs_list = []
 
-    outputs = []
-    with torch.no_grad():
-        for batch in tqdm(loader):
-            outputs.append(model(batch.to(device)))
+    with temporary_setting_model_mode(model, set_train=False):
+        for batch in loader:
+            outputs_list.append(model(batch.to(device)))
 
-    model.train(prev_mode)
-    return torch.cat(outputs).detach().cpu()
+    outputs = torch.cat(outputs_list).detach().cpu()
+    return outputs
 
 
 __all__ = ["inference_on_images"]

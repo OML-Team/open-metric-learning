@@ -1,14 +1,14 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from torch import Tensor
 
 from oml.const import PAIR_1ST_KEY, PAIR_2ND_KEY
-from oml.datasets.list_dataset import ListDataset
+from oml.datasets.list_dataset import ListDataset, TBBoxes
 from oml.interfaces.datasets import IPairsDataset
 from oml.transforms.images.torchvision.transforms import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms
-from oml.utils.images.images import TImReader, imread_cv2
+from oml.utils.images.images import TImReader, imread_pillow
 
 
 class EmbeddingPairsDataset(IPairsDataset):
@@ -59,8 +59,10 @@ class ImagePairsDataset(IPairsDataset):
         self,
         paths1: List[Path],
         paths2: List[Path],
-        transform: TTransforms = get_normalisation_torch(),
-        f_imread: TImReader = imread_cv2,
+        bboxes1: Optional[TBBoxes] = None,
+        bboxes2: Optional[TBBoxes] = None,
+        transform: Optional[TTransforms] = None,
+        f_imread: TImReader = imread_pillow,
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,
         cache_size: int = 100_000,
@@ -69,6 +71,12 @@ class ImagePairsDataset(IPairsDataset):
         Args:
             paths1: Paths to the 1st input images
             paths2: Paths to the 2nd input images
+            bboxes1: Should be either ``None`` or a sequence of bboxes.
+                If an image has ``N`` boxes, duplicate its
+                path ``N`` times and provide bounding box for each of them.
+                If you want to get an embedding for the whole image, set bbox to ``None`` for
+                this particular image path. The format is ``x1, y1, x2, y2``.
+            bboxes2: The same as ``bboxes2``, but for the second inputs.
             transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
             f_imread: Function to read the images
             pair_1st_key: Key to put the 1st images into the batches
@@ -78,15 +86,17 @@ class ImagePairsDataset(IPairsDataset):
         """
         assert len(paths1) == len(paths2)
 
-        dataset_args = {"bboxes": None, "transform": transform, "f_imread": f_imread, "cache_size": cache_size // 2}
-        self.dataset1 = ListDataset(paths1, **dataset_args)
-        self.dataset2 = ListDataset(paths2, **dataset_args)
+        if transform is None:
+            transform = get_normalisation_torch()
+
+        dataset_args = {"transform": transform, "f_imread": f_imread, "cache_size": cache_size // 2}
+        self.dataset1 = ListDataset(paths1, bboxes=bboxes1, **dataset_args)
+        self.dataset2 = ListDataset(paths2, bboxes=bboxes2, **dataset_args)
 
         self.pair_1st_key = pair_1st_key
         self.pair_2nd_key = pair_2nd_key
 
     def __getitem__(self, idx: int) -> Dict[str, Tensor]:
-        # todo: add support of bounding boxes
         return {self.pair_1st_key: self.dataset1[idx], self.pair_2nd_key: self.dataset2[idx]}
 
     def __len__(self) -> int:

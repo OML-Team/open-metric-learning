@@ -37,7 +37,7 @@ class IFreezable(ABC):
 
 class IPairwiseModel(nn.Module):
     """
-    Model of this type takes two inputs, for example, two embeddings or two images.
+    A model of this type takes two inputs, for example, two embeddings or two images.
 
     """
 
