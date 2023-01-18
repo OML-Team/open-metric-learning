@@ -74,7 +74,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
         x1 = x1.unsqueeze(1)
         x2 = x2.unsqueeze(1)
 
-    dist = cdist(x1=x1, x2=x2, p=p).squeeze()
+    dist = cdist(x1=x1, x2=x2, p=p).view(len(x1))
 
     return dist
 

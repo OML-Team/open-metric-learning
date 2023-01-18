@@ -8,7 +8,7 @@ from oml.retrieval.postprocessors.pairwise import (
     PairwiseEmbeddingsPostprocessor,
     PairwiseImagesPostprocessor,
 )
-from oml.utils.misc import dictconfig_to_dict, remove_unused_kwargs
+from oml.utils.misc import dictconfig_to_dict
 
 POSTPROCESSORS_REGISTRY = {
     "pairwise_images": PairwiseImagesPostprocessor,
@@ -24,7 +24,6 @@ def get_postprocessor(name: str, **kwargs: Dict[str, Any]) -> IDistancesPostproc
     if "pairwise_model" in kwargs:
         kwargs["pairwise_model"] = get_pairwise_model_by_cfg(kwargs["pairwise_model"])
 
-    kwargs = remove_unused_kwargs(kwargs, constructor)
     return constructor(**kwargs)
 
 

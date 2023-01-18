@@ -61,7 +61,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         **module_kwargs
     )
 
-    postprocessor = None if "postprocessor" not in cfg else get_postprocessor_by_cfg(cfg["postprocessor"])
+    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
