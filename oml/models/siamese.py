@@ -53,6 +53,11 @@ class ResNetSiamese(IPairwiseModel):
     """
 
     def __init__(self, pretrained: bool) -> None:
+        """
+        Args:
+            pretrained: Set ``True`` if you want to use pretrained model.
+
+        """
         super(ResNetSiamese, self).__init__()
         self.backbone = resnet18(pretrained=pretrained)
 
