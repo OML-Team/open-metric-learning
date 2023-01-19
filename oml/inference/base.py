@@ -20,7 +20,7 @@ def inference_on_images(
     transform: TTransforms,
     num_workers: int,
     batch_size: int,
-    verbose: bool,
+    verbose: bool = False,
     f_imread: Optional[TImReader] = None,
 ) -> Tensor:
     if f_imread is None:

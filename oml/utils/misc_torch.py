@@ -97,6 +97,16 @@ def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
 
 
 def normalise(x: Tensor, p: int = 2) -> Tensor:
+    """
+    Args:
+        x: A 2D tensor
+        p: Specifies the exact p-norm
+
+    Returns:
+        Normalised input
+
+    """
+    assert x.ndim() == 2
     xn = torch.linalg.norm(x, p, dim=1).detach()
     x = x.div(xn.unsqueeze(1))
     return x
@@ -124,7 +134,7 @@ def temporary_setting_model_mode(model: torch.nn.Module, set_train: bool) -> tor
 
 class OnlineCalc(ABC):
     """
-    The base class to calculate some statistics online (on the steam of values).
+    The base class to calculate some statistics online (on the stream of values).
 
     """
 
