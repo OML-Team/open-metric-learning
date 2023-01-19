@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.base import images_inference
+from oml.inference.base import inference_on_images
 from oml.models.siamese import ResNetSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
@@ -24,7 +24,7 @@ def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[T
     queries = paths[is_query]
     galleries = paths[is_gallery]
 
-    embeddings = images_inference(
+    embeddings = inference_on_images(
         model=model, paths=paths.tolist(), transform=transforms, num_workers=0, batch_size=4, verbose=False
     )
 

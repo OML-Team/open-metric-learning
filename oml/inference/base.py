@@ -59,7 +59,7 @@ def _inference(
 
 
 @torch.no_grad()
-def images_inference(
+def inference_on_images(
     model: nn.Module,
     paths: List[Path],
     transform: TTransforms,
@@ -74,12 +74,12 @@ def images_inference(
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread)
     device = get_device(model)
 
-    def apply_model(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:
+    def _apply(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:
         return model_(batch_[dataset.input_tensors_key].to(device))
 
     outputs = _inference(
         model=model,
-        apply_model=apply_model,
+        apply_model=_apply,
         dataset=dataset,
         num_workers=num_workers,
         batch_size=batch_size,
@@ -89,4 +89,4 @@ def images_inference(
     return outputs
 
 
-__all__ = ["images_inference", "_inference"]
+__all__ = ["inference_on_images", "_inference"]
