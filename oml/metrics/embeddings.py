@@ -134,14 +134,15 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
 
-        self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
+        keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
-            self.keys_to_accumulate.append(self.categories_key)
+            keys_to_accumulate.append(self.categories_key)
         if self.extra_keys:
-            self.keys_to_accumulate.extend(list(extra_keys))
+            keys_to_accumulate.extend(list(extra_keys))
         if self.postprocessor:
-            self.keys_to_accumulate.extend(self.postprocessor.needed_keys)
+            keys_to_accumulate.extend(self.postprocessor.needed_keys)
 
+        self.keys_to_accumulate = tuple(set(keys_to_accumulate))
         self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
 
     def setup(self, num_samples: int) -> None:  # type: ignore

@@ -3,6 +3,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, Dict, List
 
+import numpy as np
 import torch
 from torch import Tensor
 
@@ -232,8 +233,8 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
         return distances_upd
 
     def process_by_dict(self, distances: Tensor, data: Dict[str, Any]) -> Tensor:
-        queries = data[self.paths_key][data[self.is_query_key]]
-        galleries = data[self.paths_key][data[self.is_gallery_key]]
+        queries = np.array(data[self.paths_key])[data[self.is_query_key]]
+        galleries = np.array(data[self.paths_key])[data[self.is_gallery_key]]
         return self.process(distances=distances, queries=queries, galleries=galleries)
 
     @property
