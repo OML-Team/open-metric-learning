@@ -6,6 +6,8 @@ import numpy as np
 import torch
 from torch import Tensor, cdist
 
+from oml.utils.misc import find_first_occurrences
+
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
 TOnlineValues = Union[TSingleValues, TSequenceValues]
@@ -101,6 +103,32 @@ def _check_is_sequence(val: Any) -> bool:
         return True
     except Exception:
         return False
+
+
+def drop_duplicates_by_ids(ids: List[Hashable], data: Tensor, sort: bool = True) -> Tuple[List[Hashable], Tensor]:
+    """
+    The function returns rows of data that have unique ids.
+    Thus, if there are multiple occurrences of some id, it leaves the first one.
+
+    Args:
+        ids: Identifiers of data records with the length of ``N``
+        data: Tensor of data records in the shape of ``[N, *]``
+        sort: Set ``True`` to return unique records sorted by their ids
+
+    Returns:
+        Unique data records with their ids
+
+    """
+    ids_first = find_first_occurrences(ids)
+    ids = [ids[i] for i in ids_first]
+    data = data[ids_first]
+
+    if sort:
+        ii_permute = torch.argsort(torch.tensor(ids))
+        ids = [ids[i] for i in ii_permute]
+        data = data[ii_permute]
+
+    return ids, data
 
 
 class OnlineCalc(ABC):
@@ -407,4 +435,5 @@ __all__ = [
     "take_2d",
     "assign_2d",
     "PCA",
+    "drop_duplicates_by_ids",
 ]
