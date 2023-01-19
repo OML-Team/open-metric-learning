@@ -3,8 +3,6 @@ Pairwise Processing
 
 Note, this part of the library is under construction.
 
-Interfaces
-================================================================================================
 .. toctree::
    :titlesonly:
 
@@ -35,14 +33,6 @@ IPairsDataset
 
     .. automethod:: __init__
     .. automethod:: __getitem__
-
-Implementations
-================================================================================================
-.. toctree::
-   :titlesonly:
-
-.. contents::
-   :local:
 
 PairwisePostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
