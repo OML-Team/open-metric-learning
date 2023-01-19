@@ -102,6 +102,7 @@ class PairsMiner:
 
 class ImagesSiamese(torch.nn.Module):
     def __init__(self, weights, normalise_features) -> None:
+        # todo: apply or don't apply sigmoid
         super(ImagesSiamese, self).__init__()
         self.model = ViTExtractor(weights=weights, arch="vits16", normalise_features=normalise_features)
         feat_dim = self.model.feat_dim

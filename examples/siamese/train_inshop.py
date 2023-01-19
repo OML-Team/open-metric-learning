@@ -13,7 +13,7 @@ from oml.samplers.category_balance import CategoryBalanceSampler
 from oml.transforms.images.utils import get_im_reader_for_transforms
 from oml.utils.misc import flatten_dict
 
-logs_root = Path("/nydl/logs/DeepFashion_InShop/2023")
+logs_root = Path("/nydl/logs/2023/inshop/")
 
 dataset_root = Path("/nydl/data/DeepFashion_InShop/")
 n_labels = 5
@@ -23,11 +23,11 @@ num_workers = 20
 
 weights = "vits16_inshop"
 normalize_features = False
-n_epochs = 50
-n_epoch_warm_up = 5
+n_epochs = 250
+n_epoch_warm_up = 2
 val_period = 1
 lr_warm_up = 1e-3
-lr = 1e-6
+lr = 2e-6
 top_n = 5
 
 train_transform = t.Compose(
@@ -63,11 +63,16 @@ optimizer = torch.optim.AdamW(params=model.parameters(), lr=1e10)
 pairs_miner = PairsMiner()
 criterion = torch.nn.BCEWithLogitsLoss(reduction="mean")
 
-writer = SummaryWriter(log_dir=str(logs_root / str(datetime.now()).replace(" ", "_").split(".")[0]))
+log_dir = str(logs_root / str(datetime.now()).replace(" ", "_").split(".")[0])
+Path(log_dir).mkdir(parents=True, exist_ok=True)
+writer = SummaryWriter(log_dir=log_dir)
+
 k = 0
+best_cmc = 0.0
+ckpt_metric = "OVERALL/cmc/1"
 
 for i_epoch in range(n_epochs):
-    # tqdm_loader = tqdm([next(iter(loader))] * 80)
+    # tqdm_loader = tqdm([next(iter(loader))] * 2)
     tqdm_loader = tqdm(loader)
 
     if i_epoch < n_epoch_warm_up:
@@ -96,5 +101,12 @@ for i_epoch in range(n_epochs):
 
     if (i_epoch + 1) % val_period == 0:
         metrics = validate(model=model, top_n=top_n, df_val=df_val, emb_val=emb_val)
-        for m, v in flatten_dict(metrics).items():
+        metrics = flatten_dict(metrics)
+        for m, v in metrics.items():
             writer.add_scalar(m, v, global_step=i_epoch)
+
+        if metrics[ckpt_metric] > best_cmc:
+            model = model.cpu()
+            torch.save(model.state_dict(), Path(log_dir) / "best.pth")
+            best_cmc = float(metrics[ckpt_metric])
+            mode = model.cuda()
