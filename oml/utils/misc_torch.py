@@ -106,7 +106,7 @@ def normalise(x: Tensor, p: int = 2) -> Tensor:
         Normalised input
 
     """
-    assert x.ndim() == 2
+    assert x.ndim == 2
     xn = torch.linalg.norm(x, p, dim=1).detach()
     x = x.div(xn.unsqueeze(1))
     return x
