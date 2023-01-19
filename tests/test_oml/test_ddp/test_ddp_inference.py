@@ -5,7 +5,7 @@ import torch
 from torchvision.models import resnet18
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.base import inference_on_images
+from oml.inference.list_inference import inference_on_images
 from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
 from tests.test_oml.test_ddp.utils import init_ddp, run_in_ddp

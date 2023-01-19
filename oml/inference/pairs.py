@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from torch import Tensor
 
 from oml.datasets.pairs import EmbeddingPairsDataset, ImagePairsDataset
-from oml.inference.base import _inference
+from oml.inference.abstract import _inference
 from oml.interfaces.models import IPairwiseModel
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
