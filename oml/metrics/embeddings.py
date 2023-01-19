@@ -39,10 +39,6 @@ from oml.functional.metrics import (
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
-from oml.retrieval.postprocessors.pairwise import (
-    PairwiseEmbeddingsPostprocessor,
-    PairwiseImagesPostprocessor,
-)
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 
@@ -143,6 +139,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             self.keys_to_accumulate.append(self.categories_key)
         if self.extra_keys:
             self.keys_to_accumulate.extend(list(extra_keys))
+        if self.postprocessor:
+            self.keys_to_accumulate.extend(self.postprocessor.needed_keys)
 
         self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
 
@@ -169,22 +167,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
-        if self.postprocessor is None:
-            pass
-        elif isinstance(self.postprocessor, PairwiseEmbeddingsPostprocessor):
-            self.distance_matrix = self.postprocessor.process(
-                distances=self.distance_matrix,
-                queries=embeddings[is_query],  # type: ignore
-                galleries=embeddings[is_gallery],  # type: ignore
-            )
-        elif isinstance(self.postprocessor, PairwiseImagesPostprocessor):
-            self.distance_matrix = self.postprocessor.process(
-                distances=self.distance_matrix,
-                queries=np.array(self.acc.storage[PATHS_KEY])[is_query],  # type: ignore
-                galleries=np.array(self.acc.storage[PATHS_KEY])[is_gallery],  # type: ignore
-            )
-        else:
-            raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")
+        if self.postprocessor:
+            self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
