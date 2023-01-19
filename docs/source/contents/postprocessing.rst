@@ -1,48 +1,98 @@
 Pairwise Processing
 =============================
 
+Note, this part of the library is under construction.
+
 .. toctree::
    :titlesonly:
 
 .. contents::
    :local:
 
-Note, this part of the library is under construction.
-
-
-IPostprocessor
+IDistancesPostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.postprocessor.IPostprocessor
+.. autoclass:: oml.interfaces.retrieval.IDistancesPostprocessor
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: process
 
-
-IPairwiseDistanceModel
+IPairwiseModel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.models.IPairwiseDistanceModel
+.. autoclass:: oml.interfaces.models.IPairwiseModel
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: forward
 
+IPairsDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IPairsDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
+
+PairwisePostprocessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwisePostprocessor
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: process
+    .. automethod:: inference
 
 PairwiseEmbeddingsPostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.postprocessors.pairwise_embeddings.PairwiseEmbeddingsPostprocessor
+.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwiseEmbeddingsPostprocessor
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
-    .. automethod:: process
+    .. automethod:: inference
 
-
-SimpleSiamese
+PairwiseImagesPostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.SimpleSiamese
+.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwiseImagesPostprocessor
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: inference
+
+LinearSiamese
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.siamese.LinearSiamese
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
     .. automethod:: forward
+
+ResNetSiamese
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.siamese.ResNetSiamese
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+
+EmbeddingPairsDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.pairs.EmbeddingPairsDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
+
+ImagePairsDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.pairs.ImagePairsDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__

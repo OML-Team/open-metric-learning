@@ -14,6 +14,7 @@ from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader, imread_cv2
 
 TBBox = Tuple[int, int, int, int]
+TBBoxes = Sequence[Optional[TBBox]]
 
 
 class ListDataset(Dataset):
@@ -22,7 +23,7 @@ class ListDataset(Dataset):
     def __init__(
         self,
         filenames_list: Sequence[Path],
-        bboxes: Optional[Sequence[Optional[TBBox]]] = None,
+        bboxes: Optional[TBBoxes] = None,
         transform: TTransforms = get_normalisation_torch(),
         f_imread: TImReader = imread_cv2,
         cache_size: int = 100_000,
@@ -30,17 +31,15 @@ class ListDataset(Dataset):
         """
         Args:
             filenames_list: list of paths to images
-            boxes: Sequences of bounding boxes. Should be either ``None`` or
-                Sequence of bboxes. If the image has multiple boxes, pass
-                multiple image paths to ``filenames_list`` and for each
-                filename provide one of its boxes. If you want to get
-                embeddings for the whole image, set bbox to ``None`` for
-                specific file.
-
-                Format: x1, y1, x2, y2
+            bboxes: Should be either ``None`` or a sequence of bboxes.
+                If an image has ``N`` boxes, duplicate its
+                path ``N`` times and provide bounding box for each of them.
+                If you want to get an embedding for the whole image, set bbox to ``None`` for
+                this particular image path. The format is ``x1, y1, x2, y2``.
             transform: torchvision or albumentations augmentations
             f_imread: function that opens image and returns bytes
             cache_size: cache_size: Size of the dataset's cache
+
         """
         self.filenames_list = filenames_list
         self.transform = transform
@@ -51,7 +50,7 @@ class ListDataset(Dataset):
         self.validate_bboxes(bboxes, filenames_list)
 
     @staticmethod
-    def validate_bboxes(bboxes: Optional[Sequence[Optional[TBBox]]], files: Sequence[Path]) -> None:
+    def validate_bboxes(bboxes: Optional[TBBoxes], files: Sequence[Path]) -> None:
         if bboxes is not None:
             if len(bboxes) != len(files):
                 raise InvalidBBoxesException(f"Number of boxes and files missmatch: {len(bboxes)=} != {len(files)}")

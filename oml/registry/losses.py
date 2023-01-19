@@ -6,7 +6,7 @@ from oml.losses.arcface import ArcFaceLoss, ArcFaceLossWithMLP
 from oml.losses.surrogate_precision import SurrogatePrecision
 from oml.losses.triplet import TripletLoss, TripletLossPlain, TripletLossWithMiner
 from oml.registry.miners import get_miner_by_cfg
-from oml.utils.misc import TCfg, dictconfig_to_dict, remove_unused_kargs
+from oml.utils.misc import TCfg, dictconfig_to_dict, remove_unused_kwargs
 
 LOSSES_REGISTRY = {
     "triplet": TripletLoss,
@@ -22,10 +22,10 @@ def get_criterion(name: str, **kwargs: Dict[str, Any]) -> nn.Module:
     constructor = LOSSES_REGISTRY[name]
     if "miner" in kwargs:
         miner = get_miner_by_cfg(kwargs.pop("miner"))
-        kwargs = remove_unused_kargs(kwargs, constructor)
+        kwargs = remove_unused_kwargs(kwargs, constructor)
         return constructor(miner=miner, **kwargs)
     else:
-        kwargs = remove_unused_kargs(kwargs, constructor)
+        kwargs = remove_unused_kwargs(kwargs, constructor)
         return constructor(**kwargs)
 
 

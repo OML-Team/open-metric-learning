@@ -36,7 +36,7 @@ DatasetQueryGallery
 
 ListDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.list_.ListDataset
+.. autoclass:: oml.datasets.list_dataset.ListDataset
     :undoc-members:
     :show-inheritance:
 

@@ -8,11 +8,11 @@ import torch
 from torch import Tensor
 
 from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
-from oml.interfaces.models import IPairwiseDistanceModel
-from oml.models.siamese import SimpleSiamese
-from oml.postprocessors.pairwise_embeddings import PairwiseEmbeddingsPostprocessor
+from oml.interfaces.models import IPairwiseModel
+from oml.models.siamese import LinearSiamese
+from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import flatten_dict, one_hot
-from oml.utils.misc_torch import pairwise_dist
+from oml.utils.misc_torch import normalise, pairwise_dist
 
 FEAT_SIZE = 8
 oh = partial(one_hot, dim=FEAT_SIZE)
@@ -24,6 +24,7 @@ def independent_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     feat_dim = 12
 
     embeddings = torch.randn((sz, feat_dim))
+    embeddings = normalise(embeddings)
 
     is_query = torch.ones(sz).bool()
     is_query[: sz // 2] = False
@@ -40,6 +41,8 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     feat_dim = 4
 
     embeddings = torch.randn((sz, feat_dim))
+    embeddings = normalise(embeddings)
+
     is_query = torch.ones(sz).bool()
     is_gallery = torch.ones(sz).bool()
 
@@ -57,12 +60,12 @@ def test_trivial_processing_does_not_change_distances_order(
 
     distances = calc_distance_matrix(embeddings, is_query, is_gallery)
 
-    model = SimpleSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
-    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
+    model = LinearSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
 
     distances_processed = processor.process(
-        emb_query=embeddings_query,
-        emb_gallery=embeddings_gallery,
+        queries=embeddings_query,
+        galleries=embeddings_gallery,
         distances=distances.clone(),
     )
 
@@ -70,6 +73,11 @@ def test_trivial_processing_does_not_change_distances_order(
     order_processed = distances_processed.argsort()
 
     assert (order == order_processed).all(), (order, order_processed)
+
+    if top_n <= is_gallery.sum():
+        min_orig_distances = torch.topk(distances, k=top_n, largest=False).values
+        min_processed_distances = torch.topk(distances_processed, k=top_n, largest=False).values
+        assert torch.allclose(min_orig_distances, min_processed_distances)
 
 
 def perfect_case() -> Tuple[Tensor, Tensor, Tensor, Tensor]:
@@ -117,8 +125,8 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
         metrics = flatten_dict(calc_retrieval_metrics(distances=distances, **args))
 
         # Metrics after broken distances have been fixed
-        model = SimpleSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
-        processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n)
+        model = LinearSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
+        processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n, batch_size=16, num_workers=0)
         distances_upd = processor.process(distances, query_embeddings, gallery_embeddings)
         metrics_upd = flatten_dict(calc_retrieval_metrics(distances=distances_upd, **args))
 
@@ -128,7 +136,7 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
             assert metric_upd >= metric, (key, metric, metric_upd)
 
 
-class DummyPairwise(IPairwiseDistanceModel):
+class DummyPairwise(IPairwiseModel):
     def __init__(self, distances_to_return: Tensor):
         super(DummyPairwise, self).__init__()
         self.distances_to_return = distances_to_return
@@ -155,9 +163,9 @@ def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
 
     # Now let's fix the error with dummy pairwise model
     model = DummyPairwise(distances_to_return=torch.tensor([3.5, 2.5]))
-    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=2)
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=2, batch_size=128, num_workers=0)
     distances_upd = processor.process(
-        distances, emb_query=torch.randn((1, FEAT_SIZE)), emb_gallery=torch.randn((5, FEAT_SIZE))
+        distances=distances, queries=torch.randn((1, FEAT_SIZE)), galleries=torch.randn((5, FEAT_SIZE))
     )
     precisions_upd = calc_retrieval_metrics(distances=distances_upd, **args)["precision"]
     assert math.isclose(precisions_upd[1], 1)
