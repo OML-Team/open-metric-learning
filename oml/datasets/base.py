@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from oml.const import (
     CATEGORIES_COLUMN,
     CATEGORIES_KEY,
+    INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
     IS_GALLERY_KEY,
@@ -58,6 +59,7 @@ class BaseDataset(Dataset):
         x2_key: str = X2_KEY,
         y1_key: str = Y1_KEY,
         y2_key: str = Y2_KEY,
+        index_key: str = INDEX_KEY,
     ):
         """
 
@@ -82,6 +84,7 @@ class BaseDataset(Dataset):
             x2_key: Key to put ``x2`` into the batches
             y1_key: Key to put ``y1`` into the batches
             y2_key: Key to put ``y2`` into the batches
+            index_key: Key to put samples' ids into the batches
 
         """
         df = df.copy()
@@ -92,6 +95,7 @@ class BaseDataset(Dataset):
         self.labels_key = labels_key
         self.paths_key = paths_key
         self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
+        self.index_key = index_key
 
         self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
         if self.bboxes_exist:
@@ -145,6 +149,7 @@ class BaseDataset(Dataset):
             self.input_tensors_key: image_tensor,
             self.labels_key: row[LABELS_COLUMN],
             self.paths_key: row[PATHS_COLUMN],
+            self.index_key: idx,
         }
 
         if self.categories_key:
