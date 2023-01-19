@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from oml.models.siamese import SimpleSiamese
+from oml.models.siamese import LinearSiamese
 from oml.utils.misc_torch import elementwise_dist
 
 
@@ -13,7 +13,7 @@ def test_simple_siamese_identity_initialisation(feat_dim: int, bs: int) -> None:
 
     distances = elementwise_dist(x1=x1, x2=x2, p=2)
 
-    model = SimpleSiamese(feat_dim=feat_dim, identity_init=True)
+    model = LinearSiamese(feat_dim=feat_dim, identity_init=True)
     distances_estimated = model(x1=x1, x2=x2)
 
     assert torch.isclose(distances, distances_estimated).all()

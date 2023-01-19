@@ -9,6 +9,8 @@ from oml.const import (  # noqa
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
     LABELS_KEY,
+    PAIR_1ST_KEY,
+    PAIR_2ND_KEY,
 )
 from oml.samplers.balance import BalanceSampler  # noqa
 
@@ -64,4 +66,29 @@ class IDatasetQueryGallery(Dataset, ABC):
         raise NotImplementedError()
 
 
-__all__ = ["IDatasetWithLabels", "IDatasetQueryGallery"]
+class IPairsDataset(Dataset, ABC):
+    """
+    This is an interface for the datasets which return pair of something.
+
+    """
+
+    pairs_1st_key: str
+    pairs_2nd_key: str
+
+    @abstractmethod
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        """
+        Args:
+            item: Idx of the sample
+
+        Returns:
+             Dictionary with the following keys:
+
+            >>> self.pairs_1st_key
+            >>> self.pairs_2nd_key
+
+        """
+        raise NotImplementedError()
+
+
+__all__ = ["IDatasetWithLabels", "IDatasetQueryGallery", "IPairsDataset"]

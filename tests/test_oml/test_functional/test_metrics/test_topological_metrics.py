@@ -4,7 +4,7 @@ import pytest
 import torch
 
 from oml.functional.metrics import TMetricsDict, calc_pcf, calc_topological_metrics
-from oml.utils.misc import compare_dicts_recursively, remove_unused_kargs
+from oml.utils.misc import compare_dicts_recursively, remove_unused_kwargs
 
 
 @pytest.fixture()
@@ -34,7 +34,7 @@ def test_calc_functions(
     pfc_variance = tuple(metrics_expected[metric_name].keys())
     kwargs = {"embeddings": embeddings, "pfc_variance": pfc_variance}
 
-    kwargs = remove_unused_kargs(kwargs, metric_func)
+    kwargs = remove_unused_kwargs(kwargs, metric_func)
     main_components_percentage = metric_func(**kwargs)  # type: ignore
     metrics_calculated = dict(zip(pfc_variance, main_components_percentage))
     for p in metrics_expected[metric_name].keys():

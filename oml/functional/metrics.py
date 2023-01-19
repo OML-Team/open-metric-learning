@@ -219,8 +219,8 @@ def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True)
 
     anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n=len(embeddings))
 
-    pos_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[positive_ii]).squeeze()
-    neg_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[negative_ii]).squeeze()
+    pos_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[positive_ii])
+    neg_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[negative_ii])
 
     acc = (pos_dists < neg_dists).float()
 

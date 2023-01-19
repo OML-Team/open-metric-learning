@@ -1,5 +1,6 @@
 from abc import ABC
 from collections.abc import MutableMapping
+from contextlib import contextmanager
 from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, Union
 
 import numpy as np
@@ -76,7 +77,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
         x1 = x1.unsqueeze(1)
         x2 = x2.unsqueeze(1)
 
-    dist = cdist(x1=x1, x2=x2, p=p).squeeze()
+    dist = cdist(x1=x1, x2=x2, p=p).view(len(x1))
 
     return dist
 
@@ -95,6 +96,26 @@ def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     assert x1.shape[-1] == x2.shape[-1]
 
     return cdist(x1=x1, x2=x2, p=p)
+
+
+def normalise(x: Tensor, p: int = 2) -> Tensor:
+    """
+    Args:
+        x: A 2D tensor
+        p: Specifies the exact p-norm
+
+    Returns:
+        Normalised input
+
+    """
+    assert x.ndim == 2
+    xn = torch.linalg.norm(x, p, dim=1).detach()
+    x = x.div(xn.unsqueeze(1))
+    return x
+
+
+def get_device(model: torch.nn.Module) -> str:
+    return str(next(model.parameters()).device)
 
 
 def _check_is_sequence(val: Any) -> bool:
@@ -131,9 +152,17 @@ def drop_duplicates_by_ids(ids: List[Hashable], data: Tensor, sort: bool = True)
     return ids, data
 
 
+@contextmanager
+def temporary_setting_model_mode(model: torch.nn.Module, set_train: bool) -> torch.nn.Module:
+    prev_mode = model.training
+    model.train(set_train)
+    yield model
+    model.train(prev_mode)
+
+
 class OnlineCalc(ABC):
     """
-    The base class to calculate some statistics online (on the steam of values).
+    The base class to calculate some statistics online (on the stream of values).
 
     """
 

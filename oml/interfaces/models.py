@@ -35,10 +35,9 @@ class IFreezable(ABC):
         raise NotImplementedError()
 
 
-class IPairwiseDistanceModel(nn.Module):
+class IPairwiseModel(nn.Module):
     """
-    Model of this type takes two inputs (for example, they may be vectors or images)
-    and returns the *distance* (not in a strictly mathematical sense) between those two inputs.
+    A model of this type takes two inputs, for example, two embeddings or two images.
 
     """
 
@@ -49,11 +48,8 @@ class IPairwiseDistanceModel(nn.Module):
             x1: The first input.
             x2: The second input.
 
-        Returns:
-            *Distances* between the inputs.
-
         """
         raise NotImplementedError()
 
 
-__all__ = ["IExtractor", "IFreezable", "IPairwiseDistanceModel"]
+__all__ = ["IExtractor", "IFreezable", "IPairwiseModel"]

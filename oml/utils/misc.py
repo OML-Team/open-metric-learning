@@ -115,7 +115,7 @@ def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     return tuple(min(x, max_el) for x in arr)
 
 
-def remove_unused_kargs(kwargs: Dict[str, Any], constructor: Any) -> Dict[str, Any]:
+def remove_unused_kwargs(kwargs: Dict[str, Any], constructor: Any) -> Dict[str, Any]:
     return {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
 
 
