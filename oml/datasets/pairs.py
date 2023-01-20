@@ -69,7 +69,7 @@ class ImagePairsDataset(IPairsDataset):
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,
         index_key: str = INDEX_KEY,
-        cache_size: int = 100_000,
+        cache_size: Optional[int] = 100_000,
     ):
         """
         Args:
@@ -94,7 +94,8 @@ class ImagePairsDataset(IPairsDataset):
         if transform is None:
             transform = get_normalisation_torch()
 
-        dataset_args = {"transform": transform, "f_imread": f_imread, "cache_size": cache_size // 2}
+        cache_size = cache_size // 2 if cache_size else None
+        dataset_args = {"transform": transform, "f_imread": f_imread, "cache_size": cache_size}
         self.dataset1 = ListDataset(paths1, bboxes=bboxes1, **dataset_args)
         self.dataset2 = ListDataset(paths2, bboxes=bboxes2, **dataset_args)
 
