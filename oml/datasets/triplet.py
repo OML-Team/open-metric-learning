@@ -4,7 +4,7 @@ from functools import lru_cache
 from itertools import chain
 from pathlib import Path
 from random import sample
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
@@ -59,7 +59,9 @@ class TriDataset(Dataset):
         self.transforms = transforms or get_normalisation_albu()
         assert isinstance(transforms, albu.Compose) or (transforms is None)
 
-        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        self.read_bytes_image_cached = (
+            lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        )
 
         self.index_key = index_key
 

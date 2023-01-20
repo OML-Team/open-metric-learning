@@ -48,7 +48,9 @@ class ListDataset(Dataset):
         self.filenames_list = filenames_list
         self.transform = transform
         self.f_imread = f_imread
-        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        self.read_bytes_image_cached = (
+            lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        )
         self.bboxes = bboxes
 
         self.input_tensors_key = input_tensors_key

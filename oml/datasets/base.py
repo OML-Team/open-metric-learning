@@ -112,7 +112,9 @@ class BaseDataset(Dataset):
         self.df = df
         self.transform = transform if transform else get_transforms("norm_albu")
         self.f_imread = f_imread
-        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        self.read_bytes_image_cached = (
+            lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        )
 
         available_augs_types = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(self.transform, available_augs_types), f"Type of transforms must be in {available_augs_types}"
