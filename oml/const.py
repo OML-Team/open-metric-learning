@@ -27,7 +27,6 @@ TMP_PATH = Path(tempfile.gettempdir())
 
 DOTENV_PATH = PROJECT_ROOT / ".env"
 CONFIGS_PATH = PROJECT_ROOT / "oml" / "configs"
-MODELS_CONFIGS_PATH = PROJECT_ROOT / "configs" / "model"
 
 CKPT_SAVE_ROOT = CACHE_PATH / "torch" / "checkpoints"
 
@@ -37,6 +36,7 @@ LOG_TOPK_IMAGES_PER_ROW = 5
 N_GT_SHOW_EMBEDDING_METRICS = 2
 
 STORAGE_URL = "https://oml.daloroserver.com"
+STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
@@ -91,3 +91,7 @@ X1_KEY = "x1"
 X2_KEY = "x2"
 Y1_KEY = "y1"
 Y2_KEY = "y2"
+INDEX_KEY = "idx"
+
+PAIR_1ST_KEY = "input_tensors_1"
+PAIR_2ND_KEY = "input_tensors_2"

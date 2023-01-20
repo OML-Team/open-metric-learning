@@ -15,6 +15,22 @@ num_workers: 0
 
 bs_val: 2
 
+postprocessor:
+  name: pairwise_images
+  args:
+    top_n: 3
+    pairwise_model:
+      name: resnet_siamese
+      args:
+        pretrained: False
+    transforms:
+      name: norm_resize_torch
+      args:
+        im_size: 64
+    num_workers: 0
+    batch_size: 4
+    verbose: True
+
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 5]

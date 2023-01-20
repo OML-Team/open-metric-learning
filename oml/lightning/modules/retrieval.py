@@ -7,7 +7,7 @@ from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
-from oml.interfaces.models import IExtractor
+from oml.interfaces.models import IExtractor, IFreezable
 from oml.lightning.modules.module_ddp import ModuleDDP
 
 
@@ -29,6 +29,7 @@ class RetrievalModule(pl.LightningModule):
         labels_key: str = LABELS_KEY,
         embeddings_key: str = EMBEDDINGS_KEY,
         scheduler_monitor_metric: Optional[str] = None,
+        freeze_n_epochs: int = 0,
     ):
         """
 
@@ -43,6 +44,9 @@ class RetrievalModule(pl.LightningModule):
             labels_key: Key to get labels from the batches
             embeddings_key: Key to get embeddings from the batches
             scheduler_monitor_metric: Metric to monitor for the schedulers that depend on the metric value
+            freeze_n_epochs: number of epochs to freeze model (for n > 0 model has to be an successor of IFreezable
+                interface). When ``current_epoch >= freeze_n_epochs`` model is unfreezed. Note that epochs are
+                starting with 0.
 
         """
         pl.LightningModule.__init__(self)
@@ -60,6 +64,11 @@ class RetrievalModule(pl.LightningModule):
         self.labels_key = labels_key
         self.embeddings_key = embeddings_key
 
+        self.freeze_n_epochs = freeze_n_epochs
+        assert freeze_n_epochs == 0 or isinstance(
+            model, IFreezable
+        ), f"Model must be {IFreezable.__name__} to use this."
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         embeddings = self.model(x)
         return embeddings
@@ -69,7 +78,8 @@ class RetrievalModule(pl.LightningModule):
         bs = len(embeddings)
 
         loss = self.criterion(embeddings, batch[self.labels_key])
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        loss_name = (getattr(self.criterion, "criterion_name", "") + "_loss").strip("_")
+        self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if hasattr(self.criterion, "last_logs"):
             self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
@@ -79,7 +89,7 @@ class RetrievalModule(pl.LightningModule):
 
         return loss
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model.extract(batch[self.input_tensors_key])
         return {**batch, **{self.embeddings_key: embeddings}}
 
@@ -102,6 +112,13 @@ class RetrievalModule(pl.LightningModule):
         tqdm_dict.pop("v_num", None)
         return tqdm_dict
 
+    def on_epoch_start(self) -> None:
+        if self.freeze_n_epochs and isinstance(self.model, IFreezable):
+            if self.current_epoch >= self.freeze_n_epochs:
+                self.model.unfreeze()
+            else:
+                self.model.freeze()
+
 
 class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
     """
@@ -114,7 +131,7 @@ class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
         loaders_val: Optional[EVAL_DATALOADERS] = None,
         *args: Any,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
         RetrievalModule.__init__(self, *args, **kwargs)

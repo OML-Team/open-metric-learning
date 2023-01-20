@@ -61,7 +61,7 @@ class DummyCommonModule(pl.LightningModule):
     def configure_optimizers(self) -> torch.optim.Optimizer:
         return Adam(self.model.parameters(), lr=1e-4)
 
-    def validation_step(self, batch: TItem, batch_idx: int, *dataset_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: TItem, batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
         return {**batch, **{EMBEDDINGS_KEY: embeddings.detach().cpu()}}
 

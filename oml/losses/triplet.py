@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from oml.functional.losses import get_reduced
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.miners import ITripletsMiner, labels2list
 from oml.miners.cross_batch import TripletMinerWithMemory
@@ -25,6 +26,8 @@ class TripletLoss(Module):
     margin value (also known as `dimension collapse`).
 
     """
+
+    criterion_name = "triplet"  # for better logging
 
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
@@ -75,14 +78,7 @@ class TripletLoss(Module):
                 "neg_dist": float(negative_dist.clone().detach().mean().item()),
             }
 
-        if self.reduction == "mean":
-            loss = loss.mean()
-        elif self.reduction == "sum":
-            loss = loss.sum()
-        elif self.reduction == "none":
-            return loss
-        else:
-            raise ValueError()
+        loss = get_reduced(loss, reduction=self.reduction)
 
         return loss
 
@@ -115,6 +111,8 @@ class TripletLossPlain(Module):
     The same as `TripletLoss`, but works with anchor, positive and negative features stacked together.
 
     """
+
+    criterion_name = "triplet"  # for better logging
 
     def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
         """
@@ -159,6 +157,8 @@ class TripletLossWithMiner(ITripletLossWithMiner):
     This class combines `Miner` and `TripletLoss`.
 
     """
+
+    criterion_name = "triplet"  # for better logging
 
     def __init__(
         self,

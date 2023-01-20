@@ -51,7 +51,7 @@ model:
 scheduling:
   scheduler_interval: epoch
   scheduler_frequency: 1
-  monitor_metric: loss_epoch
+  monitor_metric: triplet_loss_epoch
   scheduler:
     name: reduce_on_plateau
     args:

@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from oml.interfaces.models import IExtractor
+from oml.models.projection import ExtractorWithMLP
 from oml.models.resnet import ResnetExtractor
 from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
@@ -50,3 +51,28 @@ def test_creation(
         net(torch.randn(1, 3, 224, 224))
 
     assert True
+
+
+@pytest.mark.parametrize(
+    "constructor,args,default_arch",
+    [
+        (ViTExtractor, vit_args, "vits16"),
+        (ViTCLIPExtractor, vit_clip_args, "vitb32_224"),
+        (ResnetExtractor, resnet_args, "resnet50"),
+    ],
+)
+def test_extractor_with_mlp(constructor: IExtractor, args: Dict[str, Any], default_arch: str) -> None:
+    im = torch.randn(1, 3, 224, 224)
+
+    net = constructor(weights=None, arch=default_arch, **args)
+    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128])
+    features1 = extractor(im)
+
+    fname = f"{default_arch}_with_mlp_random.pth"
+    torch.save({"state_dict": extractor.state_dict()}, fname)
+    net = constructor(weights=None, arch=default_arch, **args)
+    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128], weights=fname)
+    Path(fname).unlink()
+    features2 = extractor(im)
+
+    assert torch.allclose(features1, features2)

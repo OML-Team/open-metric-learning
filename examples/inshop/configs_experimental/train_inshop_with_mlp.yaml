@@ -1,0 +1,101 @@
+postfix: metric_learning
+
+seed: 42
+precision: 32
+accelerator: gpu
+devices: [0, 1]
+
+dataframe_name: df_no_bboxes.csv
+dataset_root: data/DeepFashion_InShop/
+logs_root: logs/DeepFashion_InShop/
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+num_workers: 20
+cache_size: 100000
+
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 224
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+sampler:
+  name: category_balance
+  args:
+    n_labels: 20
+    n_instances: 6
+    n_categories: 3
+    resample_labels: True
+    weight_categories: True
+
+bs_val: 256
+max_epochs: 10000
+valid_period: 1
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1]
+  map_top_k: [5]
+  fmr_vals: [1]
+  pfc_variance: [0.5, 0.9, 0.99]
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+log_images: True
+
+metric_for_checkpointing: OVERALL/cmc/1
+
+freeze_n_epochs: 5
+
+model:
+  name: extractor_with_mlp
+  args:
+    mlp_features: [384]
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: vits16_dino
+        arch: vits16
+
+criterion:
+  name: triplet_with_miner
+  args:
+    need_logs: True
+    margin: null
+    reduction: mean
+    miner:
+      name: hard_triplets
+      args: {}
+
+optimizer:
+  name: adam
+  args:
+    lr: 1e-5
+
+
+scheduling: null
+
+
+# To use neptune you should also specify NEPTUNE_API_TOKEN in
+# .env file or via `export NEPTUNE_API_TOKEN=...`
+neptune_project: null
+
+
+hydra_dir: ${logs_root}/${logs_folder}/
+
+tags:
+  - ${postfix}
+  - deepfashion
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+   - pkg://oml.configs

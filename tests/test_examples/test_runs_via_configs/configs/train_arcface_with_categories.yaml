@@ -1,0 +1,71 @@
+postfix: "deepfashion"
+
+seed: 42
+precision: 32
+accelerator: cpu
+devices: 1
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_category.csv
+logs_root: logs
+
+num_workers: 0
+cache_size: 0
+
+transforms_train:
+  name: augs_albu
+  args:
+    im_size: 64
+
+transforms_val:
+  name: norm_resize_torch
+  args:
+    im_size: 64
+
+criterion:
+  name: arcface
+  args:
+    smoothing_epsilon: 0.2
+    m: 0.4
+    s: 64
+    in_features: 384
+    num_classes: 4
+
+defaults:
+  - optimizer: adam
+  - sampler: category_balance
+
+model:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: False
+    use_multi_scale: False
+    weights: null
+
+scheduling: null
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+log_images: False
+
+metric_for_checkpointing: OVERALL/cmc/1
+
+max_epochs: 2
+valid_period: 1
+
+neptune_project: null
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs

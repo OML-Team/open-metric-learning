@@ -32,6 +32,8 @@ build_readme:
 	cat docs/readme/zoo.md >> ${README_FILE}
 	echo "\n## Contributing guide\n" >> ${README_FILE}
 	cat docs/readme/contributing.md >> ${README_FILE}
+	echo "\n## Extra materials\n" >> ${README_FILE}
+	cat docs/readme/extra_materials.md >> ${README_FILE}
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
 	cat docs/readme/acknowledgments.md >> ${README_FILE}
 
@@ -44,7 +46,7 @@ download_mock_dataset:
 .PHONY: run_tests
 run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
-	$(JUPYTER_CMD) --execute examples/visualization.ipynb
+	#$(JUPYTER_CMD) --execute examples/visualization.ipynb  # todo: seems like some issue appeared on lightning side
 
 .PHONY: test_converters
 test_converters:

@@ -16,7 +16,6 @@ repos:
   - id: mixed-line-ending
   - id: pretty-format-json
     args: [--autofix]
-  - id: requirements-txt-fixer
 
 
 # autoformat code with black formatter
@@ -36,7 +35,7 @@ repos:
 
 
 # check code style
-- repo: https://gitlab.com/pycqa/flake8
+- repo: https://github.com/pycqa/flake8
   rev: 3.8.4
   hooks:
   - id: flake8
@@ -49,3 +48,10 @@ repos:
   hooks:
   - id: mypy
     additional_dependencies: [types-requests==2.25.9]
+
+# check for unused code
+- repo: https://github.com/jendrikseipp/vulture
+  rev: v2.6
+  hooks:
+    - id: vulture
+      args: [--min-confidence=100, --sort-by-size, .]

@@ -33,3 +33,32 @@ TripletLossWithMiner
 
     .. automethod:: __init__
     .. automethod:: forward
+
+SurrogatePrecision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.losses.surrogate_precision.SurrogatePrecision
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+
+ArcFaceLoss
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.losses.arcface.ArcFaceLoss
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+
+ArcFaceLossWithMLP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.losses.arcface.ArcFaceLossWithMLP
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+
+label_smoothing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.functional.label_smoothing.label_smoothing

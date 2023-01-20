@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from oml.const import (
     CATEGORIES_COLUMN,
     CATEGORIES_KEY,
+    INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
     IS_GALLERY_KEY,
@@ -58,6 +59,7 @@ class BaseDataset(Dataset):
         x2_key: str = X2_KEY,
         y1_key: str = Y1_KEY,
         y2_key: str = Y2_KEY,
+        index_key: str = INDEX_KEY,
     ):
         """
 
@@ -82,6 +84,7 @@ class BaseDataset(Dataset):
             x2_key: Key to put ``x2`` into the batches
             y1_key: Key to put ``y1`` into the batches
             y2_key: Key to put ``y2`` into the batches
+            index_key: Key to put samples' ids into the batches
 
         """
         df = df.copy()
@@ -92,6 +95,7 @@ class BaseDataset(Dataset):
         self.labels_key = labels_key
         self.paths_key = paths_key
         self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
+        self.index_key = index_key
 
         self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
         if self.bboxes_exist:
@@ -145,6 +149,7 @@ class BaseDataset(Dataset):
             self.input_tensors_key: image_tensor,
             self.labels_key: row[LABELS_COLUMN],
             self.paths_key: row[PATHS_COLUMN],
+            self.index_key: idx,
         }
 
         if self.categories_key:
@@ -195,7 +200,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     the validation stage. It has to provide information
     about its `query`/`gallery` split.
 
-    Note, that some of the datasets used as benchmarks in Metric Learning
+    Note, that some datasets used as benchmarks in Metric Learning
     provide the splitting information (for example, ``DeepFashion InShop`` dataset), but some of them
     don't (for example, ``CARS196`` or ``CUB200``).
     The validation idea for the latter is to calculate the embeddings for the whole validation set,
@@ -260,12 +265,20 @@ def get_retrieval_datasets(
     f_imread_val: Optional[TImReader] = None,
     dataframe_name: str = "df.csv",
     cache_size: int = 100_000,
+    verbose: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
-    check_retrieval_dataframe_format(df, dataset_root=dataset_root)
+
+    check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
+
+    # first half will consist of "train" split, second one of "val"
+    # so labels in train will be from 0 to N-1 and labels in test will be from N to K
+    mapper = {l: i for i, l in enumerate(df.sort_values(by=[SPLIT_COLUMN])[LABELS_COLUMN].unique())}
 
     # train
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
+    df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
+
     train_dataset = DatasetWithLabels(
         df=df_train,
         dataset_root=dataset_root,

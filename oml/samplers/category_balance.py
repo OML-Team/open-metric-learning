@@ -69,7 +69,6 @@ class CategoryBalanceSampler(IBatchSampler):
 
         unique_categories = sorted(list(unique_categories))
 
-        self._resample_labels = resample_labels
         self._labels = np.array(labels)
         self._label2category = label2category
         self.n_categories = n_categories

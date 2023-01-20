@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from oml.const import MOCK_DATASET_PATH
-from oml.datasets.list_ import ListDataset, TBBox
+from oml.datasets.list_dataset import ListDataset, TBBox
 
 
 @pytest.fixture
@@ -52,21 +52,24 @@ def test_dataset_len(images: List[Path]) -> None:
 def test_dataset_iter(images: List[Path]) -> None:
     dataset = ListDataset(images)
 
-    for im in dataset:
-        assert isinstance(im, torch.Tensor)
+    for batch in dataset:
+        assert isinstance(batch[dataset.input_tensors_key], torch.Tensor)
 
 
 def test_dataloader_iter(images: List[Path]) -> None:
-    dataloader = DataLoader(ListDataset(images))
+    dataset = ListDataset(images)
+    dataloader = DataLoader(dataset)
 
-    for im in dataloader:
-        assert im.ndim == 4
+    for batch in dataloader:
+        assert batch[dataset.input_tensors_key].ndim == 4
 
 
 @pytest.mark.parametrize("im_paths,bboxes", [get_images_and_boxes(), get_images_and_boxes_with_nones()])
 def test_list_dataset_iter(im_paths: Sequence[Path], bboxes: Sequence[Optional[TBBox]]) -> None:
-    dataloader = DataLoader(ListDataset(im_paths, bboxes))
-    for image, box in zip(dataloader, bboxes):
+    dataset = ListDataset(im_paths, bboxes)
+    dataloader = DataLoader(dataset)
+    for batch, box in zip(dataloader, bboxes):
+        image = batch[dataset.input_tensors_key]
         if box is not None:
             x1, y1, x2, y2 = box
         else:

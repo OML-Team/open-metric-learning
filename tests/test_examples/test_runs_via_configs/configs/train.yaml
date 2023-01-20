@@ -23,14 +23,14 @@ transforms_val:
     im_size: 64
 
 criterion:
-  name: triplet_with_miner
+  name: arcface
   args:
-    margin: null
-    reduction: mean
-    need_logs: True
-    miner:
-      name: all_triplets
-      args: {}
+    smoothing_epsilon: 0
+    m: 0.4
+    s: 64
+    in_features: 384
+    num_classes: 4
+
 
 defaults:
   - optimizer: sgd

@@ -33,11 +33,16 @@ from oml.functional.metrics import (
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
+    calc_topological_metrics,
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
-from oml.interfaces.post_processor import IPostprocessor
+from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
+from oml.retrieval.postprocessors.pairwise import (
+    PairwiseEmbeddingsPostprocessor,
+    PairwiseImagesPostprocessor,
+)
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 
@@ -66,8 +71,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
+        fmr_vals: Tuple[int, ...] = tuple(),
+        pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
-        postprocessor: Optional[IPostprocessor] = None,
+        postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         check_dataset_validity: bool = True,
         return_only_main_category: bool = False,
@@ -82,9 +89,17 @@ class EmbeddingMetrics(IMetricVisualisable):
             is_query_key: Key to take the information whether every batch sample belongs to the query
             is_gallery_key: Key to take the information whether every batch sample belongs to the gallery
             extra_keys: Keys to accumulate some additional information from the batches
-            cmc_top_k: Values of ``k`` to compute ``CMC@k`` metrics
-            precision_top_k: Values of ``k`` to compute ``Precision@k`` metrics
-            map_top_k: Values of ``k`` to compute ``MAP@k`` metrics
+            cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
+            precision_top_k: Values of ``k`` to calculate ``precision@k``
+            map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
+            fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (`False Non Match Rate
+                      at the given False Match Rate`).
+                      For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
+                      Note, computing this metric requires additional memory overhead,
+                      that is why it's turned off by default.
+            pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+                          of variance that needs to be explained is greater than the percentage specified
+                          by ``pfc_variance``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
@@ -104,6 +119,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.cmc_top_k = cmc_top_k
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
+        self.fmr_vals = fmr_vals
+        self.pfc_variance = pfc_variance
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -111,13 +128,14 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.distance_matrix = None
         self.mask_gt = None
         self.metrics = None
+        self.metrics_unreduced = None
         self.mask_to_ignore = None
 
         self.check_dataset_validity = check_dataset_validity
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
 
-        self.metrics_to_exclude_from_visualization = metrics_to_exclude_from_visualization
+        self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
 
         self.keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
@@ -145,15 +163,28 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
 
-        if self.postprocessor:
-            # we have no this functionality yet
-            self.postprocessor.process()
-
-        # Note, in some of the datasets part of the samples may appear in both query & gallery.
+        # Note, in some datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+
+        if self.postprocessor is None:
+            pass
+        elif isinstance(self.postprocessor, PairwiseEmbeddingsPostprocessor):
+            self.distance_matrix = self.postprocessor.process(
+                distances=self.distance_matrix,
+                queries=embeddings[is_query],  # type: ignore
+                galleries=embeddings[is_gallery],  # type: ignore
+            )
+        elif isinstance(self.postprocessor, PairwiseImagesPostprocessor):
+            self.distance_matrix = self.postprocessor.process(
+                distances=self.distance_matrix,
+                queries=np.array(self.acc.storage[PATHS_KEY])[is_query],  # type: ignore
+                galleries=np.array(self.acc.storage[PATHS_KEY])[is_gallery],  # type: ignore
+            )
+        else:
+            raise ValueError(f"Unexpected postprocessor type: {self.postprocessor}")
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
@@ -165,11 +196,13 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self._calc_matrices()
 
-        args = {
+        args_retrieval_metrics = {
             "cmc_top_k": self.cmc_top_k,
             "precision_top_k": self.precision_top_k,
             "map_top_k": self.map_top_k,
+            "fmr_vals": self.fmr_vals,
         }
+        args_topological_metrics = {"pfc_variance": self.pfc_variance}
 
         metrics: TMetricsDict_ByLabels = dict()
 
@@ -180,8 +213,11 @@ class EmbeddingMetrics(IMetricVisualisable):
             mask_to_ignore=self.mask_to_ignore,
             check_dataset_validity=self.check_dataset_validity,
             reduce=False,
-            **args,  # type: ignore
+            **args_retrieval_metrics,  # type: ignore
         )
+
+        embeddings = self.acc.storage[self.embeddings_key]
+        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
 
         if self.categories_key is not None:
             categories = np.array(self.acc.storage[self.categories_key])
@@ -196,10 +232,13 @@ class EmbeddingMetrics(IMetricVisualisable):
                     mask_gt=self.mask_gt[mask],  # type: ignore
                     mask_to_ignore=self.mask_to_ignore[mask],  # type: ignore
                     reduce=False,
-                    **args,  # type: ignore
+                    **args_retrieval_metrics,  # type: ignore
                 )
 
-        self.metrics_unreduced = metrics
+                mask = categories == category
+                metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
+
+        self.metrics_unreduced = metrics  # type: ignore
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
         if self.return_only_main_category:
@@ -246,12 +285,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
 
-    def get_plot_for_queries(
-        self,
-        query_ids: List[int],
-        n_instances: int,
-        verbose: bool = True,
-    ) -> plt.Figure:
+    def get_plot_for_queries(self, query_ids: List[int], n_instances: int, verbose: bool = True) -> plt.Figure:
         """
         Visualize the predictions for the query with the indicies <query_ids>.
 
