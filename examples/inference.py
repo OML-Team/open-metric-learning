@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from oml.const import BBOXES_COLUMNS, PATHS_COLUMN, TCfg
-from oml.datasets.list_ import ListDataset
+from oml.datasets.list_dataset import ListDataset
 from oml.exceptions import (
     InferenceConfigError,
     InvalidDataFrameColumnsException,
@@ -130,6 +130,7 @@ def inference(cfg: TCfg) -> None:
     extractor.to(device)
     features = []
     for batch in tqdm(loader):
+        batch = batch[dataset.input_tensors_key]
         batch.to(device)
         feats = extractor.extract(batch)
         features += [feat.squeeze().tolist() for feat in torch.split(feats, 1)]
