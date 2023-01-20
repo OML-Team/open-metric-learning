@@ -6,7 +6,7 @@ from typing import Any, List
 import torch
 from torch import Tensor
 
-from oml.inference.pairwise import (
+from oml.inference.pairs import (
     pairwise_inference_on_embeddings,
     pairwise_inference_on_images,
 )

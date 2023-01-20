@@ -80,6 +80,13 @@ def is_ddp() -> bool:
         return False
 
 
+def get_world_size_safe() -> int:
+    try:
+        return get_world_size()
+    except RuntimeError:
+        return 0
+
+
 def is_main_process() -> bool:
     if is_ddp():
         return get_rank() == 0

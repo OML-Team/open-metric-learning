@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from torch import Tensor
 
-from oml.const import PAIR_1ST_KEY, PAIR_2ND_KEY
+from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY
 from oml.datasets.list_dataset import ListDataset, TBBoxes
 from oml.interfaces.datasets import IPairsDataset
 from oml.transforms.images.torchvision.transforms import get_normalisation_torch
@@ -23,6 +23,7 @@ class EmbeddingPairsDataset(IPairsDataset):
         embeddings2: Tensor,
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,
+        index_key: str = INDEX_KEY,
     ):
         """
 
@@ -31,6 +32,7 @@ class EmbeddingPairsDataset(IPairsDataset):
             embeddings2: The second input embeddings
             pair_1st_key: Key to put ``embeddings1`` into the batches
             pair_2nd_key: Key to put ``embeddings2`` into the batches
+            index_key: Key to put samples' ids into the batches
 
         """
         assert embeddings1.shape == embeddings2.shape
@@ -38,12 +40,13 @@ class EmbeddingPairsDataset(IPairsDataset):
 
         self.pair_1st_key = pair_1st_key
         self.pair_2nd_key = pair_2nd_key
+        self.index_key = index_key
 
         self.embeddings1 = embeddings1
         self.embeddings2 = embeddings2
 
     def __getitem__(self, idx: int) -> Dict[str, Tensor]:
-        return {self.pair_1st_key: self.embeddings1[idx], self.pair_2nd_key: self.embeddings2[idx]}
+        return {self.pair_1st_key: self.embeddings1[idx], self.pair_2nd_key: self.embeddings2[idx], self.index_key: idx}
 
     def __len__(self) -> int:
         return len(self.embeddings1)
@@ -65,6 +68,7 @@ class ImagePairsDataset(IPairsDataset):
         f_imread: TImReader = imread_pillow,
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,
+        index_key: str = INDEX_KEY,
         cache_size: int = 100_000,
     ):
         """
@@ -81,6 +85,7 @@ class ImagePairsDataset(IPairsDataset):
             f_imread: Function to read the images
             pair_1st_key: Key to put the 1st images into the batches
             pair_2nd_key: Key to put the 2nd images into the batches
+            index_key: Key to put samples' ids into the batches
             cache_size: Size of the dataset's cache
 
         """
@@ -95,9 +100,10 @@ class ImagePairsDataset(IPairsDataset):
 
         self.pair_1st_key = pair_1st_key
         self.pair_2nd_key = pair_2nd_key
+        self.index_key = index_key
 
-    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
-        return {self.pair_1st_key: self.dataset1[idx], self.pair_2nd_key: self.dataset2[idx]}
+    def __getitem__(self, idx: int) -> Dict[str, Union[int, Dict[str, Any]]]:
+        return {self.pair_1st_key: self.dataset1[idx], self.pair_2nd_key: self.dataset2[idx], self.index_key: idx}
 
     def __len__(self) -> int:
         return len(self.dataset1)
