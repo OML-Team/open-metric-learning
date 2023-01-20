@@ -111,7 +111,6 @@ def inference(cfg: TCfg) -> None:
             if not verify_image_readable(fimage.read()):
                 raise InvalidImageException(f"File can not be decoded as image: {path}")
 
-    kwargs = {}
     # Loading transformations
     trans_type = cfg.get("transforms")
     if trans_type:
@@ -119,11 +118,10 @@ def inference(cfg: TCfg) -> None:
 
         available_augs_types = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(transform, available_augs_types), f"Type of transforms must be in {available_augs_types}"
-        kwargs["transform"] = transform
     else:
         raise InferenceConfigError("'transforms' field is missing in the config")
 
-    dataset = ListDataset(filenames_list=im_paths, bboxes=bboxes, f_imread=imread_cv2, **kwargs)
+    dataset = ListDataset(filenames_list=im_paths, bboxes=bboxes, f_imread=imread_cv2, transform=transform)
     loader = DataLoader(dataset=dataset, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"])
 
     extractor = get_extractor_by_cfg(cfg["model"])

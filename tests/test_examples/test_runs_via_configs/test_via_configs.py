@@ -77,9 +77,7 @@ def test_inference_error_two_sources_provided(accelerator: str, devices: int) ->
 
 
 @pytest.fixture()
-def params_for_inference_on_folder(
-    accelerator: str, devices: int, cleanup: bool = True
-) -> Iterator[Tuple[str, Path, Path]]:
+def params_for_inference_on_folder(accelerator: str, devices: int) -> Iterator[Tuple[str, Path, Path]]:
     features_path: Path = MOCK_DATASET_PATH / "features1.json"
     command = (
         f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH} " f"features_file={features_path}"
@@ -90,9 +88,7 @@ def params_for_inference_on_folder(
 
 
 @pytest.fixture()
-def params_for_inference_on_df(
-    accelerator: str, devices: int, cleanup: bool = True
-) -> Iterator[Tuple[str, Path, Path]]:
+def params_for_inference_on_df(accelerator: str, devices: int) -> Iterator[Tuple[str, Path, Path]]:
     cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
     features_path = MOCK_DATASET_PATH / "features2.json"
 
