@@ -1,13 +1,13 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import albumentations as albu
 import numpy as np
-import torch
 from PIL import Image
 from torch.utils.data import Dataset
 
+from oml.const import INDEX_KEY, INPUT_TENSORS_KEY
 from oml.exceptions import InvalidBBoxesException
 from oml.transforms.images.torchvision.transforms import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms
@@ -26,7 +26,9 @@ class ListDataset(Dataset):
         bboxes: Optional[TBBoxes] = None,
         transform: TTransforms = get_normalisation_torch(),
         f_imread: TImReader = imread_cv2,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
         cache_size: int = 100_000,
+        index_key: str = INDEX_KEY,
     ):
         """
         Args:
@@ -38,7 +40,9 @@ class ListDataset(Dataset):
                 this particular image path. The format is ``x1, y1, x2, y2``.
             transform: torchvision or albumentations augmentations
             f_imread: function that opens image and returns bytes
+            input_tensors_key: Key to put tensors into the batches
             cache_size: cache_size: Size of the dataset's cache
+            index_key: Key to put samples' ids into the batches
 
         """
         self.filenames_list = filenames_list
@@ -46,6 +50,9 @@ class ListDataset(Dataset):
         self.f_imread = f_imread
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
         self.bboxes = bboxes
+
+        self.input_tensors_key = input_tensors_key
+        self.index_key = index_key
 
         self.validate_bboxes(bboxes, filenames_list)
 
@@ -69,7 +76,7 @@ class ListDataset(Dataset):
         with open(str(path), "rb") as fin:
             return fin.read()
 
-    def __getitem__(self, idx: int) -> torch.Tensor:
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
         im_path = self.filenames_list[idx]
         img_bytes = self.read_bytes_image_cached(im_path)
         img = self.f_imread(img_bytes)
@@ -94,7 +101,7 @@ class ListDataset(Dataset):
             # torchvision.transforms
             image_tensor = self.transform(img)
 
-        return image_tensor
+        return {self.input_tensors_key: image_tensor, self.index_key: idx}
 
     def __len__(self) -> int:
         return len(self.filenames_list)

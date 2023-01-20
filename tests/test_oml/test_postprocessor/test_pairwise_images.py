@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.base import inference_on_images
+from oml.inference.list_inference import inference_on_images
 from oml.models.siamese import ResNetSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch

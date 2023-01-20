@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from oml.const import INPUT_TENSORS_KEY
+from oml.const import INDEX_KEY, INPUT_TENSORS_KEY
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.images.images import TImReader, imread_cv2
 
@@ -29,6 +29,7 @@ class TriDataset(Dataset):
         expand_ratio: float,
         f_imread: TImReader = imread_cv2,
         cache_size: int = 50_000,
+        index_key: str = INDEX_KEY,
     ):
         """
 
@@ -40,6 +41,7 @@ class TriDataset(Dataset):
                           We keep positive pairs, but generale negative ones randomly.
                           After this procedure you dataset's length will increased (1 + expand_ratio) times
             f_imread: Function to read image from disk
+            index_key: Key to put samples' ids into the batches
 
         """
         assert expand_ratio >= 0
@@ -58,6 +60,8 @@ class TriDataset(Dataset):
         assert isinstance(transforms, albu.Compose) or (transforms is None)
 
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
+
+        self.index_key = index_key
 
         logging.info(f"Dataset contains {len(self.triplets)} triplets.")
 
@@ -90,7 +94,7 @@ class TriDataset(Dataset):
         tensors = tuple(map(lambda x: self.transforms(image=x)["image"], images))
 
         tri_ids = (f"{idx}_a", f"{idx}_p", f"{idx}_n")
-        return {INPUT_TENSORS_KEY: tensors, "tri_ids": tri_ids, "images": images}
+        return {INPUT_TENSORS_KEY: tensors, "tri_ids": tri_ids, "images": images, self.index_key: idx}
 
 
 def tri_collate(items: List[TItem]) -> Dict[str, Any]:
