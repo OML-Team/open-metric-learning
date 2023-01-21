@@ -1,7 +1,16 @@
+from typing import Any
+
 import numpy as np
+import pytest
 import torch
 
-from oml.utils.misc_torch import PCA, assign_2d, elementwise_dist, take_2d
+from oml.utils.misc_torch import (
+    PCA,
+    assign_2d,
+    drop_duplicates_by_ids,
+    elementwise_dist,
+    take_2d,
+)
 
 
 def test_elementwise_dist() -> None:
@@ -57,6 +66,34 @@ def test_assign_2d() -> None:
     ])
 
     assert (expected == assign_2d(x=x, indices=indices, new_values=new_values)).all()
+
+
+@pytest.fixture()
+def drop_duplicates_by_ids_test_data() -> Any:
+    ids = [0, 1, 1, 0, 2]
+    data = torch.tensor([
+        [0.3, 0.4],
+        [0.5, 0.3],
+        [0.5, 0.3],
+        [0.3, 0.4],
+        [0.9, 0.8]
+    ])
+
+    ids_expected = [0, 1, 2]
+    data_expected = torch.tensor([
+        [0.3, 0.4],
+        [0.5, 0.3],
+        [0.9, 0.8],
+    ])
+
+    return (ids, data), (ids_expected, data_expected)
+
+
+def test_drop_duplicates_by_ids(drop_duplicates_by_ids_test_data) -> None:  # type: ignore
+    (ids, data), (ids_expected, data_expected) = drop_duplicates_by_ids_test_data
+    ids_calculated, data_calculated = drop_duplicates_by_ids(ids=ids, data=data)
+    assert ids_calculated == ids_expected
+    assert torch.allclose(data_expected, data_calculated)
 
 
 def test_pca() -> None:

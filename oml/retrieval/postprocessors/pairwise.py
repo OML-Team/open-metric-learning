@@ -7,8 +7,9 @@ import numpy as np
 import torch
 from torch import Tensor
 
+
 from oml.const import EMBEDDINGS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, PATHS_KEY
-from oml.inference.pairwise import (
+from oml.inference.pairs import (
     pairwise_inference_on_embeddings,
     pairwise_inference_on_images,
 )
