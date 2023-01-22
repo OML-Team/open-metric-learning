@@ -112,7 +112,7 @@ class BaseDataset(Dataset):
         self.df = df
         self.transform = transform if transform else get_transforms("norm_albu")
         self.f_imread = f_imread
-        self.read_bytes_image_cached = (
+        self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
         )
 
@@ -127,7 +127,7 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         row = self.df.iloc[idx]
 
-        img_bytes = self.read_bytes_image_cached(row[PATHS_COLUMN])  # type: ignore
+        img_bytes = self.read_bytes_image(row[PATHS_COLUMN])  # type: ignore
         img = self.f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]

@@ -48,7 +48,7 @@ class ListDataset(Dataset):
         self.filenames_list = filenames_list
         self.transform = transform
         self.f_imread = f_imread
-        self.read_bytes_image_cached = (
+        self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
         )
         self.bboxes = bboxes
@@ -80,7 +80,7 @@ class ListDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         im_path = self.filenames_list[idx]
-        img_bytes = self.read_bytes_image_cached(im_path)  # type: ignore
+        img_bytes = self.read_bytes_image(im_path)  # type: ignore
         img = self.f_imread(img_bytes)
         if self.bboxes is not None:
             bbox = self.bboxes[idx]

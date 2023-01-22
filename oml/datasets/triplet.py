@@ -59,7 +59,7 @@ class TriDataset(Dataset):
         self.transforms = transforms or get_normalisation_albu()
         assert isinstance(transforms, albu.Compose) or (transforms is None)
 
-        self.read_bytes_image_cached = (
+        self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
         )
 
@@ -73,7 +73,7 @@ class TriDataset(Dataset):
             return fin.read()
 
     def get_image(self, path: Union[Path, str]) -> np.ndarray:
-        image_bytes = self.read_bytes_image_cached(path)  # type: ignore
+        image_bytes = self.read_bytes_image(path)  # type: ignore
         image = self.f_imread(image_bytes)
         return image
 
