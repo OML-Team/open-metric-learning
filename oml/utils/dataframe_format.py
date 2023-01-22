@@ -65,7 +65,6 @@ def check_retrieval_dataframe_format(
     # we explicitly put ==True here because of Nones
     labels_query = set(df[LABELS_COLUMN][df[IS_QUERY_COLUMN] == True])  # noqa
     labels_gallery = set(df[LABELS_COLUMN][df[IS_GALLERY_COLUMN] == True])  # noqa
-    # raise ValueError([labels_query, labels_gallery])
     assert labels_query.intersection(labels_gallery) == labels_query
 
     if dataset_root is None:
