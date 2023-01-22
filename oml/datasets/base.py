@@ -127,7 +127,7 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         row = self.df.iloc[idx]
 
-        img_bytes = self.read_bytes_image_cached(row[PATHS_COLUMN])
+        img_bytes = self.read_bytes_image_cached(row[PATHS_COLUMN])  # type: ignore
         img = self.f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]

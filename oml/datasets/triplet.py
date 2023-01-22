@@ -73,7 +73,7 @@ class TriDataset(Dataset):
             return fin.read()
 
     def get_image(self, path: Union[Path, str]) -> np.ndarray:
-        image_bytes = self.read_bytes_image_cached(path)
+        image_bytes = self.read_bytes_image_cached(path)  # type: ignore
         image = self.f_imread(image_bytes)
         return image
 

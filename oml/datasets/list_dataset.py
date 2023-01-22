@@ -80,7 +80,7 @@ class ListDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         im_path = self.filenames_list[idx]
-        img_bytes = self.read_bytes_image_cached(im_path)
+        img_bytes = self.read_bytes_image_cached(im_path)  # type: ignore
         img = self.f_imread(img_bytes)
         if self.bboxes is not None:
             bbox = self.bboxes[idx]
