@@ -159,9 +159,7 @@ def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Ten
 
 
 def calc_gt_mask(
-    labels: Union[np.ndarray, Tensor],
-    is_query: Union[np.ndarray, Tensor],
-    is_gallery: Union[np.ndarray, Tensor],
+    labels: Union[np.ndarray, Tensor], is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]
 ) -> Tensor:
     assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [labels, is_query, is_gallery])
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
@@ -193,9 +191,7 @@ def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[n
 
 
 def calc_distance_matrix(
-    embeddings: Union[np.ndarray, Tensor],
-    is_query: Union[np.ndarray, Tensor],
-    is_gallery: Union[np.ndarray, Tensor],
+    embeddings: Union[np.ndarray, Tensor], is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]
 ) -> Tensor:
     assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [embeddings, is_query, is_gallery])
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
@@ -417,19 +413,19 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     return map
 
 
-def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[int, ...] = (1,)) -> Tensor:
+def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> Tensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
 
-    The metric calculates the percentage of positive distances higher than a given :math:`q`-th percentile
+    The metric calculates the quantile of positive distances higher than a given :math:`q`-th quantile
     of negative distances.
 
     Args:
         pos_dist: Distances between relevant samples.
         neg_dist: Distances between non-relevant samples.
-        fmr_vals: Values of ``fmr`` (measured in percents) to compute the corresponding ``fnmr``.
-                  For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
+        fmr_vals: Values of ``fmr`` (measured in quantiles) to compute the corresponding ``fnmr``.
+                  For example, if ``fmr_values`` is (0.2, 0.4) we will calculate ``fnmr@fmr=0.2`` and ``fnmr@fmr=0.4``
 
     Returns:
         Tensor of ``fnmr@fmr`` values.
@@ -440,8 +436,8 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[int, ..
 
     .. math::
 
-        \\textrm{FNMR}(T) = \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(u_i - T\\right) =
-        100 - \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - u_i\\right)
+        \\textrm{FNMR}(T) = \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(u_i - T\\right) =
+        1 - \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - u_i\\right)
 
     where :math:`H(x)` is the unit step function, and :math:`H(0)` taken to be :math:`1`.
 
@@ -451,8 +447,8 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[int, ..
 
     .. math::
 
-        \\textrm{FMR}(T) = 100 - \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(v_i - T\\right) =
-        \\frac{100}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - v_i\\right)
+        \\textrm{FMR}(T) = 1 - \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(v_i - T\\right) =
+        \\frac{1}{N}\\sum\\limits_{i = 1}^{N}H\\left(T - v_i\\right)
 
     Given some interesting false match rate values :math:`\\textrm{FMR}_k` one can find thresholds :math:`T_k`
     corresponding to :math:`\\textrm{FMR}` measurements
@@ -461,7 +457,7 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[int, ..
 
         T_k = Q_v\\left(\\textrm{FMR}_k\\right)
 
-    where :math:`Q` is the percentile function, and evaluate the corresponding values of
+    where :math:`Q` is the quantile function, and evaluate the corresponding values of
     :math:`\\textrm{FNMR}@\\textrm{FMR}\\left(T_k\\right) \\stackrel{\\text{def}}{=} \\textrm{FNMR}\\left(T_k\\right)`.
 
 
@@ -481,13 +477,13 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[int, ..
     Example:
         >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
         >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
-        >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(10, 50))
-        tensor([40., 20.])
+        >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(0.1, 0.5))
+        tensor([0.4000, 0.2000])
 
     """
-    _check_if_in_range(fmr_vals, 0, 100, "fmr_vals")
-    thresholds = torch.from_numpy(np.percentile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
-    fnmr_at_fmr = 100 * (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
+    _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
+    thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
+    fnmr_at_fmr = 1 * (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
 
 
