@@ -35,9 +35,9 @@ def calc_retrieval_metrics(
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
-        fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (`False Non Match Rate
+        fmr_vals: Values of ``fmr`` (measured in quantiles) to calculate ``fnmr@fmr`` (`False Non Match Rate
                   at the given False Match Rate`).
-                  For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
+                  For example, if ``fmr_values`` is (0.2, 0.4) we will calculate ``fnmr@fmr=0.2`` and ``fnmr@fmr=0.4``
         reduce: If ``False`` return metrics for each query without averaging
         check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
          each of the queries
@@ -483,7 +483,7 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     """
     _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
     thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
-    fnmr_at_fmr = 1 * (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
+    fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
 
 
