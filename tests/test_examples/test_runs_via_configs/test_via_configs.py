@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import tempfile
 import warnings
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple
@@ -78,26 +79,31 @@ def test_inference_error_two_sources_provided(accelerator: str, devices: int) ->
 
 @pytest.fixture()
 def params_for_inference_on_folder(accelerator: str, devices: int) -> Iterator[Tuple[str, Path, Path]]:
-    features_path: Path = MOCK_DATASET_PATH / "features1.json"
-    command = (
-        f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH} " f"features_file={features_path}"
-    )
-    cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
-    yield command, features_path, cfg_path
-    features_path.unlink()
+    with tempfile.TemporaryDirectory() as td:
+        tmp_dir = Path(td)
+        features_path: Path = tmp_dir / "features1.json"
+        command = (
+            f"inference_images_mock.py ~dataframe_name dataset_root={MOCK_DATASET_PATH} "
+            f"features_file={features_path}"
+        )
+        cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
+        yield command, features_path, cfg_path
+        features_path.unlink()
 
 
 @pytest.fixture()
 def params_for_inference_on_df(accelerator: str, devices: int) -> Iterator[Tuple[str, Path, Path]]:
-    cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
-    features_path = MOCK_DATASET_PATH / "features2.json"
+    with tempfile.TemporaryDirectory() as td:
+        tmp_dir = Path(td)
+        cfg_path = SCRIPTS_PATH / "configs" / "inference_images_mock.yaml"
+        features_path = tmp_dir / "features2.json"
 
-    command = (
-        "inference_images_mock.py dataframe_name={df_name} "
-        f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_file={str(features_path)}"
-    )
-    yield command, features_path, cfg_path
-    features_path.unlink()
+        command = (
+            "inference_images_mock.py dataframe_name={df_name} "
+            f"dataset_root={MOCK_DATASET_PATH} ~images_folder features_file={str(features_path)}"
+        )
+        yield command, features_path, cfg_path
+        features_path.unlink()
 
 
 def check_features_shape(features_path: Path) -> None:
