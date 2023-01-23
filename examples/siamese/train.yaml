@@ -1,0 +1,63 @@
+postfix: sop_repeat
+
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/2023/sop/
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+num_workers: 20
+n_epochs: 500
+n_epoch_warm_up: 1
+lr_warm_up: 1e-3
+lr: 5e-6
+val_period: 1
+bs_val: 256
+
+top_n: 5
+
+extractor:
+  name: vit
+  args:
+    normalise_features: True
+    use_multi_scale: False
+    weights: vits16_sop
+    arch: vits16
+
+optimizer:
+  name: adam
+  args:
+    lr: 5e-6
+
+sampler:
+  name: category_balance
+  args:
+    n_labels: 5
+    n_instances: 4
+    n_categories: 5
+    resample_labels: True
+    weight_categories: True
+
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 224
+    min_scale: 0.8
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+transforms_extraction:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+
+hydra_dir: ${logs_root}/${logs_folder}/
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+    - pkg://oml.configs

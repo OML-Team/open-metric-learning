@@ -51,6 +51,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
 
         # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
         distances_upd = self.inference(queries=queries, galleries=galleries, ii_top=ii_top, top_n=top_n)
+        distances_upd = distances_upd.to(distances.device)
 
         # 3. Update distances for top-n galleries
         # The idea is that we somehow permute top-n galleries, but rest of the galleries

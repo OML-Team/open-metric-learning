@@ -11,6 +11,7 @@ tests/test_examples/**/logs/
 mock_dataset/
 logs/
 docs/build
+2023/*
 
 # __________________________________
 
