@@ -22,7 +22,7 @@ from oml.utils.misc import flatten_dict
 
 
 def main(cfg: DictConfig) -> None:
-    device = torch.device("cuda:0")
+    device = torch.device("cpu")
 
     transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
     transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
