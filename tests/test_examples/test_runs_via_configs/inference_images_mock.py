@@ -1,10 +1,16 @@
+import sys
+from pathlib import Path
+
 import hydra
 from omegaconf import DictConfig
 
-from examples.inference import inference
-from oml.const import MOCK_DATASET_PATH
+from oml.const import MOCK_DATASET_PATH, PROJECT_ROOT
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import dictconfig_to_dict
+
+sys.path.append(str((PROJECT_ROOT / "examples").absolute))
+
+from examples.inference import inference
 
 
 @hydra.main(config_path="configs", config_name="inference_images_mock.yaml")
