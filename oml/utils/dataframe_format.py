@@ -40,21 +40,27 @@ def check_retrieval_dataframe_format(
 
     assert all(x in df.columns for x in OBLIGATORY_COLUMNS), df.columns
 
-    assert set(df[SPLIT_COLUMN]) == {"train", "validation"}, set(df[SPLIT_COLUMN])
+    assert set(df[SPLIT_COLUMN]).issubset({"train", "validation"}), set(df[SPLIT_COLUMN])
 
     mask_train = df[SPLIT_COLUMN] == "train"
-    assert pd.isna(df[IS_QUERY_COLUMN][mask_train].unique()[0]), df[IS_QUERY_COLUMN][mask_train].unique()
-    assert pd.isna(df[IS_GALLERY_COLUMN][mask_train].unique()[0]), df[IS_GALLERY_COLUMN][mask_train].unique()
+
+    if mask_train.sum() > 0:
+        q_train_vals = df[IS_QUERY_COLUMN][mask_train].unique()
+        assert pd.isna(q_train_vals[0]) and len(q_train_vals) == 1, q_train_vals
+        g_train_vals = df[IS_GALLERY_COLUMN][mask_train].unique()
+        assert pd.isna(g_train_vals[0]) and len(g_train_vals) == 1, g_train_vals
 
     val_mask = ~mask_train
 
-    for split_field in [IS_QUERY_COLUMN, IS_GALLERY_COLUMN]:
-        unq_values = set(df[split_field][val_mask])
-        assert unq_values in [{False}, {True}, {False, True}]
+    if val_mask.sum() > 0:
+        for split_field in [IS_QUERY_COLUMN, IS_GALLERY_COLUMN]:
+            unq_values = set(df[split_field][val_mask])
+            assert unq_values in [{False}, {True}, {False, True}], unq_values
+        assert all(
+            ((df[IS_QUERY_COLUMN][val_mask].astype(bool)) | df[IS_GALLERY_COLUMN][val_mask].astype(bool)).to_list()
+        )
 
     assert df[LABELS_COLUMN].dtypes == int
-
-    assert all(((df[IS_QUERY_COLUMN][val_mask].astype(bool)) | df[IS_GALLERY_COLUMN][val_mask].astype(bool)).to_list())
 
     # we explicitly put ==True here because of Nones
     labels_query = set(df[LABELS_COLUMN][df[IS_QUERY_COLUMN] == True])  # noqa
