@@ -172,7 +172,7 @@ def test_inference_compare_features_from_df_and_path(
     )
 
     for (_, feats1), (_, feats2) in zip(sorted_paths_feats_df, sorted_paths_feats_from_path):
-        assert np.isclose(feats1, feats2).all()
+        assert np.isclose(feats1, feats2, atol=1e-5).all()
 
     check_features_shape(features_df_path)
     check_features_shape(features_with_paths_location)

@@ -129,7 +129,7 @@ def inference(cfg: TCfg) -> None:
     features = []
     for batch in tqdm(loader):
         batch = batch[dataset.input_tensors_key]
-        batch.to(device)
+        batch = batch.to(device)
         feats = extractor.extract(batch)
         features += [feat.squeeze().tolist() for feat in torch.split(feats, 1)]
 
