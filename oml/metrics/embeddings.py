@@ -67,7 +67,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
-        fmr_vals: Tuple[int, ...] = tuple(),
+        fmr_vals: Tuple[float, ...] = tuple(),
         pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
@@ -88,9 +88,10 @@ class EmbeddingMetrics(IMetricVisualisable):
             cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
             precision_top_k: Values of ``k`` to calculate ``precision@k``
             map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
-            fmr_vals: Values of ``fmr`` (measured in percents) to calculate ``fnmr@fmr`` (`False Non Match Rate
+            fmr_vals: Values of ``fmr`` (measured in quantiles) to calculate ``fnmr@fmr`` (`False Non Match Rate
                       at the given False Match Rate`).
-                      For example, if ``fmr_values`` is (20, 40) we will calculate ``fnmr@fmr=20`` and ``fnmr@fmr=40``
+                      For example, if ``fmr_values`` is (0.2, 0.4) we will calculate ``fnmr@fmr=0.2``
+                      and ``fnmr@fmr=0.4``.
                       Note, computing this metric requires additional memory overhead,
                       that is why it's turned off by default.
             pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
