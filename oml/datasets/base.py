@@ -47,6 +47,7 @@ class BaseDataset(Dataset):
     def __init__(
         self,
         df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
         transform: Optional[TTransforms] = None,
         dataset_root: Optional[Union[str, Path]] = None,
         f_imread: TImReader = imread_cv2,
@@ -72,6 +73,8 @@ class BaseDataset(Dataset):
 
                   >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORIES_COLUMN
 
+            extra_data: Dictionary with additional information which we want to put into batches. We assume that
+                the length of each record in this structure is the same as dataset's size.
             transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
             dataset_root: Path to the images dir, set ``None`` if you provided the absolute paths in your dataframe
             f_imread: Function to read the images
@@ -88,6 +91,11 @@ class BaseDataset(Dataset):
 
         """
         df = df.copy()
+
+        if extra_data:
+            assert all(
+                len(record) == len(df) for record in extra_data.values()
+            ), "All the extra records need to have the size equal to the dataset's size"
 
         assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
 
@@ -110,6 +118,7 @@ class BaseDataset(Dataset):
             df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
 
         self.df = df
+        self.extra_data = extra_data
         self.transform = transform if transform else get_transforms("norm_albu")
         self.f_imread = f_imread
         self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
@@ -165,6 +174,13 @@ class BaseDataset(Dataset):
                 }
             )
 
+        if self.extra_data:
+            for key, record in self.extra_data.items():
+                if key in item:
+                    raise ValueError(f"<extra_data> and dataset share the same key: {key}")
+                else:
+                    item[key] = record[idx]
+
         return item
 
     def __len__(self) -> int:
@@ -215,6 +231,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     def __init__(
         self,
         df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: TImReader = imread_cv2,
@@ -232,6 +249,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
+            extra_data=extra_data,
             dataset_root=dataset_root,
             transform=transform,
             f_imread=f_imread,

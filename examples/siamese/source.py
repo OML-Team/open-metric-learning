@@ -2,17 +2,84 @@
 # flake8: noqa
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
+import pytorch_lightning as pl
 import torch
 from torch import Tensor, nn
+from torch.nn import BCEWithLogitsLoss
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from oml.const import PATHS_COLUMN
 from oml.inference.list_inference import inference_on_images
-from oml.interfaces.models import IExtractor, IPairwiseModel
+from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.utils.misc_torch import elementwise_dist
+
+
+class PairwiseModule(pl.LightningModule):
+    def __init__(
+        self,
+        pairwise_model,
+        pairs_miner,
+        optimizer,
+        scheduler,
+        scheduler_interval,
+        scheduler_frequency,
+        pair_1st_key,
+        pair_2nd_key,
+        labels_key,
+        embeddings_key,
+    ):
+        pl.LightningModule.__init__(self)
+
+        self.model = pairwise_model
+        self.miner = pairs_miner
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        self.scheduler_interval = scheduler_interval
+        self.scheduler_frequency = scheduler_frequency
+        self.pair_1st_key = pair_1st_key
+        self.pair_2nd_key = pair_2nd_key
+        self.labels_key = labels_key
+        self.embeddings_key = embeddings_key
+
+        self.criterion = BCEWithLogitsLoss()
+
+    def train_step(self, batch, batch_idx):
+        x1 = batch[self.pair_1st_key]
+        x2 = batch[self.pair_2nd_key]
+
+        ids1, ids2, is_negative = self.miner.sample(features=batch[self.embeddings_key], labels=batch[self.labels_key])
+
+        predictions = self.model(x1=x2, x2=x2)
+        loss = self.criterion(predictions, is_negative.float())
+
+        self.log("loss", loss.item(), prog_bar=True, batch_size=len(x1), on_step=True, on_epoch=True)
+
+        return loss
+
+    def configure_optimizers(self) -> Any:
+        if self.scheduler is None:
+            return self.optimizer
+        else:
+            scheduler = {
+                "scheduler": self.scheduler,
+                "interval": self.scheduler_interval,
+                "frequency": self.scheduler_frequency,
+            }
+            if isinstance(self.scheduler, ReduceLROnPlateau):
+                scheduler["monitor"] = self.monitor_metric
+            return [self.optimizer], [scheduler]
+
+    def on_epoch_start(self) -> None:
+        if self.freeze_n_epochs and isinstance(self.model, IFreezable):
+            if self.current_epoch >= self.freeze_n_epochs:
+                self.model.unfreeze()
+            else:
+                self.model.freeze()
 
 
 class PairsMiner:
@@ -26,13 +93,13 @@ class PairsMiner:
         ii_a_1, ii_p = zip(*list(set(list(map(lambda x: tuple(sorted([x[0], x[1]])), zip(ii_a, ii_p))))))
         ii_a_2, ii_n = zip(*list(set(list(map(lambda x: tuple(sorted([x[0], x[1]])), zip(ii_a, ii_n))))))
 
-        gt_distance = torch.ones(len(ii_a_1) + len(ii_a_2))
-        gt_distance[: len(ii_a_1)] = 0
+        is_negative = torch.ones(len(ii_a_1) + len(ii_a_2)).bool()
+        is_negative[: len(ii_a_1)] = 0
 
-        return torch.tensor([*ii_a_1, *ii_a_2]).long(), torch.tensor([*ii_p, *ii_n]).long(), gt_distance
+        return torch.tensor([*ii_a_1, *ii_a_2]).long(), torch.tensor([*ii_p, *ii_n]).long(), is_negative
 
 
-class ImagesSiamese(IPairwiseModel):
+class ImagesSiamese(IPairwiseModel, IFreezable):
     def __init__(self, extractor: IExtractor) -> None:
         super(ImagesSiamese, self).__init__()
         self.extractor = extractor
@@ -48,21 +115,24 @@ class ImagesSiamese(IPairwiseModel):
             ]
         )
 
-        self.frozen = False
+        self.train_backbone = True
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = torch.concat([x1, x2], dim=2)
 
-        if self.frozen:
-            with torch.no_grad():
-                x = self.extractor(x)
-        else:
+        with torch.set_grad_enabled(self.train_backbone):
             x = self.extractor(x)
 
         x = self.head(x)
         x = x.squeeze()
 
         return x
+
+    def freeze(self) -> None:
+        self.train_backbone = False
+
+    def unfreeze(self) -> None:
+        self.train_backbone = True
 
 
 class ImagesSiameseTrivial(IPairwiseModel):

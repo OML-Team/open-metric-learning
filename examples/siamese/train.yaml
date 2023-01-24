@@ -1,7 +1,7 @@
 postfix: sop_repeat
 
 dataset_root: /nydl/data/Stanford_Online_Products/
-logs_root: /nydl/logs/Stanford_Online_Products/2023/sop/
+logs_root: /nydl/logs/2023/sop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
