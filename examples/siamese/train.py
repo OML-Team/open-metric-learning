@@ -77,7 +77,9 @@ def main(cfg: DictConfig) -> None:
         f_imread=get_im_reader_for_transforms(transforms_val),
         extra_data={EMBEDDINGS_KEY: emb_val},
     )
-    valid_loader = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
+    valid_loader = DataLoader(
+        dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"], shuffle=False
+    )
 
     postprocessor = PairwiseImagesPostprocessor(
         top_n=cfg["top_n"],
