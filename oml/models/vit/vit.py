@@ -89,11 +89,11 @@ class ViTExtractor(IExtractor):
         factory_fun = self.constructors[self.arch]
 
         self.model = factory_fun(pretrained=False)
-        if weights is None:
+        if self.weights is None:
             return
 
-        if weights in self.pretrained_models:
-            url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
+        if self.weights in self.pretrained_models:
+            url_or_fid, hash_md5, fname = self.pretrained_models[self.weights]  # type: ignore
             weights = download_checkpoint_one_of(
                 url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname  # type: ignore
             )

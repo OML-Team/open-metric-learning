@@ -24,6 +24,7 @@ DatasetWithLabels
     .. automethod:: __init__
     .. automethod:: __getitem__
     .. automethod:: get_labels
+    .. automethod:: get_label2category
 
 DatasetQueryGallery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
