@@ -1,47 +1,69 @@
 # type: ignore
 # flake8: noqa
 from pathlib import Path
+from pprint import pprint
 
 import hydra
-import torch
+import pytorch_lightning as pl
 from omegaconf import DictConfig
-from source import ImagesSiamese, PairsMiner, get_embeddings, validate
+from source import (
+    ImagesSiamese,
+    PairsMiner,
+    PairwiseModule,
+    PairwiseModuleDDP,
+    get_embeddings,
+)
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 
-from oml.const import CATEGORIES_COLUMN, LABELS_COLUMN
-from oml.datasets.base import DatasetWithLabels
+from oml.const import CATEGORIES_COLUMN, EMBEDDINGS_KEY, LABELS_COLUMN
+from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
+from oml.lightning.entrypoints.parser import (
+    check_is_config_for_ddp,
+    parse_engine_params_from_config,
+)
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.samplers import get_sampler_by_cfg
+from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.utils import get_im_reader_for_transforms
-from oml.utils.misc import flatten_dict
+from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 
 def main(cfg: DictConfig) -> None:
-    device = torch.device("cpu")
+    cfg = dictconfig_to_dict(cfg)
+    trainer_engine_params = parse_engine_params_from_config(cfg)
+    is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
-    transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
-    transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
-    transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
+    pprint(cfg)
 
-    extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
+    set_global_seed(cfg["seed"])
 
+    cwd = Path.cwd()
+
+    # Features extraction
+    extractor = get_extractor_by_cfg(cfg["extractor"])
     emb_train, emb_val, df_train, df_val = get_embeddings(
-        dataset_root=Path(cfg["dataset_root"]),
         extractor=extractor,
-        transforms=transforms_extraction,
+        dataset_root=Path(cfg["dataset_root"]),
+        transforms=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
         batch_size=cfg["bs_val"],
     )
 
+    # Pairwise training
+    siamese = ImagesSiamese(extractor=extractor)
+
+    pairs_miner = PairsMiner()
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=siamese.parameters())  # type: ignore
+
+    transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
     dataset = DatasetWithLabels(
         df=df_train,
         transform=transforms_train,
         f_imread=get_im_reader_for_transforms(transforms_train),
+        extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
     sampler_runtime_args = {
@@ -50,13 +72,28 @@ def main(cfg: DictConfig) -> None:
     }
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
+    # unpack scheduler to the Lightning format
+    if cfg.get("scheduling"):
+        scheduler_kwargs = {
+            "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
+            "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
+            "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
+            "scheduler_monitor_metric": cfg["scheduling"].get("monitor_metric", None),
+        }
+    else:
+        scheduler_kwargs = {"scheduler": None}
+
     loader_train = DataLoader(batch_sampler=sampler, dataset=dataset, num_workers=cfg["num_workers"])
 
-    siamese = ImagesSiamese(extractor=extractor).to(device)
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=siamese.parameters())  # type: ignore
-
-    pairs_miner = PairsMiner()
-    criterion = torch.nn.BCEWithLogitsLoss(reduction="mean")
+    # Pairwise validation as postprocessor
+    transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
+    valid_dataset = DatasetQueryGallery(
+        df=df_val,
+        transform=transforms_val,
+        f_imread=get_im_reader_for_transforms(transforms_val),
+        extra_data={EMBEDDINGS_KEY: emb_val},
+    )
+    valid_loader = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
     postprocessor = PairwiseImagesPostprocessor(
         top_n=cfg["top_n"],
@@ -66,60 +103,43 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg["num_workers"],
     )
 
-    writer = SummaryWriter()
+    module_kwargs = scheduler_kwargs
+    if is_ddp:
+        module_kwargs["loaders_train"] = loader_train
+        module_kwargs["loaders_val"] = valid_loader
+        module_constructor = PairwiseModuleDDP
+    else:
+        module_constructor = PairwiseModule  # type: ignore
 
-    k = 0
-    best_cmc = 0.0
-    ckpt_metric = "OVERALL/cmc/1"
+    # todo: key from val dataset
+    pl_model = module_constructor(
+        pairwise_model=siamese,
+        pairs_miner=pairs_miner,
+        optimizer=optimizer,
+        input_tensors_key=dataset.input_tensors_key,
+        labels_key=dataset.labels_key,
+        embeddings_key=EMBEDDINGS_KEY,
+        freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
+        **module_kwargs
+    )
 
-    for i_epoch in range(cfg["n_epochs"]):
-        # tqdm_loader = tqdm([next(iter(loader_train))] * 2)
-        tqdm_loader = tqdm(loader_train)
+    # Run
+    trainer = pl.Trainer(
+        max_epochs=cfg["max_epochs"],
+        num_sanity_val_steps=0,
+        check_val_every_n_epoch=cfg["valid_period"],
+        default_root_dir=str(cwd),
+        enable_checkpointing=True,
+        enable_progress_bar=True,
+        enable_model_summary=True,
+        precision=cfg.get("precision", 32),
+        **trainer_engine_params
+    )
 
-        if i_epoch < cfg["n_epoch_warm_up"]:
-            siamese.frozen = True
-            optimizer.param_groups[0]["lr"] = cfg["lr_warm_up"]
-        else:
-            siamese.frozen = False
-            optimizer.param_groups[0]["lr"] = cfg["lr"]
-
-        for batch in tqdm_loader:
-            features = emb_train[batch["idx"]]
-            ii1, ii2, gt_dist = pairs_miner.sample(features, batch["labels"])
-            x1 = batch["input_tensors"][ii1]
-            x2 = batch["input_tensors"][ii2]
-            gt_dist = gt_dist.to(device)
-
-            pred_dist = siamese(x1=x1.to(device), x2=x2.to(device))
-            loss = criterion(pred_dist, gt_dist)
-
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-
-            accuracy = ((pred_dist > 0.5) == gt_dist).float().mean().item()
-            writer.add_scalar("loss", loss.item(), global_step=k)
-            writer.add_scalar("accuracy", accuracy, global_step=k)
-            k += 1
-
-        if (i_epoch + 1) % cfg["val_period"] == 0:
-            metrics = validate(
-                postprocessor=postprocessor,
-                top_n=cfg["top_n"],
-                df_val=df_val,
-                emb_val=emb_val,
-            )
-            metrics = flatten_dict(metrics)
-            print(metrics)
-
-            for m, v in metrics.items():
-                writer.add_scalar(m, v, global_step=i_epoch)
-
-            if metrics[ckpt_metric] > best_cmc:
-                siamese = siamese.cpu()
-                torch.save(siamese.state_dict(), "best.pth")
-                best_cmc = float(metrics[ckpt_metric])
-                siamese = siamese.to(device)
+    if is_ddp:
+        trainer.fit(model=pl_model)
+    else:
+        trainer.fit(model=pl_model, train_dataloaders=loader_train, val_dataloaders=valid_loader)
 
 
 @hydra.main(config_path=".", config_name="train.yaml")

@@ -201,7 +201,7 @@ def pl_train(cfg: TCfg) -> None:
         max_epochs=cfg["max_epochs"],
         num_sanity_val_steps=0,
         check_val_every_n_epoch=cfg["valid_period"],
-        default_root_dir=cwd,
+        default_root_dir=str(cwd),
         enable_checkpointing=True,
         enable_progress_bar=True,
         enable_model_summary=True,

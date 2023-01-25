@@ -1,18 +1,22 @@
-postfix: sop_repeat
+postfix: ""
+
+seed: 42
+precision: 32
+accelerator: cpu
+devices: 1
 
 dataset_root: /Users/alex/Library/Caches/oml/mock_dataset
 logs_root: /Users/alex/Downloads/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-num_workers: 20
-n_epochs: 500
-n_epoch_warm_up: 1
-lr_warm_up: 1e-3
-lr: 5e-6
-val_period: 1
+num_workers: 0
+max_epochs: 1000
+valid_period: 1000
 bs_val: 256
 
 top_n: 5
+
+freeze_n_epochs: 0
 
 extractor:
   name: vit
@@ -25,37 +29,47 @@ extractor:
 optimizer:
   name: adam
   args:
-    lr: 5e-6
+    lr: 1e-3
+
+scheduling: null
 
 sampler:
   name: category_balance
   args:
-    n_labels: 5
-    n_instances: 4
-    n_categories: 5
+    n_labels: 4
+    n_instances: 3
+    n_categories: 1
     resample_labels: True
     weight_categories: True
 
+#transforms_train:
+#  name: augs_hypvit_torch
+#  args:
+#    im_size: 224
+#    min_scale: 0.8
+
 transforms_train:
-  name: augs_hypvit_torch
+  name: norm_resize_hypvit_torch
   args:
-    im_size: 224
-    min_scale: 0.8
+    im_size: 32
+    crop_size: 32
 
 transforms_val:
   name: norm_resize_hypvit_torch
   args:
-    im_size: 224
-    crop_size: 224
+    im_size: 32
+    crop_size: 32
 
 transforms_extraction:
   name: norm_resize_hypvit_torch
   args:
-    im_size: 224
-    crop_size: 224
+    im_size: 32
+    crop_size: 32
 
 
 hydra_dir: ${logs_root}/${logs_folder}/
+
+
 hydra:
   run:
     dir: ${hydra_dir}

@@ -2,18 +2,27 @@
 # flake8: noqa
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 import pytorch_lightning as pl
 import torch
+from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import Tensor, nn
 from torch.nn import BCEWithLogitsLoss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from oml.const import PATHS_COLUMN
+from oml.const import (
+    EMBEDDINGS_KEY,
+    INPUT_TENSORS_KEY,
+    LABELS_KEY,
+    PAIR_1ST_KEY,
+    PAIR_2ND_KEY,
+    PATHS_COLUMN,
+)
 from oml.inference.list_inference import inference_on_images
 from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
+from oml.lightning.modules.module_ddp import ModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.utils.misc_torch import elementwise_dist
@@ -26,12 +35,15 @@ class PairwiseModule(pl.LightningModule):
         pairs_miner,
         optimizer,
         scheduler,
-        scheduler_interval,
-        scheduler_frequency,
-        pair_1st_key,
-        pair_2nd_key,
-        labels_key,
-        embeddings_key,
+        scheduler_interval: str = "step",
+        scheduler_frequency: int = 1,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        pair_1st_key: str = PAIR_1ST_KEY,
+        pair_2nd_key: str = PAIR_2ND_KEY,
+        labels_key: str = LABELS_KEY,
+        embeddings_key: str = EMBEDDINGS_KEY,
+        scheduler_monitor_metric: Optional[str] = None,
+        freeze_n_epochs: int = 0,
     ):
         pl.LightningModule.__init__(self)
 
@@ -41,25 +53,31 @@ class PairwiseModule(pl.LightningModule):
         self.scheduler = scheduler
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
+        self.input_tensors_key = input_tensors_key
         self.pair_1st_key = pair_1st_key
         self.pair_2nd_key = pair_2nd_key
         self.labels_key = labels_key
         self.embeddings_key = embeddings_key
+        self.monitor_metric = scheduler_monitor_metric
+        self.freeze_n_epochs = freeze_n_epochs
 
         self.criterion = BCEWithLogitsLoss()
 
-    def train_step(self, batch, batch_idx):
-        x1 = batch[self.pair_1st_key]
-        x2 = batch[self.pair_2nd_key]
-
+    def training_step(self, batch, batch_idx):
         ids1, ids2, is_negative = self.miner.sample(features=batch[self.embeddings_key], labels=batch[self.labels_key])
+        x1 = batch[self.input_tensors_key][ids1]
+        x2 = batch[self.input_tensors_key][ids2]
+        target = is_negative.float()
 
-        predictions = self.model(x1=x2, x2=x2)
-        loss = self.criterion(predictions, is_negative.float())
+        predictions = self.model(x1=x1, x2=x2)
+        loss = self.criterion(predictions, target)
 
         self.log("loss", loss.item(), prog_bar=True, batch_size=len(x1), on_step=True, on_epoch=True)
 
         return loss
+
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
+        return batch
 
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:
@@ -81,10 +99,28 @@ class PairwiseModule(pl.LightningModule):
             else:
                 self.model.freeze()
 
+    def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
+        # https://github.com/Lightning-AI/lightning/issues/1595
+        tqdm_dict = super().get_progress_bar_dict()
+        tqdm_dict.pop("v_num", None)
+        return tqdm_dict
+
+
+class PairwiseModuleDDP(PairwiseModule, ModuleDDP):
+    def __init__(
+        self,
+        loaders_train: Optional[TRAIN_DATALOADERS] = None,
+        loaders_val: Optional[EVAL_DATALOADERS] = None,
+        *args: Any,
+        **kwargs: Any,
+    ):
+        ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
+        PairwiseModule.__init__(self, *args, **kwargs)
+
 
 class PairsMiner:
     def __init__(self):
-        self.miner = HardTripletsMiner()
+        self.miner = HardTripletsMiner()  # todo
         # self.miner = AllTripletsMiner()
 
     def sample(self, features, labels):

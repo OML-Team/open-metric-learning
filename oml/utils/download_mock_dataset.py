@@ -41,7 +41,7 @@ def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame,
         print(f"Mock dataset has been downloaded already to {dataset_root}")
 
     if not check_mock_dataset_exists(dataset_root):
-        raise Exception("Downloaded mock dataset is invalid")
+        raise Exception(f"Downloaded mock dataset is invalid, {dataset_root}")
 
     df = pd.read_csv(Path(dataset_root) / "df.csv")
 

@@ -92,7 +92,7 @@ class BaseDataset(Dataset):
         """
         df = df.copy()
 
-        if extra_data:
+        if extra_data is not None:
             assert all(
                 len(record) == len(df) for record in extra_data.values()
             ), "All the extra records need to have the size equal to the dataset's size"
