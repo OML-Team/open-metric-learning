@@ -5,7 +5,6 @@ from pprint import pprint
 
 import hydra
 import pytorch_lightning as pl
-import torch.nn
 from omegaconf import DictConfig
 from source import (
     ImagesSiamese,
@@ -16,17 +15,17 @@ from source import (
 )
 from torch.utils.data import DataLoader
 
-from oml.const import CATEGORIES_COLUMN, EMBEDDINGS_KEY, LABELS_COLUMN
+from oml.const import EMBEDDINGS_KEY
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
     initialize_logging,
     parse_engine_params_from_config,
+    parse_sampler_from_config,
+    parse_scheduler_from_config,
 )
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
-from oml.registry.samplers import get_sampler_by_cfg
-from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.utils import get_im_reader_for_transforms
@@ -61,31 +60,14 @@ def main(cfg: DictConfig) -> None:
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=siamese.parameters())  # type: ignore
 
     transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
-    dataset = DatasetWithLabels(
+    train_dataset = DatasetWithLabels(
         df=df_train,
         transform=transforms_train,
         f_imread=get_im_reader_for_transforms(transforms_train),
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
-
-    sampler_runtime_args = {
-        "labels": dataset.get_labels(),
-        "label2category": dict(zip(df_train[LABELS_COLUMN], df_train[CATEGORIES_COLUMN])),
-    }
-    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
-
-    # unpack scheduler to the Lightning format
-    if cfg.get("scheduling"):
-        scheduler_kwargs = {
-            "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], optimizer=optimizer),
-            "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
-            "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
-            "scheduler_monitor_metric": cfg["scheduling"].get("monitor_metric", None),
-        }
-    else:
-        scheduler_kwargs = {"scheduler": None}
-
-    loader_train = DataLoader(batch_sampler=sampler, dataset=dataset, num_workers=cfg["num_workers"])
+    sampler = parse_sampler_from_config(cfg, dataset=train_dataset)
+    loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
 
     # Pairwise validation as postprocessor
     transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
@@ -105,7 +87,8 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg["num_workers"],
     )
 
-    module_kwargs = scheduler_kwargs
+    module_kwargs = {}
+    module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
     if is_ddp:
         module_kwargs["loaders_train"] = loader_train
         module_kwargs["loaders_val"] = valid_loader
@@ -120,8 +103,8 @@ def main(cfg: DictConfig) -> None:
         pairwise_model=siamese,
         pairs_miner=pairs_miner,
         optimizer=optimizer,
-        input_tensors_key=dataset.input_tensors_key,
-        labels_key=dataset.labels_key,
+        input_tensors_key=train_dataset.input_tensors_key,
+        labels_key=train_dataset.labels_key,
         embeddings_key=EMBEDDINGS_KEY,
         freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs

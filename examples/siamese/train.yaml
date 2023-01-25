@@ -23,7 +23,7 @@ extractor:
     weights: vits16_sop
     arch: vits16
 
-freeze_n_epochs: 0  # todo
+freeze_n_epochs: 1
 
 optimizer:
   name: adam
