@@ -1,12 +1,12 @@
 postfix: ""
 
 seed: 42
-precision: 16
+precision: 32
 accelerator: gpu
 devices: 2
 
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/2023/inshop
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -20,10 +20,10 @@ extractor:
   args:
     normalise_features: True
     use_multi_scale: False
-    weights: vits16_inshop
+    weights: vits16_sop
     arch: vits16
 
-freeze_n_epochs: 0
+freeze_n_epochs: 0  # todo
 
 optimizer:
   name: adam
@@ -35,7 +35,7 @@ scheduling: null
 sampler:
   name: category_balance
   args:
-    n_labels: 30
+    n_labels: 5
     n_instances: 4
     n_categories: 5
     resample_labels: True
@@ -62,6 +62,12 @@ transforms_extraction:
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
+neptune_project: NEWYORKER/similarity-api
+
+tags:
+  - sop
+  - postprocessing
+  - node1
 
 hydra:
   run:

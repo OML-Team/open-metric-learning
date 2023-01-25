@@ -20,6 +20,7 @@ from oml.const import CATEGORIES_COLUMN, EMBEDDINGS_KEY, LABELS_COLUMN
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
+    initialize_logging,
     parse_engine_params_from_config,
 )
 from oml.registry.models import get_extractor_by_cfg
@@ -112,6 +113,8 @@ def main(cfg: DictConfig) -> None:
     else:
         module_constructor = PairwiseModule  # type: ignore
 
+    logger = initialize_logging(cfg)
+
     # todo: key from val dataset
     pl_model = module_constructor(
         pairwise_model=siamese,
@@ -134,6 +137,7 @@ def main(cfg: DictConfig) -> None:
         enable_progress_bar=True,
         enable_model_summary=True,
         precision=cfg.get("precision", 32),
+        logger=logger,
         **trainer_engine_params
     )
 
