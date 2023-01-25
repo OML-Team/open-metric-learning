@@ -1,4 +1,5 @@
 from pathlib import Path
+from pprint import pprint
 from typing import Tuple
 
 import pytorch_lightning as pl
@@ -71,6 +72,7 @@ def pl_train(cfg: TCfg) -> None:
     set_global_seed(cfg["seed"])
 
     cfg = dictconfig_to_dict(cfg)
+    pprint(cfg)
     logger = initialize_logging(cfg)
 
     trainer_engine_params = parse_engine_params_from_config(cfg)
@@ -85,7 +87,8 @@ def pl_train(cfg: TCfg) -> None:
     ]
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], **{"params": optimizable_parameters})  # type: ignore
 
-    module_kwargs = parse_scheduler_from_config(cfg, optimizer=optimizer)
+    module_kwargs = {}
+    module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
     if is_ddp:
         module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
         module_constructor = RetrievalModuleDDP

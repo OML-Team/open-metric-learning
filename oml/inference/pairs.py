@@ -28,6 +28,7 @@ def pairwise_inference_on_images(
         paths2=paths2,
         transform=transform,
         f_imread=get_im_reader_for_transforms(transform) if f_imread is None else f_imread,
+        cache_size=0,
     )
 
     def _apply(
