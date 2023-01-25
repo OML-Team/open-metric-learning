@@ -24,7 +24,7 @@ def inference_on_images(
     if f_imread is None:
         f_imread = get_im_reader_for_transforms(transform)
 
-    dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread)
+    dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
 
     def _apply(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:

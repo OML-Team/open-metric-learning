@@ -85,11 +85,9 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             self.load_state_dict(loaded, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.train_backbone:
+        with torch.set_grad_enabled(self.train_backbone):
             features = self.extractor(x)
-        else:
-            with torch.no_grad():
-                features = self.extractor(x)
+
         return self.projection(features)
 
     @property
