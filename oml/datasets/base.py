@@ -211,6 +211,19 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
     def get_labels(self) -> np.ndarray:
         return np.array(self.df[LABELS_COLUMN].tolist())
 
+    def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
+        """
+        Returns:
+            Label to category mapping if there was category information in DataFrame, None otherwise.
+
+        """
+        if CATEGORIES_COLUMN in self.df.columns:
+            label2category = dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
+        else:
+            label2category = None
+
+        return label2category
+
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     """

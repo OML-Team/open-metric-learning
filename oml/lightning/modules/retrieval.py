@@ -113,7 +113,13 @@ class RetrievalModule(pl.LightningModule):
         return tqdm_dict
 
     def on_epoch_start(self) -> None:
-        if self.freeze_n_epochs and isinstance(self.model, IFreezable):
+        if self.freeze_n_epochs > 0:
+            if not isinstance(self.model, IFreezable):
+                raise ValueError(
+                    f"You want to freeze a model for {self.freeze_n_epochs},"
+                    f"but model does not implement the {IFreezable.__name__} interface."
+                )
+
             if self.current_epoch >= self.freeze_n_epochs:
                 self.model.unfreeze()
             else:

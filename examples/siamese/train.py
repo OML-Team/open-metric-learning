@@ -5,6 +5,7 @@ from pprint import pprint
 
 import hydra
 import pytorch_lightning as pl
+import torch.nn
 from omegaconf import DictConfig
 from source import (
     ImagesSiamese,

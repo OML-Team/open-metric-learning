@@ -70,7 +70,8 @@ class PairwiseModule(pl.LightningModule):
         target = is_negative.float()
 
         predictions = self.model(x1=x1, x2=x2)
-        loss = self.criterion(predictions, target)
+
+        loss = self.criterion(predictions, target.to(predictions.device))
 
         self.log("loss", loss.item(), prog_bar=True, batch_size=len(x1), on_step=True, on_epoch=True)
 
