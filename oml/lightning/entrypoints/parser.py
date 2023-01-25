@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
-from pprint import pprint
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 import albumentations as albu
 import torch
@@ -9,7 +8,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
 
-from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT, TCfg
+from oml.const import PROJECT_ROOT, TCfg
 from oml.datasets.base import DatasetWithLabels
 from oml.interfaces.samplers import IBatchSampler
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
@@ -68,8 +67,6 @@ def initialize_logging(cfg: TCfg) -> Union[bool, NeptuneLogger]:
     which are good to have for reproducibility.
 
     """
-    pprint(cfg)
-
     if ("NEPTUNE_API_TOKEN" in os.environ.keys()) and (cfg["neptune_project"] is not None):
         cwd = Path.cwd()
         logger = NeptuneLogger(
@@ -83,7 +80,7 @@ def initialize_logging(cfg: TCfg) -> Union[bool, NeptuneLogger]:
         upload_files_to_neptune_cloud(logger, cfg)
 
     else:
-        print(f"In order to use files, you should use {NeptuneLogger.__name__}")
+        print(f"Your current logger is not able to log your files, you can use {NeptuneLogger.__name__} for this.")
         logger = True
 
     return logger
@@ -128,7 +125,7 @@ def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> 
     return scheduler_kwargs
 
 
-def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> IBatchSampler:
+def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> Optional[IBatchSampler]:
     if (not dataset.categories_key) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
         raise ValueError(
             "NOTE! You are trying to use Sampler which works with the information related"
@@ -144,7 +141,7 @@ def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> IBatchSa
 def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
     return ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
-        monitor=cfg.get("metric_for_checkpointing", f"{OVERALL_CATEGORIES_KEY}/cmc/1"),
+        monitor=cfg["metric_for_checkpointing"],
         mode="max",
         save_top_k=1,
         verbose=True,
