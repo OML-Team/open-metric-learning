@@ -312,8 +312,8 @@ def pl_train_pairwise(cfg: DictConfig) -> None:
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
     extractor = get_extractor_by_cfg(cfg["extractor"])
-    # siamese = ImagesSiamese(extractor=extractor)
-    siamese = ImagesSiameseTrivial(extractor=extractor)
+    siamese = ImagesSiamese(extractor=extractor)
+    # siamese = ImagesSiameseTrivial(extractor=extractor)
     criterion = torch.nn.BCEWithLogitsLoss()
 
     pairs_miner = PairsMiner()
@@ -381,7 +381,6 @@ def pl_train_pairwise(cfg: DictConfig) -> None:
 
     if is_ddp:
         trainer.fit(model=pl_module)
-        # trainer.validate(verbose=True, model=pl_module)
     else:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
 

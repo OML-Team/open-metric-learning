@@ -25,9 +25,9 @@ extractor:
 optimizer:
   name: adam
   args:
-    lr: 2e-3  # todo
+    lr: 2e-3
 
-freeze_n_epochs: 1
+freeze_n_epochs: 3
 scheduling:
   scheduler_interval: epoch
   scheduler_frequency: 1
