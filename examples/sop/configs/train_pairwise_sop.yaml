@@ -41,7 +41,7 @@ scheduling:
 sampler:
   name: category_balance
   args:
-    n_labels: 8
+    n_labels: 6
     n_instances: 4
     n_categories: 5
     resample_labels: True
