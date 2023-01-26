@@ -1,0 +1,89 @@
+postfix: "postprocessing"
+
+seed: 42
+precision: 32
+accelerator: gpu
+devices: 2
+
+dataset_root: /nydl/data/DeepFashion_InShop/
+dataframe_name: df.csv
+logs_root: /nydl/logs/DeepFashion_InShop/
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+num_workers: 20
+max_epochs: 1000
+valid_period: 1
+
+extractor:
+  name: vit
+  args:
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_inshop
+    arch: vits16
+
+optimizer:
+  name: adam
+  args:
+    lr: 1e-3
+
+freeze_n_epochs: 1
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      gamma: 5e-3
+      milestones:
+        - $(freeze_n_epochs)
+
+sampler:
+  name: category_balance
+  args:
+    n_labels: 5
+    n_instances: 4
+    n_categories: 5
+    resample_labels: True
+    weight_categories: True
+
+bs_val: 128
+top_n: 5
+metric_for_checkpointing: OVERALL/cmc/1
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [1, 5]
+  precision_top_k: [1, 5]
+
+neptune_project: NEWYORKER/similarity-api
+
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 224
+    min_scale: 0.8
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+transforms_extraction:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+tags:
+  - sop
+  - postprocessing
+  - node1
+
+hydra_dir: ${logs_root}/${logs_folder}/
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+    - pkg://oml.configs

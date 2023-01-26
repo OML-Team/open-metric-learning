@@ -5,14 +5,17 @@ precision: 32
 accelerator: gpu
 devices: 2
 
-dataset_root: /nydl/data/Stanford_Online_Products/
-logs_root: /nydl/logs/Stanford_Online_Products/
+dataset_root: /nydl/data/mock_dataset/
+dataframe_name: df.csv
+logs_root: /nydl/data/mock_dataset/logs
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-num_workers: 20
+num_workers: 0
 max_epochs: 1000
 valid_period: 1
 bs_val: 256
+
+metric_for_checkpointing: OVERALL/cmc/1
 
 top_n: 5
 extractor:
@@ -20,7 +23,7 @@ extractor:
   args:
     normalise_features: True
     use_multi_scale: False
-    weights: vits16_sop
+    weights: vits16_dino
     arch: vits16
 
 freeze_n_epochs: 1
@@ -35,17 +38,18 @@ scheduling: null
 sampler:
   name: category_balance
   args:
-    n_labels: 5
-    n_instances: 4
-    n_categories: 5
+    n_labels: 2
+    n_instances: 2
+    n_categories: 1
     resample_labels: True
     weight_categories: True
 
 transforms_train:
-  name: augs_hypvit_torch
+  name: norm_resize_hypvit_torch
   args:
     im_size: 224
-    min_scale: 0.8
+    crop_size: 224
+
 
 transforms_val:
   name: norm_resize_hypvit_torch
@@ -59,13 +63,15 @@ transforms_extraction:
     im_size: 224
     crop_size: 224
 
+metric_args:
+  cmc_top_k: [1]
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
 neptune_project: NEWYORKER/similarity-api
 
 tags:
-  - sop
+  - mock
   - postprocessing
   - node1
 

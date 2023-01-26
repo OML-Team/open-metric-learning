@@ -1,16 +1,18 @@
 # type: ignore
 # flake8: noqa
-
 from pathlib import Path
+from pprint import pprint
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 import pytorch_lightning as pl
 import torch
+from omegaconf import DictConfig
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import Tensor, nn
 from torch.nn import BCEWithLogitsLoss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.data import DataLoader
 
 from oml.const import (
     EMBEDDINGS_KEY,
@@ -20,11 +22,27 @@ from oml.const import (
     PAIR_2ND_KEY,
     PATHS_COLUMN,
 )
+from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.inference.list_inference import inference_on_images
 from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
+from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
+from oml.lightning.entrypoints.parser import (
+    check_is_config_for_ddp,
+    initialize_logging,
+    parse_ckpt_callback_from_config,
+    parse_engine_params_from_config,
+    parse_sampler_from_config,
+    parse_scheduler_from_config,
+)
 from oml.lightning.modules.module_ddp import ModuleDDP
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
+from oml.registry.models import get_extractor_by_cfg
+from oml.registry.optimizers import get_optimizer_by_cfg
+from oml.registry.transforms import get_transforms_by_cfg
+from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.transforms.images.utils import get_im_reader_for_transforms
+from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
 from oml.utils.misc_torch import elementwise_dist
 
 
@@ -73,7 +91,12 @@ class PairwiseModule(pl.LightningModule):
 
         loss = self.criterion(predictions, target.to(predictions.device))
 
-        self.log("loss", loss.item(), prog_bar=True, batch_size=len(x1), on_step=True, on_epoch=True)
+        bs = len(batch[self.labels_key])
+
+        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+
+        if self.scheduler is not None:
+            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
 
         return loss
 
@@ -183,31 +206,9 @@ class ImagesSiameseTrivial(IPairwiseModel):
         return elementwise_dist(x1, x2, p=2)
 
 
-def validate(postprocessor, top_n, df_val, emb_val):
-    assert len(df_val) == len(emb_val)
-
-    calculator = EmbeddingMetrics(
-        cmc_top_k=(1, postprocessor.top_n),
-        precision_top_k=(1, 3, top_n),
-        postprocessor=postprocessor,
-        extra_keys=("paths",),
-    )
-    calculator.setup(len(df_val))
-    calculator.update_data(
-        {
-            "embeddings": emb_val,
-            "is_query": torch.tensor(df_val["is_query"]).bool(),
-            "is_gallery": torch.tensor(df_val["is_gallery"]).bool(),
-            "labels": torch.tensor(df_val["label"]).long(),
-            "paths": df_val["path"].tolist(),
-        }
-    )
-    metrics = calculator.compute_metrics()
-    return metrics
-
-
 def get_embeddings(
     dataset_root,
+    dataframe_name,
     extractor,
     transforms,
     num_workers,
@@ -216,7 +217,7 @@ def get_embeddings(
     postfix = getattr(extractor, "weights")
     save_path = Path(dataset_root / f"embeddings_{postfix}.pkl")
 
-    df = pd.read_csv(dataset_root / "df.csv")
+    df = pd.read_csv(dataset_root / dataframe_name)
     df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)  # todo
 
     if save_path.is_file():
@@ -244,3 +245,129 @@ def get_embeddings(
     df_val.reset_index(inplace=True)
 
     return emb_train, emb_val, df_train, df_val
+
+
+def main(cfg: DictConfig) -> None:
+    load_dotenv()
+
+    cfg = dictconfig_to_dict(cfg)
+    trainer_engine_params = parse_engine_params_from_config(cfg)
+    is_ddp = check_is_config_for_ddp(trainer_engine_params)
+
+    pprint(cfg)
+
+    set_global_seed(cfg["seed"])
+
+    cwd = Path.cwd()
+
+    # Features extraction
+    extractor = get_extractor_by_cfg(cfg["extractor"]).to("cuda:0")
+    emb_train, emb_val, df_train, df_val = get_embeddings(
+        extractor=extractor,
+        dataset_root=Path(cfg["dataset_root"]),
+        dataframe_name=cfg["dataframe_name"],
+        transforms=get_transforms_by_cfg(cfg["transforms_extraction"]),
+        num_workers=cfg["num_workers"],
+        batch_size=cfg["bs_val"],
+    )
+
+    # Pairwise training
+    # siamese = ImagesSiamese(extractor=extractor)
+    siamese = ImagesSiameseTrivial(extractor=extractor)
+
+    pairs_miner = PairsMiner()
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], params=siamese.parameters())  # type: ignore
+
+    transforms_train = get_transforms_by_cfg(cfg["transforms_train"])
+    train_dataset = DatasetWithLabels(
+        df=df_train,
+        transform=transforms_train,
+        f_imread=get_im_reader_for_transforms(transforms_train),
+        extra_data={EMBEDDINGS_KEY: emb_train},
+    )
+    sampler = parse_sampler_from_config(cfg, dataset=train_dataset)
+    loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
+
+    # Pairwise validation as postprocessor
+    transforms_val = get_transforms_by_cfg(cfg["transforms_val"])
+    valid_dataset = DatasetQueryGallery(
+        df=df_val,
+        transform=transforms_val,
+        f_imread=get_im_reader_for_transforms(transforms_val),
+        extra_data={EMBEDDINGS_KEY: emb_val},
+    )
+    loader_val = DataLoader(
+        dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"], shuffle=False
+    )
+
+    module_kwargs = {}
+    module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
+    if is_ddp:
+        module_kwargs["loaders_train"] = loader_train
+        module_kwargs["loaders_val"] = loader_val
+        module_constructor = PairwiseModuleDDP
+    else:
+        module_constructor = PairwiseModule  # type: ignore
+
+    logger = initialize_logging(cfg)
+
+    pl_module = module_constructor(
+        pairwise_model=siamese,
+        pairs_miner=pairs_miner,
+        optimizer=optimizer,
+        input_tensors_key=train_dataset.input_tensors_key,
+        labels_key=train_dataset.labels_key,
+        embeddings_key=EMBEDDINGS_KEY,
+        freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
+        **module_kwargs,
+    )
+
+    metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
+
+    postprocessor = PairwiseImagesPostprocessor(
+        top_n=cfg["top_n"],
+        pairwise_model=siamese,
+        transforms=transforms_val,
+        batch_size=cfg["bs_val"],
+        num_workers=cfg["num_workers"],
+    )
+
+    metrics_calc = metrics_constructor(
+        embeddings_key=pl_module.embeddings_key,
+        categories_key=loader_val.dataset.categories_key,
+        labels_key=loader_val.dataset.labels_key,
+        is_query_key=loader_val.dataset.is_query_key,
+        is_gallery_key=loader_val.dataset.is_gallery_key,
+        extra_keys=(loader_val.dataset.paths_key, *loader_val.dataset.bboxes_keys),
+        postprocessor=postprocessor,
+        **cfg.get("metric_args", {}),
+    )
+
+    metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
+    metrics_clb = metrics_clb_constructor(
+        metric=metrics_calc,
+        log_images=cfg.get("log_images", True),
+    )
+
+    trainer = pl.Trainer(
+        max_epochs=cfg["max_epochs"],
+        num_sanity_val_steps=0,
+        check_val_every_n_epoch=cfg["valid_period"],
+        default_root_dir=str(cwd),
+        enable_checkpointing=True,
+        enable_progress_bar=True,
+        enable_model_summary=True,
+        precision=cfg.get("precision", 32),
+        logger=logger,
+        callbacks=[metrics_clb, parse_ckpt_callback_from_config(cfg)],
+        **trainer_engine_params,
+    )
+
+    if is_ddp:
+        # trainer.fit(model=pl_module)
+        trainer.validate(verbose=True, model=pl_module)
+    else:
+        trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
+
+
+__all__ = ["main"]

@@ -7,7 +7,11 @@ from tqdm.auto import tqdm
 
 from oml.ddp.patching import patch_dataloader_to_ddp
 from oml.ddp.utils import get_world_size_safe, is_ddp, sync_dicts_ddp
-from oml.utils.misc_torch import drop_duplicates_by_ids, temporary_setting_model_mode
+from oml.utils.misc_torch import (
+    drop_duplicates_by_ids,
+    get_device,
+    temporary_setting_model_mode,
+)
 
 
 @torch.no_grad()
@@ -24,7 +28,7 @@ def _inference(
     loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
 
     if is_ddp():
-        loader = patch_dataloader_to_ddp(loader)
+        loader = tqdm(patch_dataloader_to_ddp(loader), desc=str(get_device(model)))
     else:
         loader = tqdm(loader) if verbose else loader
 
