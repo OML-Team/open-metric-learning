@@ -20,6 +20,7 @@ def inference_on_images(
     batch_size: int,
     verbose: bool = False,
     f_imread: Optional[TImReader] = None,
+    use_fp16: bool = False,
 ) -> Tensor:
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
@@ -34,6 +35,7 @@ def inference_on_images(
         num_workers=num_workers,
         batch_size=batch_size,
         verbose=verbose,
+        use_fp16=use_fp16,
     )
 
     return outputs

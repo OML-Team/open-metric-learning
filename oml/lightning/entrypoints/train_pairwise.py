@@ -98,7 +98,6 @@ class PairwiseModule(pl.LightningModule):
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if self.scheduler is not None:
-            print("xxx lr", self.scheduler.get_last_lr()[0])
             self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         return loss
@@ -219,6 +218,7 @@ def extract_embeddings(
     num_workers: int,
     batch_size: int,
     cache_on_disk: int,
+    use_fp16,
 ) -> Tuple[Tensor, Tensor, DataFrame, DataFrame]:
     df = pd.read_csv(dataset_root / dataframe_name)
 
@@ -237,6 +237,7 @@ def extract_embeddings(
             num_workers=num_workers,
             batch_size=batch_size,
             verbose=True,
+            use_fp16=use_fp16,
         ).cpu()
         if cache_on_disk:
             torch.save(embeddings, save_path)
@@ -270,6 +271,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         num_workers=cfg["num_workers"],
         batch_size=cfg["bs_val"],
         cache_on_disk=cfg["cache_extracted_embeddings_on_disk"],
+        use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 
     train_dataset = DatasetWithLabels(
@@ -379,6 +381,7 @@ def pl_train_pairwise(cfg: DictConfig) -> None:
 
     if is_ddp:
         trainer.fit(model=pl_module)
+        # trainer.validate(verbose=True, model=pl_module)
     else:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
 

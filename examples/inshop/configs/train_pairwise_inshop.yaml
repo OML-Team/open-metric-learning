@@ -1,13 +1,14 @@
 postfix: "postprocessing"
 
 seed: 42
-precision: 32
+precision: 16
 accelerator: gpu
 devices: 2
 
+dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
-
 
 num_workers: 20
 max_epochs: 1000
@@ -24,7 +25,7 @@ extractor:
 optimizer:
   name: adam
   args:
-    lr: 1e-3
+    lr: 2e-3  # todo
 
 freeze_n_epochs: 1
 scheduling:
@@ -40,7 +41,7 @@ scheduling:
 sampler:
   name: category_balance
   args:
-    n_labels: 5
+    n_labels: 8
     n_instances: 4
     n_categories: 5
     resample_labels: True

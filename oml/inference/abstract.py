@@ -22,6 +22,7 @@ def _inference(
     num_workers: int,
     batch_size: int,
     verbose: bool,
+    use_fp16: bool,
 ) -> Tensor:
     assert hasattr(dataset, "index_key"), "We expect that your dataset returns samples ids in __getitem__ method"
 
@@ -35,11 +36,13 @@ def _inference(
 
     outputs_list = []
     ids = []
-    with temporary_setting_model_mode(model, set_train=False):
-        for batch in loader:
-            out = apply_model(model, batch)
-            outputs_list.append(out)
-            ids.extend(batch[dataset.index_key].long().tolist())
+
+    with torch.autocast(device_type="cuda", dtype=torch.float16 if use_fp16 else torch.float32):
+        with temporary_setting_model_mode(model, set_train=False):
+            for batch in loader:
+                out = apply_model(model, batch)
+                outputs_list.append(out)
+                ids.extend(batch[dataset.index_key].long().tolist())
 
     outputs = torch.cat(outputs_list).detach()
 
