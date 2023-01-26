@@ -6,7 +6,7 @@ from torch import Tensor, nn
 
 from oml.datasets.list_dataset import ListDataset
 from oml.inference.abstract import _inference
-from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
+from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader
 from oml.utils.misc_torch import get_device
 
@@ -21,9 +21,6 @@ def inference_on_images(
     verbose: bool = False,
     f_imread: Optional[TImReader] = None,
 ) -> Tensor:
-    if f_imread is None:
-        f_imread = get_im_reader_for_transforms(transform)
-
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
 

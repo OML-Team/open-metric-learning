@@ -6,7 +6,7 @@ from torch import Tensor
 from oml.datasets.pairs import EmbeddingPairsDataset, ImagePairsDataset
 from oml.inference.abstract import _inference
 from oml.interfaces.models import IPairwiseModel
-from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
+from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader
 from oml.utils.misc_torch import get_device
 
@@ -27,7 +27,7 @@ def pairwise_inference_on_images(
         paths1=paths1,
         paths2=paths2,
         transform=transform,
-        f_imread=get_im_reader_for_transforms(transform) if f_imread is None else f_imread,
+        f_imread=f_imread,
         cache_size=0,
     )
 

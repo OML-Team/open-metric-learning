@@ -28,9 +28,10 @@ def _inference(
     loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
 
     if is_ddp():
-        loader = tqdm(patch_dataloader_to_ddp(loader), desc=str(get_device(model)))
-    else:
-        loader = tqdm(loader) if verbose else loader
+        loader = patch_dataloader_to_ddp(loader)
+
+    if verbose:
+        loader = tqdm(loader, desc=str(get_device(model)))
 
     outputs_list = []
     ids = []

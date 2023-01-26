@@ -50,7 +50,7 @@ class BaseDataset(Dataset):
         extra_data: Optional[Dict[str, Any]] = None,
         transform: Optional[TTransforms] = None,
         dataset_root: Optional[Union[str, Path]] = None,
-        f_imread: TImReader = imread_cv2,
+        f_imread: Optional[TImReader] = None,
         cache_size: Optional[int] = 100_000,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
@@ -76,8 +76,8 @@ class BaseDataset(Dataset):
             extra_data: Dictionary with additional information which we want to put into batches. We assume that
                 the length of each record in this structure is the same as dataset's size.
             transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
-            dataset_root: Path to the images dir, set ``None`` if you provided the absolute paths in your dataframe
-            f_imread: Function to read the images
+            dataset_root: Path to the images' dir, set ``None`` if you provided the absolute paths in your dataframe
+            f_imread: Function to read the images, pass ``None`` so we pick it autmatically based on provided transforms
             cache_size: Size of the dataset's cache
             input_tensors_key: Key to put tensors into the batches
             labels_key: Key to put labels into the batches
@@ -120,7 +120,7 @@ class BaseDataset(Dataset):
         self.df = df
         self.extra_data = extra_data
         self.transform = transform if transform else get_transforms("norm_albu")
-        self.f_imread = f_imread
+        self.f_imread = f_imread if f_imread else get_im_reader_for_transforms(transform)
         self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
         )
@@ -317,7 +317,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         transform=transforms_train,
         cache_size=cache_size,
-        f_imread=f_imread_train or get_im_reader_for_transforms(transforms_train),
+        f_imread=f_imread_train,
     )
 
     # val (query + gallery)
@@ -327,7 +327,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         transform=transforms_val,
         cache_size=cache_size,
-        f_imread=f_imread_val or get_im_reader_for_transforms(transforms_val),
+        f_imread=f_imread_val,
     )
 
     return train_dataset, valid_dataset
