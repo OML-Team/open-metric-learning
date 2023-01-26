@@ -35,7 +35,7 @@ from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, imread_cv2
+from oml.utils.images.images import TImReader
 
 
 class BaseDataset(Dataset):
@@ -249,7 +249,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         extra_data: Optional[Dict[str, Any]] = None,
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
-        f_imread: TImReader = imread_cv2,
+        f_imread: Optional[TImReader] = None,
         cache_size: Optional[int] = 100_000,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,

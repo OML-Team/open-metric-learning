@@ -5,10 +5,9 @@ precision: 32
 accelerator: gpu
 devices: 2
 
-dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
-logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
 
 num_workers: 20
 max_epochs: 1000
@@ -36,7 +35,7 @@ scheduling:
     args:
       gamma: 5e-3
       milestones:
-        - $(freeze_n_epochs)
+        - ${freeze_n_epochs}
 
 sampler:
   name: category_balance
@@ -50,10 +49,15 @@ sampler:
 bs_val: 128
 top_n: 5
 metric_for_checkpointing: OVERALL/cmc/1
+log_images: False
 metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 5]
-  map_top_k: [1, 5]
-  precision_top_k: [1, 5]
+  map_top_k: [5]
+  fmr_vals: []  # Since InShop is a big dataset you should be careful with increasing of the memory footprint, which is needed to calculate fmr
+  pfc_variance: []
+  return_only_main_category: True
+  visualize_only_main_category: True
 
 neptune_project: NEWYORKER/similarity-api
 
@@ -69,6 +73,7 @@ transforms_val:
     im_size: 224
     crop_size: 224
 
+cache_extracted_embeddings_on_disk: True
 transforms_extraction:
   name: norm_resize_hypvit_torch
   args:
@@ -76,7 +81,7 @@ transforms_extraction:
     crop_size: 224
 
 tags:
-  - sop
+  - inshop
   - postprocessing
   - node1
 

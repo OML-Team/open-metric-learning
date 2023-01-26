@@ -11,7 +11,8 @@ from omegaconf import DictConfig
 from pandas import DataFrame
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import Tensor, nn
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 from torch.utils.data import DataLoader
 
 from oml.const import (
@@ -50,11 +51,11 @@ from oml.utils.misc_torch import elementwise_dist
 class PairwiseModule(pl.LightningModule):
     def __init__(
         self,
-        pairwise_model,
+        pairwise_model: IPairwiseModel,
         pairs_miner,
-        criterion,
-        optimizer,
-        scheduler,
+        criterion: nn.Module,
+        optimizer: Optimizer,
+        scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
         input_tensors_key: str = INPUT_TENSORS_KEY,
@@ -82,7 +83,7 @@ class PairwiseModule(pl.LightningModule):
         self.monitor_metric = scheduler_monitor_metric
         self.freeze_n_epochs = freeze_n_epochs
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch: Dict[str, Any], batch_idx: int) -> Tensor:
         ids1, ids2, is_negative = self.miner.sample(features=batch[self.embeddings_key], labels=batch[self.labels_key])
         x1 = batch[self.input_tensors_key][ids1]
         x2 = batch[self.input_tensors_key][ids2]
@@ -97,7 +98,8 @@ class PairwiseModule(pl.LightningModule):
         self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if self.scheduler is not None:
-            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
+            print("xxx lr", self.scheduler.get_last_lr()[0])
+            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         return loss
 
@@ -207,22 +209,26 @@ class ImagesSiameseTrivial(IPairwiseModel):
         return elementwise_dist(x1, x2, p=2)
 
 
-def compute_embeddings(
+def extract_embeddings(
     dataset_root: Path,
     dataframe_name: str,
+    save_root: Path,
+    save_file_postfix: str,
     extractor: IExtractor,
     transforms_extraction: TTransforms,
     num_workers: int,
     batch_size: int,
+    cache_on_disk: int,
 ) -> Tuple[Tensor, Tensor, DataFrame, DataFrame]:
-    postfix = getattr(extractor, "weights")  # todo
-    save_path = Path(dataset_root / f"embeddings_{postfix}.pkl")
-
     df = pd.read_csv(dataset_root / dataframe_name)
-    df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)  # todo
 
-    if save_path.is_file():
+    # it has now affect if paths are global already
+    df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)
+
+    save_path = Path(save_root / f"embeddings_{save_file_postfix}.pkl")
+    if save_path.is_file() and cache_on_disk:
         embeddings = torch.load(save_path, map_location="cpu")
+        print("Embeddings have been loaded from the disk.")
     else:
         embeddings = inference_on_images(
             model=extractor,
@@ -232,7 +238,9 @@ def compute_embeddings(
             batch_size=batch_size,
             verbose=True,
         ).cpu()
-        torch.save(embeddings, save_path)
+        if cache_on_disk:
+            torch.save(embeddings, save_path)
+            print("Embeddings have been saved to the disk.")
 
     train_mask = df["split"] == "train"
 
@@ -252,13 +260,16 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
-    emb_train, emb_val, df_train, df_val = compute_embeddings(
+    emb_train, emb_val, df_train, df_val = extract_embeddings(
         extractor=extractor,
         dataset_root=Path(cfg["dataset_root"]),
+        save_root=Path(cfg["dataset_root"]),
+        save_file_postfix=cfg["extractor"]["args"].get("weights", "unknown_weights"),
         dataframe_name=cfg["dataframe_name"],
         transforms_extraction=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
         batch_size=cfg["bs_val"],
+        cache_on_disk=cfg["cache_extracted_embeddings_on_disk"],
     )
 
     train_dataset = DatasetWithLabels(
@@ -267,14 +278,15 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
-    sampler = parse_sampler_from_config(cfg, dataset=train_dataset)
-    loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
-
     valid_dataset = DatasetQueryGallery(
         df=df_val,
         transform=get_transforms_by_cfg(cfg["transforms_val"]),
         extra_data={EMBEDDINGS_KEY: emb_val},
     )
+
+    sampler = parse_sampler_from_config(cfg, dataset=train_dataset)
+    assert sampler is not None
+    loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
 
     loader_val = DataLoader(
         dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"], shuffle=False
@@ -297,6 +309,7 @@ def pl_train_pairwise(cfg: DictConfig) -> None:
 
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
+    extractor = get_extractor_by_cfg(cfg["extractor"])
     # siamese = ImagesSiamese(extractor=extractor)
     siamese = ImagesSiameseTrivial(extractor=extractor)
     criterion = torch.nn.BCEWithLogitsLoss()
@@ -365,8 +378,7 @@ def pl_train_pairwise(cfg: DictConfig) -> None:
     )
 
     if is_ddp:
-        # trainer.fit(model=pl_module)
-        trainer.validate(verbose=True, model=pl_module)
+        trainer.fit(model=pl_module)
     else:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
 

@@ -50,7 +50,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
         ii_top = torch.topk(distances, k=top_n, largest=False)[1]
 
         # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
-        print("Postprocessor's inference has been started...")
+        print("\nPostprocessor's inference has been started...")
         distances_upd = self.inference(queries=queries, galleries=galleries, ii_top=ii_top, top_n=top_n)
         distances_upd = distances_upd.to(distances.device)
 
