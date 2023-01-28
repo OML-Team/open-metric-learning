@@ -95,7 +95,7 @@ def test_concat_siamese(constructor: IExtractor, args: Dict[str, Any], default_a
     output1 = extractor(im1, im2)
     assert output1.ndim == 1
 
-    fname = f"{default_arch}_with_head_random.pth"
+    fname = f"{default_arch}_siamese_random.pth"
     torch.save({"state_dict": extractor.state_dict()}, fname)
     net = constructor(weights=None, arch=default_arch, **args)
     extractor = ConcatSiamese(extractor=net, mlp_hidden_dims=[128, 10], weights=fname).eval()
