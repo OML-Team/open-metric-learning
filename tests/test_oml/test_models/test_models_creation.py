@@ -7,6 +7,7 @@ import torch
 from oml.interfaces.models import IExtractor
 from oml.models.projection import ExtractorWithMLP
 from oml.models.resnet import ResnetExtractor
+from oml.models.siamese import ConcatSiamese
 from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
 
@@ -65,14 +66,42 @@ def test_extractor_with_mlp(constructor: IExtractor, args: Dict[str, Any], defau
     im = torch.randn(1, 3, 224, 224)
 
     net = constructor(weights=None, arch=default_arch, **args)
-    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128])
+    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128]).eval()
     features1 = extractor(im)
 
     fname = f"{default_arch}_with_mlp_random.pth"
     torch.save({"state_dict": extractor.state_dict()}, fname)
     net = constructor(weights=None, arch=default_arch, **args)
-    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128], weights=fname)
+    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128], weights=fname).eval()
     Path(fname).unlink()
     features2 = extractor(im)
 
     assert torch.allclose(features1, features2)
+
+
+@pytest.mark.parametrize(
+    "constructor,args,default_arch",
+    [
+        (ViTExtractor, vit_args, "vits8"),
+        (ResnetExtractor, resnet_args, "resnet50"),
+    ],
+)
+def test_concat_siamese(constructor: IExtractor, args: Dict[str, Any], default_arch: str) -> None:
+    im1 = torch.randn(2, 3, 32, 32)
+    im2 = torch.randn(2, 3, 32, 32)
+
+    net = constructor(weights=None, arch=default_arch, **args)
+    extractor = ConcatSiamese(extractor=net, mlp_hidden_dims=[128, 10]).eval()
+    output1 = extractor(im1, im2)
+    assert output1.ndim == 1
+
+    fname = f"{default_arch}_with_head_random.pth"
+    torch.save({"state_dict": extractor.state_dict()}, fname)
+    net = constructor(weights=None, arch=default_arch, **args)
+    extractor = ConcatSiamese(extractor=net, mlp_hidden_dims=[128, 10], weights=fname).eval()
+    Path(fname).unlink()
+    output2 = extractor(im1, im2)
+
+    assert output2.ndim == 1
+
+    assert torch.allclose(output1, output2)

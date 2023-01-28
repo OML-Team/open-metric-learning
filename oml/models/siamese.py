@@ -1,8 +1,15 @@
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import torch
 from torch import Tensor, nn
+from torch.nn.modules.activation import Sigmoid
 from torchvision.models import resnet18
+from torchvision.ops import MLP
 
 from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
+from oml.models.utils import remove_prefix_from_state_dict
+from oml.utils.io import download_checkpoint
 from oml.utils.misc_torch import elementwise_dist
 
 
@@ -78,28 +85,59 @@ class ResNetSiamese(IPairwiseModel):
         return x
 
 
-class ImagesSiamese(IPairwiseModel, IFreezable):
+class ConcatSiamese(IPairwiseModel, IFreezable):
     """
     This model concatenates two inputs and passes them through
     a given backbone and applyies a head after that.
+
     """
 
-    def __init__(self, backbone: IExtractor) -> None:
-        super(ImagesSiamese, self).__init__()
-        self.extractor = backbone
-        feat_dim = self.extractor.feat_dim
+    pretrained_models: Dict[str, Any] = {}
 
-        # todo: parametrize
-        self.head = nn.Sequential(
-            *[
-                nn.Linear(feat_dim, feat_dim // 2, bias=True),
-                nn.Dropout(),
-                nn.Sigmoid(),
-                nn.Linear(feat_dim // 2, 1, bias=False),
-            ]
+    def __init__(
+        self,
+        extractor: IExtractor,
+        mlp_hidden_dims: List[int],
+        weights: Optional[Union[str, Path]] = None,
+        strict_load: bool = True,
+    ) -> None:
+        """
+
+        Args:
+            extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
+            mlp_hidden_dims: Hidden dimensions of the head
+            weights: Path to weights file or ``None`` for random initialization
+            strict_load: Whether to use ``self.load_state_dict`` with strict argument
+
+        """
+        super(ConcatSiamese, self).__init__()
+        self.extractor = extractor
+
+        self.head = MLP(
+            in_channels=self.extractor.feat_dim,
+            hidden_channels=[*mlp_hidden_dims, 1],
+            activation_layer=Sigmoid,
+            dropout=0.5,
+            inplace=None,
         )
 
+        # turn off the last bias
+        self.head[-2] = nn.Linear(self.head[-2].in_features, self.head[-2].out_features, bias=False)
+
+        # turn off the last dropout
+        self.head[-1] = nn.Identity()
+
         self.train_backbone = True
+
+        if weights:
+            if weights in self.pretrained_models:
+                url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
+                weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+
+            loaded = torch.load(weights, map_location="cpu")
+            loaded = loaded.get("state_dict", loaded)
+            loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
+            self.load_state_dict(loaded, strict=strict_load)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = torch.concat([x1, x2], dim=2)
@@ -108,9 +146,15 @@ class ImagesSiamese(IPairwiseModel, IFreezable):
             x = self.extractor(x)
 
         x = self.head(x)
-        x = x.squeeze()
+        x = x.view(len(x))
 
-        return
+        return x
+
+    def freeze(self) -> None:
+        self.train_backbone = False
+
+    def unfreeze(self) -> None:
+        self.train_backbone = True
 
 
 __all__ = ["LinearSiamese", "ResNetSiamese"]
