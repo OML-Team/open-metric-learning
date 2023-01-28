@@ -1,8 +1,8 @@
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models import resnet18
 
-from oml.interfaces.models import IPairwiseModel
+from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
 from oml.utils.misc_torch import elementwise_dist
 
 
@@ -76,6 +76,41 @@ class ResNetSiamese(IPairwiseModel):
         x2 = self.backbone(x2)
         x = elementwise_dist(x1, x2, p=2)
         return x
+
+
+class ImagesSiamese(IPairwiseModel, IFreezable):
+    """
+    This model concatenates two inputs and passes them through
+    a given backbone and applyies a head after that.
+    """
+
+    def __init__(self, backbone: IExtractor) -> None:
+        super(ImagesSiamese, self).__init__()
+        self.extractor = backbone
+        feat_dim = self.extractor.feat_dim
+
+        # todo: parametrize
+        self.head = nn.Sequential(
+            *[
+                nn.Linear(feat_dim, feat_dim // 2, bias=True),
+                nn.Dropout(),
+                nn.Sigmoid(),
+                nn.Linear(feat_dim // 2, 1, bias=False),
+            ]
+        )
+
+        self.train_backbone = True
+
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        x = torch.concat([x1, x2], dim=2)
+
+        with torch.set_grad_enabled(self.train_backbone):
+            x = self.extractor(x)
+
+        x = self.head(x)
+        x = x.squeeze()
+
+        return
 
 
 __all__ = ["LinearSiamese", "ResNetSiamese"]
