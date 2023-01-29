@@ -61,9 +61,9 @@ PairwiseImagesPostprocessor
     .. automethod:: __init__
     .. automethod:: inference
 
-LinearSiamese
+LinearTrivialDistanceSiamese
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.LinearSiamese
+.. autoclass:: oml.models.siamese.LinearTrivialDistanceSiamese
     :undoc-members:
     :show-inheritance:
 

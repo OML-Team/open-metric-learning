@@ -4,7 +4,11 @@ from warnings import warn
 from oml.interfaces.models import IExtractor, IPairwiseModel
 from oml.models.projection import ExtractorWithMLP
 from oml.models.resnet import ResnetExtractor
-from oml.models.siamese import ConcatSiamese, LinearSiamese, TrivialDistanceSiamese
+from oml.models.siamese import (
+    ConcatSiamese,
+    LinearTrivialDistanceSiamese,
+    TrivialDistanceSiamese,
+)
 from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
 from oml.utils.misc import TCfg, dictconfig_to_dict
@@ -17,7 +21,7 @@ EXTRACTORS_REGISTRY = {
 }
 
 PAIRWISE_MODELS_REGISTRY = {
-    "linear_siamese": LinearSiamese,
+    "linear_siamese": LinearTrivialDistanceSiamese,
     "concat_siamese": ConcatSiamese,
     "trivial_distance_siamese": TrivialDistanceSiamese,
 }

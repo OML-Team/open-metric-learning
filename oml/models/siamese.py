@@ -12,10 +12,9 @@ from oml.utils.io import download_checkpoint
 from oml.utils.misc_torch import elementwise_dist
 
 
-class LinearSiamese(IPairwiseModel):
+class LinearTrivialDistanceSiamese(IPairwiseModel):
     """
-    The model takes two embeddings as inputs, transforms them linearly
-    and estimates the distance between them.
+    This model is a useful tool mostly for development.
 
     """
 
@@ -27,7 +26,7 @@ class LinearSiamese(IPairwiseModel):
                 the model simply estimates L2 distance between the original embeddings.
 
         """
-        super(LinearSiamese, self).__init__()
+        super(LinearTrivialDistanceSiamese, self).__init__()
         self.feat_dim = feat_dim
 
         self.proj = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
@@ -154,4 +153,4 @@ class TrivialDistanceSiamese(IPairwiseModel):
         return elementwise_dist(x1, x2, p=2)
 
 
-__all__ = ["LinearSiamese", "ConcatSiamese", "TrivialDistanceSiamese"]
+__all__ = ["LinearTrivialDistanceSiamese", "ConcatSiamese", "TrivialDistanceSiamese"]
