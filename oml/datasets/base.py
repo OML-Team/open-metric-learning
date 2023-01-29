@@ -120,7 +120,7 @@ class BaseDataset(Dataset):
         self.df = df
         self.extra_data = extra_data
         self.transform = transform if transform else get_transforms("norm_albu")
-        self.f_imread = f_imread if f_imread else get_im_reader_for_transforms(transform)
+        self.f_imread = f_imread or get_im_reader_for_transforms(transform)
         self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
         )

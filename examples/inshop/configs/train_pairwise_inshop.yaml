@@ -48,7 +48,7 @@ sampler:
     weight_categories: True
 
 bs_val: 128
-top_n: 5
+postprocessing_top_n: 5
 metric_for_checkpointing: OVERALL/cmc/1
 log_images: False
 metric_args:

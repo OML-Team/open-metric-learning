@@ -60,6 +60,7 @@ def pairwise_inference_on_embeddings(
     num_workers: int,
     batch_size: int,
     verbose: bool = False,
+    use_fp16: bool = False,
 ) -> Tensor:
     device = get_device(model)
 
@@ -80,6 +81,7 @@ def pairwise_inference_on_embeddings(
         num_workers=num_workers,
         batch_size=batch_size,
         verbose=verbose,
+        use_fp16=use_fp16,
     )
 
     return output

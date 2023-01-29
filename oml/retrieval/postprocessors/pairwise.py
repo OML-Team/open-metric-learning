@@ -26,6 +26,7 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
     """
 
     top_n: int
+    verbose: bool = False
 
     def process(self, distances: Tensor, queries: Any, galleries: Any) -> Tensor:
         """
@@ -50,7 +51,8 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
         ii_top = torch.topk(distances, k=top_n, largest=False)[1]
 
         # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
-        print("\nPostprocessor's inference has been started...")
+        if self.verbose:
+            print("\nPostprocessor's inference has been started...")
         distances_upd = self.inference(queries=queries, galleries=galleries, ii_top=ii_top, top_n=top_n)
         distances_upd = distances_upd.to(distances.device)
 
@@ -100,6 +102,7 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
         num_workers: int,
         batch_size: int,
         verbose: bool = False,
+        use_fp16: bool = False,
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
         embeddings_key: str = EMBEDDINGS_KEY,
@@ -113,6 +116,7 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
             num_workers: Number of workers in DataLoader
             batch_size: Batch size that will be used in DataLoader
             verbose: Set ``True`` if you want to see progress bar for an inference
+            use_fp16: Set ``True`` if you want to use half precision
             is_query_key: Key to access a binary mask indicates queries in case of using ``process_by_dict``
             is_gallery_key: Key to access a binary mask indicates galleries in case of using ``process_by_dict``
             embeddings_key: Key to access embeddings in case of using ``process_by_dict``
@@ -125,6 +129,7 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.verbose = verbose
+        self.use_fp16 = use_fp16
 
         self.is_query_key = is_query_key
         self.is_gallery_key = is_gallery_key
@@ -152,6 +157,7 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
             num_workers=self.num_workers,
             batch_size=self.batch_size,
             verbose=self.verbose,
+            use_fp16=self.use_fp16,
         )
         distances_upd = distances_upd.view(n_queries, top_n)
         return distances_upd
@@ -175,6 +181,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
         num_workers: int,
         batch_size: int,
         verbose: bool = True,
+        use_fp16: bool = False,
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
         paths_key: str = PATHS_KEY,
@@ -189,6 +196,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
             num_workers: Number of workers in DataLoader
             batch_size: Batch size that will be used in DataLoader
             verbose: Set ``True`` if you want to see progress bar for an inference
+            use_fp16: Set ``True`` if you want to use half precision
             is_query_key: Key to access a binary mask indicates queries in case of using ``process_by_dict``
             is_gallery_key: Key to access a binary mask indicates galleries in case of using ``process_by_dict``
             paths_key: Key to access paths to images in case of using ``process_by_dict``
@@ -202,6 +210,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.verbose = verbose
+        self.use_fp16 = use_fp16
 
         self.is_query_key = is_query_key
         self.is_gallery_key = is_gallery_key
@@ -230,6 +239,7 @@ class PairwiseImagesPostprocessor(PairwisePostprocessor):
             num_workers=self.num_workers,
             batch_size=self.batch_size,
             verbose=self.verbose,
+            use_fp16=self.use_fp16,
         )
         distances_upd = distances_upd.view(n_queries, top_n)
         return distances_upd
