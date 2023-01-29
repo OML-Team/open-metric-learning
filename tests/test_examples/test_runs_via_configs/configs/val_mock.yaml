@@ -20,7 +20,7 @@ postprocessor:
   args:
     top_n: 3
     pairwise_model:
-      name: trivial_distance_siamese.yaml
+      name: trivial_distance_siamese
       args:
         extractor:
           name: resnet
