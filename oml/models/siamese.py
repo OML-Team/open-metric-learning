@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional, Union
 import torch
 from torch import Tensor, nn
 from torch.nn.modules.activation import Sigmoid
-from torchvision.models import resnet18
 from torchvision.ops import MLP
 
 from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
@@ -52,39 +51,6 @@ class LinearSiamese(IPairwiseModel):
         return y
 
 
-class ResNetSiamese(IPairwiseModel):
-    """
-    The model takes two images as inputs, passes them through backbone and
-    estimates the distance between them.
-
-    """
-
-    def __init__(self, pretrained: bool) -> None:
-        """
-        Args:
-            pretrained: Set ``True`` if you want to use pretrained model.
-
-        """
-        super(ResNetSiamese, self).__init__()
-        self.backbone = resnet18(pretrained=pretrained)
-
-    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
-        """
-
-        Args:
-            x1: The first input image.
-            x2: The second input image.
-
-        Returns:
-            Distance between images.
-
-        """
-        x1 = self.backbone(x1)
-        x2 = self.backbone(x2)
-        x = elementwise_dist(x1, x2, p=2)
-        return x
-
-
 class ConcatSiamese(IPairwiseModel, IFreezable):
     """
     This model concatenates two inputs and passes them through
@@ -102,7 +68,6 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         strict_load: bool = True,
     ) -> None:
         """
-
         Args:
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
             mlp_hidden_dims: Hidden dimensions of the head
@@ -157,4 +122,36 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         self.train_backbone = True
 
 
-__all__ = ["LinearSiamese", "ResNetSiamese"]
+class TrivialDistanceSiamese(IPairwiseModel):
+    """
+    This model is a useful tool mostly for development.
+
+    """
+
+    pretrained_models: Dict[str, Any] = {}
+
+    def __init__(self, extractor: IExtractor) -> None:
+        """
+        Args:
+            extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
+
+        """
+        super(TrivialDistanceSiamese, self).__init__()
+        self.extractor = extractor
+
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        """
+        Args:
+            x1: The first input.
+            x2: The second input.
+
+        Returns:
+            Distance between inputs.
+
+        """
+        x1 = self.extractor(x1)
+        x2 = self.extractor(x2)
+        return elementwise_dist(x1, x2, p=2)
+
+
+__all__ = ["LinearSiamese", "ConcatSiamese", "TrivialDistanceSiamese"]

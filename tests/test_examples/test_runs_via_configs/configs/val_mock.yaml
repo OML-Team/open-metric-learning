@@ -20,9 +20,17 @@ postprocessor:
   args:
     top_n: 3
     pairwise_model:
-      name: resnet_siamese
+      name: trivial_distance_siamese.yaml
       args:
-        pretrained: False
+        extractor:
+          name: resnet
+          args:
+            arch: resnet50
+            gem_p: 7.0
+            remove_fc: True
+            normalise_features: False
+            weights: resnet50_moco_v2
+            strict_load: False
     transforms:
       name: norm_resize_torch
       args:
