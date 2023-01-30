@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.list_inference import inference_on_images
+from oml.inference.flat import inference_on_images
 from oml.models.resnet import ResnetExtractor
 from oml.models.siamese import TrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
@@ -26,7 +26,13 @@ def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[T
     galleries = paths[is_gallery]
 
     embeddings = inference_on_images(
-        model=model, paths=paths.tolist(), transform=transforms, num_workers=0, batch_size=4, verbose=False
+        model=model,
+        paths=paths.tolist(),
+        transform=transforms,
+        num_workers=0,
+        batch_size=4,
+        verbose=False,
+        use_fp16=True,
     )
 
     distances = pairwise_dist(x1=embeddings[is_query], x2=embeddings[is_gallery], p=2)
@@ -45,7 +51,13 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int) -> None:
     distances, queries, galleries = get_validation_results(model=extractor, transforms=transforms)
 
     postprocessor = PairwiseImagesPostprocessor(
-        top_n=top_n, pairwise_model=pairwise_model, transforms=transforms, num_workers=0, batch_size=4, verbose=False
+        top_n=top_n,
+        pairwise_model=pairwise_model,
+        transforms=transforms,
+        num_workers=0,
+        batch_size=4,
+        verbose=False,
+        use_fp16=True,
     )
     distances_processed = postprocessor.process(distances=distances.clone(), queries=queries, galleries=galleries)
 

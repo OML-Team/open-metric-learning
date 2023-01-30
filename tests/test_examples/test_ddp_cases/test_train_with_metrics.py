@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import SequentialSampler
 
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT
-from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.lightning.modules.ddp import ModuleDDP
 from oml.samplers.balance import BalanceSampler
 
 from .run_retrieval_experiment_ddp import MetricValCallbackWithSaving
