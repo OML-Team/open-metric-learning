@@ -1,12 +1,12 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.train_pairwise import (
+from oml.lightning.entrypoints.train_postprocessor import (
     pl_train_postprocessor,  # type: ignore
 )
 
 
-@hydra.main(config_path="configs", config_name="train_postprocessor_sop.yaml")
+@hydra.main(config_path="configs_experimental", config_name="train_postprocessor_sop.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     pl_train_postprocessor(cfg)
 

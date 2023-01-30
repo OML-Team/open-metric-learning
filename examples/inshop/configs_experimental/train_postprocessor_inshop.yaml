@@ -68,7 +68,7 @@ metric_args:
   return_only_main_category: True
   visualize_only_main_category: True
 
-neptune_project: NEWYORKER/similarity-api
+neptune_project: null
 
 transforms_train:
   name: augs_hypvit_torch
@@ -92,7 +92,6 @@ transforms_extraction:
 tags:
   - inshop
   - postprocessing
-  - node1
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
