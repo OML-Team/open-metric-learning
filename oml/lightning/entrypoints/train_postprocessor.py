@@ -3,13 +3,14 @@ from pathlib import Path
 from pprint import pprint
 from typing import Tuple
 
+import pandas as pd
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig
 from torch import device as tdevice
 from torch.utils.data import DataLoader
 
-from oml.const import EMBEDDINGS_KEY, TCfg
+from oml.const import BBOXES_COLUMNS, EMBEDDINGS_KEY, TCfg
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.inference.flat import inference_on_dataframe
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
@@ -34,7 +35,7 @@ from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
 
 
-def get_md5sum_of_extraction_stage_cfg(cfg: TCfg) -> str:
+def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
     cfg_extraction_str = (
         str(cfg["extractor"])
         + str(cfg["transforms_extraction"])
@@ -47,19 +48,28 @@ def get_md5sum_of_extraction_stage_cfg(cfg: TCfg) -> str:
 
 
 def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
+    # todo: support bounding bboxes
+    df = pd.read_csv(Path(cfg["dataset_root"]) / cfg["dataframe_name"])
+    assert not set(BBOXES_COLUMNS).intersection(
+        df.columns
+    ), "We've found bboxes in the dataframe, but they're not supported yet."
+
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
+    if cfg["embeddings_cache_dir"] is not None:
+        cache_file = Path(cfg["embeddings_cache_dir"]) / f"embeddings_{get_hash_of_extraction_stage_cfg(cfg)[:5]}.pkl"
+    else:
+        cache_file = None
+
     emb_train, emb_val, df_train, df_val = inference_on_dataframe(
         extractor=extractor,
-        dataset_root=Path(cfg["dataset_root"]),
-        save_root=Path(cfg["dataset_root"]),
-        save_file_postfix=get_md5sum_of_extraction_stage_cfg(cfg)[:5],
+        dataset_root=cfg["dataset_root"],
+        output_cache_path=cache_file,
         dataframe_name=cfg["dataframe_name"],
         transforms_extraction=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
         batch_size=cfg["bs_val"],
-        cache_on_disk=cfg["cache_extracted_embeddings_on_disk"],
         use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 

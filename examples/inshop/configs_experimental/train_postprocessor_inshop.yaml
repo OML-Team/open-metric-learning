@@ -82,7 +82,7 @@ transforms_val:
     im_size: 224
     crop_size: 224
 
-cache_extracted_embeddings_on_disk: True
+embeddings_cache_dir: ${dataset_root}
 transforms_extraction:
   name: norm_resize_hypvit_torch
   args:

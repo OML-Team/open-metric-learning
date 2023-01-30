@@ -51,13 +51,11 @@ def inference_on_images(
 def inference_on_dataframe(
     dataset_root: Path,
     dataframe_name: str,
-    save_root: Path,
-    save_file_postfix: str,
+    output_cache_path: Optional[Path],
     extractor: IExtractor,
     transforms_extraction: TTransforms,
     num_workers: int,
     batch_size: int,
-    cache_on_disk: int,
     use_fp16: bool,
 ) -> Tuple[Tensor, Tensor, DataFrame, DataFrame]:
     df = pd.read_csv(dataset_root / dataframe_name)
@@ -67,9 +65,8 @@ def inference_on_dataframe(
 
     check_retrieval_dataframe_format(df)
 
-    save_path = Path(save_root / f"embeddings_{save_file_postfix}.pkl")
-    if save_path.is_file() and cache_on_disk:
-        embeddings = torch.load(save_path, map_location="cpu")
+    if (output_cache_path is not None) and output_cache_path.is_file():
+        embeddings = torch.load(output_cache_path, map_location="cpu")
         print("Embeddings have been loaded from the disk.")
     else:
         embeddings = inference_on_images(
@@ -82,8 +79,8 @@ def inference_on_dataframe(
             use_fp16=use_fp16,
             accumulate_on_cpu=True,
         )
-        if cache_on_disk:
-            torch.save(embeddings, save_path)
+        if output_cache_path is not None:
+            torch.save(embeddings, output_cache_path)
             print("Embeddings have been saved to the disk.")
 
     train_mask = df[SPLIT_COLUMN] == "train"
