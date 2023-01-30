@@ -165,7 +165,6 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
 
     if is_ddp:
         trainer.fit(model=pl_module)
-        # trainer.validate(model=pl_module, verbose=True)
     else:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
 
