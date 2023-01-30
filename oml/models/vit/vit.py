@@ -82,7 +82,6 @@ class ViTExtractor(IExtractor):
         assert arch in self.constructors
         super(ViTExtractor, self).__init__()
 
-        self.weights = weights
         self.normalise_features = normalise_features
         self.mscale = use_multi_scale
         self.arch = arch
@@ -90,7 +89,7 @@ class ViTExtractor(IExtractor):
         factory_fun = self.constructors[self.arch]
 
         self.model = factory_fun(pretrained=False)
-        if self.weights is None:
+        if weights is None:
             return
 
         if weights in self.pretrained_models:

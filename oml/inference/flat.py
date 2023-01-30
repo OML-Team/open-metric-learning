@@ -26,6 +26,7 @@ def inference_on_images(
     verbose: bool = False,
     f_imread: Optional[TImReader] = None,
     use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
@@ -41,6 +42,7 @@ def inference_on_images(
         batch_size=batch_size,
         verbose=verbose,
         use_fp16=use_fp16,
+        accumulate_on_cpu=accumulate_on_cpu,
     )
 
     return outputs
@@ -78,7 +80,8 @@ def inference_on_dataframe(
             batch_size=batch_size,
             verbose=True,
             use_fp16=use_fp16,
-        ).cpu()
+            accumulate_on_cpu=True,
+        )
         if cache_on_disk:
             torch.save(embeddings, save_path)
             print("Embeddings have been saved to the disk.")

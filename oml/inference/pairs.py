@@ -21,6 +21,7 @@ def pairwise_inference_on_images(
     verbose: bool = True,
     f_imread: Optional[TImReader] = None,
     use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     device = get_device(model)
 
@@ -48,6 +49,7 @@ def pairwise_inference_on_images(
         batch_size=batch_size,
         verbose=verbose,
         use_fp16=use_fp16,
+        accumulate_on_cpu=accumulate_on_cpu,
     )
 
     return output
@@ -61,6 +63,7 @@ def pairwise_inference_on_embeddings(
     batch_size: int,
     verbose: bool = False,
     use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     device = get_device(model)
 
@@ -82,6 +85,7 @@ def pairwise_inference_on_embeddings(
         batch_size=batch_size,
         verbose=verbose,
         use_fp16=use_fp16,
+        accumulate_on_cpu=accumulate_on_cpu,
     )
 
     return output
