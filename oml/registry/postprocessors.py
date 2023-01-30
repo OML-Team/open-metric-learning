@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from oml.const import TCfg
 from oml.interfaces.retrieval import IDistancesPostprocessor
-from oml.registry.pairwise_models import get_pairwise_model_by_cfg
+from oml.registry.models import get_pairwise_model_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import (
     PairwiseEmbeddingsPostprocessor,

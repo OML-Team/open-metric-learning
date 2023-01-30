@@ -9,13 +9,18 @@ from torch.optim import Optimizer
 from oml.const import CONFIGS_PATH, TCfg
 from oml.registry.losses import LOSSES_REGISTRY, get_criterion
 from oml.registry.miners import MINERS_REGISTRY, get_miner
-from oml.registry.models import MODELS_REGISTRY, get_extractor, raise_if_needed
+from oml.registry.models import (
+    EXTRACTORS_REGISTRY,
+    PAIRWISE_MODELS_REGISTRY,
+    get_extractor,
+    get_pairwise_model,
+    raise_if_needed,
+)
 from oml.registry.optimizers import (
     OPTIMIZERS_REGISTRY,
     get_optimizer,
     get_optimizer_by_cfg,
 )
-from oml.registry.pairwise_models import PAIRWISE_MODELS_REGISTRY, get_pairwise_model
 from oml.registry.postprocessors import POSTPROCESSORS_REGISTRY, get_postprocessor
 from oml.registry.samplers import SAMPLERS_REGISTRY, get_sampler
 from oml.registry.schedulers import SCHEDULERS_REGISTRY, get_scheduler
@@ -38,7 +43,7 @@ def get_opt() -> Optimizer:
 @pytest.mark.parametrize(
     "folder_name,registry,factory_fun,runtime_args",
     [
-        ("model", MODELS_REGISTRY, get_extractor, None),
+        ("model", EXTRACTORS_REGISTRY, get_extractor, None),
         ("criterion", LOSSES_REGISTRY, get_criterion, None),
         ("miner", MINERS_REGISTRY, get_miner, None),
         ("optimizer", OPTIMIZERS_REGISTRY, get_optimizer, {"params": get_params()}),
