@@ -5,9 +5,9 @@ precision: 16
 accelerator: gpu
 devices: 2
 
-dataset_root: /nydl/data/Stanford_Online_Products/
+dataset_root: data/Stanford_Online_Products/
 dataframe_name: df.csv
-logs_root: /nydl/logs/Stanford_Online_Products/
+logs_root: logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20

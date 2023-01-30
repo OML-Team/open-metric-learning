@@ -1,4 +1,3 @@
-import hashlib
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
@@ -148,21 +147,6 @@ def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
         verbose=True,
         filename="best",
     )
-
-
-def get_cfg_md5sum(cfg: TCfg) -> str:
-    cfg = dictconfig_to_dict(cfg)
-    cfg = cfg.copy()
-
-    # we ignore keys that cannot change the essence of the experiment
-    keys_to_remove = ("logs_root", "logs_folder", "tags", "postfix", "neptune_project", "hydra_dir", "hydra")
-    for key in keys_to_remove:
-        if key in cfg:
-            cfg.pop(key)
-
-    md5sum = hashlib.md5(str(cfg).encode("utf-8")).hexdigest()
-
-    return md5sum
 
 
 __all__ = [

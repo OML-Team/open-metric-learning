@@ -23,6 +23,7 @@ def _inference(
     batch_size: int,
     verbose: bool,
     use_fp16: bool,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     assert hasattr(dataset, "index_key"), "We expect that your dataset returns samples ids in __getitem__ method"
 
@@ -41,6 +42,8 @@ def _inference(
         with temporary_setting_model_mode(model, set_train=False):
             for batch in loader:
                 out = apply_model(model, batch)
+                if accumulate_on_cpu:
+                    out = out.cpu()
                 outputs_list.append(out)
                 ids.extend(batch[dataset.index_key].long().tolist())
 

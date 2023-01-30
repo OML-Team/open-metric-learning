@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 from pprint import pprint
 from typing import Tuple
@@ -14,7 +15,6 @@ from oml.inference.flat import inference_on_dataframe
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
-    get_cfg_md5sum,
     initialize_logging,
     parse_ckpt_callback_from_config,
     parse_engine_params_from_config,
@@ -34,6 +34,18 @@ from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
 
 
+def get_md5sum_of_extraction_stage_cfg(cfg: TCfg) -> str:
+    cfg_extraction_str = (
+        str(cfg["extractor"])
+        + str(cfg["transforms_extraction"])
+        + cfg["dataframe_name"]
+        + str(cfg.get("precision", 32))
+    )
+
+    md5sum = hashlib.md5(cfg_extraction_str.encode("utf-8")).hexdigest()
+    return md5sum
+
+
 def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
@@ -42,7 +54,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         extractor=extractor,
         dataset_root=Path(cfg["dataset_root"]),
         save_root=Path(cfg["dataset_root"]),
-        save_file_postfix=get_cfg_md5sum(cfg)[:5],
+        save_file_postfix=get_md5sum_of_extraction_stage_cfg(cfg)[:5],
         dataframe_name=cfg["dataframe_name"],
         transforms_extraction=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
@@ -153,6 +165,7 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
 
     if is_ddp:
         trainer.fit(model=pl_module)
+        # trainer.validate(model=pl_module, verbose=True)
     else:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
 
