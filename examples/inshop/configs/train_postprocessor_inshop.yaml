@@ -22,6 +22,12 @@ extractor:
     weights: vits16_inshop
     arch: vits16
 
+pairwise_model:
+  name: concat_siamese
+  args:
+    mlp_hidden_dims: [384, 192]
+    extractor: ${extractor}
+
 optimizer:
   name: adam
   args:

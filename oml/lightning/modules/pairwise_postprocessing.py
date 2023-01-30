@@ -1,27 +1,24 @@
 from typing import Any, Dict, Optional, Union
 
 import pytorch_lightning as pl
-import torch
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
-from torch import nn
+from torch import Tensor, nn
+from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
-from oml.interfaces.models import IExtractor, IFreezable
+from oml.interfaces.models import IFreezable, IPairwiseModel
+from oml.lightning.entrypoints.train_pairwise import PairsMiner
 from oml.lightning.modules.ddp import ModuleDDP
 
 
-class RetrievalModule(pl.LightningModule):
-    """
-    This is a base module to train your model with Lightning.
-
-    """
-
+class PairwiseModule(pl.LightningModule):
     def __init__(
         self,
-        model: IExtractor,
+        pairwise_model: IPairwiseModel,
+        pairs_miner: PairsMiner,
         criterion: nn.Module,
-        optimizer: torch.optim.Optimizer,
+        optimizer: Optimizer,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
@@ -34,7 +31,8 @@ class RetrievalModule(pl.LightningModule):
         """
 
         Args:
-            model: Model to train
+            pairwise_model: Pairwise model to train
+            pairs_miner: Miner of pairs
             criterion: Criterion to optimize
             optimizer: Optimizer
             scheduler: Learning rate scheduler
@@ -51,47 +49,41 @@ class RetrievalModule(pl.LightningModule):
         """
         pl.LightningModule.__init__(self)
 
-        self.model = model
+        self.model = pairwise_model
+        self.miner = pairs_miner
         self.criterion = criterion
         self.optimizer = optimizer
-
-        self.monitor_metric = scheduler_monitor_metric
         self.scheduler = scheduler
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
-
         self.input_tensors_key = input_tensors_key
         self.labels_key = labels_key
         self.embeddings_key = embeddings_key
-
+        self.monitor_metric = scheduler_monitor_metric
         self.freeze_n_epochs = freeze_n_epochs
-        assert freeze_n_epochs == 0 or isinstance(
-            model, IFreezable
-        ), f"Model must be {IFreezable.__name__} to use this."
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        embeddings = self.model(x)
-        return embeddings
+    def training_step(self, batch: Dict[str, Any], batch_idx: int) -> Tensor:
+        ids1, ids2, is_negative = self.miner.sample(features=batch[self.embeddings_key], labels=batch[self.labels_key])
+        x1 = batch[self.input_tensors_key][ids1]
+        x2 = batch[self.input_tensors_key][ids2]
+        target = is_negative.float()
 
-    def training_step(self, batch: Dict[str, Any], batch_idx: int) -> torch.Tensor:
-        embeddings = self.model(batch[self.input_tensors_key])
-        bs = len(embeddings)
+        predictions = self.model(x1=x1, x2=x2)
 
-        loss = self.criterion(embeddings, batch[self.labels_key])
-        loss_name = (getattr(self.criterion, "criterion_name", "") + "_loss").strip("_")
-        self.log(loss_name, loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
+        loss = self.criterion(predictions, target.to(predictions.device))
 
-        if hasattr(self.criterion, "last_logs"):
-            self.log_dict(self.criterion.last_logs, prog_bar=False, batch_size=bs, on_step=True, on_epoch=False)
+        bs = len(batch[self.labels_key])
+
+        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         if self.scheduler is not None:
-            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=False)
+            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
 
         return loss
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
-        embeddings = self.model.extract(batch[self.input_tensors_key])
-        return {**batch, **{self.embeddings_key: embeddings}}
+        # We simply accumulate batches here since we apply postprocessor during metrics calculation
+        return batch
 
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:
@@ -106,32 +98,21 @@ class RetrievalModule(pl.LightningModule):
                 scheduler["monitor"] = self.monitor_metric
             return [self.optimizer], [scheduler]
 
+    def on_epoch_start(self) -> None:
+        if self.freeze_n_epochs and isinstance(self.model, IFreezable):
+            if self.current_epoch >= self.freeze_n_epochs:
+                self.model.unfreeze()
+            else:
+                self.model.freeze()
+
     def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
         # https://github.com/Lightning-AI/lightning/issues/1595
         tqdm_dict = super().get_progress_bar_dict()
         tqdm_dict.pop("v_num", None)
         return tqdm_dict
 
-    def on_epoch_start(self) -> None:
-        if self.freeze_n_epochs > 0:
-            if not isinstance(self.model, IFreezable):
-                raise ValueError(
-                    f"You want to freeze a model for {self.freeze_n_epochs},"
-                    f"but model does not implement the {IFreezable.__name__} interface."
-                )
 
-            if self.current_epoch >= self.freeze_n_epochs:
-                self.model.unfreeze()
-            else:
-                self.model.freeze()
-
-
-class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
-    """
-    This is a base module for the training of your model with Lightning in DDP.
-
-    """
-
+class PairwiseModuleDDP(PairwiseModule, ModuleDDP):
     def __init__(
         self,
         loaders_train: Optional[TRAIN_DATALOADERS] = None,
@@ -140,7 +121,7 @@ class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
         **kwargs: Any,
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
-        RetrievalModule.__init__(self, *args, **kwargs)
+        PairwiseModule.__init__(self, *args, **kwargs)
 
 
-__all__ = ["RetrievalModule", "RetrievalModuleDDP"]
+__all__ = ["PairwiseModule", "PairwiseModuleDDP"]

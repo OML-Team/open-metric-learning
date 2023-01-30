@@ -1,33 +1,21 @@
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Tuple
 
 import pandas as pd
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig
 from pandas import DataFrame
-from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import Tensor
 from torch import device as tdevice
-from torch import nn
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 from torch.utils.data import DataLoader
 
-from oml.const import (
-    EMBEDDINGS_KEY,
-    INPUT_TENSORS_KEY,
-    LABELS_KEY,
-    PAIR_1ST_KEY,
-    PAIR_2ND_KEY,
-    PATHS_COLUMN,
-    TCfg,
-)
+from oml.const import EMBEDDINGS_KEY, PATHS_COLUMN, TCfg
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.inference.list_inference import inference_on_images
 from oml.interfaces.miners import ITripletsMinerInBatch
-from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
+from oml.interfaces.models import IExtractor
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
@@ -38,17 +26,19 @@ from oml.lightning.entrypoints.parser import (
     parse_sampler_from_config,
     parse_scheduler_from_config,
 )
-from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.lightning.modules.pairwise_postprocessing import (
+    PairwiseModule,
+    PairwiseModuleDDP,
+)
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
-from oml.registry.models import get_extractor_by_cfg
+from oml.registry.models import get_extractor_by_cfg, get_pairwise_model_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.utils import TTransforms
 from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
-from oml.utils.misc_torch import elementwise_dist
 
 
 class PairsMiner:
@@ -77,149 +67,6 @@ class PairsMiner:
         is_negative[: len(ii_a_1)] = 0
 
         return torch.tensor([*ii_a_1, *ii_a_2]).long(), torch.tensor([*ii_p, *ii_n]).long(), is_negative
-
-
-class PairwiseModule(pl.LightningModule):
-    def __init__(
-        self,
-        pairwise_model: IPairwiseModel,
-        pairs_miner: PairsMiner,
-        criterion: nn.Module,
-        optimizer: Optimizer,
-        scheduler: Optional[_LRScheduler] = None,
-        scheduler_interval: str = "step",
-        scheduler_frequency: int = 1,
-        input_tensors_key: str = INPUT_TENSORS_KEY,
-        pair_1st_key: str = PAIR_1ST_KEY,
-        pair_2nd_key: str = PAIR_2ND_KEY,
-        labels_key: str = LABELS_KEY,
-        embeddings_key: str = EMBEDDINGS_KEY,
-        scheduler_monitor_metric: Optional[str] = None,
-        freeze_n_epochs: int = 0,
-    ):
-        pl.LightningModule.__init__(self)
-
-        self.model = pairwise_model
-        self.miner = pairs_miner
-        self.criterion = criterion
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-        self.scheduler_interval = scheduler_interval
-        self.scheduler_frequency = scheduler_frequency
-        self.input_tensors_key = input_tensors_key
-        self.pair_1st_key = pair_1st_key
-        self.pair_2nd_key = pair_2nd_key
-        self.labels_key = labels_key
-        self.embeddings_key = embeddings_key
-        self.monitor_metric = scheduler_monitor_metric
-        self.freeze_n_epochs = freeze_n_epochs
-
-    def training_step(self, batch: Dict[str, Any], batch_idx: int) -> Tensor:
-        ids1, ids2, is_negative = self.miner.sample(features=batch[self.embeddings_key], labels=batch[self.labels_key])
-        x1 = batch[self.input_tensors_key][ids1]
-        x2 = batch[self.input_tensors_key][ids2]
-        target = is_negative.float()
-
-        predictions = self.model(x1=x1, x2=x2)
-
-        loss = self.criterion(predictions, target.to(predictions.device))
-
-        bs = len(batch[self.labels_key])
-
-        self.log("loss", loss.item(), prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
-
-        if self.scheduler is not None:
-            self.log("lr", self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=bs, on_step=True, on_epoch=True)
-
-        return loss
-
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
-        return batch
-
-    def configure_optimizers(self) -> Any:
-        if self.scheduler is None:
-            return self.optimizer
-        else:
-            scheduler = {
-                "scheduler": self.scheduler,
-                "interval": self.scheduler_interval,
-                "frequency": self.scheduler_frequency,
-            }
-            if isinstance(self.scheduler, ReduceLROnPlateau):
-                scheduler["monitor"] = self.monitor_metric
-            return [self.optimizer], [scheduler]
-
-    def on_epoch_start(self) -> None:
-        if self.freeze_n_epochs and isinstance(self.model, IFreezable):
-            if self.current_epoch >= self.freeze_n_epochs:
-                self.model.unfreeze()
-            else:
-                self.model.freeze()
-
-    def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
-        # https://github.com/Lightning-AI/lightning/issues/1595
-        tqdm_dict = super().get_progress_bar_dict()
-        tqdm_dict.pop("v_num", None)
-        return tqdm_dict
-
-
-class PairwiseModuleDDP(PairwiseModule, ModuleDDP):
-    def __init__(
-        self,
-        loaders_train: Optional[TRAIN_DATALOADERS] = None,
-        loaders_val: Optional[EVAL_DATALOADERS] = None,
-        *args: Any,
-        **kwargs: Any,
-    ):
-        ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
-        PairwiseModule.__init__(self, *args, **kwargs)
-
-
-class ImagesSiamese(IPairwiseModel, IFreezable):
-    def __init__(self, extractor: IExtractor) -> None:
-        super(ImagesSiamese, self).__init__()
-        self.extractor = extractor
-        feat_dim = self.extractor.feat_dim
-
-        # todo: parametrize
-        self.head = nn.Sequential(
-            *[
-                nn.Linear(feat_dim, feat_dim // 2, bias=True),
-                nn.Dropout(),
-                nn.Sigmoid(),
-                nn.Linear(feat_dim // 2, 1, bias=False),
-            ]
-        )
-
-        self.train_backbone = True
-
-    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
-        x = torch.concat([x1, x2], dim=2)
-
-        with torch.set_grad_enabled(self.train_backbone):
-            x = self.extractor(x)
-
-        x = self.head(x)
-        x = x.view(len(x))
-
-        return x
-
-    def freeze(self) -> None:
-        self.train_backbone = False
-
-    def unfreeze(self) -> None:
-        self.train_backbone = True
-
-
-class ImagesSiameseTrivial(IPairwiseModel):
-    def __init__(self, extractor: IExtractor) -> None:
-        super(ImagesSiameseTrivial, self).__init__()
-        self.extractor = extractor
-
-    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
-        x1 = self.extractor(x1)
-        x2 = self.extractor(x2)
-        return elementwise_dist(x1, x2, p=2)
 
 
 def extract_embeddings(
@@ -325,8 +172,7 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
 
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
-    extractor = get_extractor_by_cfg(cfg["extractor"])
-    siamese = ImagesSiamese(extractor=extractor)
+    siamese = get_pairwise_model_by_cfg(cfg["pairwise_model"])
     criterion = torch.nn.BCEWithLogitsLoss()
 
     pairs_miner = PairsMiner(mode="hard")
