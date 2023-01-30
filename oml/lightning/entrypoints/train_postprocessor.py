@@ -1,7 +1,7 @@
 import hashlib
 from pathlib import Path
 from pprint import pprint
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import pandas as pd
 import pytorch_lightning as pl
@@ -32,14 +32,24 @@ from oml.registry.models import get_extractor_by_cfg, get_pairwise_model_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
-from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
+from oml.utils.misc import (
+    dictconfig_to_dict,
+    flatten_dict,
+    load_dotenv,
+    set_global_seed,
+)
 
 
 def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
+    def dict2str(dictionary: Dict[str, Any]) -> str:
+        flatten_items = flatten_dict(dictionary).items()
+        sorted(flatten_items, key=lambda x: x[0])
+        return str(flatten_items)
+
     cfg_extraction_str = (
-        str(cfg["extractor"])
-        + str(cfg["transforms_extraction"])
-        + cfg["dataframe_name"]
+        dict2str(cfg["extractor"])
+        + dict2str(cfg["transforms_extraction"])
+        + str(cfg["dataframe_name"])
         + str(cfg.get("precision", 32))
     )
 
