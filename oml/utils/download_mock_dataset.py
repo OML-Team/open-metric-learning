@@ -16,23 +16,20 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def check_mock_dataset_exists(dataset_root: Union[str, Path]) -> bool:
-    return check_exists_and_validate_md5(dataset_root, MOCK_DATASET_MD5)
-
-
-def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def download_mock_dataset(dataset_root: Union[str, Path], check_md5: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to download mock dataset which is already prepared in the required format.
 
     Args:
         dataset_root: Path to save the dataset
+        check_md5: Set ``True`` to check md5sum
 
     Returns: Dataframes for the training and validation stages
 
     """
     dataset_root = Path(dataset_root)
 
-    if not check_mock_dataset_exists(dataset_root):
+    if not check_exists_and_validate_md5(dataset_root, MOCK_DATASET_MD5 if check_md5 else None):
         try:
             download_folder_from_remote_storage(remote_folder=MOCK_DATASET_PATH.name, local_folder=str(dataset_root))
         except Exception:
@@ -40,8 +37,8 @@ def download_mock_dataset(dataset_root: Union[str, Path]) -> Tuple[pd.DataFrame,
     else:
         print(f"Mock dataset has been downloaded already to {dataset_root}")
 
-    if not check_mock_dataset_exists(dataset_root):
-        raise Exception(f"Downloaded mock dataset is invalid, {dataset_root}")
+    if not check_exists_and_validate_md5(dataset_root, MOCK_DATASET_MD5 if check_md5 else None):
+        raise Exception("Downloaded mock dataset is invalid.")
 
     df = pd.read_csv(Path(dataset_root) / "df.csv")
 

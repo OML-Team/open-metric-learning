@@ -1,0 +1,87 @@
+postfix: "postprocessing"
+
+seed: 42
+precision: 16
+accelerator: cpu
+devices: 2
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_category.csv
+logs_root: logs
+
+num_workers: 0
+max_epochs: 2
+valid_period: 1
+
+extractor:
+  name: vit
+  args:
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
+
+optimizer:
+  name: adam
+  args:
+    lr: 1e-5
+
+freeze_n_epochs: 1
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      gamma: 5e-3
+      milestones:
+        - ${freeze_n_epochs}
+
+sampler:
+  name: category_balance
+  args:
+    n_labels: 2
+    n_instances: 2
+    n_categories: 1
+    resample_labels: True
+    weight_categories: True
+
+bs_val: 128
+postprocessing_top_n: 5
+metric_for_checkpointing: OVERALL/cmc/1
+log_images: True
+metric_args:
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  return_only_main_category: False
+  visualize_only_main_category: False
+
+neptune_project: null
+
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 32
+    min_scale: 0.8
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 32
+    crop_size: 32
+
+cache_extracted_embeddings_on_disk: True
+transforms_extraction:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 32
+    crop_size: 32
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs
