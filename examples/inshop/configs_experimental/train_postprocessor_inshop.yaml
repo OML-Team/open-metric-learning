@@ -28,6 +28,8 @@ pairwise_model:
     mlp_hidden_dims: [384, 192]
     extractor: ${extractor}
 
+hard_pairs_mining: True
+
 optimizer:
   name: adam
   args:

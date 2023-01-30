@@ -1,21 +1,16 @@
 from pathlib import Path
 from pprint import pprint
-from typing import List, Tuple
+from typing import Tuple
 
-import pandas as pd
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig
-from pandas import DataFrame
-from torch import Tensor
 from torch import device as tdevice
 from torch.utils.data import DataLoader
 
-from oml.const import EMBEDDINGS_KEY, PATHS_COLUMN, TCfg
+from oml.const import EMBEDDINGS_KEY, TCfg
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.inference.list_inference import inference_on_images
-from oml.interfaces.miners import ITripletsMinerInBatch
-from oml.interfaces.models import IExtractor
+from oml.inference.flat import inference_on_dataframe
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
@@ -31,98 +26,19 @@ from oml.lightning.modules.pairwise_postprocessing import (
     PairwiseModuleDDP,
 )
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.miners.inbatch_hard_tri import HardTripletsMiner
+from oml.miners.pairs import PairsMiner
 from oml.registry.models import get_extractor_by_cfg, get_pairwise_model_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
-from oml.transforms.images.utils import TTransforms
 from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
-
-
-class PairsMiner:
-    miner: ITripletsMinerInBatch
-
-    def __init__(self, mode: str):
-        super().__init__()
-        assert mode in ("hard", "all")
-
-        self.mode = mode
-
-        if self.mode == "all":
-            self.miner = AllTripletsMiner()
-        elif self.mode == "hard":
-            self.miner = HardTripletsMiner()
-        else:
-            ValueError(f"Unexpected mining mode {self.mode}")
-
-    def sample(self, features: Tensor, labels: List[int]) -> Tuple[Tensor, Tensor, Tensor]:
-        ii_a, ii_p, ii_n = self.miner._sample(features, labels=labels)
-
-        ii_a_1, ii_p = zip(*list(set(list(map(lambda x: tuple(sorted([x[0], x[1]])), zip(ii_a, ii_p))))))
-        ii_a_2, ii_n = zip(*list(set(list(map(lambda x: tuple(sorted([x[0], x[1]])), zip(ii_a, ii_n))))))
-
-        is_negative = torch.ones(len(ii_a_1) + len(ii_a_2)).bool()
-        is_negative[: len(ii_a_1)] = 0
-
-        return torch.tensor([*ii_a_1, *ii_a_2]).long(), torch.tensor([*ii_p, *ii_n]).long(), is_negative
-
-
-def extract_embeddings(
-    dataset_root: Path,
-    dataframe_name: str,
-    save_root: Path,
-    save_file_postfix: str,
-    extractor: IExtractor,
-    transforms_extraction: TTransforms,
-    num_workers: int,
-    batch_size: int,
-    cache_on_disk: int,
-    use_fp16: bool,
-) -> Tuple[Tensor, Tensor, DataFrame, DataFrame]:
-    df = pd.read_csv(dataset_root / dataframe_name)
-
-    # it has now affect if paths are global already
-    df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)
-
-    save_path = Path(save_root / f"embeddings_{save_file_postfix}.pkl")
-    if save_path.is_file() and cache_on_disk:
-        embeddings = torch.load(save_path, map_location="cpu")
-        print("Embeddings have been loaded from the disk.")
-    else:
-        embeddings = inference_on_images(
-            model=extractor,
-            paths=df[PATHS_COLUMN],
-            transform=transforms_extraction,
-            num_workers=num_workers,
-            batch_size=batch_size,
-            verbose=True,
-            use_fp16=use_fp16,
-        ).cpu()
-        if cache_on_disk:
-            torch.save(embeddings, save_path)
-            print("Embeddings have been saved to the disk.")
-
-    train_mask = df["split"] == "train"
-
-    emb_train = embeddings[train_mask]
-    emb_val = embeddings[~train_mask]
-
-    df_train = df[train_mask]
-    df_train.reset_index(inplace=True, drop=True)
-
-    df_val = df[~train_mask]
-    df_val.reset_index(inplace=True, drop=True)
-
-    return emb_train, emb_val, df_train, df_val
 
 
 def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
-    emb_train, emb_val, df_train, df_val = extract_embeddings(
+    emb_train, emb_val, df_train, df_val = inference_on_dataframe(
         extractor=extractor,
         dataset_root=Path(cfg["dataset_root"]),
         save_root=Path(cfg["dataset_root"]),
@@ -174,8 +90,7 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
 
     siamese = get_pairwise_model_by_cfg(cfg["pairwise_model"])
     criterion = torch.nn.BCEWithLogitsLoss()
-
-    pairs_miner = PairsMiner(mode="hard")
+    pairs_miner = PairsMiner(hard_mining=cfg["hard_pairs_mining"])
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], **{"params": siamese.parameters()})
 
     module_kwargs = {}
@@ -220,10 +135,7 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
     )
 
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
-    metrics_clb = metrics_clb_constructor(
-        metric=metrics_calc,
-        log_images=cfg.get("log_images", True),
-    )
+    metrics_clb = metrics_clb_constructor(metric=metrics_calc, log_images=cfg.get("log_images", True))
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],
