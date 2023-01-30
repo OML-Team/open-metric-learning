@@ -21,6 +21,7 @@ def get_vit_and_mlp(
 ) -> nn.Module:
     """
     Function for creation of ViT model and MLP projection.
+
     """
     vit = ViTExtractor(
         weights=None,
@@ -66,10 +67,11 @@ class ExtractorWithMLP(IExtractor, IFreezable):
     ):
         """
         Args:
-            extractor: Instance of IExtractor (e.g. ViTExtractor)
+            extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
             mlp_features: Sizes of projection layers
             weights: Path to weights file or ``None`` for random initialization
             strict_load: Whether to use ``self.load_state_dict`` with strict argument
+
         """
         IExtractor.__init__(self)
         self.train_backbone = train_backbone
@@ -79,6 +81,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             if weights in self.pretrained_models:
                 url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
                 weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
