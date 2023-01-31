@@ -183,8 +183,17 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 [comment]:lightning-ddp-end
 </p>
 </details>
+ㅤ
+ㅤ
 
-Postprocessor (todo description)
+You can also boost the retrieval accuracy of your features extractor by adding a postprocessor.
+In the example below we train a siamese model to re-rank top retrieval outputs of the original model
+by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
+
+For the Config-API analogue of the pipeline below, please, check the
+[config](https://github.com/OML-Team/open-metric-learning/blob/main/examples/sop/configs_experimental/train_postprocessor_sop.yaml).
+The documentation for related classes is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html).
+*Note, this functionality is new and a work still in progress.*
 
 <details>
 <summary>Postprocessor: Training + Validation</summary>
