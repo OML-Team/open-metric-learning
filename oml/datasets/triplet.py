@@ -28,7 +28,7 @@ class TriDataset(Dataset):
         transforms: albu.Compose,
         expand_ratio: float,
         f_imread: TImReader = imread_cv2,
-        cache_size: Optional[int] = 50_000,
+        cache_size: Optional[int] = 0,
         index_key: str = INDEX_KEY,
     ):
         """

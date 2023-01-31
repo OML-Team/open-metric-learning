@@ -51,7 +51,7 @@ class BaseDataset(Dataset):
         transform: Optional[TTransforms] = None,
         dataset_root: Optional[Union[str, Path]] = None,
         f_imread: Optional[TImReader] = None,
-        cache_size: Optional[int] = 100_000,
+        cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
         paths_key: str = PATHS_KEY,
@@ -250,7 +250,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
         f_imread: Optional[TImReader] = None,
-        cache_size: Optional[int] = 100_000,
+        cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
         paths_key: str = PATHS_KEY,
@@ -297,7 +297,7 @@ def get_retrieval_datasets(
     f_imread_train: Optional[TImReader] = None,
     f_imread_val: Optional[TImReader] = None,
     dataframe_name: str = "df.csv",
-    cache_size: Optional[int] = 100_000,
+    cache_size: Optional[int] = 0,
     verbose: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
