@@ -450,9 +450,8 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 </p>
 </details>
 ㅤ
-ㅤ
 
-### Postprocessing
+#### Postprocessing
 
 You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
 to check the examples above first).
