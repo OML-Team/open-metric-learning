@@ -463,7 +463,7 @@ by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
 For the Config-API analogue of the pipeline below, please, check the
 [config](https://github.com/OML-Team/open-metric-learning/blob/main/examples/sop/configs_experimental/train_postprocessor_sop.yaml).
 The documentation for related classes is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html).
-Note, this functionality is new and a work still in progress.
+*Note, this functionality is new and a work still in progress.*
 
 <details>
 <summary>Postprocessor: Training + Validation</summary>
