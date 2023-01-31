@@ -7,7 +7,11 @@ from tqdm.auto import tqdm
 
 from oml.ddp.patching import patch_dataloader_to_ddp
 from oml.ddp.utils import get_world_size_safe, is_ddp, sync_dicts_ddp
-from oml.utils.misc_torch import drop_duplicates_by_ids, temporary_setting_model_mode
+from oml.utils.misc_torch import (
+    drop_duplicates_by_ids,
+    get_device,
+    temporary_setting_model_mode,
+)
 
 
 @torch.no_grad()
@@ -18,6 +22,8 @@ def _inference(
     num_workers: int,
     batch_size: int,
     verbose: bool,
+    use_fp16: bool,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     assert hasattr(dataset, "index_key"), "We expect that your dataset returns samples ids in __getitem__ method"
 
@@ -25,16 +31,21 @@ def _inference(
 
     if is_ddp():
         loader = patch_dataloader_to_ddp(loader)
-    else:
-        loader = tqdm(loader) if verbose else loader
+
+    if verbose:
+        loader = tqdm(loader, desc=str(get_device(model)))
 
     outputs_list = []
     ids = []
-    with temporary_setting_model_mode(model, set_train=False):
-        for batch in loader:
-            out = apply_model(model, batch)
-            outputs_list.append(out)
-            ids.extend(batch[dataset.index_key].long().tolist())
+
+    with torch.autocast(device_type="cuda", dtype=torch.float16 if use_fp16 else torch.float32):
+        with temporary_setting_model_mode(model, set_train=False):
+            for batch in loader:
+                out = apply_model(model, batch)
+                if accumulate_on_cpu:
+                    out = out.cpu()
+                outputs_list.append(out)
+                ids.extend(batch[dataset.index_key].long().tolist())
 
     outputs = torch.cat(outputs_list).detach()
 

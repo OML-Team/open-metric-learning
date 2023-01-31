@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict, List
 
 from torch import Tensor
 
@@ -24,6 +24,30 @@ class IDistancesPostprocessor:
 
         Returns:
             An updated distances matrix with the shape of ``[Q, G]``
+
+        """
+        raise NotImplementedError()
+
+    def process_by_dict(self, distances: Tensor, data: Dict[str, Any]) -> Tensor:
+        """
+        This method is the analogue of ``process``, but data is passed as a dictionary,
+        so we need to use the corresponding keys, which also have to be obtainable by
+        ``needed_keys`` property.
+
+        Args:
+            distances: Matrix with the shape of ``[Q, G]``
+            data: Dictionary of data
+
+        Returns:
+            An updated distances matrix with the shape of ``[Q, G]``
+
+        """
+        raise NotImplementedError()
+
+    @property
+    def needed_keys(self) -> List[str]:
+        """
+        Returns: Keys that will be used to process data using ``process_by_dict``
 
         """
         raise NotImplementedError()

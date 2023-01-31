@@ -6,7 +6,7 @@ from torch import Tensor
 from oml.datasets.pairs import EmbeddingPairsDataset, ImagePairsDataset
 from oml.inference.abstract import _inference
 from oml.interfaces.models import IPairwiseModel
-from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
+from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader
 from oml.utils.misc_torch import get_device
 
@@ -20,6 +20,8 @@ def pairwise_inference_on_images(
     batch_size: int,
     verbose: bool = True,
     f_imread: Optional[TImReader] = None,
+    use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     device = get_device(model)
 
@@ -27,7 +29,8 @@ def pairwise_inference_on_images(
         paths1=paths1,
         paths2=paths2,
         transform=transform,
-        f_imread=get_im_reader_for_transforms(transform) if f_imread is None else f_imread,
+        f_imread=f_imread,
+        cache_size=0,
     )
 
     def _apply(
@@ -45,6 +48,8 @@ def pairwise_inference_on_images(
         num_workers=num_workers,
         batch_size=batch_size,
         verbose=verbose,
+        use_fp16=use_fp16,
+        accumulate_on_cpu=accumulate_on_cpu,
     )
 
     return output
@@ -57,6 +62,8 @@ def pairwise_inference_on_embeddings(
     num_workers: int,
     batch_size: int,
     verbose: bool = False,
+    use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
 ) -> Tensor:
     device = get_device(model)
 
@@ -77,6 +84,8 @@ def pairwise_inference_on_embeddings(
         num_workers=num_workers,
         batch_size=batch_size,
         verbose=verbose,
+        use_fp16=use_fp16,
+        accumulate_on_cpu=accumulate_on_cpu,
     )
 
     return output

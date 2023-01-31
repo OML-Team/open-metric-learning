@@ -27,7 +27,7 @@ metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 5]
   map_top_k: [5]
-  fmr_vals: [1]
+  fmr_vals: [0.01]
   pfc_variance: [0.5, 0.9, 0.99]
   return_only_main_category: False
   visualize_only_main_category: True

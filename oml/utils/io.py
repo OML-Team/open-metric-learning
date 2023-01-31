@@ -37,11 +37,14 @@ def calc_folder_hash(folder: Union[Path, str]) -> str:
     return folder_hash.hexdigest()
 
 
-def check_exists_and_validate_md5(path: Union[str, Path], md5: str) -> bool:
+def check_exists_and_validate_md5(path: Union[str, Path], md5: Optional[str] = None) -> bool:
     path = Path(path)
 
     if not path.exists():
         return False
+
+    if not md5:
+        return True
 
     if path.is_dir():
         return calc_folder_hash(path) == md5

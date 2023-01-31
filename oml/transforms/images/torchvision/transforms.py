@@ -17,10 +17,12 @@ def get_augs_torch(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD)
     return augs
 
 
-def get_augs_hypvit(im_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD) -> t.Compose:
+def get_augs_hypvit(
+    im_size: int = 224, min_scale: float = 0.2, mean: TNormParam = MEAN, std: TNormParam = STD
+) -> t.Compose:
     augs = t.Compose(
         [
-            t.RandomResizedCrop(im_size, scale=(0.2, 1.0), interpolation=InterpolationMode.BICUBIC),
+            t.RandomResizedCrop(im_size, scale=(min_scale, 1.0), interpolation=InterpolationMode.BICUBIC),
             t.RandomHorizontalFlip(),
             t.ToTensor(),
             t.Normalize(mean=mean, std=std),

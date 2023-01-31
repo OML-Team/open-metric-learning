@@ -20,6 +20,8 @@ class Accumulator:
                                  We will take values via these keys calling
                                  >>> self.update_data()
         """
+        assert len(keys_to_accumulate) == len(set(keys_to_accumulate)), "All the keys have to be unique!"
+
         self.keys_to_accumulate = keys_to_accumulate
         self.num_samples = None
 

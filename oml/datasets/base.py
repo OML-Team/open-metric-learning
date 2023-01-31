@@ -35,7 +35,7 @@ from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, imread_cv2
+from oml.utils.images.images import TImReader
 
 
 class BaseDataset(Dataset):
@@ -47,10 +47,11 @@ class BaseDataset(Dataset):
     def __init__(
         self,
         df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
         transform: Optional[TTransforms] = None,
         dataset_root: Optional[Union[str, Path]] = None,
-        f_imread: TImReader = imread_cv2,
-        cache_size: int = 100_000,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
         paths_key: str = PATHS_KEY,
@@ -72,9 +73,11 @@ class BaseDataset(Dataset):
 
                   >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORIES_COLUMN
 
+            extra_data: Dictionary with additional information which we want to put into batches. We assume that
+                the length of each record in this structure is the same as dataset's size.
             transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
-            dataset_root: Path to the images dir, set ``None`` if you provided the absolute paths in your dataframe
-            f_imread: Function to read the images
+            dataset_root: Path to the images' dir, set ``None`` if you provided the absolute paths in your dataframe
+            f_imread: Function to read the images, pass ``None`` so we pick it autmatically based on provided transforms
             cache_size: Size of the dataset's cache
             input_tensors_key: Key to put tensors into the batches
             labels_key: Key to put labels into the batches
@@ -88,6 +91,11 @@ class BaseDataset(Dataset):
 
         """
         df = df.copy()
+
+        if extra_data is not None:
+            assert all(
+                len(record) == len(df) for record in extra_data.values()
+            ), "All the extra records need to have the size equal to the dataset's size"
 
         assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
 
@@ -110,9 +118,12 @@ class BaseDataset(Dataset):
             df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
 
         self.df = df
+        self.extra_data = extra_data
         self.transform = transform if transform else get_transforms("norm_albu")
-        self.f_imread = f_imread
-        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
+        self.f_imread = f_imread or get_im_reader_for_transforms(transform)
+        self.read_bytes_image = (
+            lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        )
 
         available_augs_types = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(self.transform, available_augs_types), f"Type of transforms must be in {available_augs_types}"
@@ -125,7 +136,7 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         row = self.df.iloc[idx]
 
-        img_bytes = self.read_bytes_image_cached(row[PATHS_COLUMN])
+        img_bytes = self.read_bytes_image(row[PATHS_COLUMN])  # type: ignore
         img = self.f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
@@ -165,6 +176,13 @@ class BaseDataset(Dataset):
                 }
             )
 
+        if self.extra_data:
+            for key, record in self.extra_data.items():
+                if key in item:
+                    raise ValueError(f"<extra_data> and dataset share the same key: {key}")
+                else:
+                    item[key] = record[idx]
+
         return item
 
     def __len__(self) -> int:
@@ -193,6 +211,19 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
     def get_labels(self) -> np.ndarray:
         return np.array(self.df[LABELS_COLUMN].tolist())
 
+    def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
+        """
+        Returns:
+            Label to category mapping if there was category information in DataFrame, None otherwise.
+
+        """
+        if CATEGORIES_COLUMN in self.df.columns:
+            label2category = dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
+        else:
+            label2category = None
+
+        return label2category
+
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     """
@@ -215,10 +246,11 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     def __init__(
         self,
         df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
         dataset_root: Optional[Union[str, Path]] = None,
         transform: Optional[albu.Compose] = None,
-        f_imread: TImReader = imread_cv2,
-        cache_size: int = 100_000,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
         paths_key: str = PATHS_KEY,
@@ -232,6 +264,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
+            extra_data=extra_data,
             dataset_root=dataset_root,
             transform=transform,
             f_imread=f_imread,
@@ -264,7 +297,7 @@ def get_retrieval_datasets(
     f_imread_train: Optional[TImReader] = None,
     f_imread_val: Optional[TImReader] = None,
     dataframe_name: str = "df.csv",
-    cache_size: int = 100_000,
+    cache_size: Optional[int] = 0,
     verbose: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
@@ -284,7 +317,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         transform=transforms_train,
         cache_size=cache_size,
-        f_imread=f_imread_train or get_im_reader_for_transforms(transforms_train),
+        f_imread=f_imread_train,
     )
 
     # val (query + gallery)
@@ -294,7 +327,7 @@ def get_retrieval_datasets(
         dataset_root=dataset_root,
         transform=transforms_val,
         cache_size=cache_size,
-        f_imread=f_imread_val or get_im_reader_for_transforms(transforms_val),
+        f_imread=f_imread_val,
     )
 
     return train_dataset, valid_dataset

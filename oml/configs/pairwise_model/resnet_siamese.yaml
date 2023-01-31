@@ -1,3 +1,0 @@
-name: resnet_siamese
-args:
-  pretrained: False

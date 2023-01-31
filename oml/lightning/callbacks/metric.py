@@ -11,7 +11,7 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
-from oml.lightning.modules.module_ddp import ModuleDDP
+from oml.lightning.modules.ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
 

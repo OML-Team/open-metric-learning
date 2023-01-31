@@ -4,7 +4,7 @@ from functools import lru_cache
 from itertools import chain
 from pathlib import Path
 from random import sample
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
@@ -28,7 +28,7 @@ class TriDataset(Dataset):
         transforms: albu.Compose,
         expand_ratio: float,
         f_imread: TImReader = imread_cv2,
-        cache_size: int = 50_000,
+        cache_size: Optional[int] = 0,
         index_key: str = INDEX_KEY,
     ):
         """
@@ -59,7 +59,9 @@ class TriDataset(Dataset):
         self.transforms = transforms or get_normalisation_albu()
         assert isinstance(transforms, albu.Compose) or (transforms is None)
 
-        self.read_bytes_image_cached = lru_cache(maxsize=cache_size)(self._read_bytes_image)
+        self.read_bytes_image = (
+            lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
+        )
 
         self.index_key = index_key
 
@@ -71,7 +73,7 @@ class TriDataset(Dataset):
             return fin.read()
 
     def get_image(self, path: Union[Path, str]) -> np.ndarray:
-        image_bytes = self.read_bytes_image_cached(path)
+        image_bytes = self.read_bytes_image(path)  # type: ignore
         image = self.f_imread(image_bytes)
         return image
 
