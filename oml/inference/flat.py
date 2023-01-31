@@ -53,7 +53,7 @@ def inference_on_dataframe(
     dataframe_name: str,
     extractor: IExtractor,
     transforms_extraction: TTransforms,
-    output_cache_path: Optional[Path] = None,
+    output_cache_path: Optional[Union[str, Path]] = None,
     num_workers: int = 0,
     batch_size: int = 128,
     use_fp16: bool = False,
@@ -65,7 +65,7 @@ def inference_on_dataframe(
 
     check_retrieval_dataframe_format(df)
 
-    if (output_cache_path is not None) and output_cache_path.is_file():
+    if (output_cache_path is not None) and Path(output_cache_path).is_file():
         embeddings = torch.load(output_cache_path, map_location="cpu")
         print("Embeddings have been loaded from the disk.")
     else:
