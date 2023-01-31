@@ -27,7 +27,7 @@ class ListDataset(Dataset):
         transform: TTransforms = get_normalisation_torch(),
         f_imread: Optional[TImReader] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
-        cache_size: Optional[int] = 100_000,
+        cache_size: Optional[int] = 0,
         index_key: str = INDEX_KEY,
     ):
         """
