@@ -257,3 +257,5 @@ pprint(calculator.compute_metrics())  # Pairwise inference happens here
 [comment]:postprocessor-end
 </p>
 </details>
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1LBmusxwo8dPqWznmK627GNMzeDVdjMwv?usp=sharing)

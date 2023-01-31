@@ -528,6 +528,8 @@ pprint(calculator.compute_metrics())  # Pairwise inference happens here
 </p>
 </details>
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1LBmusxwo8dPqWznmK627GNMzeDVdjMwv?usp=sharing)
+
 ## Usage with PyTorch Metric Learning
 
 You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
