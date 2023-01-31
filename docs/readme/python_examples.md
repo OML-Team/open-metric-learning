@@ -129,10 +129,6 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 </p>
 </details>
 ㅤ
-ㅤ
-
-If you want to train your model in the DDP regime (Distributed Data Parallel), you
-only need to slightly change only few lines of code in the example below.
 
 <details>
 <summary>Training + Validation [Lightning Distributed]</summary>
@@ -186,7 +182,10 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ㅤ
 ㅤ
 
-You can also boost the retrieval accuracy of your features extractor by adding a postprocessor.
+### Postprocessing
+
+You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
+to check the examples above first).
 In the example below we train a siamese model to re-rank top retrieval outputs of the original model
 by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
 
@@ -260,8 +259,6 @@ for batch in valid_loader:
     calculator.update_data(data_dict=batch)
 
 pprint(calculator.compute_metrics())  # Pairwise inference happens here
-
-
 ```
 [comment]:postprocessor-end
 </p>
