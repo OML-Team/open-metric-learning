@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import torch
@@ -49,16 +49,16 @@ def inference_on_images(
 
 
 def inference_on_dataframe(
-    dataset_root: Path,
+    dataset_root: Union[Path, str],
     dataframe_name: str,
-    output_cache_path: Optional[Path],
     extractor: IExtractor,
     transforms_extraction: TTransforms,
-    num_workers: int,
-    batch_size: int,
-    use_fp16: bool,
+    output_cache_path: Optional[Path] = None,
+    num_workers: int = 0,
+    batch_size: int = 128,
+    use_fp16: bool = False,
 ) -> Tuple[Tensor, Tensor, DataFrame, DataFrame]:
-    df = pd.read_csv(dataset_root / dataframe_name)
+    df = pd.read_csv(Path(dataset_root) / dataframe_name)
 
     # it has now affect if paths are global already
     df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)
