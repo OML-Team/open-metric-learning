@@ -44,7 +44,7 @@ download_mock_dataset:
 	python oml/utils/download_mock_dataset.py
 
 .PHONY: run_tests
-run_tests:
+run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
 	$(JUPYTER_CMD) --execute examples/visualization.ipynb
 
