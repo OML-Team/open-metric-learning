@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 
 import hydra
 from omegaconf import DictConfig
@@ -10,7 +9,7 @@ from oml.utils.misc import dictconfig_to_dict
 
 sys.path.append(str((PROJECT_ROOT / "examples").absolute))
 
-from examples.inference import inference
+from examples.inference import inference  # noqa: E402
 
 
 @hydra.main(config_path="configs", config_name="inference_images_mock.yaml")
