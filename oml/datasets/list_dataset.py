@@ -10,8 +10,8 @@ from torch.utils.data import Dataset
 from oml.const import INDEX_KEY, INPUT_TENSORS_KEY
 from oml.exceptions import InvalidBBoxesException
 from oml.transforms.images.torchvision.transforms import get_normalisation_torch
-from oml.transforms.images.utils import TTransforms
-from oml.utils.images.images import TImReader, imread_cv2
+from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
+from oml.utils.images.images import TImReader
 
 TBBox = Tuple[int, int, int, int]
 TBBoxes = Sequence[Optional[TBBox]]
@@ -25,9 +25,9 @@ class ListDataset(Dataset):
         filenames_list: Sequence[Path],
         bboxes: Optional[TBBoxes] = None,
         transform: TTransforms = get_normalisation_torch(),
-        f_imread: TImReader = imread_cv2,
+        f_imread: Optional[TImReader] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
-        cache_size: Optional[int] = 100_000,
+        cache_size: Optional[int] = 0,
         index_key: str = INDEX_KEY,
     ):
         """
@@ -39,7 +39,7 @@ class ListDataset(Dataset):
                 If you want to get an embedding for the whole image, set bbox to ``None`` for
                 this particular image path. The format is ``x1, y1, x2, y2``.
             transform: torchvision or albumentations augmentations
-            f_imread: function that opens image and returns bytes
+            f_imread: Function to read the images, pass ``None`` so we pick it autmatically based on provided transforms
             input_tensors_key: Key to put tensors into the batches
             cache_size: cache_size: Size of the dataset's cache
             index_key: Key to put samples' ids into the batches
@@ -47,7 +47,7 @@ class ListDataset(Dataset):
         """
         self.filenames_list = filenames_list
         self.transform = transform
-        self.f_imread = f_imread
+        self.f_imread = f_imread or get_im_reader_for_transforms(transform)
         self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
         )

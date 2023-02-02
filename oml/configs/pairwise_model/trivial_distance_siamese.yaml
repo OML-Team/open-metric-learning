@@ -1,0 +1,11 @@
+name: trivial_distance_siamese
+args:
+  extractor:
+    name: resnet
+    args:
+      arch: resnet50
+      gem_p: 7.0
+      remove_fc: True
+      normalise_features: False
+      weights: resnet50_moco_v2
+      strict_load: False

@@ -72,7 +72,7 @@ def initialize_logging(cfg: TCfg) -> Union[bool, NeptuneLogger]:
         logger = NeptuneLogger(
             api_key=os.environ["NEPTUNE_API_TOKEN"],
             project=cfg["neptune_project"],
-            tags=list(cfg["tags"]) + [cfg["postfix"]] + [cwd.name],
+            tags=list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd.name],
             log_model_checkpoints=False,
         )
         dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}

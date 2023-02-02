@@ -96,6 +96,14 @@ def square_pad(img: np.ndarray) -> np.ndarray:
     return pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=PAD_COLOR)
 
 
+def verify_image_readable(image: bytes) -> bool:
+    try:
+        Image.open(BytesIO(image)).verify()
+        return True
+    except Exception:
+        return False
+
+
 __all__ = [
     "TImage",
     "TImReader",
@@ -105,4 +113,5 @@ __all__ = [
     "draw_bbox",
     "get_img_with_bbox",
     "square_pad",
+    "verify_image_readable",
 ]

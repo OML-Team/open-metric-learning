@@ -1,0 +1,45 @@
+postfix: "mock"
+
+seed: 42
+precision: 32
+accelerator: cpu
+devices: 1
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df.csv
+dataframe_separator: ","
+images_folder: ${dataset_root}
+features_file: ${dataset_root}/features.json
+
+logs_root: logs
+
+num_workers: 0
+cache_size: 10
+
+transforms:
+  name: norm_resize_albu
+  args:
+    im_size: 48
+
+
+batch_size: 2
+
+log_images: False
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: True
+    weights: vits16_dino
+
+tags:
+  - ${postfix}
+  - deepfashion
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+    - pkg://oml.config

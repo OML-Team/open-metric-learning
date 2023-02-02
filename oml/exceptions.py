@@ -4,3 +4,15 @@ class BaseOMLException(Exception):
 
 class InvalidBBoxesException(BaseOMLException):
     pass
+
+
+class InferenceConfigError(BaseOMLException):
+    pass
+
+
+class InvalidDataFrameColumnsException(BaseOMLException):
+    pass
+
+
+class InvalidImageException(BaseOMLException):
+    pass

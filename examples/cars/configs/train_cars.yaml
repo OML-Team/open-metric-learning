@@ -11,7 +11,7 @@ logs_root: logs/CARS196/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 100000
+cache_size: 0
 
 transforms_train:
   name: augs_albu

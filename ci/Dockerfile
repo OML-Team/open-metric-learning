@@ -31,5 +31,6 @@ COPY ci/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt ${EXTRA_INDEX}
 
 WORKDIR /oml-lib
+ENV PYTHONPATH=$PYTHONPATH:/oml-lib
 COPY . /oml-lib
 RUN pip install .

@@ -69,7 +69,7 @@ class ImagePairsDataset(IPairsDataset):
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,
         index_key: str = INDEX_KEY,
-        cache_size: Optional[int] = 100_000,
+        cache_size: Optional[int] = 0,
     ):
         """
         Args:

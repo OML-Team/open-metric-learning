@@ -13,7 +13,7 @@ logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 show_dataset_warnings: False
 
 num_workers: 20
-cache_size: 100000
+cache_size: 0
 
 transforms_train:
   name: augs_hypvit_torch
