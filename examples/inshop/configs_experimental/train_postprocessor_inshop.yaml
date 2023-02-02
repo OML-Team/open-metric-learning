@@ -5,9 +5,9 @@ precision: 16
 accelerator: gpu
 devices: 2
 
-dataset_root: data/DeepFashion_InShop/
+dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
-logs_root: logs/DeepFashion_InShop/
+logs_root: /nydl/logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -68,7 +68,7 @@ metric_args:
   return_only_main_category: True
   visualize_only_main_category: True
 
-neptune_project: null
+neptune_project: NEWYORKER/similarity-api
 
 transforms_train:
   name: augs_hypvit_torch

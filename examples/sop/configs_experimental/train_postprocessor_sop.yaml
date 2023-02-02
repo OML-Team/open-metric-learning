@@ -5,9 +5,9 @@ precision: 16
 accelerator: gpu
 devices: 2
 
-dataset_root: data/Stanford_Online_Products/
+dataset_root: /nydl/data/Stanford_Online_Products/
 dataframe_name: df.csv
-logs_root: logs/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -26,7 +26,13 @@ pairwise_model:
   name: concat_siamese
   args:
     mlp_hidden_dims: [384, 192]
-    extractor: ${extractor}
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: vits16_sop
+        arch: vits16
 
 hard_pairs_mining: True
 
@@ -68,7 +74,7 @@ metric_args:
   return_only_main_category: True
   visualize_only_main_category: True
 
-neptune_project: null
+neptune_project: NEWYORKER/similarity-api
 
 transforms_train:
   name: augs_hypvit_torch

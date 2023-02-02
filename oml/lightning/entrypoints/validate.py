@@ -39,6 +39,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         transforms_train=None,
         transforms_val=get_transforms_by_cfg(cfg["transforms_val"]),
         dataframe_name=cfg["dataframe_name"],
+        verbose=False,
     )
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
@@ -51,6 +52,8 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     else:
         module_constructor = RetrievalModule  # type: ignore
 
+    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
+
     pl_model = module_constructor(
         model=extractor,
         criterion=None,
@@ -61,7 +64,8 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         **module_kwargs
     )
 
-    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
+    # todo: dirty hack to allow lightning handling the model's devices
+    pl_model.model_pairwise = getattr(postprocessor, "model", None)
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
