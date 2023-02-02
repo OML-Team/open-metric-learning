@@ -67,7 +67,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
-        fmr_vals: Tuple[float, ...] = tuple(),
+        fmr_vals: Tuple[float, ...] = None,
         pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
