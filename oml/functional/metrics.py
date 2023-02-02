@@ -152,6 +152,7 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     return output
 
 
+@torch.no_grad()
 def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
     distances[mask_to_ignore] = float("inf")
     mask_gt[mask_to_ignore] = False
