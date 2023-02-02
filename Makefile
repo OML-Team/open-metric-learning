@@ -44,9 +44,9 @@ download_mock_dataset:
 	python oml/utils/download_mock_dataset.py
 
 .PHONY: run_tests
-run_tests: download_mock_dataset
+run_tests:
 	pytest --disable-warnings -sv tests
-	#$(JUPYTER_CMD) --execute examples/visualization.ipynb  # todo: seems like some issue appeared on lightning side
+	$(JUPYTER_CMD) --execute examples/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
