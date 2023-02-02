@@ -149,7 +149,10 @@ class TripletLossPlain(Module):
 
         anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n)
 
-        return self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
+        loss = self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
+        self.last_logs = self.criterion.last_logs
+
+        return loss
 
 
 class TripletLossWithMiner(ITripletLossWithMiner):
