@@ -19,9 +19,7 @@ class IBasicMetric(ABC):
     def setup(self, *args: Any, **kwargs: Any) -> Any:
         """
         Method for preparing metrics to work: memory allocation, placeholder preparation, etc.
-        Has to be called before the first call of
-
-        >>> self.update_data()
+        Has to be called before the first call of ``self.update_data()``
 
         """
         raise NotImplementedError()

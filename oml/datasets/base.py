@@ -65,13 +65,8 @@ class BaseDataset(Dataset):
         """
 
         Args:
-            df: Table with the following obligatory columns:
-
-                  >>> LABELS_COLUMN, PATHS_COLUMN
-
-                  and the optional ones:
-
-                  >>> X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN, CATEGORIES_COLUMN
+            df: Table with the following obligatory columns: ``LABELS_COLUMN``, ``PATHS_COLUMN``, and the optional ones:
+            ``X1_COLUMN``, ``X2_COLUMN``, ``Y1_COLUMN``, ``Y2_COLUMN``, ``CATEGORIES_COLUMN``
 
             extra_data: Dictionary with additional information which we want to put into batches. We assume that
                 the length of each record in this structure is the same as dataset's size.
