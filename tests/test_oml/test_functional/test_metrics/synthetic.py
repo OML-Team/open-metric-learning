@@ -123,10 +123,10 @@ def generate_distance_matrix(
 
     Example:
 
-        >>> desired_correct_positions = [[0, 1, 4], [0, 2, 4]]  # doctest: +SKIP
-        >>> labels = torch.tensor([0, 0, 0, 0, 1, 1])  # doctest: +SKIP
-        >>> is_query = torch.tensor([False, True, True, False, False, False])  # doctest: +SKIP
-        >>> is_gallery = torch.tensor([True] * len(labels))  # doctest: +SKIP
+        >>> desired_correct_positions = [[0, 1, 4], [0, 2, 4]]
+        >>> labels = torch.tensor([0, 0, 0, 0, 1, 1])
+        >>> is_query = torch.tensor([False, True, True, False, False, False])
+        >>> is_gallery = torch.tensor([True] * len(labels))
 
         gives a distance matrix which, after sorting and applying `mask_to_ignore`, has the correct answers at
         the corresponding positions
