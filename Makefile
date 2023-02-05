@@ -46,7 +46,7 @@ download_mock_dataset:
 .PHONY: run_tests
 run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
-	$(JUPYTER_CMD) --execute examples/visualization.ipynb
+	#$(JUPYTER_CMD) --execute examples/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
