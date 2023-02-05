@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from oml.const import BBOXES_COLUMNS, EMBEDDINGS_KEY, TCfg
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.inference.flat import inference_on_dataframe
+from oml.interfaces.models import IPairwiseModel
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.entrypoints.parser import (
     check_is_config_for_ddp,
@@ -28,8 +29,9 @@ from oml.lightning.modules.pairwise_postprocessing import (
 )
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.miners.pairs import PairsMiner
-from oml.registry.models import get_extractor_by_cfg, get_pairwise_model_by_cfg
+from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
+from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.utils.misc import (
@@ -79,7 +81,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         dataframe_name=cfg["dataframe_name"],
         transforms_extraction=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
-        batch_size=cfg["bs_val"],
+        batch_size=cfg["batch_size_infernce"],
         use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 
@@ -91,7 +93,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
 
     valid_dataset = DatasetQueryGallery(
         df=df_val,
-        transform=get_transforms_by_cfg(cfg["transforms_val"]),
+        transform=None,  # we don't care about transforms, since the only goal of this dataset is to deliver embeddings
         extra_data={EMBEDDINGS_KEY: emb_val},
     )
 
@@ -100,7 +102,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
 
     loader_val = DataLoader(
-        dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"], shuffle=False
+        dataset=valid_dataset, batch_size=cfg["batch_size_infernce"], num_workers=cfg["num_workers"], shuffle=False
     )
 
     return loader_train, loader_val
@@ -120,10 +122,13 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
 
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
-    siamese = get_pairwise_model_by_cfg(cfg["pairwise_model"])
+    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
+    assert isinstance(postprocessor, PairwiseImagesPostprocessor), "We support only images processing in this pipeline."
+    assert isinstance(postprocessor.model, IPairwiseModel), f"You model must be a child of {IPairwiseModel.__name__}"
+
     criterion = torch.nn.BCEWithLogitsLoss()
     pairs_miner = PairsMiner(hard_mining=cfg["hard_pairs_mining"])
-    optimizer = get_optimizer_by_cfg(cfg["optimizer"], **{"params": siamese.parameters()})
+    optimizer = get_optimizer_by_cfg(cfg["optimizer"], **{"params": postprocessor.model.parameters()})
 
     module_kwargs = {}
     module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
@@ -134,7 +139,7 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
         module_constructor = PairwiseModule  # type: ignore
 
     pl_module = module_constructor(
-        pairwise_model=siamese,
+        pairwise_model=postprocessor.model,
         pairs_miner=pairs_miner,
         criterion=criterion,
         optimizer=optimizer,
@@ -143,15 +148,6 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
         embeddings_key=EMBEDDINGS_KEY,
         freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs,
-    )
-
-    postprocessor = PairwiseImagesPostprocessor(
-        pairwise_model=siamese,
-        top_n=cfg["postprocessing_top_n"],
-        transforms=get_transforms_by_cfg(cfg["transforms_val"]),
-        batch_size=cfg["bs_val"],
-        num_workers=cfg["num_workers"],
-        use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
