@@ -63,6 +63,9 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
 
+    # todo: dirty hack to allow lightning handling the model's devices
+    pl_model.model_pairwise_ = getattr(postprocessor, "model", None)
+
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
         embeddings_key=pl_model.embeddings_key,
