@@ -17,7 +17,7 @@ class Accumulator:
 
         Args:
             keys_to_accumulate: List or tuple of keys to be collected.
-                                 We will take values via these keys calling ``self.update_data()``
+                                 We will take values via these keys calling ``self.update_data()``.
         """
         assert len(keys_to_accumulate) == len(set(keys_to_accumulate)), "All the keys have to be unique!"
 
