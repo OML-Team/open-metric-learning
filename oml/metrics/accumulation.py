@@ -78,7 +78,7 @@ class Accumulator:
     def update_data(self, data_dict: Dict[str, Any]) -> None:
         """
         Args:
-            data_dict: We will accumulate data getting values via ``self.keys_to_accumulate``
+            data_dict: We will accumulate data getting values via ``self.keys_to_accumulate``.
 
         """
         bs_values = [len(data_dict[k]) for k in self.keys_to_accumulate]
