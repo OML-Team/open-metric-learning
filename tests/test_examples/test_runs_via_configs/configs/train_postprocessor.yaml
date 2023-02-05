@@ -33,6 +33,12 @@ transforms_extraction:
 
 # TRAIN
 
+pairwise_model:
+  name: concat_siamese
+  args:
+    mlp_hidden_dims: [384, 192]
+    extractor: ${extractor}
+
 hard_pairs_mining: True
 
 optimizer:
@@ -74,11 +80,7 @@ postprocessor:
   name: pairwise_images
   args:
     top_n: 5
-    pairwise_model:
-      name: concat_siamese
-      args:
-        mlp_hidden_dims: [384, 192]
-        extractor: ${extractor}
+    pairwise_model: ${pairwise_model}
     transforms:
       name: norm_resize_hypvit_torch
       args:

@@ -32,6 +32,19 @@ transforms_extraction:
     crop_size: 224
 
 # TRAIN
+
+pairwise_model:
+  name: concat_siamese
+  args:
+    mlp_hidden_dims: [384, 192]
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: vits16_sop
+        arch: vits16
+
 hard_pairs_mining: True
 
 optimizer:
@@ -73,17 +86,7 @@ postprocessor:
   name: pairwise_images
   args:
     top_n: 5
-    pairwise_model:
-      name: concat_siamese
-      args:
-        mlp_hidden_dims: [384, 192]
-        extractor:
-          name: vit
-          args:
-            normalise_features: False
-            use_multi_scale: False
-            weights: vits16_sop
-            arch: vits16
+    pairwise_model: ${pairwise_model}
     transforms:
       name: norm_resize_hypvit_torch
       args:
