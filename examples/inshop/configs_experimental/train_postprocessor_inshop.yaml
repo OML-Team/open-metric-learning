@@ -25,7 +25,7 @@ extractor:
 pairwise_model:
   name: concat_siamese
   args:
-    mlp_hidden_dims: [384, 192]
+    mlp_hidden_dims: [192]
     extractor: ${extractor}
 
 hard_pairs_mining: True

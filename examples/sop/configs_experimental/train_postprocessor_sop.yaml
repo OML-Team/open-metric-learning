@@ -33,6 +33,7 @@ pairwise_model:
         use_multi_scale: False
         weights: vits16_sop
         arch: vits16
+  weights: /nydl/logs/Stanford_Online_Products/2023-02-02_16-31-37_postprocessing/checkpoints/best.ckpt
 
 hard_pairs_mining: True
 
@@ -41,7 +42,7 @@ optimizer:
   args:
     lr: 2e-3
 
-freeze_n_epochs: 3
+freeze_n_epochs: 0  # todo
 scheduling:
   scheduler_interval: epoch
   scheduler_frequency: 1
@@ -98,6 +99,7 @@ transforms_extraction:
 tags:
   - sop
   - postprocessing
+  - continue_2023-02-02_16-31-37
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
