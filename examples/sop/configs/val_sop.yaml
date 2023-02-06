@@ -21,7 +21,7 @@ model:
     arch: vits16
     normalise_features: True
     use_multi_scale: False
-    weights: vits16_sop
+    weights: null
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
