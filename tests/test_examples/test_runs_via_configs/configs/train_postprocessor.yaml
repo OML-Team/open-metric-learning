@@ -74,7 +74,7 @@ transforms_train:
 
 # VALIDATION
 
-batch_size_infernce: 128
+batch_size_inference: 128
 
 postprocessor:
   name: pairwise_images
@@ -87,7 +87,7 @@ postprocessor:
         im_size: 32
         crop_size: 32
     num_workers: 0
-    batch_size: ${batch_size_infernce}
+    batch_size: ${batch_size_inference}
     verbose: True
     use_fp16: True
 

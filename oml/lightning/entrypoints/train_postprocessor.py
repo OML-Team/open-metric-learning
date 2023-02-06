@@ -81,7 +81,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         dataframe_name=cfg["dataframe_name"],
         transforms_extraction=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
-        batch_size=cfg["batch_size_infernce"],
+        batch_size=cfg["batch_size_inference"],
         use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 
@@ -102,7 +102,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
 
     loader_val = DataLoader(
-        dataset=valid_dataset, batch_size=cfg["batch_size_infernce"], num_workers=cfg["num_workers"], shuffle=False
+        dataset=valid_dataset, batch_size=cfg["batch_size_inference"], num_workers=cfg["num_workers"], shuffle=False
     )
 
     return loader_train, loader_val
