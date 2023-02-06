@@ -161,7 +161,7 @@ class TrivialDistanceSiamese(IPairwiseModel):
         return elementwise_dist(x1, x2, p=2)
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
-        return self.forward(x1=x2, x2=x2)
+        return self.forward(x1=x1, x2=x2)
 
 
 __all__ = ["LinearTrivialDistanceSiamese", "ConcatSiamese", "TrivialDistanceSiamese"]
