@@ -118,7 +118,7 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         return x
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
-        x = self.predict(x1=x1, x2=x2)
+        x = self.forward(x1=x1, x2=x2)
         x = torch.sigmoid(x)
         return x
 
