@@ -39,7 +39,7 @@ def pairwise_inference_on_images(
     ) -> Tensor:
         pair1 = batch_[dataset.pair_1st_key][dataset.dataset1.input_tensors_key].to(device)
         pair2 = batch_[dataset.pair_2nd_key][dataset.dataset2.input_tensors_key].to(device)
-        return model_(pair1, pair2)
+        return model_.predict(pair1, pair2)
 
     output = _inference(
         model=model,
@@ -75,7 +75,7 @@ def pairwise_inference_on_embeddings(
     ) -> Tensor:
         pair1 = batch_[dataset.pair_1st_key].to(device)
         pair2 = batch_[dataset.pair_2nd_key].to(device)
-        return model_(pair1, pair2)
+        return model_.predict(pair1, pair2)
 
     output = _inference(
         model=model,

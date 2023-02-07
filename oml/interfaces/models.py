@@ -51,5 +51,18 @@ class IPairwiseModel(nn.Module):
         """
         raise NotImplementedError()
 
+    def predict(self, x1: Any, x2: Any) -> Tensor:
+        """
+        While ``self.forward()`` is called during training, this method is called during
+        inference or validation time. For example, it allows application of some activation,
+        which was a part of a loss function during the training.
+
+        Args:
+            x1: The first input.
+            x2: The second input.
+
+        """
+        raise NotImplementedError()
+
 
 __all__ = ["IExtractor", "IFreezable", "IPairwiseModel"]

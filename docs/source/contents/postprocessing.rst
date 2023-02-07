@@ -24,6 +24,7 @@ IPairwiseModel
     :show-inheritance:
 
     .. automethod:: forward
+    .. automethod:: predict
 
 IPairsDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,6 +79,18 @@ TrivialDistanceSiamese
 
     .. automethod:: __init__
     .. automethod:: forward
+
+ConcatSiamese
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.siamese.ConcatSiamese
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+    .. automethod:: predict
+    .. automethod:: freeze
+    .. automethod:: unfreeze
 
 EmbeddingPairsDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
