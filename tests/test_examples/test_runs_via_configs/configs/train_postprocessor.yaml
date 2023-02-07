@@ -13,6 +13,10 @@ num_workers: 0
 max_epochs: 2
 valid_period: 1
 
+# EXTRACTION
+
+embeddings_cache_dir: /tmp
+
 extractor:
   name: vit
   args:
@@ -20,6 +24,14 @@ extractor:
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
+
+transforms_extraction:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 32
+    crop_size: 32
+
+# TRAIN
 
 pairwise_model:
   name: concat_siamese
@@ -54,8 +66,31 @@ sampler:
     resample_labels: True
     weight_categories: True
 
-bs_val: 128
-postprocessing_top_n: 5
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 32
+    min_scale: 0.8
+
+# VALIDATION
+
+batch_size_inference: 128
+
+postprocessor:
+  name: pairwise_images
+  args:
+    top_n: 5
+    pairwise_model: ${pairwise_model}
+    transforms:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 32
+        crop_size: 32
+    num_workers: 0
+    batch_size: ${batch_size_inference}
+    verbose: True
+    use_fp16: True
+
 metric_for_checkpointing: OVERALL/cmc/1
 log_images: True
 metric_args:
@@ -65,25 +100,6 @@ metric_args:
   visualize_only_main_category: False
 
 neptune_project: null
-
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 32
-    min_scale: 0.8
-
-transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 32
-    crop_size: 32
-
-embeddings_cache_dir: /tmp
-transforms_extraction:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 32
-    crop_size: 32
 
 tags:
   - mock
