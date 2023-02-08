@@ -7,7 +7,7 @@ devices: 2
 
 dataset_root: /nydl/data/Stanford_Online_Products/
 dataframe_name: df.csv
-logs_root: /nydl/logs/Stanford_Online_Products/
+logs_root: /nydl/logs/8feb/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -25,7 +25,7 @@ extractor:
 pairwise_model:
   name: concat_siamese
   args:
-    mlp_hidden_dims: [384, 192]
+    mlp_hidden_dims: [192]
     extractor:
       name: vit
       args:
@@ -33,7 +33,6 @@ pairwise_model:
         use_multi_scale: False
         weights: vits16_sop
         arch: vits16
-  weights: /nydl/logs/Stanford_Online_Products/2023-02-02_16-31-37_postprocessing/checkpoints/best.ckpt
 
 hard_pairs_mining: True
 
@@ -42,7 +41,7 @@ optimizer:
   args:
     lr: 2e-3
 
-freeze_n_epochs: 0  # todo
+freeze_n_epochs: 3
 scheduling:
   scheduler_interval: epoch
   scheduler_frequency: 1
@@ -99,7 +98,6 @@ transforms_extraction:
 tags:
   - sop
   - postprocessing
-  - continue_2023-02-02_16-31-37
 
 hydra_dir: ${logs_root}/${logs_folder}/
 

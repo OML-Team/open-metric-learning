@@ -1,13 +1,14 @@
 accelerator: gpu
-devices: 2
+precision: 16
+devices: 1
 
 dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
 
 logs_root: /nydl/logs/DeepFashion_InShop/
 
-bs_val: 128
-num_workers: 20
+bs_val: 180
+num_workers: 15
 
 transforms_val:
   name: norm_resize_hypvit_torch
@@ -26,7 +27,7 @@ model:
 postprocessor:
   name: pairwise_images
   args:
-    top_n: 10
+    top_n: 5
     pairwise_model:
       name: concat_siamese
       args:
@@ -47,6 +48,7 @@ postprocessor:
     num_workers: ${num_workers}
     batch_size: ${bs_val}
     verbose: True
+    use_fp16: True
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]

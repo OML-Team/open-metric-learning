@@ -1,5 +1,6 @@
 accelerator: gpu
-devices: 2
+devices: 1
+precision: 16
 
 dataset_root: /nydl/data/Stanford_Online_Products/
 dataframe_name: df.csv
@@ -31,7 +32,7 @@ postprocessor:
       name: concat_siamese
       args:
         mlp_hidden_dims: [192]
-        weights: /nydl/code/open-metric-learning/2023_tensorboard/sop/2023-01-19_17:21:04/best_new.pth
+        weights: /nydl/logs/best_ckpts/sop/2023-01-19_17:21:04/best.pth
         extractor:
           name: vit
           args:
@@ -47,10 +48,11 @@ postprocessor:
     num_workers: ${num_workers}
     batch_size: ${bs_val}
     verbose: True
+    use_fp16: True
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
-  cmc_top_k: [1, 5]
+  cmc_top_k: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   map_top_k: [5]
   fmr_vals: []
   precision_top_k: [5]
