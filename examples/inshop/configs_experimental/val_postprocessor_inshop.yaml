@@ -1,6 +1,6 @@
 accelerator: gpu
 precision: 16
-devices: 1
+devices: 2
 
 dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
