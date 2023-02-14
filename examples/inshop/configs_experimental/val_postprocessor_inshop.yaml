@@ -32,7 +32,7 @@ postprocessor:
       name: concat_siamese
       args:
         mlp_hidden_dims: [384, 192]
-        weights: /nydl/logs/DeepFashion_InShop/2023-02-01_15-57-15_postprocessing/checkpoints/best.ckpt
+        weights: /nydl/logs/DeepFashion_InShop/2023-02-01_15-57-15_postprocessing/checkpoints/best.ckpt  # 0.9407792687416077 # 0.9404 (after swap)
         extractor:
           name: vit
           args:

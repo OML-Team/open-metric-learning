@@ -133,7 +133,7 @@ def pl_train(cfg: TCfg) -> None:
         callbacks=[metrics_clb, parse_ckpt_callback_from_config(cfg)],
         logger=logger,
         precision=cfg.get("precision", 32),
-        max_time="00:15:00:00",  # todo
+        # max_time="00:15:00:00",  # todo
         **trainer_engine_params,
     )
 

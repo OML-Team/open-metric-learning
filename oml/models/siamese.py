@@ -120,6 +120,7 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = self.forward(x1=x1, x2=x2)
         x = torch.sigmoid(x)
+
         return x
 
     def freeze(self) -> None:

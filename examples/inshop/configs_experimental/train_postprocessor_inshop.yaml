@@ -1,4 +1,4 @@
-postfix: "postprocessing"
+postfix: "postprocessing_no_categories"
 
 seed: 42
 precision: 16
@@ -7,7 +7,7 @@ devices: 2
 
 dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
-logs_root: /nydl/logs/DeepFashion_InShop/
+logs_root: /nydl/logs/8feb/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -18,12 +18,14 @@ valid_period: 1
 
 embeddings_cache_dir: ${dataset_root}
 
+extractor_weights: /nydl/logs/8feb/InShop/2023-02-14_10-31-24_inshop_no_categories/checkpoints/best.ckpt
+
 extractor:
   name: vit
   args:
-    normalise_features: False
+    normalise_features: True
     use_multi_scale: False
-    weights: vits16_inshop
+    weights: ${extractor_weights}
     arch: vits16
 
 transforms_extraction:
@@ -38,7 +40,24 @@ pairwise_model:
   name: concat_siamese
   args:
     mlp_hidden_dims: [192]
-    extractor: ${extractor}
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: ${extractor_weights}
+        arch: vits16
+
+#pairwise_model:
+#  name: trivial_distance_siamese
+#  args:
+#    extractor:
+#      name: vit
+#      args:
+#        normalise_features: True
+#        use_multi_scale: False
+#        weights: ${extractor_weights}
+#        arch: vits16
 
 hard_pairs_mining: True
 
@@ -59,13 +78,10 @@ scheduling:
         - ${freeze_n_epochs}
 
 sampler:
-  name: category_balance
+  name: balance
   args:
-    n_labels: 6
+    n_labels: 30
     n_instances: 4
-    n_categories: 5
-    resample_labels: True
-    weight_categories: True
 
 transforms_train:
   name: augs_hypvit_torch
@@ -103,7 +119,7 @@ metric_args:
   return_only_main_category: True
   visualize_only_main_category: True
 
-neptune_project: NEWYORKER/similarity-api
+neptune_project: null
 
 tags:
   - inshop

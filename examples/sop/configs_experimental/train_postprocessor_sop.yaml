@@ -1,4 +1,4 @@
-postfix: "postprocessing"
+postfix: "postprocessing_no_categories"
 
 seed: 42
 precision: 16
@@ -17,12 +17,14 @@ valid_period: 1
 # EXTRACTION
 embeddings_cache_dir: ${dataset_root}
 
+extractor_weights: /nydl/logs/Stanford_Online_Products/2023-02-14_13-11-41_sop_no_categories/checkpoints/best.ckpt
+
 extractor:
   name: vit
   args:
     normalise_features: True
     use_multi_scale: False
-    weights: vits16_sop
+    weights: ${extractor_weights}
     arch: vits16
 
 transforms_extraction:
@@ -42,7 +44,7 @@ pairwise_model:
       args:
         normalise_features: False
         use_multi_scale: False
-        weights: vits16_sop
+        weights: ${extractor_weights}
         arch: vits16
 
 hard_pairs_mining: True
@@ -64,11 +66,10 @@ scheduling:
         - ${freeze_n_epochs}
 
 sampler:
-  name: category_balance
+  name: balance
   args:
-    n_labels: 6
+    n_labels: 30
     n_instances: 4
-    n_categories: 5
     resample_labels: True
     weight_categories: True
 
@@ -108,7 +109,7 @@ metric_args:
   return_only_main_category: True
   visualize_only_main_category: True
 
-neptune_project: NEWYORKER/similarity-api
+neptune_project: null
 
 tags:
   - sop
