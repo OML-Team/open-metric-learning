@@ -1,6 +1,6 @@
 accelerator: gpu
-devices: 1
-precision: 16
+devices: 2
+precision: 32
 
 dataset_root: /nydl/data/Stanford_Online_Products/
 dataframe_name: df.csv
@@ -32,7 +32,7 @@ postprocessor:
       name: concat_siamese
       args:
         mlp_hidden_dims: [192]
-        weights: /nydl/logs/best_ckpts/sop/2023-01-19_17:21:04/best.pth
+        weights: /nydl/logs/8feb/Stanford_Online_Products/2023-02-08_14-13-30_postprocessing/checkpoints/best.ckpt
         extractor:
           name: vit
           args:

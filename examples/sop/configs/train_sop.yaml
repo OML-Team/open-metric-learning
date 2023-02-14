@@ -1,4 +1,4 @@
-postfix: metric_learning
+postfix: sop_no_categories
 
 seed: 42
 precision: 16
@@ -6,12 +6,12 @@ accelerator: gpu
 devices: 2
 
 dataframe_name: df.csv
-dataset_root: data/Stanford_Online_Products/
-logs_root: logs/Stanford_Online_Products/
+dataset_root: /nydl/data/Stanford_Online_Products/
+logs_root: /nydl/logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
+cache_size: 150000
 
 transforms_train:
   name: augs_hypvit_torch
@@ -25,17 +25,14 @@ transforms_val:
     crop_size: 224
 
 sampler:
-  name: category_balance
+  name: balance
   args:
-    n_labels: 32
-    n_instances: 6
-    n_categories: 3
-    resample_labels: True
-    weight_categories: True
+    n_labels: 150
+    n_instances: 4
 
 bs_val: 256
 max_epochs: 10000
-valid_period: 1
+valid_period: 5
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]

@@ -1,4 +1,4 @@
-postfix: metric_learning
+postfix: inshop_no_categories
 
 seed: 42
 precision: 16
@@ -25,17 +25,14 @@ transforms_val:
     crop_size: 224
 
 sampler:
-  name: category_balance
+  name: balance
   args:
-    n_labels: 30
+    n_labels: 150
     n_instances: 4
-    n_categories: 5
-    resample_labels: True
-    weight_categories: True
 
 bs_val: 256
 max_epochs: 10000
-valid_period: 1
+valid_period: 5
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
