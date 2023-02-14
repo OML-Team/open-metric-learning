@@ -113,7 +113,7 @@ def generate_samples_for_cmc_score() -> List[Tuple[float, torch.Tensor, torch.Te
         0.2,
         0.25,
     ]:
-        # generate params of the datasets
+        # generate params of the dataset_converters
         class_number = np.random.randint(low=2, high=5)
         kq = np.random.randint(low=500, high=1000)
         kg = np.random.randint(low=250, high=500)

@@ -78,7 +78,7 @@ Y2_COLUMN = "y_2"
 OBLIGATORY_COLUMNS = [LABELS_COLUMN, PATHS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
 BBOXES_COLUMNS = [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]
 
-# Keys for interactions among our classes (datasets, metrics and so on)
+# Keys for interactions among our classes (dataset_converters, metrics and so on)
 OVERALL_CATEGORIES_KEY = "OVERALL"
 INPUT_TENSORS_KEY = "input_tensors"
 LABELS_KEY = "labels"

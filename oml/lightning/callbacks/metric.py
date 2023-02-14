@@ -32,7 +32,7 @@ class MetricValCallback(Callback):
         Args:
             metric: Metric
             loader_idx: Idx of the loader to calculate metric for
-            samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
+            samples_in_getitem: Some of the dataset_converters return several samples when calling ``__getitem__``,
                 so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
                 but for the dataset which explicitly return triplets, this value must be equal to 3,
                 for a dataset of pairs it must be equal to 2.

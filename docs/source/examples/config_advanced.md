@@ -23,7 +23,7 @@ is in the right format:
 import pandas as pd
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 
-check_retrieval_dataframe_format(df=pd.read_csv("/path/to/your/table.csv"), dataset_root="/path/to/your/datasets/root/")
+check_retrieval_dataframe_format(df=pd.read_csv("/path/to/your/table.csv"), dataset_root="/path/to/your/dataset_converters/root/")
 ```
 
 

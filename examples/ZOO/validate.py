@@ -4,7 +4,7 @@ from omegaconf import DictConfig
 from oml.lightning.entrypoints.validate import pl_val
 
 
-@hydra.main(config_path="configs", config_name="val_cars.yaml")
+@hydra.main(config_path="configs", config_name="/path/to/your/validation/config/")
 def main_hydra(cfg: DictConfig) -> None:
     pl_val(cfg)
 

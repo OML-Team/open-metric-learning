@@ -163,7 +163,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
 
-        # Note, in some datasets part of the samples may appear in both query & gallery.
+        # Note, in some dataset_converters part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)

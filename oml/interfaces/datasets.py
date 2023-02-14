@@ -18,7 +18,7 @@ from oml.samplers.balance import BalanceSampler  # noqa
 
 class IDatasetWithLabels(Dataset, ABC):
     """
-    This is an interface for the datasets which can provide their labels.
+    This is an interface for the dataset_converters which can provide their labels.
 
     """
 
@@ -49,7 +49,7 @@ class IDatasetWithLabels(Dataset, ABC):
 
 class IDatasetQueryGallery(Dataset, ABC):
     """
-    This is an interface for the datasets which can provide the information on how to split
+    This is an interface for the dataset_converters which can provide the information on how to split
     the validation set into the two parts: query and gallery.
 
     """
@@ -81,7 +81,7 @@ class IDatasetQueryGallery(Dataset, ABC):
 
 class IPairsDataset(Dataset, ABC):
     """
-    This is an interface for the datasets which return pair of something.
+    This is an interface for the dataset_converters which return pair of something.
 
     """
 
