@@ -52,7 +52,7 @@ where each label has been split roughly in a 50-50 split.
 <summary>CUB 200 2011</summary>
 <p>
 
-[Dataset page.](https://deepai.org/dataset/cub-200-2011)
+[Dataset page.](https://www.vision.caltech.edu/datasets/cub_200_2011/)
 
 The dataset contains 11,788 images of 200 labels belonging to birds,
 5,994 for training and 5,794 for testing.

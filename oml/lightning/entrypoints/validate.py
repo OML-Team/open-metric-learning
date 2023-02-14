@@ -67,6 +67,9 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     # todo: dirty hack to allow lightning handling the model's devices
     pl_model.model_pairwise = getattr(postprocessor, "model", None)
 
+    # Note! We add the link to our model to a Lightning's Module, so it can recongize it and manipulate its devices
+    pl_model.model_pairwise_ = getattr(postprocessor, "model", None)
+
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
         embeddings_key=pl_model.embeddings_key,

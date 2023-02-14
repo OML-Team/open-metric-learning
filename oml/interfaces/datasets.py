@@ -35,9 +35,9 @@ class IDatasetWithLabels(Dataset, ABC):
         Returns:
              Dictionary with the following keys:
 
-            >>> self.input_tensors_key
-            >>> self.labels_key
-            >>> self.index_key
+            ``self.input_tensors_key``
+            ``self.labels_key``
+            ``self.index_key``
 
         """
         raise NotImplementedError()
@@ -69,11 +69,11 @@ class IDatasetQueryGallery(Dataset, ABC):
         Returns:
              Dictionary with the following keys:
 
-            >>> self.input_tensors_key
-            >>> self.labels_key
-            >>> self.is_query_key
-            >>> self.is_gallery_key
-            >>> self.index_key
+            ``self.input_tensors_key``
+            ``self.labels_key``
+            ``self.is_query_key``
+            ``self.is_gallery_key``
+            ``self.index_key``
 
         """
         raise NotImplementedError()
@@ -98,9 +98,9 @@ class IPairsDataset(Dataset, ABC):
         Returns:
              Dictionary with the following keys:
 
-            >>> self.pairs_1st_key
-            >>> self.pairs_2nd_key
-            >>> self.index_key
+            ``self.pairs_1st_key``
+            ``self.pairs_2nd_key``
+            ``self.index_key``
 
         """
         raise NotImplementedError()

@@ -49,6 +49,9 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
         y = elementwise_dist(x1, x2, p=2)
         return y
 
+    def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return self.forward(x1=x1, x2=x2)
+
 
 class ConcatSiamese(IPairwiseModel, IFreezable):
     """
@@ -114,6 +117,11 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
 
         return x
 
+    def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
+        x = self.forward(x1=x1, x2=x2)
+        x = torch.sigmoid(x)
+        return x
+
     def freeze(self) -> None:
         self.train_backbone = False
 
@@ -151,6 +159,9 @@ class TrivialDistanceSiamese(IPairwiseModel):
         x1 = self.extractor(x1)
         x2 = self.extractor(x2)
         return elementwise_dist(x1, x2, p=2)
+
+    def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return self.forward(x1=x1, x2=x2)
 
 
 __all__ = ["LinearTrivialDistanceSiamese", "ConcatSiamese", "TrivialDistanceSiamese"]

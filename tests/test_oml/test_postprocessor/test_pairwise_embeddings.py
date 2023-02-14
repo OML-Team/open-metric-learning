@@ -145,6 +145,9 @@ class DummyPairwise(IPairwiseModel):
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         return self.distances_to_return
 
+    def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return self.distances_to_return
+
 
 def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
     """
