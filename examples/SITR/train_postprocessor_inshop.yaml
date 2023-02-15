@@ -7,12 +7,12 @@ devices: 2
 
 dataset_root: /nydl/data/DeepFashion_InShop/
 dataframe_name: df.csv
-logs_root: /nydl/logs/8feb/DeepFashion_InShop/
+logs_root: /nydl/logs/8feb/InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
 max_epochs: 1000
-valid_period: 1
+valid_period: 8
 
 # EXTRACTION
 
@@ -47,17 +47,6 @@ pairwise_model:
         use_multi_scale: False
         weights: ${extractor_weights}
         arch: vits16
-
-#pairwise_model:
-#  name: trivial_distance_siamese
-#  args:
-#    extractor:
-#      name: vit
-#      args:
-#        normalise_features: True
-#        use_multi_scale: False
-#        weights: ${extractor_weights}
-#        arch: vits16
 
 hard_pairs_mining: True
 

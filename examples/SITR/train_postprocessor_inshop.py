@@ -6,7 +6,7 @@ from oml.lightning.entrypoints.train_postprocessor import (
 )
 
 
-@hydra.main(config_path="../configs_experimental", config_name="train_postprocessor_inshop.yaml")
+@hydra.main(config_path=".", config_name="train_postprocessor_inshop.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     pl_train_postprocessor(cfg)
 

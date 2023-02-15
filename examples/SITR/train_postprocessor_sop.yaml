@@ -12,7 +12,7 @@ logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
 max_epochs: 1000
-valid_period: 1
+valid_period: 10
 
 # EXTRACTION
 embeddings_cache_dir: ${dataset_root}
@@ -70,8 +70,6 @@ sampler:
   args:
     n_labels: 30
     n_instances: 4
-    resample_labels: True
-    weight_categories: True
 
 transforms_train:
   name: augs_hypvit_torch
