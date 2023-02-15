@@ -34,6 +34,7 @@ from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,
@@ -93,7 +94,8 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
 
     valid_dataset = DatasetQueryGallery(
         df=df_val,
-        transform=None,  # we don't care about transforms, since the only goal of this dataset is to deliver embeddings
+        # we don't care about transforms, since the only goal of this dataset is to deliver embeddings
+        transform=get_normalisation_resize_torch(im_size=8),
         extra_data={EMBEDDINGS_KEY: emb_val},
     )
 
@@ -149,6 +151,9 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
         freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs,
     )
+
+    # Note: it's a dirty hack to allow lightning handling the model's devices
+    pl_module.model_pairwise = getattr(postprocessor, "model", None)
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
