@@ -1,0 +1,42 @@
+accelerator: gpu
+precision: 32
+devices: 1
+
+dataset_root: path/to/dataset/
+dataframe_name: df.csv
+
+logs_root: path/to/logs
+
+bs_val: 128
+num_workers: 20
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+weights: path/to/weights
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: ${weights}
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [5]
+  pfc_variance: [0.5, 0.9, 0.99]
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+log_images: False
+
+hydra:
+  searchpath:
+   - pkg://oml.configs
