@@ -82,6 +82,8 @@ class ViTExtractor(IExtractor):
         assert arch in self.constructors
         super(ViTExtractor, self).__init__()
 
+
+
         self.normalise_features = normalise_features
         self.mscale = use_multi_scale
         self.arch = arch
@@ -177,8 +179,18 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
     )
 
     arr = sum(attentions[i] * 1 / attentions.shape[0] for i in range(attentions.shape[0]))
+    # # print((0.6 * arr).min(), (0.6 * arr).max())
+    # # print((0.6 * arr / arr.max()).min(), (0.6 * arr / arr.max()).max())
+    # # import matplotlib.pyplot as plt
+    # # plt.hist(arr, bins=10)
+    # # plt.show()
+    #
+    # print(np.mean(arr), np.median(arr), np.mean(arr) < 0.01)
+
+    # arr[arr < 0.01] = 0
 
     arr = show_cam_on_image(image / image.max(), 0.6 * arr / arr.max())  # type: ignore
+    # print(arr.shape)
 
     return arr
 

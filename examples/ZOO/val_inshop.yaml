@@ -1,13 +1,13 @@
 accelerator: gpu
 devices: 1
 
-dataset_root: data/DeepFashion_InShop/
-dataframe_name: df_no_bboxes.csv
+dataset_root: /home/daloro/data/DeepFashion_InShop/
+dataframe_name: df.csv
 
-logs_root: logs/DeepFashion_InShop/
+logs_root: /home/daloro/logs/DeepFashion_InShop/
 
-bs_val: 128
-num_workers: 20
+bs_val: 256
+num_workers: 10
 
 transforms_val:
   name: norm_resize_hypvit_torch
@@ -21,15 +21,15 @@ model:
     arch: vits16
     normalise_features: False
     use_multi_scale: False
-    weights: vits16_inshop
+    weights: vits16_dino
 
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
-  cmc_top_k: [1, 5]
+  cmc_top_k: [1, 10, 20, 30]
   map_top_k: [5]
-  precision_top_k: [5]
-  pfc_variance: [0.5, 0.9, 0.99]
+  precision_top_k: [1, 10, 20, 30]
+  pfc_variance: []
   return_only_main_category: True
   visualize_only_main_category: True
 

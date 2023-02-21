@@ -1,3 +1,4 @@
+import PIL
 import torchvision.transforms as t
 from torchvision.transforms import Compose, InterpolationMode, Normalize, ToTensor
 
@@ -36,7 +37,7 @@ def get_normalisation_resize_hypvit(
 ) -> t.Compose:
     transforms = t.Compose(
         [
-            t.Resize(im_size, interpolation=InterpolationMode.BICUBIC),
+            t.Resize(im_size, interpolation=PIL.Image.BICUBIC),
             t.CenterCrop(crop_size),
             t.ToTensor(),
             t.Normalize(mean=mean, std=std),

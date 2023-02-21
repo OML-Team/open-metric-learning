@@ -1,7 +1,10 @@
+import shutil
 from copy import deepcopy
+from pathlib import Path
 from pprint import pprint
 from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -39,7 +42,8 @@ from oml.functional.metrics import (
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
-from oml.utils.images.images import get_img_with_bbox, square_pad
+from oml.utils.images.images import get_img_with_bbox, square_pad, imread_cv2
+from oml.utils.images.images_resize import karesize_image
 from oml.utils.misc import flatten_dict
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
@@ -165,9 +169,9 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         # Note, in some dataset_converters part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
-        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery).clone()
+        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery).clone()
+        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery).clone()
 
         if self.postprocessor:
             self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
@@ -283,7 +287,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
         assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        dist_matrix_with_inf, mask_gt = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
+        dist_matrix_with_inf, mask_gt = apply_mask_to_ignore(self.distance_matrix.clone(), self.mask_gt.clone(), self.mask_to_ignore.clone())
 
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
@@ -339,6 +343,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                     j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
                 )
                 img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
+
                 img = square_pad(img)
                 plt.title(f"{i} - {round(dist_matrix_with_inf[query_idx, idx].item(), 3)}")
                 plt.imshow(img)
@@ -359,7 +364,172 @@ class EmbeddingMetrics(IMetricVisualisable):
                 plt.axis("off")
 
         fig.tight_layout()
+
         return fig
+
+    def plow_with_att(self, query_ids: List[int], extractor, siamese, prefix: str, save_dir: str, n_instances: int, verbose: bool = True) -> plt.Figure:
+        """
+        Visualize the predictions for the query with the indicies <query_ids>.
+
+        Args:
+            query_ids: Index of the query
+            n_instances: Amount of the predictions to show
+            verbose: wether to show image paths or not
+
+        """
+        assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
+
+        save_dir = Path(save_dir)
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        dist_matrix_with_inf, mask_gt = apply_mask_to_ignore(self.distance_matrix.clone(), self.mask_gt.clone(), self.mask_to_ignore.clone())
+
+        is_query = self.acc.storage[self.is_query_key]
+        is_gallery = self.acc.storage[self.is_gallery_key]
+
+        query_paths = np.array(self.acc.storage[PATHS_KEY])[is_query]
+        gallery_paths = np.array(self.acc.storage[PATHS_KEY])[is_gallery]
+
+        if all([k in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
+            bboxes = list(
+                zip(
+                    self.acc.storage[X1_KEY],
+                    self.acc.storage[Y1_KEY],
+                    self.acc.storage[X2_KEY],
+                    self.acc.storage[Y2_KEY],
+                )
+            )
+        elif all([k not in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
+            fake_coord = np.array([float("nan")] * len(is_query))
+            bboxes = list(zip(fake_coord, fake_coord, fake_coord, fake_coord))
+        else:
+            raise KeyError(f"Not all the keys collected in storage! {[*self.acc.storage]}")
+
+        query_bboxes = torch.tensor(bboxes)[is_query]
+        gallery_bboxes = torch.tensor(bboxes)[is_gallery]
+
+        fig = plt.figure(figsize=(30, 30 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
+        for j, query_idx in enumerate(query_ids):
+            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:n_instances]
+
+            n_gt = mask_gt[query_idx].sum()  # type: ignore
+
+            plt.subplot(
+                len(query_ids),
+                n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS,
+                j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + 1,
+            )
+
+            label = query_paths[query_idx].split('id_')[1].split('/')[0]
+
+            save_dir_label = (save_dir / label)
+            save_dir_att_embedder = save_dir_label / "att_embedder"
+            save_dir_att_postproc = save_dir_label / "att_postproc"
+
+            for folder in [save_dir_label, save_dir_att_embedder, save_dir_att_postproc]:
+                folder.mkdir(exist_ok=True, parents=True)
+
+            ext = Path(query_paths[query_idx]).suffix.strip('.')
+
+            shutil.copy(query_paths[query_idx], save_dir_label / f"{prefix}_Q.{ext}")
+
+            save_attn_extractor(query_paths[query_idx],
+                                extractor,
+                                save_dir_att_embedder / f"Q_att_224.{ext}",
+                                save_dir_att_embedder / f"Q_att_src.{ext}")
+
+            img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
+            img = square_pad(img)
+            if verbose:
+                print("Q  ", query_paths[query_idx])
+            plt.imshow(img)
+            plt.title(f"{prefix}\nQuery, #gt = {n_gt}")
+            plt.axis("off")
+
+            for i, idx in enumerate(ids):
+                color = GREEN if mask_gt[query_idx, idx] else RED  # type: ignore
+                if verbose:
+                    print("G", i, gallery_paths[idx])
+                plt.subplot(
+                    len(query_ids),
+                    n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
+                    j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
+                )
+                img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
+                shutil.copy(gallery_paths[idx],
+                            save_dir_label / f"{prefix}_G{i}.{Path(gallery_paths[idx]).suffix}")
+
+                save_attn_extractor(gallery_paths[idx],
+                                    extractor,
+                                    save_dir_att_embedder / f"224_G{i}_att.{ext}",
+                                    save_dir_att_embedder / f"src_G{i}_att.{ext}")
+
+                save_attn_siamese(query_paths[query_idx],
+                                  gallery_paths[idx],
+                                  siamese,
+                                  save_dir_att_postproc / f"224_Q_G{i}_att.{ext}",
+                                  save_dir_att_postproc / f"src_Q_G{i}_att.{ext}")
+
+                img = square_pad(img)
+                plt.title(f"{i} - {round(dist_matrix_with_inf[query_idx, idx].item(), 3)}")
+                plt.imshow(img)
+                plt.axis("off")
+
+            gt_ids = mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
+
+            for i, gt_idx in enumerate(gt_ids):
+                plt.subplot(
+                    len(query_ids),
+                    n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
+                    j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + n_instances + 2,
+                )
+                img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
+                img = square_pad(img)
+                plt.title("GT " + str(round(dist_matrix_with_inf[query_idx, gt_idx].item(), 3)))
+                plt.imshow(img)
+                plt.axis("off")
+
+        fig.tight_layout()
+
+        plt.savefig(save_dir_label / f"{prefix}.png")
+        return fig
+
+
+def save_attn_extractor(image_path, extractor, save_224_name, save_src_name):
+    im_q = imread_cv2(image_path)
+    im_q_hw = im_q.shape[:2]
+    im_q = cv2.resize(im_q, (224, 224))
+    attn_q = extractor.draw_attention(im_q)[:, :, ::-1]
+
+    cv2.imwrite(str(save_224_name), attn_q)
+    cv2.imwrite(str(save_src_name), cv2.resize(attn_q, (im_q_hw[1], im_q_hw[0])))
+
+
+def save_attn_siamese(q_path, g_path, siamese, save_qg_224_name, save_qg_src_name):
+    im_q = imread_cv2(q_path)
+    im_g = imread_cv2(g_path)
+
+    im_q_hw = im_q.shape[:2]
+    im_g_hw = im_g.shape[:2]
+
+    im_q = cv2.resize(im_q, (224, 224))
+    im_g = cv2.resize(im_g, (224, 224))
+
+    im_concat = np.concatenate([im_q, im_g], axis=1)
+
+    attn_siam = siamese.extractor.draw_attention(im_concat)[:, :, ::-1]
+
+    cv2.imwrite(str(save_qg_224_name), attn_siam)
+    cv2.imwrite(str(save_qg_src_name), cv2.resize(attn_siam, (im_q_hw[1] + im_g_hw[1], im_q_hw[0])))
+
+    # attn_q = attn_siam[:, :224, :]
+    # attn_g = attn_siam[:, 224:, :]
+    #
+    # cv2.imwrite(save_q_224_name, attn_q)
+    # cv2.imwrite(save_q_src_name, karesize_image(attn_q, im_q_hw))
+    #
+    # cv2.imwrite(save_g_224_name, attn_g)
+    # cv2.imwrite(save_g_src_name, karesize_image(attn_g, im_g_hw))
 
 
 class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP):

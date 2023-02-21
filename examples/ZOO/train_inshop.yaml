@@ -1,16 +1,16 @@
 postfix: inshop_no_categories
 
 seed: 42
-precision: 16
+precision: 32
 accelerator: gpu
-devices: 2
+devices: 1
 
 dataframe_name: df.csv
-dataset_root: /nydl/data/DeepFashion_InShop/
-logs_root: /nydl/logs/8feb/InShop/
+dataset_root: /home/daloro/data/DeepFashion_InShop/
+logs_root: /home/daloro/logs/8feb/InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
-num_workers: 20
+num_workers: 10
 cache_size: 0
 
 transforms_train:

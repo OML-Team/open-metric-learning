@@ -1,14 +1,14 @@
 accelerator: gpu
-precision: 16
-devices: 2
+precision: 32
+devices: 1
 
-dataset_root: /nydl/data/DeepFashion_InShop/
+dataset_root: /home/daloro/data/DeepFashion_InShop/
 dataframe_name: df.csv
 
-logs_root: /nydl/logs/DeepFashion_InShop/
+logs_root: /home/daloro/logs/DeepFashion_InShop/
 
-bs_val: 180
-num_workers: 15
+bs_val: 512
+num_workers: 10
 
 transforms_val:
   name: norm_resize_hypvit_torch
@@ -31,8 +31,8 @@ postprocessor:
     pairwise_model:
       name: concat_siamese
       args:
-        mlp_hidden_dims: [384, 192]
-        weights: /nydl/logs/DeepFashion_InShop/2023-02-01_15-57-15_postprocessing/checkpoints/best.ckpt  # 0.9407792687416077 # 0.9404 (after swap)
+        mlp_hidden_dims: [192]
+        weights: /home/daloro/python_projects/open-metric-learning/postprocessor.ckpt  # 0.9407792687416077 # 0.9404 (after swap)
         extractor:
           name: vit
           args:
@@ -56,7 +56,7 @@ metric_args:
   map_top_k: [5]
   fmr_vals: []
   precision_top_k: [5]
-  pfc_variance: [0.5, 0.9, 0.99]
+  pfc_variance: []
   return_only_main_category: True
   visualize_only_main_category: True
 

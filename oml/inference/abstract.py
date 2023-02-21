@@ -38,14 +38,15 @@ def _inference(
     outputs_list = []
     ids = []
 
-    with torch.autocast(device_type="cuda", dtype=torch.float16 if use_fp16 else torch.float32):
-        with temporary_setting_model_mode(model, set_train=False):
-            for batch in loader:
-                out = apply_model(model, batch)
-                if accumulate_on_cpu:
-                    out = out.cpu()
-                outputs_list.append(out)
-                ids.extend(batch[dataset.index_key].long().tolist())
+    # with torch.autocast(device_type="cuda", dtype=torch.float16 if use_fp16 else torch.float32):
+    #     with temporary_setting_model_mode(model, set_train=False):
+    with torch.no_grad():
+        for batch in loader:
+            out = apply_model(model, batch)
+            if accumulate_on_cpu:
+                out = out.cpu()
+            outputs_list.append(out)
+            ids.extend(batch[dataset.index_key].long().tolist())
 
     outputs = torch.cat(outputs_list).detach()
 
