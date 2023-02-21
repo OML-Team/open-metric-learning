@@ -1,6 +1,6 @@
 accelerator: gpu
-devices: 2
-precision: 16
+devices: 1
+precision: 32
 
 dataset_root: /nydl/data/Stanford_Online_Products/
 dataframe_name: df.csv
@@ -20,16 +20,17 @@ model:
   name: vit
   args:
     arch: vits16
-    normalise_features: True
+    normalise_features: False
     use_multi_scale: False
-    weights: /nydl/logs/Stanford_Online_Products/2023-02-14_13-11-41_sop_no_categories/checkpoints/best.ckpt
+#    weights: /nydl/logs/8feb/Stanford_Online_Products/2023-02-14_13-11-41_sop_no_categories/checkpoints/best.ckpt
+    weights: "/nydl/logs/surrogate/sop/sop_recallatk_5e-05_bs400_spc4_embed384_archoml_decay0.0004_fclr0_anneal0.01/2023-01-31_12-44-08/best.pth"
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
-  cmc_top_k: [1, 5]
-  map_top_k: [5]
-  pfc_variance: [0.5, 0.9, 0.99]
-  return_only_main_category: False
+  cmc_top_k: [1, 10, 100]
+  map_top_k: [5, 10]
+  pfc_variance: []
+  return_only_main_category: True
   visualize_only_main_category: True
 
 log_images: False

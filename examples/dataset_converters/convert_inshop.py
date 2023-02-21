@@ -92,10 +92,10 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
 
     # rm bad labels
-    mask_non_single_images = df.groupby("label").label.transform("count") > 1
-    df = df[mask_non_single_images]
-    df.reset_index(drop=True, inplace=True)
-    print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
+    # mask_non_single_images = df.groupby("label").label.transform("count") > 1
+    # df = df[mask_non_single_images]
+    # df.reset_index(drop=True, inplace=True)
+    # print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
