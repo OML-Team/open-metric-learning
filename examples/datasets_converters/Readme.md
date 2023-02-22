@@ -110,7 +110,9 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
 </p>
 </details>
 
-After a dataset is ready, simply run the converter. It will create `df.csv` in your dataset folder:
+After a dataset is ready, simply run the converter. It will create `df.csv` if you passed
+`--no-bboxes` parameter or `df_with_bboxes.csv` otherwise in your dataset folder.
+
 ```shell
 python convert_<*>.py --dataset_root=... --no_bboxes
 ```

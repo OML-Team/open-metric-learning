@@ -1,12 +1,12 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.validate import pl_val
+from oml.lightning.entrypoints.train import pl_train
 
 
-@hydra.main(config_path="configs", config_name="val_cub.yaml")
+@hydra.main(config_path=".", config_name="train_cars.yaml")
 def main_hydra(cfg: DictConfig) -> None:
-    pl_val(cfg)
+    pl_train(cfg)
 
 
 if __name__ == "__main__":
