@@ -5,7 +5,7 @@ on a tiny dataset of
 [figures](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing).
 ㅤ
 
-#### Feature extractor
+**Feature extractor**
 
 <details>
 <summary>Training</summary>
@@ -183,7 +183,7 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 </details>
 ㅤ
 
-#### Postprocessing
+**Postprocessing**
 
 You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
 to check the examples above first).
