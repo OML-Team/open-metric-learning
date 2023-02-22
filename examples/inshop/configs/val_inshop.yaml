@@ -1,8 +1,9 @@
 accelerator: gpu
 devices: 1
+precision: 32
 
 dataset_root: data/DeepFashion_InShop/
-dataframe_name: df_no_bboxes.csv
+dataframe_name: df.csv
 
 logs_root: logs/DeepFashion_InShop/
 

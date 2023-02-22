@@ -1,5 +1,6 @@
 accelerator: gpu
 devices: 1
+precision: 32
 
 dataset_root: data/CUB_200_2011/
 dataframe_name: df.csv

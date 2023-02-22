@@ -91,11 +91,12 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     assert df["label"].nunique() == 7982
     assert set(df["label"].astype(int).tolist()) == set(list(range(1, 7982 + 1)))
 
-    # rm bad labels
+    # rm images without pairs from train
+    n_orig = len(df)
     mask_non_single_images = df.groupby("label").label.transform("count") > 1
-    df = df[mask_non_single_images]
+    df = df[mask_non_single_images | (df["split"] == "validation")]
     df.reset_index(drop=True, inplace=True)
-    print(f"Dropped {len(mask_non_single_images) - mask_non_single_images.sum()} items with only 1 image.")
+    print(f"Dropped {n_orig - len(df)} items from train with only 1 image.")
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
@@ -128,12 +129,8 @@ def main() -> None:
     print("DeepFashion Inshop dataset preparation started...")
     args = get_argparser().parse_args()
 
-    df = build_inshop_df(
-        dataset_root=args.dataset_root,
-        no_bboxes=args.no_bboxes,
-    )
-
-    fname = "df_no_bboxes" if args.no_bboxes else "df"
+    df = build_inshop_df(args.dataset_root, args.no_bboxes)
+    fname = "df" if args.no_bboxes else "df_with_bboxes"
     df.to_csv(args.dataset_root / f"{fname}.csv", index=None)
 
     print("DeepFashion Inshop dataset preparation completed.")

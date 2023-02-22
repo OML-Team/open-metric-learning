@@ -1,5 +1,6 @@
 accelerator: gpu
 devices: 1
+precision: 32
 
 dataset_root: data/Stanford_Online_Products/
 dataframe_name: df.csv
