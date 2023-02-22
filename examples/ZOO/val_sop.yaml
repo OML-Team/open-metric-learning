@@ -20,10 +20,9 @@ model:
   name: vit
   args:
     arch: vits16
-    normalise_features: False
+    normalise_features: True
     use_multi_scale: False
-#    weights: /nydl/logs/8feb/Stanford_Online_Products/2023-02-14_13-11-41_sop_no_categories/checkpoints/best.ckpt
-    weights: "/nydl/logs/surrogate/sop/sop_recallatk_5e-05_bs400_spc4_embed384_archoml_decay0.0004_fclr0_anneal0.01/2023-01-31_12-44-08/best.pth"
+    weights: /nydl/logs/8feb/Stanford_Online_Products/2023-02-14_13-11-41_sop_no_categories/checkpoints/best.ckpt
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]

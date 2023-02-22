@@ -27,7 +27,7 @@ model:
 postprocessor:
   name: pairwise_images
   args:
-    top_n: 9
+    top_n: 5
     pairwise_model:
       name: concat_siamese
       args:
