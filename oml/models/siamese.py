@@ -121,12 +121,12 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         x = self.forward(x1=x1, x2=x2)
         x = torch.sigmoid(x)
 
-        # return x
+        return x
 
-        # TTA
-        y = self.forward(x1=x2, x2=x1)
-        y = torch.sigmoid(y)
-        return (x + y) / 2
+        # # TTA
+        # y = self.forward(x1=x2, x2=x1)
+        # y = torch.sigmoid(y)
+        # return (x + y) / 2
 
     def freeze(self) -> None:
         self.train_backbone = False
