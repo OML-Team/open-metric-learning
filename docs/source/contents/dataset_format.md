@@ -4,16 +4,16 @@ of usage built-in datasets or Config-API. You can find the tiny example dataset 
 
 Required columns:
 * `label` - integer value indicates the label.
-* `path` - path to sample.
+* `path` - path to sample. It may be global or relative path (in these case you need to pass `dataset_root` to build-in Datasets.)
 * `split` - must be one of 2 values: `train` or `validation`.
-* `is_query`, `is_gallery` - have to be `None` where `split == train` and `True`
-  or `False` where `split == validation`. Note, that both values can be `True` at
+* `is_query`, `is_gallery` - have to be `None` where `split == train` and `True` (or `1`)
+  or `False` (or `0`) where `split == validation`. Note, that both values can be `True` at
   the same time. Then we will validate every item
-  in the validation set using the "1 vs rest" approach (datasets of this kind are `CARS196` or `CUB`).
+  in the validation set using the "1 vs rest" approach (datasets of this kind are `SOP`, `CARS196` or `CUB`).
 
 Optional columns:
 * `category` - category which groups sets of similar labels (like `dresses`, or `furniture`).
-* `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`y_1` must be less than `y_2`).
+* `x_1`, `x_2`, `y_1`, `y_2` - integers, the format is `left`, `right`, `top`, `bot` (`x_1` and `y_1` must be less than `x_2` and `y_2`).
   If only part of your images has bounding boxes, just fill the corresponding row with empty values.
 
 [Here](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing)
