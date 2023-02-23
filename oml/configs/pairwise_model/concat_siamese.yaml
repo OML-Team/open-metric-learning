@@ -10,4 +10,5 @@ args:
       weights: resnet50_moco_v2
       strict_load: False
   mlp_hidden_dims: [20, 20]
+  use_tta: True
   weights: null
