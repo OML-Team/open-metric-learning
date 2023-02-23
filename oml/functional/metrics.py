@@ -407,9 +407,10 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     map = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
         positions = torch.arange(1, k + 1).unsqueeze(0)
-        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / _n_gt)
+        n_k = correct_preds[:, k - 1].clone()
+        n_k[n_k < 1] = torch.inf  # todo: hack to avoid zero division
+        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / n_k)
     return map
 
 

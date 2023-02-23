@@ -37,8 +37,9 @@ def naive_cmc(positions: TPositions, k: int) -> torch.Tensor:
 def naive_map(positions: TPositions, k: int) -> torch.Tensor:
     values = torch.empty(len(positions), dtype=torch.float)
     for query_idx, pos in enumerate(positions):
-        num_gt = min(len(pos), k)
-        values[query_idx] = sum(gt_count / (idx + 1) for gt_count, idx in enumerate(pos, 1) if idx < k) / num_gt
+        print(pos, "xxx")
+        n_k = sum(el < k for el in pos)  # todo: < or <= ? and 0 devision problem
+        values[query_idx] = sum(gt_count / (idx + 1) for gt_count, idx in enumerate(pos, 1) if idx < k) / n_k
     metric = torch.mean(values.float())
     return metric
 
