@@ -66,6 +66,7 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         self,
         extractor: IExtractor,
         mlp_hidden_dims: List[int],
+        use_tta: bool = False,
         weights: Optional[Union[str, Path]] = None,
         strict_load: bool = True,
     ) -> None:
@@ -73,12 +74,15 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         Args:
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
             mlp_hidden_dims: Hidden dimensions of the head
+            use_tta: Set ``True`` if you want to average the results obtained by two different orders of concatenating
+             input images. Affects only ``self.predict()`` method.
             weights: Path to weights file or ``None`` for random initialization
             strict_load: Whether to use ``self.load_state_dict`` with strict argument
 
         """
         super(ConcatSiamese, self).__init__()
         self.extractor = extractor
+        self.use_tta = use_tta
 
         self.head = MLP(
             in_channels=self.extractor.feat_dim,
@@ -120,7 +124,13 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = self.forward(x1=x1, x2=x2)
         x = torch.sigmoid(x)
-        return x
+
+        if self.use_tta:
+            y = self.forward(x1=x2, x2=x1)
+            y = torch.sigmoid(y)
+            return (x + y) / 2
+        else:
+            return x
 
     def freeze(self) -> None:
         self.train_backbone = False
