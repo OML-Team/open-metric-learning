@@ -37,9 +37,10 @@ def naive_cmc(positions: TPositions, k: int) -> torch.Tensor:
 def naive_map(positions: TPositions, k: int) -> torch.Tensor:
     values = torch.empty(len(positions), dtype=torch.float)
     for query_idx, pos in enumerate(positions):
-        print(pos, "xxx")
-        n_k = sum(el < k for el in pos)  # todo: < or <= ? and 0 devision problem
-        values[query_idx] = sum(gt_count / (idx + 1) for gt_count, idx in enumerate(pos, 1) if idx < k) / n_k
+        n_correct_before_j = {j: sum(el < j for el in pos[:j]) for j in range(1, k + 1)}
+        values[query_idx] = sum(n_correct_before_j[i] / i * (i - 1 in pos) for i in range(1, k + 1)) / (
+            n_correct_before_j[k] or float("inf")
+        )
     metric = torch.mean(values.float())
     return metric
 
@@ -115,19 +116,19 @@ def exact_test_case() -> TExactTestCase:
 
     metrics_expected["cmc"][2] = torch.tensor([1, 1, 1, 0, 1, 0]).float()
     metrics_expected["precision"][2] = torch.tensor([1, 0.5, 0.5, 0, 1, 0]).float()
-    metrics_expected["map"][2] = torch.tensor([1, 0.5, 0.25, 0, 1, 0]).float()
+    metrics_expected["map"][2] = torch.tensor([1, 1, 1 / 2, 0, 1, 0]).float()
 
     metrics_expected["cmc"][3] = torch.tensor([1, 1, 1, 1, 1, 0]).float()
     metrics_expected["precision"][3] = torch.tensor([0.6666, 0.3333, 0.6666, 0.3333, 1, 0]).float()
-    metrics_expected["map"][3] = torch.tensor([0.6666, 0.3333, 0.3888, 0.1111, 1, 0]).float()
+    metrics_expected["map"][3] = torch.tensor([1, 1, 7 / 12, 1 / 3, 1, 0]).float()
 
     metrics_expected["cmc"][4] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["precision"][4] = torch.tensor([1, 0.6666, 0.6666, 0.6666, 1, 1]).float()
-    metrics_expected["map"][4] = torch.tensor([0.9166, 0.5, 0.3888, 0.2777, 1, 0.25]).float()
+    metrics_expected["map"][4] = torch.tensor([11 / 12, 3 / 4, 7 / 12, 5 / 12, 1, 1 / 4]).float()
 
     metrics_expected["cmc"][5] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["precision"][5] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
-    metrics_expected["map"][5] = torch.tensor([0.9166, 0.7, 0.5888, 0.4777, 1, 0.25]).float()
+    metrics_expected["map"][5] = torch.tensor([11 / 12, 21 / 30, 53 / 90, 43 / 90, 1, 1 / 4]).float()
 
     metrics_expected["cmc"][10] = torch.tensor([1, 1, 1, 1, 1, 1]).float()
     metrics_expected["precision"][10] = metrics_expected["precision"][5]

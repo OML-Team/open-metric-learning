@@ -370,15 +370,16 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     for the query is defined as
 
     .. math::
-        \\begin{split}\\textrm{map}@k &=
-        \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
-        \\frac{\\textrm{# of relevant elements among top } i\\textrm{ elements}}{i} \\times \\textrm{rel}(i) = \\\\
-        & = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
-        \\frac{\\sum\\limits_{j = 1}^{i}g_j}{i} \\times \\textrm{rel}(i)
+        \\begin{split}
+        \\textrm{map}@k &=
+        \\frac{1}{n_k}\\sum\\limits_{i = 1}^k
+        \\frac{n_i}{i} \\times \\textrm{rel}(i)
         \\end{split}
 
     where :math:`\\textrm{rel}(i)` is 1 if :math:`i`-th element from the top :math:`i` closest
-    elements from the gallery to the query is relevant to the query, and 0 otherwise.
+    elements from the gallery to the query is relevant to the query, and 0 otherwise;
+    and :math:`n_i = \\sum\\limits_{j = 1}^{i}g_j`, which is the number of the relevant predictions
+    among the first :math:`i` outputs.
 
     See:
 
@@ -409,7 +410,7 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     for k in top_k:
         positions = torch.arange(1, k + 1).unsqueeze(0)
         n_k = correct_preds[:, k - 1].clone()
-        n_k[n_k < 1] = torch.inf  # todo: hack to avoid zero division
+        n_k[n_k < 1] = torch.inf  # hack to avoid zero division
         map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / n_k)
     return map
 
