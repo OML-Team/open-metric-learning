@@ -370,15 +370,16 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     for the query is defined as
 
     .. math::
-        \\begin{split}\\textrm{map}@k &=
-        \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
-        \\frac{\\textrm{# of relevant elements among top } i\\textrm{ elements}}{i} \\times \\textrm{rel}(i) = \\\\
-        & = \\frac{1}{\\min{\\left(k, n\\right)}}\\sum\\limits_{i = 1}^k
-        \\frac{\\sum\\limits_{j = 1}^{i}g_j}{i} \\times \\textrm{rel}(i)
+        \\begin{split}
+        \\textrm{map}@k &=
+        \\frac{1}{n_k}\\sum\\limits_{i = 1}^k
+        \\frac{n_i}{i} \\times \\textrm{rel}(i)
         \\end{split}
 
     where :math:`\\textrm{rel}(i)` is 1 if :math:`i`-th element from the top :math:`i` closest
-    elements from the gallery to the query is relevant to the query, and 0 otherwise.
+    elements from the gallery to the query is relevant to the query, and 0 otherwise;
+    and :math:`n_i = \\sum\\limits_{j = 1}^{i}g_j`, which is the number of the relevant predictions
+    among the first :math:`i` outputs.
 
     See:
 
@@ -400,16 +401,17 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
         ... ], dtype=torch.bool)
         >>> n_gt = torch.tensor([2, 3, 5])
         >>> calc_map(gt_tops, n_gt, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([0.5000, 0.2500, 0.0000])]
+        [tensor([1., 0., 0.]), tensor([1.0000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
     map = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
         positions = torch.arange(1, k + 1).unsqueeze(0)
-        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / _n_gt)
+        n_k = correct_preds[:, k - 1].clone()
+        n_k[n_k < 1] = torch.inf  # hack to avoid zero division
+        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / n_k)
     return map
 
 
