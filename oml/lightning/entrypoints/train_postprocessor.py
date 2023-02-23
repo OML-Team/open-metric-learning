@@ -152,9 +152,6 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
         **module_kwargs,
     )
 
-    # Note: it's a dirty hack to allow lightning handling the model's devices
-    pl_module.model_pairwise = getattr(postprocessor, "model", None)
-
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
         embeddings_key=pl_module.embeddings_key,
