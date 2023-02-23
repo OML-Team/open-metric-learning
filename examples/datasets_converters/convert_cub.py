@@ -104,7 +104,7 @@ def main() -> None:
     print("CUB200 2011 dataset preparation started...")
     args = get_argparser().parse_args()
     df = build_cub_df(args.dataset_root, args.no_bboxes)
-    fname = "df_no_bboxes" if args.no_bboxes else "df"
+    fname = "df" if args.no_bboxes else "df_with_bboxes"
     df.to_csv(args.dataset_root / f"{fname}.csv", index=None)
     print("CUB200 2011 dataset preparation completed.")
     print(f"DataFrame saved in {args.dataset_root}\n")

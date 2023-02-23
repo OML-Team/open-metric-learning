@@ -3,7 +3,9 @@ You are not limited by our project structure and you can use only that part of t
 You can start with fully working code snippets below that train and validate the model
 on a tiny dataset of
 [figures](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing).
+ㅤ
 
+**Feature extractor**
 
 <details>
 <summary>Training</summary>
@@ -181,7 +183,7 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 </details>
 ㅤ
 
-#### Postprocessing
+**Postprocessing**
 
 You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
 to check the examples above first).

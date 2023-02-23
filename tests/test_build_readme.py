@@ -17,7 +17,7 @@ def test_readme_was_built_correctly() -> None:
 
     assert readme == readme_tmp, (
         "Automatically generated readme and yours are not the same. The reason is that"
-        "you tried to change the Readme.md inplace, instead of changing its source components"
+        "you tried to change the README.md inplace, instead of changing its source components"
         "in docs/readme folder."
     )
 

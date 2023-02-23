@@ -10,10 +10,6 @@ from oml.const import (
     LABELS_COLUMN,
     PATHS_COLUMN,
     SPLIT_COLUMN,
-    X1_COLUMN,
-    X2_COLUMN,
-    Y1_COLUMN,
-    Y2_COLUMN,
 )
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 
@@ -61,10 +57,6 @@ def build_sop_df(dataset_root: Path) -> pd.DataFrame:
             "split": SPLIT_COLUMN,
             "is_query": IS_QUERY_COLUMN,
             "is_gallery": IS_GALLERY_COLUMN,
-            "x_1": X1_COLUMN,
-            "x_2": X2_COLUMN,
-            "y_1": Y1_COLUMN,
-            "y_2": Y2_COLUMN,
             "category": CATEGORIES_COLUMN,
         }
     )

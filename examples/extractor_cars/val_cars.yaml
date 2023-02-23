@@ -1,19 +1,19 @@
 accelerator: gpu
 devices: 1
+precision: 32
 
-dataset_root: data/DeepFashion_InShop/
-dataframe_name: df_no_bboxes.csv
+dataset_root: data/CARS196/
+dataframe_name: df.csv
 
-logs_root: logs/DeepFashion_InShop/
+logs_root: logs/CARS196/
 
-bs_val: 128
-num_workers: 20
+bs_val: 256
+num_workers: 8
 
 transforms_val:
-  name: norm_resize_hypvit_torch
+  name: norm_resize_albu
   args:
     im_size: 224
-    crop_size: 224
 
 model:
   name: vit
@@ -21,16 +21,16 @@ model:
     arch: vits16
     normalise_features: False
     use_multi_scale: False
-    weights: vits16_inshop
-
+    weights: vits16_cars
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [5]
+  fmr_vals: [0.01]
   pfc_variance: [0.5, 0.9, 0.99]
-  return_only_main_category: True
+  return_only_main_category: False
   visualize_only_main_category: True
 
 log_images: False
