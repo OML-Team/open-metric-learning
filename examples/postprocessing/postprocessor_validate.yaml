@@ -8,7 +8,7 @@ dataframe_name: df.csv
 bs_val: 128
 num_workers: 20
 
-extractor_weights: /path/to/embedder.ckpt  # <---- specify path to baseline embedder
+extractor_weights: /path/to/extractor.ckpt  # <---- specify path to a baseline feature extractor
 postprocessor_weights: /path/to/postprocessor.ckpt  # <---- specify path to a trained postprocessor
 
 transforms_val:

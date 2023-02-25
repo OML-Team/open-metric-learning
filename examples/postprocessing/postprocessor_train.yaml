@@ -14,11 +14,11 @@ num_workers: 20
 max_epochs: 1000
 valid_period: 10
 
-# CACHE EMBEDDINGS PRODUCED BY BASELINE EMBEDDER
+# CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
 
 embeddings_cache_dir: ${dataset_root}
 
-extractor_weights: /path/to/embedder.ckpt  # <---- specify path to baseline embedder
+extractor_weights: /path/to/extractor.ckpt  # <---- specify path to baseline feature extractor
 
 extractor:
   name: vit

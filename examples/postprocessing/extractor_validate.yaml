@@ -14,7 +14,7 @@ transforms_val:
     im_size: 224
     crop_size: 224
 
-weights: /path/to/embedder.ckpt  # <---- specify path to an embedder
+weights: /path/to/extractor.ckpt  # <---- specify path to an extractor
 
 model:
   name: vit

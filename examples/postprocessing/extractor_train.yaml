@@ -1,4 +1,4 @@
-postfix: "embedder"
+postfix: "feature_extractor"
 
 seed: 42
 precision: 16
