@@ -1,0 +1,66 @@
+accelerator: gpu
+precision: 32
+devices: 1
+
+dataset_root: /path/to/dataset  # <---- specify path to your dataset
+dataframe_name: df.csv
+
+bs_val: 128
+num_workers: 20
+
+extractor_weights: /path/to/embedder.ckpt  # <---- specify path to baseline embedder
+postprocessor_weights: /path/to/postprocessor.ckpt  # <---- specify path to a trained postprocessor
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: True
+    use_multi_scale: False
+    weights: ${extractor_weights}
+
+postprocessor:
+  name: pairwise_images
+  args:
+    top_n: 5
+    pairwise_model:
+      name: concat_siamese
+      args:
+        mlp_hidden_dims: [192]
+        weights: ${postprocessor_weights}
+        extractor:
+          name: vit
+          args:
+            arch: vits16
+            normalise_features: False
+            use_multi_scale: False
+            weights: null
+    transforms:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+    num_workers: ${num_workers}
+    batch_size: ${bs_val}
+    verbose: True
+    use_fp16: False  # todo: we checked metrics on True, let's check what is going on on False
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1, 10, 20, 30, 100]
+  map_top_k: [5, 10]
+  fmr_vals: []
+  precision_top_k: []
+  pfc_variance: []
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+hydra:
+  searchpath:
+   - pkg://oml.configs

@@ -1,0 +1,124 @@
+postfix: "postprocessing"
+
+seed: 42
+precision: 16
+accelerator: gpu
+devices: 2
+
+dataset_root: /path/to/dataset/   # <---- specify path to your dataset
+logs_root: /path/to/logs   # <---- specify path to your logs
+dataframe_name: df.csv
+logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
+
+num_workers: 20
+max_epochs: 1000
+valid_period: 10
+
+# CACHE EMBEDDINGS PRODUCED BY BASELINE EMBEDDER
+
+embeddings_cache_dir: ${dataset_root}
+
+extractor_weights: /path/to/embedder.ckpt  # <---- specify path to baseline embedder
+
+extractor:
+  name: vit
+  args:
+    normalise_features: True
+    use_multi_scale: False
+    weights: ${extractor_weights}
+    arch: vits16
+
+transforms_extraction:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+# TRAIN POSTPROCESSOR
+
+pairwise_model:
+  name: concat_siamese
+  args:
+    mlp_hidden_dims: [192]
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: ${extractor_weights}
+        arch: vits16
+
+hard_pairs_mining: True
+
+optimizer:
+  name: adam
+  args:
+    lr: 2e-3
+
+freeze_n_epochs: 3
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  scheduler:
+    name: multi_step
+    args:
+      gamma: 5e-3
+      milestones:
+        - ${freeze_n_epochs}
+
+sampler:
+  name: balance
+  args:
+    n_labels: 30
+    n_instances: 4
+
+transforms_train:
+  name: augs_hypvit_torch
+  args:
+    im_size: 224
+    min_scale: 0.8
+
+# VALIDATE POSTPROCESSOR BY RE-RANKING TOP-N OUTPUTS
+
+batch_size_inference: 128
+
+postprocessor:
+  name: pairwise_images
+  args:
+    top_n: 5
+    pairwise_model: ${pairwise_model}
+    transforms:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+    num_workers: ${num_workers}
+    batch_size: ${batch_size_inference}
+    verbose: True
+    use_fp16: True
+
+metric_for_checkpointing: OVERALL/cmc/1
+log_images: False
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1, 10, 20, 30, 100]
+  map_top_k: [5, 10]
+  fmr_vals: []
+  pfc_variance: []
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+# To use neptune you should also specify NEPTUNE_API_TOKEN in
+# .env file or via `export NEPTUNE_API_TOKEN=...`
+neptune_project: null
+
+tags:
+  - postprocessing
+
+hydra_dir: ${logs_root}/${logs_folder}/
+
+hydra:
+  run:
+    dir: ${hydra_dir}
+  searchpath:
+    - pkg://oml.configs

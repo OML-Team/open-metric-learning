@@ -1,0 +1,38 @@
+accelerator: gpu
+precision: 32
+devices: 1
+
+dataset_root: /path/to/dataset/  # <---- specify path to your dataset
+dataframe_name: df.csv
+
+bs_val: 128
+num_workers: 20
+
+transforms_val:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+weights: /path/to/embedder.ckpt  # <---- specify path to an embedder
+
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: ${weights}
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1, 10, 20, 30, 100]
+  map_top_k: [5, 10]
+  precision_top_k: []
+  pfc_variance: []
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+hydra:
+  searchpath:
+   - pkg://oml.configs

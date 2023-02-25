@@ -5,8 +5,6 @@ precision: 32
 dataset_root: data/Stanford_Online_Products/
 dataframe_name: df.csv
 
-logs_root: logs/Stanford_Online_Products/
-
 bs_val: 512
 num_workers: 20
 
@@ -31,8 +29,6 @@ metric_args:
   pfc_variance: [0.5, 0.9, 0.99]
   return_only_main_category: False
   visualize_only_main_category: True
-
-log_images: False
 
 hydra:
   searchpath:
