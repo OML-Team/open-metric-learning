@@ -20,7 +20,7 @@ model:
   name: vit
   args:
     arch: vits16
-    normalise_features: False
+    normalise_features: True
     use_multi_scale: False
     weights: ${weights}
 
