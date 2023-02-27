@@ -33,6 +33,7 @@ postprocessor:
       name: concat_siamese
       args:
         mlp_hidden_dims: [192]
+        use_tta: False
         weights: ${postprocessor_weights}
         extractor:
           name: vit
@@ -49,7 +50,7 @@ postprocessor:
     num_workers: ${num_workers}
     batch_size: ${bs_val}
     verbose: True
-    use_fp16: False  # todo: we checked metrics on True, let's check what is going on on False
+    use_fp16: False
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]

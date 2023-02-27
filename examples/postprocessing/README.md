@@ -14,7 +14,7 @@ python validate_extractor.py dataset_root=data/Inshop/ weights=extractor_inshop.
 **Stanford Online Products**
 ```bash
 python train_extractor.py dataset_root=data/SOP/ logs_root=logs/SOP
-python val_extractor.py dataset_root=data/SOP/ weights=extractor_sop.ckpt
+python validate_extractor.py dataset_root=data/SOP/ weights=extractor_sop.ckpt
 ```
 
 ## II. Train & validate a postprocessor
@@ -22,13 +22,13 @@ python val_extractor.py dataset_root=data/SOP/ weights=extractor_sop.ckpt
 **DeepFashion Inshop**
 ```bash
 python train_postprocessor.py dataset_root=data/InShop/ logs_root=logs/InShop extractor_weights=extractor_inshop.ckpt
-python val_postprocessor.py dataset_root=data/InShop/ extractor_weights=extractor_inshop.ckpt postprocessor_weights=postprocessor_inshop.ckpt
+python validate_postprocessor.py dataset_root=data/InShop/ extractor_weights=extractor_inshop.ckpt postprocessor_weights=postprocessor_inshop.ckpt
 ```
 
 **Stanford Online Products**
 ```bash
 python train_postprocessor.py dataset_root=data/SOP/ logs_root=logs/SOP extractor_weights=extractor_sop.ckpt
-python val_postprocessor.py dataset_root=data/SOP/ extractor_weights=extractor_sop.ckpt postprocessor_weights=postprocessor_sop.ckpt
+python validate_postprocessor.py dataset_root=data/SOP/ extractor_weights=extractor_sop.ckpt postprocessor_weights=postprocessor_sop.ckpt
 ```
 
 ## Pretrained checkpoints
