@@ -1,11 +1,11 @@
 accelerator: gpu
-devices: 1
 precision: 32
+devices: 1
 
-dataset_root: data/Stanford_Online_Products/
+dataset_root: /path/to/dataset/  # <---- specify path to your dataset
 dataframe_name: df.csv
 
-bs_val: 512
+bs_val: 128
 num_workers: 20
 
 transforms_val:
@@ -14,20 +14,23 @@ transforms_val:
     im_size: 224
     crop_size: 224
 
+weights: /path/to/extractor.ckpt  # <---- specify path to an extractor
+
 model:
   name: vit
   args:
     arch: vits16
     normalise_features: True
     use_multi_scale: False
-    weights: vits16_sop
+    weights: ${weights}
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
-  cmc_top_k: [1, 5]
-  map_top_k: [5]
-  pfc_variance: [0.5, 0.9, 0.99]
-  return_only_main_category: False
+  cmc_top_k: [1, 10, 20, 30, 100]
+  map_top_k: [5, 10]
+  precision_top_k: []
+  pfc_variance: []
+  return_only_main_category: True
   visualize_only_main_category: True
 
 hydra:

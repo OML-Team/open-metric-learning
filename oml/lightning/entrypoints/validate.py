@@ -63,8 +63,8 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
 
-    # Note! We add the link to our model to a Lightning's Module, so it can recongize it and manipulate its devices
-    pl_model.model_pairwise_ = getattr(postprocessor, "model", None)
+    # Note! We add the link to our model to a Lightning's Module, so it can recognize it and manipulate its devices
+    pl_model.model_link_ = getattr(postprocessor, "model", None)
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
@@ -80,7 +80,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     clb_metric = metrics_clb_constructor(
         metric=metrics_calc,
-        log_images=cfg.get("log_images", False),
+        log_images=False,
     )
 
     trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)

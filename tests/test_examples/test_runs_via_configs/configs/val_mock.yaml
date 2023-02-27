@@ -47,8 +47,6 @@ metric_args:
   return_only_main_category: False
   visualize_only_main_category: True
 
-log_images: False
-
 model:
   name: vit
   args:
