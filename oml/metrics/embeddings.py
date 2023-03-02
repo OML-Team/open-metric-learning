@@ -166,8 +166,12 @@ class EmbeddingMetrics(IMetricVisualisable):
         # Note, in some datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
-        self.mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        self.distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+        mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
+        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+
+        self.distance_matrix, self.mask_gt = apply_mask_to_ignore(
+            distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=self.mask_to_ignore
+        )
 
         if self.postprocessor:
             self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
@@ -196,7 +200,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         metrics[self.overall_categories_key] = calc_retrieval_metrics(
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
-            mask_to_ignore=self.mask_to_ignore,
             check_dataset_validity=self.check_dataset_validity,
             reduce=False,
             **args_retrieval_metrics,  # type: ignore
@@ -216,7 +219,6 @@ class EmbeddingMetrics(IMetricVisualisable):
                 metrics[category] = calc_retrieval_metrics(
                     distances=self.distance_matrix[mask],  # type: ignore
                     mask_gt=self.mask_gt[mask],  # type: ignore
-                    mask_to_ignore=self.mask_to_ignore[mask],  # type: ignore
                     reduce=False,
                     **args_retrieval_metrics,  # type: ignore
                 )
