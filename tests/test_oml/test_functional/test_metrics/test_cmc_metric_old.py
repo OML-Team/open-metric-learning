@@ -77,12 +77,10 @@ TEST_DATA_LESS_BIG = (
 )
 
 
-@pytest.mark.parametrize("distance_matrix,mask_gt,topk,expected", (TEST_DATA_SIMPLE[1],))
+@pytest.mark.parametrize("distance_matrix,mask_gt,topk,expected", TEST_DATA_SIMPLE)
 def test_metric_count(distance_matrix: Tensor, mask_gt: Tensor, topk: int, expected: float) -> None:
     """Simple test"""
-    print("\n", distance_matrix, mask_gt, topk, expected, "yyy")
     out = cmc_score_count(distances=distance_matrix, mask_gt=mask_gt, topk=topk)
-    print(out)
     assert np.isclose(out, expected), (out, expected)
 
 
