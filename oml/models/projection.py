@@ -50,11 +50,11 @@ class ExtractorWithMLP(IExtractor, IFreezable):
     }
 
     pretrained_models = {
-        "vits16_224_mlp_384_inshop": (
-            f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
-            "35244966",
-            "vits16_224_mlp_384_inshop.ckpt",
-        )
+        "vits16_224_mlp_384_inshop": {
+            "weights": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
+            "hash": "35244966",
+            "fname": "vits16_224_mlp_384_inshop.ckpt",
+        }
     }
 
     def __init__(
@@ -79,8 +79,10 @@ class ExtractorWithMLP(IExtractor, IFreezable):
         self.projection = MLP(self.extractor.feat_dim, mlp_features)
         if weights:
             if weights in self.pretrained_models:
-                url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-                weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+                pretrained = self.pretrained_models[weights]  # type: ignore
+                weights = download_checkpoint(
+                    url_or_fid=pretrained["url"], hash_md5=pretrained["hash"], fname=pretrained["fname"]
+                )
 
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)

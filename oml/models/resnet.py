@@ -31,11 +31,14 @@ class ResnetExtractor(IExtractor):
     }
 
     pretrained_models = {
-        "resnet50_moco_v2": (
-            "https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar",
-            "a04e12f8",
-            None,
-        )
+        "resnet50_moco_v2": {
+            "url": "https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar",
+            "hash": "a04e12f8",
+            "fname": None,
+            "gem_p": 1,
+            "remove_fc": False,
+            "normalise_features": True,  # todo check
+        }
     }
 
     def __init__(
@@ -90,15 +93,19 @@ class ResnetExtractor(IExtractor):
         if weights is None:
             return
 
-        elif isinstance(weights, str) and weights.lower() == "default":
+        elif isinstance(weights, str) and weights.lower().endswith("_default"):
             state_dict = factory_fun(weights="DEFAULT").state_dict()
 
-        elif isinstance(weights, str) and weights.lower() == "imagenet_v1":
+        elif isinstance(weights, str) and weights.lower().endswith("_imagenet_v1"):
             state_dict = factory_fun(weights="IMAGENET1K_V1").state_dict()
 
         elif weights in self.pretrained_models:
-            url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
-            path_to_ckpt = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
+            pretrained = self.pretrained_models[weights]  # type: ignore
+            path_to_ckpt = download_checkpoint(
+                url_or_fid=pretrained["url"],  # type: ignore
+                hash_md5=pretrained["hash"],  # type: ignore
+                fname=pretrained["fname"],  # type: ignore
+            )
             state_dict = load_moco_model(path_to_model=Path(path_to_ckpt)).state_dict()
 
         else:
@@ -151,6 +158,27 @@ class ResnetExtractor(IExtractor):
         gray_image = cam(image_tensor.unsqueeze(0), "gradcam", None)
         img_with_grads = show_cam_on_image(image / 255, gray_image)
         return img_with_grads
+
+    @classmethod
+    def from_pretrained(cls, weights: str) -> "ResnetExtractor":
+        arch = weights.split("_")[0]
+
+        if weights.lower().endswith("_default") or weights.lower().endswith("_imagenet_v1"):
+            resnet_extractor = ResnetExtractor(
+                weights=weights, arch=arch, normalise_features=False, gem_p=1, remove_fc=True
+            )
+
+        else:
+            pretrained = ResnetExtractor.pretrained_models[weights]  # type: ignore
+            resnet_extractor = ResnetExtractor(
+                weights=weights,
+                arch=arch,
+                strict_load=True,
+                normalise_features=pretrained["normalise_features"],  # type: ignore
+                gem_p=pretrained["gem_p"],  # type: ignore
+                remove_fc=pretrained["remove_fc"],  # type: ignore
+            )
+        return resnet_extractor
 
 
 def load_moco_model(path_to_model: Path) -> nn.Module:

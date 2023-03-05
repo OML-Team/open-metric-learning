@@ -38,17 +38,18 @@ def test_creation(
     net(torch.randn(1, 3, 224, 224))
     Path(fname).unlink()
 
-    # 3. Pretrained checkpoints
-    for key in constructor.pretrained_models.keys():
-        if constructor == ViTCLIPExtractor:
-            is_large_model = "vitl" in key
-            if is_large_model and not download_large_checkpoints:
-                continue
-            arch = key.split("_", maxsplit=1)[1]  # sber_vitb16_224 -> vitb16_224, openai_vitb16_224 -> vitb16_224
-        else:
-            arch = key.split("_")[0]
+    # 3. Test pretrained
+    for weights in constructor.pretrained_models.keys():
+        if ("vitl" in weights) and not download_large_checkpoints:
+            continue
+        net = constructor.from_pretrained(weights=weights)
+        net(torch.randn(1, 3, 224, 224))
 
-        net = constructor(weights=key, arch=arch, **args)
+    if constructor == ResnetExtractor:
+        net = ResnetExtractor.from_pretrained("resnet50_default")
+        net(torch.randn(1, 3, 224, 224))
+
+        net = ResnetExtractor.from_pretrained("resnet18_imagenet_v1")
         net(torch.randn(1, 3, 224, 224))
 
     assert True

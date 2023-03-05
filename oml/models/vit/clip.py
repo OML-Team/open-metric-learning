@@ -15,37 +15,57 @@ _SBER_URL = "https://huggingface.co/sberbank-ai"
 class ViTCLIPExtractor(IExtractor):
     pretrained_models: Dict[str, Any] = {
         # checkpoints pretrained by OpenAI
-        "openai_vitb16_224": (
-            f"{_OPENAI_URL}/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
-            "44c3d804ecac03d9545ac1a3adbca3a6",
-        ),
-        "openai_vitb32_224": (
-            f"{_OPENAI_URL}/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
-            "3ba34e387b24dfe590eeb1ae6a8a122b",
-        ),
-        "openai_vitl14_224": (
-            f"{_OPENAI_URL}/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
-            "096db1af569b284eb76b3881534822d9",
-        ),
-        "openai_vitl14_336": (
-            f"{_OPENAI_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
-            "b311058cae50cb10fbfa2a44231c9473",
-        ),
+        "openai_vitb16_224": {
+            "url": f"{_OPENAI_URL}/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
+            "hash": "44c3d804ecac03d9545ac1a3adbca3a6",
+            "is_jitted": True,
+            "normalise_features": False,
+            "fname": "openai_vitb16_224.ckpt",
+        },
+        "openai_vitb32_224": {
+            "url": f"{_OPENAI_URL}/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
+            "hash": "3ba34e387b24dfe590eeb1ae6a8a122b",
+            "is_jitted": True,
+            "normalise_features": False,
+            "fname": "openai_vitb32_224.ckpt",
+        },
+        "openai_vitl14_224": {
+            "url": f"{_OPENAI_URL}/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
+            "hash": "096db1af569b284eb76b3881534822d9",
+            "is_jitted": True,
+            "normalise_features": False,
+            "fname": "openai_vitl14_224.ckpt",
+        },
+        "openai_vitl14_336": {
+            "url": f"{_OPENAI_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
+            "hash": "b311058cae50cb10fbfa2a44231c9473",
+            "is_jitted": True,
+            "normalise_features": False,
+            "fname": "openai_vitl14_336.ckpt",
+        },
         # checkpoints pretrained by SberbankAI
-        "sber_vitb16_224": (
-            f"{_SBER_URL}/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
-            "7882e07674d78c674e33cb892a68bbfc",
-        ),
-        "sber_vitb32_224": (
-            f"{_SBER_URL}/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
-            "e2c4dab46a3cfa608bdd762973e90d32",
-        ),
-        "sber_vitl14_224": (
-            f"{_SBER_URL}/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
-            "9b4a1cd25d15bad4ffd2ba6e34b8a67c",
-        ),
+        "sber_vitb16_224": {
+            "url": f"{_SBER_URL}/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
+            "hash": "7882e07674d78c674e33cb892a68bbfc",
+            "is_jitted": False,
+            "normalise_features": False,
+            "fname": "sber_vitb16_224.ckpt",
+        },
+        "sber_vitb32_224": {
+            "url": f"{_SBER_URL}/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
+            "hash": "e2c4dab46a3cfa608bdd762973e90d32",
+            "is_jitted": False,
+            "normalise_features": False,
+            "fname": "sber_vitb32_224.ckpt",
+        },
+        "sber_vitl14_224": {
+            "url": f"{_SBER_URL}/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
+            "hash": "9b4a1cd25d15bad4ffd2ba6e34b8a67c",
+            "is_jitted": False,
+            "normalise_features": False,
+            "fname": "sber_vitl14_224.ckpt",
+        },
     }
-    jitted_weights = {"openai_vitb16_224", "openai_vitb32_224", "openai_vitl14_224", "openai_vitl14_336"}
 
     def __init__(
         self,
@@ -87,9 +107,9 @@ class ViTCLIPExtractor(IExtractor):
         if weights is None:
             return
         if weights in self.pretrained_models:
-            jitted_weights = weights in self.jitted_weights
-            weights, md5 = self.pretrained_models[weights]
-            weights = download_checkpoint(weights, md5)
+            pretrained = self.pretrained_models[weights]
+            jitted_weights = pretrained["is_jitted"]
+            weights = download_checkpoint(weights, pretrained["hash"], fname=pretrained["fname"])
         else:
             jitted_weights = False
 
@@ -113,6 +133,15 @@ class ViTCLIPExtractor(IExtractor):
     @property
     def feat_dim(self) -> int:
         return self.visual.state_dict()["proj"].shape[-1]
+
+    @classmethod
+    def from_pretrained(cls, weights: str) -> "ViTCLIPExtractor":
+        arch = "_".join(weights.split("_")[1:])
+        pretrained = ViTCLIPExtractor.pretrained_models[weights]
+        clip_extractor = ViTCLIPExtractor(
+            weights=weights, arch=arch, normalise_features=pretrained["normalise_features"], strict_load=True
+        )
+        return clip_extractor
 
 
 def take_visual_part_of_vit_clip(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
