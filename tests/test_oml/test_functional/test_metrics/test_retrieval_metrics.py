@@ -205,11 +205,11 @@ def compare_metrics(
     distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery)
     mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
     mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-    distances, mask_gt = apply_mask_to_ignore(distances, mask_gt, mask_to_ignore)
 
     metrics_calculated = calc_retrieval_metrics(
         distances=distances,
         mask_gt=mask_gt,
+        mask_to_ignore=mask_to_ignore,
         map_top_k=top_k,
         precision_top_k=top_k,
         cmc_top_k=top_k,
