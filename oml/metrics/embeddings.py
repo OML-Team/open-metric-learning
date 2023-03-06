@@ -202,6 +202,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             mask_gt=self.mask_gt,
             check_dataset_validity=self.check_dataset_validity,
             reduce=False,
+            mask_to_ignore=None,  # we already applied it
             **args_retrieval_metrics,  # type: ignore
         )
 
@@ -220,6 +221,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                     distances=self.distance_matrix[mask],  # type: ignore
                     mask_gt=self.mask_gt[mask],  # type: ignore
                     reduce=False,
+                    mask_to_ignore=None,  # we already applied it
                     **args_retrieval_metrics,  # type: ignore
                 )
 

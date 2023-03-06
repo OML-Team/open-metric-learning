@@ -16,6 +16,7 @@ TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 def calc_retrieval_metrics(
     distances: Tensor,
     mask_gt: Tensor,
+    mask_to_ignore: Optional[Tensor] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -29,6 +30,8 @@ def calc_retrieval_metrics(
     Args:
         distances: Distance matrix with the shape of ``[query_size, gallery_size]``
         mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
+        mask_to_ignore: Binary matrix to indicate that some elements in the gallery cannot be used
+                     as answers and must be ignored
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
@@ -49,7 +52,19 @@ def calc_retrieval_metrics(
         raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
 
     if check_dataset_validity:
-        validate_dataset(mask_gt=mask_gt)
+        validate_dataset(mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
+
+    if distances.shape != mask_gt.shape:
+        raise ValueError(
+            f"Distances matrix has the shape of {distances.shape}, "
+            f"but mask_to_ignore has the shape of {mask_gt.shape}."
+        )
+
+    if (mask_to_ignore is not None) and (mask_to_ignore.shape != distances.shape):
+        raise ValueError(
+            f"Distances matrix has the shape of {distances.shape}, "
+            f"but mask_to_ignore has the shape of {mask_to_ignore.shape}."
+        )
 
     query_sz, gallery_sz = distances.shape
 
@@ -60,6 +75,9 @@ def calc_retrieval_metrics(
                     f"Your desired k={k} more than gallery_size={gallery_sz}."
                     f"We'll calculate metrics with k limited by the gallery size."
                 )
+
+    if mask_to_ignore is not None:
+        distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     cmc_top_k_clipped = clip_max(cmc_top_k, gallery_sz)
     precision_top_k_clipped = clip_max(precision_top_k, gallery_sz)
@@ -87,7 +105,7 @@ def calc_retrieval_metrics(
         metrics["map"] = dict(zip(map_top_k, map))
 
     if fmr_vals:
-        pos_dist, neg_dist = extract_pos_neg_dists(distances, mask_gt)
+        pos_dist, neg_dist = extract_pos_neg_dists(distances, mask_gt, mask_to_ignore)
         fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
         metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
 
@@ -390,7 +408,7 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     map = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        positions = torch.arange(1, k + 1).unsqueeze(0)
+        positions = torch.arange(1, k + 1).unsqueeze(0).to(correct_preds.device)
         n_k = correct_preds[:, k - 1].clone()
         n_k[n_k < 1] = torch.inf  # hack to avoid zero division
         map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / n_k)
@@ -527,8 +545,7 @@ def calc_pcf(embeddings: Tensor, pfc_variance: Tuple[float, ...]) -> List[Tensor
 
 
 def extract_pos_neg_dists(
-    distances: Tensor,
-    mask_gt: Tensor,
+    distances: Tensor, mask_gt: Tensor, mask_to_ignore: Optional[Tensor]
 ) -> Tuple[Tensor, Tensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.
@@ -536,11 +553,12 @@ def extract_pos_neg_dists(
     Args:
         distances: Distance matrix with the shape of ``[query_size, gallery_size]``
         mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
+        mask_to_ignore: Binary matrix to indicate that some elements in gallery cannot be used
+                     as answers and must be ignored
     Returns:
         pos_dist: Tensor of distances between relevant samples
         neg_dist: Tensor of distances between non-relevant samples
     """
-    mask_to_ignore = torch.isinf(distances)
     if mask_to_ignore is not None:
         mask_to_not_ignore = ~mask_to_ignore
         pos_dist = distances[mask_gt & mask_to_not_ignore]
@@ -551,9 +569,10 @@ def extract_pos_neg_dists(
     return pos_dist, neg_dist
 
 
-def validate_dataset(mask_gt: Tensor, mask_to_ignore: Optional[Tensor] = None) -> None:
-    mask = (mask_gt & ~mask_to_ignore) if mask_to_ignore is not None else mask_gt
-    assert mask.any(1).all(), "There are queries without available correct answers in the gallery!"
+def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
+    assert (
+        (mask_gt & ~mask_to_ignore).any(1).all()
+    ), "There are queries without available correct answers in the gallery!"
 
 
 def _to_tensor(array: Union[np.ndarray, Tensor]) -> Tensor:

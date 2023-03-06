@@ -6,16 +6,15 @@ import pytest
 import torch
 from torch import Tensor
 
-from oml.functional.metrics import apply_mask_to_ignore, calc_retrieval_metrics
+from oml.functional.metrics import calc_retrieval_metrics
 from oml.utils.misc_torch import pairwise_dist
 
 
 def cmc_score_count(distances: Tensor, mask_gt: Tensor, topk: int, mask_to_ignore: Optional[Tensor] = None) -> float:
-    if mask_to_ignore is not None:
-        distances, mask_gt = apply_mask_to_ignore(distances, mask_gt, mask_to_ignore)
     metrics = calc_retrieval_metrics(
         distances=distances,
         mask_gt=mask_gt,
+        mask_to_ignore=mask_to_ignore,
         cmc_top_k=(topk,),
         map_top_k=tuple(),
         precision_top_k=tuple(),
@@ -40,9 +39,9 @@ EPS = 1e-4
 
 TEST_DATA_SIMPLE = (
     # (distance_matrix, mask_gt,  topk, expected_value)
-    (torch.tensor([[1.0, 2], [2.0, 1.0]]), torch.tensor([[0, 1], [1, 0]]), 1, 0.0),
+    (torch.tensor([[1, 2], [2, 1]]), torch.tensor([[0, 1], [1, 0]]), 1, 0.0),
     (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]]), 1, 0.5),
-    (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]]), 2, 1.0),
+    (torch.tensor([[0, 0.5], [0.0, 0.5]]), torch.tensor([[0, 1], [1, 0]]), 2, 1),
     (
         torch.tensor([[1, 0.5, 0.2], [2, 3, 4], [0.4, 3, 4]]),
         torch.tensor([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
@@ -81,7 +80,7 @@ TEST_DATA_LESS_BIG = (
 def test_metric_count(distance_matrix: Tensor, mask_gt: Tensor, topk: int, expected: float) -> None:
     """Simple test"""
     out = cmc_score_count(distances=distance_matrix, mask_gt=mask_gt, topk=topk)
-    assert np.isclose(out, expected), (out, expected)
+    assert np.isclose(out, expected), (out, expected, "xxx")
 
 
 @pytest.mark.parametrize(
