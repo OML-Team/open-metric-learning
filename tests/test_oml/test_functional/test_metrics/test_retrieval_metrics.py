@@ -16,8 +16,8 @@ from oml.functional.metrics import (
     calc_mask_to_ignore,
     calc_precision,
     calc_retrieval_metrics,
-    validate_dataset,
 )
+from oml.metrics.embeddings import validate_dataset
 from oml.utils.misc import remove_unused_kwargs
 from oml.utils.misc_torch import take_2d
 

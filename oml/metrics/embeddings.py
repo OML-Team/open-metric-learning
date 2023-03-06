@@ -5,6 +5,7 @@ from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch import Tensor
 
 from oml.const import (
     BLUE,
@@ -45,6 +46,12 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
+def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
+    assert (
+        (mask_gt & ~mask_to_ignore).any(1).all()
+    ), "There are queries without available correct answers in the gallery!"
+
+
 class EmbeddingMetrics(IMetricVisualisable):
     """
     This class accumulates the information from the batches and embeddings produced by the model
@@ -72,7 +79,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         categories_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
-        check_dataset_validity: bool = True,
         return_only_main_category: bool = False,
         visualize_only_main_category: bool = True,
         verbose: bool = True,
@@ -101,8 +107,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
              affect calculations.
-            check_dataset_validity: Set ``True`` if you want to check if all the queries have valid answers in the
-             gallery set
             return_only_main_category: Whether you want to return only the main category from ``.compute_metrics()``
             visualize_only_main_category: Whether you want to visualize only the main category with ``.visualize()``
             verbose: Set ``True`` if you want to print metrics
@@ -128,7 +132,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics_unreduced = None
         self.mask_to_ignore = None
 
-        self.check_dataset_validity = check_dataset_validity
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
 
@@ -173,6 +176,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=self.mask_to_ignore
         )
 
+        validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=self.mask_to_ignore)
+
         if self.postprocessor:
             self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
 
@@ -200,7 +205,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         metrics[self.overall_categories_key] = calc_retrieval_metrics(
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
-            check_dataset_validity=self.check_dataset_validity,
             reduce=False,
             mask_to_ignore=None,  # we already applied it
             **args_retrieval_metrics,  # type: ignore
