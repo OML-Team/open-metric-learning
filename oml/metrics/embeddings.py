@@ -130,7 +130,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.mask_gt = None
         self.metrics = None
         self.metrics_unreduced = None
-        self.mask_to_ignore = None
 
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
@@ -153,7 +152,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.distance_matrix = None
         self.mask_gt = None
         self.metrics = None
-        self.mask_to_ignore = None
 
         self.acc.refresh(num_samples=num_samples)
 
@@ -168,15 +166,15 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         # Note, in some datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        self.mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
         self.distance_matrix, self.mask_gt = apply_mask_to_ignore(
-            distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=self.mask_to_ignore
+            distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore
         )
 
-        validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=self.mask_to_ignore)
+        validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
 
         if self.postprocessor:
             self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
@@ -291,8 +289,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
         assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        dist_matrix_with_inf, mask_gt = apply_mask_to_ignore(self.distance_matrix, self.mask_gt, self.mask_to_ignore)
-
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
 
@@ -319,9 +315,9 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         fig = plt.figure(figsize=(30, 30 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
         for j, query_idx in enumerate(query_ids):
-            ids = torch.argsort(dist_matrix_with_inf[query_idx])[:n_instances]
+            ids = torch.argsort(self.distance_matrix[query_idx])[:n_instances]
 
-            n_gt = mask_gt[query_idx].sum()  # type: ignore
+            n_gt = self.mask_gt[query_idx].sum()  # type: ignore
 
             plt.subplot(
                 len(query_ids),
@@ -338,7 +334,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             plt.axis("off")
 
             for i, idx in enumerate(ids):
-                color = GREEN if mask_gt[query_idx, idx] else RED  # type: ignore
+                color = GREEN if self.mask_gt[query_idx, idx] else RED  # type: ignore
                 if verbose:
                     print("G", i, gallery_paths[idx])
                 plt.subplot(
@@ -348,11 +344,11 @@ class EmbeddingMetrics(IMetricVisualisable):
                 )
                 img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
                 img = square_pad(img)
-                plt.title(f"{i} - {round(dist_matrix_with_inf[query_idx, idx].item(), 3)}")
+                plt.title(f"{i} - {round(self.distance_matrix[query_idx, idx].item(), 3)}")
                 plt.imshow(img)
                 plt.axis("off")
 
-            gt_ids = mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
+            gt_ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
 
             for i, gt_idx in enumerate(gt_ids):
                 plt.subplot(
@@ -362,7 +358,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                 )
                 img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
                 img = square_pad(img)
-                plt.title("GT " + str(round(dist_matrix_with_inf[query_idx, gt_idx].item(), 3)))
+                plt.title("GT " + str(round(self.distance_matrix[query_idx, gt_idx].item(), 3)))
                 plt.imshow(img)
                 plt.axis("off")
 
