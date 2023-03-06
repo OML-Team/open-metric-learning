@@ -22,7 +22,6 @@ def calc_retrieval_metrics(
     map_top_k: Tuple[int, ...] = (5,),
     fmr_vals: Tuple[int, ...] = (1,),
     reduce: bool = True,
-    check_dataset_validity: bool = False,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -39,8 +38,6 @@ def calc_retrieval_metrics(
                   at the given False Match Rate`).
                   For example, if ``fmr_values`` is (0.2, 0.4) we will calculate ``fnmr@fmr=0.2`` and ``fnmr@fmr=0.4``
         reduce: If ``False`` return metrics for each query without averaging
-        check_dataset_validity: Set ``True`` if you want to check that we have available answers in the gallery for
-         each of the queries
 
     Returns:
         Metrics dictionary.
@@ -50,9 +47,6 @@ def calc_retrieval_metrics(
 
     if not any(top_k_args + [fmr_vals]):
         raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
-
-    if check_dataset_validity:
-        validate_dataset(mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     if distances.shape != mask_gt.shape:
         raise ValueError(
@@ -567,12 +561,6 @@ def extract_pos_neg_dists(
         pos_dist = distances[mask_gt]
         neg_dist = distances[~mask_gt]
     return pos_dist, neg_dist
-
-
-def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
-    assert (
-        (mask_gt & ~mask_to_ignore).any(1).all()
-    ), "There are queries without available correct answers in the gallery!"
 
 
 def _to_tensor(array: Union[np.ndarray, Tensor]) -> Tensor:
