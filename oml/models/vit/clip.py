@@ -109,7 +109,7 @@ class ViTCLIPExtractor(IExtractor):
         if weights in self.pretrained_models:
             pretrained = self.pretrained_models[weights]
             jitted_weights = pretrained["is_jitted"]
-            weights = download_checkpoint(weights, pretrained["hash"], fname=pretrained["fname"])
+            weights = download_checkpoint(pretrained["url"], pretrained["hash"], fname=pretrained["fname"])
         else:
             jitted_weights = False
 
