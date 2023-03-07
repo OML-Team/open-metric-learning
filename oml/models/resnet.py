@@ -35,9 +35,9 @@ class ResnetExtractor(IExtractor):
             "url": "https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar",
             "hash": "a04e12f8",
             "fname": None,
-            "gem_p": 1,
-            "remove_fc": False,
-            "normalise_features": True,  # todo check
+            "gem_p": 5.0,
+            "remove_fc": True,
+            "normalise_features": False,
         }
     }
 
