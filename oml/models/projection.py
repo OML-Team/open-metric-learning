@@ -51,7 +51,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
     pretrained_models = {
         "vits16_224_mlp_384_inshop": {
-            "weights": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
+            "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
             "hash": "35244966",
             "fname": "vits16_224_mlp_384_inshop.ckpt",
         }
