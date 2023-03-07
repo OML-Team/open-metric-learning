@@ -1,26 +1,35 @@
-accelerator: gpu
+accelerator: cpu
 devices: 1
 precision: 32
 
-dataset_root: data/CUB_200_2011/
+dataset_root: /Users/alexeyshab/data/CUB_200_2011
 dataframe_name: df.csv
 
 bs_val: 256
 num_workers: 8
 
 transforms_val:
-  name: norm_resize_albu
+  name: norm_resize_torch
   args:
     im_size: 224
 
-model:
-  name: vit
-  args:
-    arch: vits16
-    normalise_features: False
-    use_multi_scale: False
-    weights: vits16_cub
+#model:
+#  name: vit
+#  args:
+#    arch: vits16
+#    normalise_features: False
+#    use_multi_scale: False
+#    weights: vits16_cub
 
+model:
+  name: resnet
+  args:
+    arch: resnet50
+    gem_p: 5.0
+    remove_fc: True
+    normalise_features: False
+    weights: resnet50_moco_v2
+    strict_load: True
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
