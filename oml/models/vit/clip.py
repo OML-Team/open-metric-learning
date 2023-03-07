@@ -28,7 +28,8 @@ class ViTCLIPExtractor(IExtractor):
             "hash": "3ba34e387b24dfe590eeb1ae6a8a122b",
             "is_jitted": True,
             "normalise_features": False,
-            "fname": "openai_vitb32_224.ckpt",
+            # "fname": "openai_vitb32_224.ckpt",
+            "fname": None,
             "arch": "vitb32_224",
         },
         "openai_vitl14_224": {
