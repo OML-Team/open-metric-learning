@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
@@ -13,7 +13,8 @@ from oml.transforms.images.torchvision.transforms import (
     get_normalisation_resize_torch,
     get_normalisation_torch,
 )
-from oml.transforms.images.utils import TTransforms
+from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
+from oml.utils.images.images import TImReader
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 TRANSFORMS_ALBU = {
@@ -63,8 +64,10 @@ TRANSFORMS_FOR_PRETRAINED = {
 }
 
 
-def get_transforms_for_pretrained(weights: str) -> TTransforms:
-    return TRANSFORMS_FOR_PRETRAINED[weights]
+def get_transforms_for_pretrained(weights: str) -> Tuple[TTransforms, TImReader]:
+    transforms = TRANSFORMS_FOR_PRETRAINED[weights]
+    im_reader = get_im_reader_for_transforms(transforms)
+    return transforms, im_reader
 
 
 __all__ = [
@@ -73,4 +76,5 @@ __all__ = [
     "TRANSFORMS_REGISTRY",
     "get_transforms",
     "get_transforms_by_cfg",
+    "get_transforms_for_pretrained",
 ]

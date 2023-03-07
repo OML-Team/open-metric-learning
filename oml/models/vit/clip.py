@@ -21,6 +21,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": True,
             "normalise_features": False,
             "fname": "openai_vitb16_224.ckpt",
+            "arch": "vitb16_224",
         },
         "openai_vitb32_224": {
             "url": f"{_OPENAI_URL}/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
@@ -28,6 +29,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": True,
             "normalise_features": False,
             "fname": "openai_vitb32_224.ckpt",
+            "arch": "vitb32_224",
         },
         "openai_vitl14_224": {
             "url": f"{_OPENAI_URL}/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
@@ -35,6 +37,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": True,
             "normalise_features": False,
             "fname": "openai_vitl14_224.ckpt",
+            "arch": "vitl14_224",
         },
         "openai_vitl14_336": {
             "url": f"{_OPENAI_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
@@ -42,6 +45,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": True,
             "normalise_features": False,
             "fname": "openai_vitl14_336.ckpt",
+            "arch": "vitl14_336",
         },
         # checkpoints pretrained by SberbankAI
         "sber_vitb16_224": {
@@ -50,6 +54,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": False,
             "normalise_features": False,
             "fname": "sber_vitb16_224.ckpt",
+            "arch": "vitb16_224",
         },
         "sber_vitb32_224": {
             "url": f"{_SBER_URL}/ruclip-vit-base-patch32-224/resolve/main/pytorch_model.bin",
@@ -57,6 +62,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": False,
             "normalise_features": False,
             "fname": "sber_vitb32_224.ckpt",
+            "arch": "vitb32_224",
         },
         "sber_vitl14_224": {
             "url": f"{_SBER_URL}/ruclip-vit-large-patch14-224/resolve/main/pytorch_model.bin",
@@ -64,6 +70,7 @@ class ViTCLIPExtractor(IExtractor):
             "is_jitted": False,
             "normalise_features": False,
             "fname": "sber_vitl14_224.ckpt",
+            "arch": "vitl14_224",
         },
     }
 
@@ -136,10 +143,12 @@ class ViTCLIPExtractor(IExtractor):
 
     @classmethod
     def from_pretrained(cls, weights: str) -> "ViTCLIPExtractor":
-        arch = "_".join(weights.split("_")[1:])
         pretrained = ViTCLIPExtractor.pretrained_models[weights]
         clip_extractor = ViTCLIPExtractor(
-            weights=weights, arch=arch, normalise_features=pretrained["normalise_features"], strict_load=True
+            weights=weights,
+            arch=pretrained["arch"],
+            normalise_features=pretrained["normalise_features"],
+            strict_load=True,
         )
         return clip_extractor
 

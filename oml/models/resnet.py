@@ -38,6 +38,7 @@ class ResnetExtractor(IExtractor):
             "gem_p": 5.0,
             "remove_fc": True,
             "normalise_features": False,
+            "arch": "resnet50",
         }
     }
 
@@ -161,9 +162,8 @@ class ResnetExtractor(IExtractor):
 
     @classmethod
     def from_pretrained(cls, weights: str) -> "ResnetExtractor":
-        arch = weights.split("_")[0]
-
         if weights.lower().endswith("_default") or weights.lower().endswith("_imagenet_v1"):
+            arch = weights.split("_")[0]
             resnet_extractor = ResnetExtractor(
                 weights=weights, arch=arch, normalise_features=False, gem_p=1, remove_fc=True
             )
@@ -172,8 +172,8 @@ class ResnetExtractor(IExtractor):
             pretrained = ResnetExtractor.pretrained_models[weights]  # type: ignore
             resnet_extractor = ResnetExtractor(
                 weights=weights,
-                arch=arch,
                 strict_load=True,
+                arch=pretrained["arch"],  # type: ignore
                 normalise_features=pretrained["normalise_features"],  # type: ignore
                 gem_p=pretrained["gem_p"],  # type: ignore
                 remove_fc=pretrained["remove_fc"],  # type: ignore

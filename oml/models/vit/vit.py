@@ -37,24 +37,28 @@ class ViTExtractor(IExtractor):
             "hash": "cf0f22",
             "fname": None,
             "normalise_features": False,
+            "arch": "vits16",
         },
         "vits8_dino": {
             "url": f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth",
             "hash": "230cd5",
             "fname": None,
             "normalise_features": False,
+            "arch": "vits8",
         },
         "vitb16_dino": {
             "url": f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth",
             "hash": "552daf",
             "fname": None,
             "normalise_features": False,
+            "arch": "vitb16",
         },
         "vitb8_dino": {
             "url": f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth",
             "hash": "556550",
             "fname": None,
             "normalise_features": False,
+            "arch": "vitb8",
         },
         # our pretrained checkpoints
         "vits16_inshop": {
@@ -62,24 +66,28 @@ class ViTExtractor(IExtractor):
             "hash": "a76b85",
             "fname": "vits16_inshop.ckpt",
             "normalise_features": False,
+            "arch": "vits16",
         },
         "vits16_sop": {
             "url": [f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
             "hash": "21e743",
             "fname": "vits16_sop.ckpt",
             "normalise_features": True,
+            "arch": "vits16",
         },
         "vits16_cub": {
             "url": [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
             "hash": "e82633",
             "fname": "vits16_cub.ckpt",
             "normalise_features": False,
+            "arch": "vits16",
         },
         "vits16_cars": {
             "url": [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
             "hash": "9f1e59",
             "fname": "vits16_cars.ckpt",
             "normalise_features": False,
+            "arch": "vits16",
         },
     }
 
@@ -177,10 +185,9 @@ class ViTExtractor(IExtractor):
             )
 
         pretrained = ViTExtractor.pretrained_models[weights]
-        arch = weights.split("_")[0]
         vit_extractor = ViTExtractor(
             weights=weights,
-            arch=arch,
+            arch=pretrained["arch"],  # type: ignore
             normalise_features=pretrained["normalise_features"],  # type: ignore
             strict_load=True,
         )
