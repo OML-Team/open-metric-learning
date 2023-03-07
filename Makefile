@@ -46,7 +46,7 @@ download_mock_dataset:
 run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	#$(JUPYTER_CMD) --execute examples/visualization.ipynb
+	$(JUPYTER_CMD) --execute examples/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
