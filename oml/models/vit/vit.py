@@ -32,31 +32,63 @@ class ViTExtractor(IExtractor):
 
     pretrained_models = {
         # checkpoints pretrained in DINO framework on ImageNet by MetaAI
-        "vits16_dino": (f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth", "cf0f22", None),
-        "vits8_dino": (f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth", "230cd5", None),
-        "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
-        "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
+        "vits16_dino": {
+            "url": f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth",
+            "hash": "cf0f22",
+            "fname": "vits16_dino.ckpt",
+            "normalise_features": False,
+            "arch": "vits16",
+        },
+        "vits8_dino": {
+            "url": f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth",
+            "hash": "230cd5",
+            "fname": "vits8_dino.ckpt",
+            "normalise_features": False,
+            "arch": "vits8",
+        },
+        "vitb16_dino": {
+            "url": f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth",
+            "hash": "552daf",
+            "fname": "vitb16_dino.ckpt",
+            "normalise_features": False,
+            "arch": "vitb16",
+        },
+        "vitb8_dino": {
+            "url": f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth",
+            "hash": "556550",
+            "fname": "vitb8_dino.ckpt",
+            "normalise_features": False,
+            "arch": "vitb8",
+        },
         # our pretrained checkpoints
-        "vits16_inshop": (
-            [f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
-            "a76b85",
-            "vits16_inshop.ckpt",
-        ),
-        "vits16_sop": (
-            [f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
-            "21e743",
-            "vits16_sop.ckpt",
-        ),
-        "vits16_cub": (
-            [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
-            "e82633",
-            "vits16_cub.ckpt",
-        ),
-        "vits16_cars": (
-            [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
-            "9f1e59",
-            "vits16_cars.ckpt",
-        ),
+        "vits16_inshop": {
+            "url": [f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
+            "hash": "a76b85",
+            "fname": "vits16_inshop.ckpt",
+            "normalise_features": False,
+            "arch": "vits16",
+        },
+        "vits16_sop": {
+            "url": [f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
+            "hash": "21e743",
+            "fname": "vits16_sop.ckpt",
+            "normalise_features": True,
+            "arch": "vits16",
+        },
+        "vits16_cub": {
+            "url": [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
+            "hash": "e82633",
+            "fname": "vits16_cub.ckpt",
+            "normalise_features": False,
+            "arch": "vits16",
+        },
+        "vits16_cars": {
+            "url": [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
+            "hash": "9f1e59",
+            "fname": "vits16_cars.ckpt",
+            "normalise_features": False,
+            "arch": "vits16",
+        },
     }
 
     def __init__(
@@ -93,9 +125,11 @@ class ViTExtractor(IExtractor):
             return
 
         if weights in self.pretrained_models:
-            url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
+            pretrained = self.pretrained_models[weights]  # type: ignore
             weights = download_checkpoint_one_of(
-                url_or_fid_list=url_or_fid, hash_md5=hash_md5, fname=fname  # type: ignore
+                url_or_fid_list=pretrained["url"],  # type: ignore
+                hash_md5=pretrained["hash"],  # type: ignore
+                fname=pretrained["fname"],  # type: ignore
             )
 
         ckpt = torch.load(weights, map_location="cpu")
@@ -141,6 +175,23 @@ class ViTExtractor(IExtractor):
 
         """
         return vis_vit(vit=self, image=image)
+
+    @classmethod
+    def from_pretrained(cls, weights: str) -> "ViTExtractor":
+        if weights not in ViTExtractor.pretrained_models:
+            raise KeyError(
+                f"There is no pretrained model {weights}."
+                f" The existing ones are {ViTExtractor.pretrained_models.keys()}"
+            )
+
+        pretrained = ViTExtractor.pretrained_models[weights]
+        vit_extractor = ViTExtractor(
+            weights=weights,
+            arch=pretrained["arch"],  # type: ignore
+            normalise_features=pretrained["normalise_features"],  # type: ignore
+            strict_load=True,
+        )
+        return vit_extractor
 
 
 def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
