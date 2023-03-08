@@ -48,6 +48,6 @@ features = model(img_tensor.unsqueeze(0))
 print(list(ViTExtractor.pretrained_models.keys()))
 
 # Load checkpoint saved on a disk:
-model_ = ViTExtractor(weights=CKPT_DIR / "vits8_dino.ckpt", arch="vits8", normalise_features=False)
+model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
 ```
 [comment]:zoo-end
