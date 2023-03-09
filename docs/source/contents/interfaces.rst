@@ -13,8 +13,10 @@ IExtractor
     :undoc-members:
     :show-inheritance:
 
-    .. automethod:: extract
     .. autoproperty:: feat_dim
+    .. automethod:: extract
+    .. automethod:: from_pretrained
+
 
 IFreezable
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

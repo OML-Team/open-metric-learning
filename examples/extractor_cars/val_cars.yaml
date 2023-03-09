@@ -2,43 +2,33 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: /nydl/data/CARS196/
+dataset_root: data/CARS196/
 dataframe_name: df.csv
 
 bs_val: 256
 num_workers: 8
 
-model:
-  name: resnet
-  args:
-    arch: resnet50_projector
-    gem_p: 5.0
-    remove_fc: True
-    normalise_features: False
-    weights: resnet50_moco_v2
-
 transforms_val:
-  name: norm_resize_hypvit_torch
+  name: norm_resize_albu
   args:
-    im_size: 256
-    crop_size: 224
+    im_size: 224
 
-#model:
-#  name: vit
-#  args:
-#    arch: vits16
-#    normalise_features: False
-#    use_multi_scale: False
-#    weights: vits16_cars
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_cars
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
-  cmc_top_k: [1]
-  map_top_k: []
-  precision_top_k: []
-  fmr_vals: []
-  pfc_variance: []
-  return_only_main_category: True
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [5]
+  fmr_vals: [0.01]
+  pfc_variance: [0.5, 0.9, 0.99]
+  return_only_main_category: False
   visualize_only_main_category: True
 
 hydra:

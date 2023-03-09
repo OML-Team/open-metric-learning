@@ -16,17 +16,22 @@ class IExtractor(nn.Module, ABC):
 
     @property
     def feat_dim(self) -> int:
+        """
+        The only method that obligatory to implemented.
+        """
         raise NotImplementedError()
 
     @classmethod
-    def from_pretrained(cls, weights: str) -> Any:
+    def from_pretrained(cls, weights: str) -> "IExtractor":
         """
         This method allows to download a pretrained checkpoint.
-        ``self.pretrained_models`` is the dictionary which keeps the records of the available checkpoints in the format,
-        depending on implementation of a particular child of ``IExtractor``.
+        The class field ``self.pretrained_models`` is the dictionary which keeps records of all the available
+        checkpoints in the format, depending on implementation of a particular child of ``IExtractor``.
+        As a user, you don't need to worry about implementing this method.
 
         Args:
-            weights: A unique identifier (key) of a pretrained model in ``self.pretrained_models``.
+            weights: A unique identifier (key) of a pretrained model information stored in
+              a class field ``self.pretrained_models``.
 
         Returns: An instance of ``IExtractor``
 
@@ -36,7 +41,7 @@ class IExtractor(nn.Module, ABC):
                 f"There is no pretrained model {weights}." f" The existing ones are {cls.pretrained_models.keys()}."
             )
 
-        extractor = cls.__init__(cls, weights=weights, **cls.pretrained_models[weights]["init_args"])  # type: ignore
+        extractor = cls(weights=weights, **cls.pretrained_models[weights]["init_args"])  # type: ignore
         return extractor
 
 
