@@ -8,7 +8,7 @@ pillow>=8.2
 pandas>=1.0, <=1.5.2
 matplotlib>3.1, <3.6.2
 jupyter>=1.0.0
-grad-cam>=1.2
+grad-cam>=1.4.6
 
 omegaconf>=2.0.5, <2.3.0
 hydra-core>=1.2.0, <1.3.0

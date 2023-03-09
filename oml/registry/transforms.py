@@ -46,7 +46,12 @@ def get_transforms_by_cfg(cfg: TCfg) -> TTransforms:
 
 
 TRANSFORMS_FOR_PRETRAINED = {
-    "resnet50_moco_v2": get_normalisation_resize_torch(im_size=224),
+    "resnet50_moco_v2": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet18_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet34_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet50_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet101_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet152_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
     "vitb8_dino": get_normalisation_resize_torch(im_size=224),
     "vitb16_dino": get_normalisation_resize_torch(im_size=224),
     "vits8_dino": get_normalisation_resize_torch(im_size=224),

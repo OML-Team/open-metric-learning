@@ -45,13 +45,6 @@ def test_creation(
         net = constructor.from_pretrained(weights=weights)
         net(torch.randn(1, 3, 224, 224))
 
-    if constructor == ResnetExtractor:
-        net = ResnetExtractor.from_pretrained("resnet50_default")
-        net(torch.randn(1, 3, 224, 224))
-
-        net = ResnetExtractor.from_pretrained("resnet18_imagenet_v1")
-        net(torch.randn(1, 3, 224, 224))
-
     assert True
 
 

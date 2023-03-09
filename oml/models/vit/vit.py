@@ -199,7 +199,7 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]
 
-    img_tensor = get_normalisation_albu(mean=mean, std=std)(image=image)["image"]
+    img_tensor = get_normalisation_albu(mean=mean, std=std)(image=image)["image"]  # todo
 
     w = img_tensor.shape[1] - img_tensor.shape[1] % patch_size
     h = img_tensor.shape[2] - img_tensor.shape[2] % patch_size
