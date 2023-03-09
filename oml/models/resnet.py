@@ -69,7 +69,7 @@ class ResnetExtractor(IExtractor):
 
     def __init__(
         self,
-        weights: str,
+        weights: Optional[Union[Path, str]],
         arch: str,
         gem_p: Optional[float],
         remove_fc: bool,
@@ -117,7 +117,7 @@ class ResnetExtractor(IExtractor):
             )
             state_dict = load_moco_weights(moco_path)
 
-        elif weights.endswith("_imagenet1k_v1"):
+        elif str(weights).endswith("_imagenet1k_v1"):
             state_dict = constructor(weights="IMAGENET1K_V1").state_dict()
 
         else:
@@ -167,9 +167,9 @@ class ResnetExtractor(IExtractor):
         if self.remove_fc:
             raise ValueError("This method does not work if there is no FC layer in the model.")
 
-        need_transform = type(image) == TPILImage
+        need_to_convert = type(image) == TPILImage
 
-        if need_transform:
+        if need_to_convert:
             image = np.asarray(image)
 
         device = get_device(self.model)
@@ -178,7 +178,7 @@ class ResnetExtractor(IExtractor):
         gray_image = cam(image_tensor.unsqueeze(0), None)[0]
         img_with_grads = show_cam_on_image(image / 255, gray_image)
 
-        if need_transform:
+        if need_to_convert:
             img_with_grads = PIL.Image.fromarray(img_with_grads)
 
         return img_with_grads

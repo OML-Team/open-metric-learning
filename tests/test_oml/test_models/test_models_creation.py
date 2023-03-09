@@ -26,25 +26,30 @@ vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits
     ],
 )
 def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
+    im = torch.randn(1, 3, 224, 224)
+
     # 1. Random weights
     extractor = constructor(weights=None, **args).eval()
-    extractor.forward(torch.randn(1, 3, 224, 224))
+    features1 = extractor.extract(im)
 
     # 2. Load from file
     fname = "weights_tmp.pth"
     torch.save({"state_dict": extractor.state_dict()}, fname)
     extractor = constructor(weights=fname, **args).eval()
-    extractor(torch.randn(1, 3, 224, 224))
+    features2 = extractor.extract(im)
     Path(fname).unlink()
+
+    assert features1.ndim == 2
+    assert features1.shape[-1] == extractor.feat_dim
 
     # 3. Test pretrained
     for weights in constructor.pretrained_models.keys():
         if (("vitl" in weights) or ("resnet101" in weights) or ("resnet152" in weights)) and SKIP_LARGE_CKPT:
             continue
         extractor = constructor.from_pretrained(weights=weights)
-        extractor(torch.randn(1, 3, 224, 224))
+        extractor.extract(im)
 
-    assert True
+    assert torch.allclose(features1, features2)
 
 
 @pytest.mark.parametrize(
@@ -68,5 +73,4 @@ def test_pairwise(constructor: IPairwiseModel, args: Dict[str, Any]) -> None:
     output2 = model_pairwise.predict(im1, im2)
 
     assert output2.ndim == 1
-
     assert torch.allclose(output1, output2)

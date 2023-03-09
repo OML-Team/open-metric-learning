@@ -38,7 +38,7 @@ class IExtractor(nn.Module, ABC):
         """
         if weights not in cls.pretrained_models:
             raise KeyError(
-                f"There is no pretrained model {weights}." f" The existing ones are {cls.pretrained_models.keys()}."
+                f"There is no pretrained model {weights}. The existing ones are {list(cls.pretrained_models.keys())}."
             )
 
         extractor = cls(weights=weights, **cls.pretrained_models[weights]["init_args"])  # type: ignore
