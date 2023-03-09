@@ -313,7 +313,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         query_bboxes = torch.tensor(bboxes)[is_query]
         gallery_bboxes = torch.tensor(bboxes)[is_gallery]
 
-        fig = plt.figure(figsize=(30, 30 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
+        fig = plt.figure(figsize=(16, 16 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
         for j, query_idx in enumerate(query_ids):
             ids = torch.argsort(self.distance_matrix[query_idx])[:n_instances]
 
@@ -327,8 +327,10 @@ class EmbeddingMetrics(IMetricVisualisable):
 
             img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
             img = square_pad(img)
+
             if verbose:
                 print("Q  ", query_paths[query_idx])
+
             plt.imshow(img)
             plt.title(f"Query, #gt = {n_gt}")
             plt.axis("off")
