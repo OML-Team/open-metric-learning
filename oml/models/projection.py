@@ -1,6 +1,5 @@
-from functools import partial
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import torch
 from torch import nn
@@ -18,7 +17,7 @@ def get_vit_and_mlp(
     normalise_features_vit: bool,
     mlp_features: List[int],
     use_multi_scale_vit: bool = False,
-) -> nn.Module:
+) -> Tuple[nn.Module, nn.Module]:
     """
     Function for creation of ViT model and MLP projection.
 
@@ -33,21 +32,19 @@ def get_vit_and_mlp(
     return vit, mlp
 
 
+def vits16_224_mlp_384() -> Tuple[nn.Module, nn.Module]:
+    return get_vit_and_mlp(
+        arch_vit="vits16", normalise_features_vit=False, use_multi_scale_vit=False, mlp_features=[384]
+    )
+
+
 class ExtractorWithMLP(IExtractor, IFreezable):
     """
-    Class-wrapper for extractors which adds additional MLP (may be useful for classification losses).
+    Class-wrapper for extractors which an additional MLP.
 
     """
 
-    constructors = {
-        "vits16_224_mlp_384": partial(
-            get_vit_and_mlp,
-            arch_vit="vits16",
-            normalise_features_vit=False,
-            use_multi_scale_vit=False,
-            mlp_features=[384],
-        )
-    }
+    constructors = {"vits16_224_mlp_384": vits16_224_mlp_384}
 
     pretrained_models = {
         "vits16_224_mlp_384_inshop": {
@@ -62,7 +59,6 @@ class ExtractorWithMLP(IExtractor, IFreezable):
         extractor: IExtractor,
         mlp_features: List[int],
         weights: Optional[Union[str, Path]] = None,
-        strict_load: bool = True,
         train_backbone: bool = False,
     ):
         """
@@ -70,7 +66,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
             mlp_features: Sizes of projection layers
             weights: Path to weights file or ``None`` for random initialization
-            strict_load: Whether to use ``self.load_state_dict`` with strict argument
+            train_backbone: set ``False`` if you want to train only MLP heap
 
         """
         IExtractor.__init__(self)
@@ -87,7 +83,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
-            self.load_state_dict(loaded, strict=strict_load)
+            self.load_state_dict(loaded, strict=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         with torch.set_grad_enabled(self.train_backbone):
@@ -106,4 +102,4 @@ class ExtractorWithMLP(IExtractor, IFreezable):
         self.train_backbone = True
 
 
-__all__ = ["ExtractorWithMLP", "get_vit_and_mlp"]
+__all__ = ["ExtractorWithMLP"]

@@ -46,7 +46,6 @@ model:
     remove_fc: True
     normalise_features: False
     weights: resnet50_moco_v2
-    strict_load: False
 
 scheduling:
   scheduler_interval: epoch

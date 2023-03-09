@@ -68,7 +68,6 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
         mlp_hidden_dims: List[int],
         use_tta: bool = False,
         weights: Optional[Union[str, Path]] = None,
-        strict_load: bool = True,
     ) -> None:
         """
         Args:
@@ -77,7 +76,6 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
             use_tta: Set ``True`` if you want to average the results obtained by two different orders of concatenating
              input images. Affects only ``self.predict()`` method.
             weights: Path to weights file or ``None`` for random initialization
-            strict_load: Whether to use ``self.load_state_dict`` with strict argument
 
         """
         super(ConcatSiamese, self).__init__()
@@ -108,7 +106,7 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
-            self.load_state_dict(loaded, strict=strict_load)
+            self.load_state_dict(loaded, strict=True)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = torch.concat([x1, x2], dim=2)

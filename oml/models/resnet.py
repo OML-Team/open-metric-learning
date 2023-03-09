@@ -48,25 +48,22 @@ class ResnetExtractor(IExtractor):
             "url": "https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar",
             "hash": "a04e12f8",
             "fname": "moco_v2_800ep_pretrain.pth.tar",
-            "gem_p": 5.0,
-            "remove_fc": True,  # todo: recalc zoo with True and updated transforms
-            "arch": "resnet50_projector",
-            "normalise_features": False,
+            "init_args": {"arch": "resnet50_projector", "remove_fc": True, "normalise_features": False, "gem_p": 5.0},
         },
-        "resnet18_imagenet1k_v1": {"gem_p": None, "arch": "resnet18", "remove_fc": True, "normalise_features": False},
-        "resnet34_imagenet1k_v1": {"gem_p": None, "arch": "resnet34", "remove_fc": True, "normalise_features": False},
-        "resnet50_imagenet1k_v1": {"gem_p": None, "arch": "resnet50", "remove_fc": True, "normalise_features": False},
+        "resnet18_imagenet1k_v1": {
+            "init_args": {"arch": "resnet18", "remove_fc": True, "normalise_features": False, "gem_p": None}
+        },
+        "resnet34_imagenet1k_v1": {
+            "init_args": {"arch": "resnet34", "remove_fc": True, "normalise_features": False, "gem_p": None}
+        },
+        "resnet50_imagenet1k_v1": {
+            "init_args": {"arch": "resnet50", "remove_fc": True, "normalise_features": False, "gem_p": None},
+        },
         "resnet101_imagenet1k_v1": {
-            "gem_p": None,
-            "arch": "resnet101",
-            "normalise_features": False,
-            "remove_fc": True,
+            "init_args": {"arch": "resnet101", "remove_fc": True, "normalise_features": False, "gem_p": None},
         },
         "resnet152_imagenet1k_v1": {
-            "gem_p": None,
-            "arch": "resnet152",
-            "normalise_features": False,
-            "remove_fc": True,
+            "init_args": {"arch": "resnet152", "remove_fc": True, "normalise_features": False, "gem_p": None},
         },
     }
 
@@ -77,7 +74,6 @@ class ResnetExtractor(IExtractor):
         gem_p: Optional[float],
         remove_fc: bool,
         normalise_features: bool,
-        strict_load: bool = True,
     ):
         """
 
@@ -91,7 +87,6 @@ class ResnetExtractor(IExtractor):
             remove_fc: Set ``True`` if you want to remove the last fully connected layer. Note, that having this layer
               is obligatory for calling ``draw_gradcam()`` method
             normalise_features: Set ``True`` to normalise output features
-            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
 
         """
         assert arch in self.constructors.keys()
@@ -130,7 +125,7 @@ class ResnetExtractor(IExtractor):
 
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
         state_dict = remove_prefix_from_state_dict(state_dict, "layer4.")  # type: ignore
-        self.model.load_state_dict(state_dict, strict=strict_load)
+        self.model.load_state_dict(state_dict, strict=True)
 
         if self.remove_fc:
             self.model.fc = nn.Identity()
@@ -187,19 +182,6 @@ class ResnetExtractor(IExtractor):
             img_with_grads = PIL.Image.fromarray(img_with_grads)
 
         return img_with_grads
-
-    @classmethod
-    def from_pretrained(cls, weights: str) -> "ResnetExtractor":
-        pretrained = ResnetExtractor.pretrained_models[weights]
-        resnet_extractor = ResnetExtractor(
-            weights=weights,
-            arch=pretrained["arch"],  # type: ignore
-            gem_p=pretrained["gem_p"],  # type: ignore
-            strict_load=True,
-            remove_fc=pretrained["remove_fc"],  # type: ignore
-            normalise_features=pretrained["normalise_features"],  # type: ignore
-        )
-        return resnet_extractor
 
 
 def load_moco_weights(path_to_model: Union[str, Path]) -> Dict[str, Any]:
