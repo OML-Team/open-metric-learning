@@ -3,7 +3,7 @@ args:
   extractor:
     name: resnet
     args:
-      arch: resnet50
+      arch: resnet50_projector
       gem_p: 7.0
       remove_fc: True
       normalise_features: False
