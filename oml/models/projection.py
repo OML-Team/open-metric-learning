@@ -17,19 +17,6 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
     """
 
-    pretrained_models = {
-        "vits16_224_mlp_384_inshop": {
-            "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
-            "hash": "35244966",
-            "fname": "vits16_224_mlp_384_inshop.ckpt",
-            "init_args": {
-                "extractor": ViTExtractor(None, "vits16", normalise_features=False, use_multi_scale=False),
-                "mlp_features": [384],
-                "train_backbone": True,
-            },
-        }
-    }
-
     def __init__(
         self,
         extractor: IExtractor,
@@ -82,6 +69,30 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
     def unfreeze(self) -> None:
         self.train_backbone = True
+
+    @classmethod
+    def from_pretrained(cls, weights: str) -> "IExtractor":
+        # The current class is a kind of metaclass, since it takes another model as a constructor's argument.
+        # Thus, we must include other models into `self.pretrained_models()` dictionary.
+        # The problem is that if we put these models into a class field, they will be instantiated even if we simply
+        # import something from the current module. To avoid this behaviour we hide pretrained models in this method.
+
+        cls.pretrained_models.update(
+            {
+                "vits16_224_mlp_384_inshop": {
+                    "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
+                    "hash": "35244966",
+                    "fname": "vits16_224_mlp_384_inshop.ckpt",
+                    "init_args": {
+                        "extractor": ViTExtractor(None, "vits16", normalise_features=False, use_multi_scale=False),
+                        "mlp_features": [384],
+                        "train_backbone": True,
+                    },
+                }
+            }
+        )
+
+        return super().from_pretrained(weights)
 
 
 __all__ = ["ExtractorWithMLP"]
