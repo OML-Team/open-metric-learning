@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import torch
 from torchvision.ops import MLP
@@ -16,6 +16,9 @@ class ExtractorWithMLP(IExtractor, IFreezable):
     Class-wrapper for extractors which an additional MLP.
 
     """
+
+    # We update this dictionary later, see `self.from_pretrained()` method
+    pretrained_models: Dict[str, Any] = {"vits16_224_mlp_384_inshop": None}
 
     def __init__(
         self,
@@ -79,7 +82,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
         cls.pretrained_models.update(
             {
-                "vits16_224_mlp_384_inshop": {
+                "vits16_224_mlp_384_inshop": {  # type: ignore
                     "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
                     "hash": "35244966",
                     "fname": "vits16_224_mlp_384_inshop.ckpt",
