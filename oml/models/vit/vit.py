@@ -36,58 +36,50 @@ class ViTExtractor(IExtractor):
             "url": f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth",
             "hash": "cf0f22",
             "fname": "vits16_dino.ckpt",
-            "normalise_features": False,
-            "arch": "vits16",
+            "init_args": {"arch": "vits16", "normalise_features": False},
         },
         "vits8_dino": {
             "url": f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth",
             "hash": "230cd5",
             "fname": "vits8_dino.ckpt",
-            "normalise_features": False,
-            "arch": "vits8",
+            "init_args": {"arch": "vits8", "normalise_features": False},
         },
         "vitb16_dino": {
             "url": f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth",
             "hash": "552daf",
             "fname": "vitb16_dino.ckpt",
-            "normalise_features": False,
-            "arch": "vitb16",
+            "init_args": {"arch": "vitb16", "normalise_features": False},
         },
         "vitb8_dino": {
             "url": f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth",
             "hash": "556550",
             "fname": "vitb8_dino.ckpt",
-            "normalise_features": False,
-            "arch": "vitb8",
+            "init_args": {"arch": "vitb8", "normalise_features": False},
         },
         # our pretrained checkpoints
         "vits16_inshop": {
             "url": [f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
             "hash": "a76b85",
             "fname": "vits16_inshop.ckpt",
-            "normalise_features": False,
-            "arch": "vits16",
+            "init_args": {"arch": "vits16", "normalise_features": False},
         },
         "vits16_sop": {
             "url": [f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
             "hash": "21e743",
             "fname": "vits16_sop.ckpt",
-            "normalise_features": True,
-            "arch": "vits16",
+            "init_args": {"arch": "vits16", "normalise_features": True},
         },
         "vits16_cub": {
             "url": [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
             "hash": "e82633",
             "fname": "vits16_cub.ckpt",
-            "normalise_features": False,
-            "arch": "vits16",
+            "init_args": {"arch": "vits16", "normalise_features": False},
         },
         "vits16_cars": {
             "url": [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
             "hash": "9f1e59",
             "fname": "vits16_cars.ckpt",
-            "normalise_features": False,
-            "arch": "vits16",
+            "init_args": {"arch": "vits16", "normalise_features": False},
         },
     }
 
@@ -97,7 +89,6 @@ class ViTExtractor(IExtractor):
         arch: str,
         normalise_features: bool,
         use_multi_scale: bool = False,
-        strict_load: bool = True,
     ):
         """
         Args:
@@ -107,8 +98,7 @@ class ViTExtractor(IExtractor):
             arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options
              in ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
-            use_multi_scale: Set ``True`` to use multi scale (the analogue of test time augmentations)
-            strict_load: Set ``True`` if you want the strict load of the weights from the checkpoint
+            use_multi_scale: Set ``True`` to use multiscale (the analogue of test time augmentations)
 
         """
         assert arch in self.constructors
@@ -135,7 +125,7 @@ class ViTExtractor(IExtractor):
         ckpt = torch.load(weights, map_location="cpu")
         state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
-        self.model.load_state_dict(ckpt, strict=strict_load)
+        self.model.load_state_dict(ckpt, strict=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mscale:
@@ -175,23 +165,6 @@ class ViTExtractor(IExtractor):
 
         """
         return vis_vit(vit=self, image=image)
-
-    @classmethod
-    def from_pretrained(cls, weights: str) -> "ViTExtractor":
-        if weights not in ViTExtractor.pretrained_models:
-            raise KeyError(
-                f"There is no pretrained model {weights}."
-                f" The existing ones are {ViTExtractor.pretrained_models.keys()}"
-            )
-
-        pretrained = ViTExtractor.pretrained_models[weights]
-        vit_extractor = ViTExtractor(
-            weights=weights,
-            arch=pretrained["arch"],  # type: ignore
-            normalise_features=pretrained["normalise_features"],  # type: ignore
-            strict_load=True,
-        )
-        return vit_extractor
 
 
 def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:

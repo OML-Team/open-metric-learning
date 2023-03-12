@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any
+from typing import Any, Dict
 
 from torch import Tensor, nn
 
@@ -9,12 +9,40 @@ class IExtractor(nn.Module, ABC):
     Models have to inherit this interface to be comparable with the rest of the library.
     """
 
+    pretrained_models: Dict[str, Any] = {}
+
     def extract(self, x: Tensor) -> Tensor:
         return self.forward(x)
 
     @property
     def feat_dim(self) -> int:
+        """
+        The only method that obligatory to implemented.
+        """
         raise NotImplementedError()
+
+    @classmethod
+    def from_pretrained(cls, weights: str) -> "IExtractor":
+        """
+        This method allows to download a pretrained checkpoint.
+        The class field ``self.pretrained_models`` is the dictionary which keeps records of all the available
+        checkpoints in the format, depending on implementation of a particular child of ``IExtractor``.
+        As a user, you don't need to worry about implementing this method.
+
+        Args:
+            weights: A unique identifier (key) of a pretrained model information stored in
+              a class field ``self.pretrained_models``.
+
+        Returns: An instance of ``IExtractor``
+
+        """
+        if weights not in cls.pretrained_models:
+            raise KeyError(
+                f"There is no pretrained model {weights}. The existing ones are {list(cls.pretrained_models.keys())}."
+            )
+
+        extractor = cls(weights=weights, **cls.pretrained_models[weights]["init_args"])  # type: ignore
+        return extractor
 
 
 class IFreezable(ABC):

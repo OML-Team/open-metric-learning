@@ -4,105 +4,73 @@ from typing import Any, Dict
 import pytest
 import torch
 
-from oml.interfaces.models import IExtractor
+from oml.interfaces.models import IExtractor, IPairwiseModel
 from oml.models.projection import ExtractorWithMLP
 from oml.models.resnet import ResnetExtractor
 from oml.models.siamese import ConcatSiamese
 from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
 
-vit_args = {"normalise_features": False, "use_multi_scale": False, "strict_load": True}
-vit_clip_args = {"normalise_features": False, "strict_load": True}
-resnet_args = {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "strict_load": True}
+SKIP_LARGE_CKPT = True
+
+vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits16"}
 
 
 @pytest.mark.parametrize(
-    "constructor,args,default_arch,download_large_checkpoints",
+    "constructor,args",
     [
-        (ViTExtractor, vit_args, "vits16", False),
-        (ViTCLIPExtractor, vit_clip_args, "vitb32_224", False),
-        (ResnetExtractor, resnet_args, "resnet50", False),
+        (ViTExtractor, vit_args),
+        (ViTCLIPExtractor, {"normalise_features": False, "arch": "vitb32_224"}),
+        (ResnetExtractor, {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "arch": "resnet50"}),
+        (ExtractorWithMLP, {"extractor": ViTExtractor(None, **vit_args), "mlp_features": [128]}),  # type: ignore
     ],
 )
-def test_creation(
-    constructor: IExtractor, args: Dict[str, Any], default_arch: str, download_large_checkpoints: bool
-) -> None:
+def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
+    im = torch.randn(1, 3, 224, 224)
+
     # 1. Random weights
-    net = constructor(weights=None, arch=default_arch, **args)
-    net.forward(torch.randn(1, 3, 224, 224))
+    extractor = constructor(weights=None, **args).eval()
+    features1 = extractor.extract(im)
 
     # 2. Load from file
-    fname = f"{default_arch}_random.pth"
-    torch.save({"state_dict": net.state_dict()}, fname)
-    net = constructor(weights=fname, arch=default_arch, **args)
-    net(torch.randn(1, 3, 224, 224))
+    fname = "weights_tmp.pth"
+    torch.save({"state_dict": extractor.state_dict()}, fname)
+    extractor = constructor(weights=fname, **args).eval()
+    features2 = extractor.extract(im)
     Path(fname).unlink()
+
+    assert features1.ndim == 2
+    assert features1.shape[-1] == extractor.feat_dim
 
     # 3. Test pretrained
     for weights in constructor.pretrained_models.keys():
-        if ("vitl" in weights) and not download_large_checkpoints:
+        if (("vitl" in weights) or ("resnet101" in weights) or ("resnet152" in weights)) and SKIP_LARGE_CKPT:
             continue
-        net = constructor.from_pretrained(weights=weights)
-        net(torch.randn(1, 3, 224, 224))
-
-    if constructor == ResnetExtractor:
-        net = ResnetExtractor.from_pretrained("resnet50_default")
-        net(torch.randn(1, 3, 224, 224))
-
-        net = ResnetExtractor.from_pretrained("resnet18_imagenet_v1")
-        net(torch.randn(1, 3, 224, 224))
-
-    assert True
-
-
-@pytest.mark.parametrize(
-    "constructor,args,default_arch",
-    [
-        (ViTExtractor, vit_args, "vits16"),
-        (ViTCLIPExtractor, vit_clip_args, "vitb32_224"),
-        (ResnetExtractor, resnet_args, "resnet50"),
-    ],
-)
-def test_extractor_with_mlp(constructor: IExtractor, args: Dict[str, Any], default_arch: str) -> None:
-    im = torch.randn(1, 3, 224, 224)
-
-    net = constructor(weights=None, arch=default_arch, **args)
-    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128]).eval()
-    features1 = extractor(im)
-
-    fname = f"{default_arch}_with_mlp_random.pth"
-    torch.save({"state_dict": extractor.state_dict()}, fname)
-    net = constructor(weights=None, arch=default_arch, **args)
-    extractor = ExtractorWithMLP(extractor=net, mlp_features=[128], weights=fname).eval()
-    Path(fname).unlink()
-    features2 = extractor(im)
+        extractor = constructor.from_pretrained(weights=weights)
+        extractor.extract(im)
 
     assert torch.allclose(features1, features2)
 
 
 @pytest.mark.parametrize(
-    "constructor,args,default_arch",
+    "constructor,args",
     [
-        (ViTExtractor, vit_args, "vits8"),
-        (ResnetExtractor, resnet_args, "resnet50"),
+        (ConcatSiamese, {"extractor": ViTExtractor(None, **vit_args), "mlp_hidden_dims": [128, 10]}),  # type: ignore
     ],
 )
-def test_concat_siamese(constructor: IExtractor, args: Dict[str, Any], default_arch: str) -> None:
+def test_pairwise(constructor: IPairwiseModel, args: Dict[str, Any]) -> None:
     im1 = torch.randn(2, 3, 32, 32)
     im2 = torch.randn(2, 3, 32, 32)
 
-    net = constructor(weights=None, arch=default_arch, **args)
-    extractor = ConcatSiamese(extractor=net, mlp_hidden_dims=[128, 10]).eval()
-    output1 = extractor(im1, im2)
+    model_pairwise = constructor(weights=None, **args).eval()
+    output1 = model_pairwise.predict(im1, im2)
     assert output1.ndim == 1
 
-    fname = f"{default_arch}_siamese_random.pth"
-    torch.save({"state_dict": extractor.state_dict()}, fname)
-    net = constructor(weights=None, arch=default_arch, **args)
-    extractor = ConcatSiamese(extractor=net, mlp_hidden_dims=[128, 10], weights=fname).eval()
+    fname = "weights_tmp.ckpt"
+    torch.save({"state_dict": model_pairwise.state_dict()}, fname)
+    model_pairwise = constructor(weights=fname, **args).eval()
     Path(fname).unlink()
-    output2 = extractor(im1, im2)
+    output2 = model_pairwise.predict(im1, im2)
 
     assert output2.ndim == 1
-
     assert torch.allclose(output1, output2)

@@ -1,9 +1,7 @@
-from functools import partial
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import torch
-from torch import nn
 from torchvision.ops import MLP
 
 from oml.const import STORAGE_CKPTS
@@ -13,56 +11,20 @@ from oml.models.vit.vit import ViTExtractor
 from oml.utils.io import download_checkpoint
 
 
-def get_vit_and_mlp(
-    arch_vit: str,
-    normalise_features_vit: bool,
-    mlp_features: List[int],
-    use_multi_scale_vit: bool = False,
-) -> nn.Module:
-    """
-    Function for creation of ViT model and MLP projection.
-
-    """
-    vit = ViTExtractor(
-        weights=None,
-        arch=arch_vit,
-        normalise_features=normalise_features_vit,
-        use_multi_scale=use_multi_scale_vit,
-    )
-    mlp = MLP(vit.feat_dim, mlp_features)
-    return vit, mlp
-
-
 class ExtractorWithMLP(IExtractor, IFreezable):
     """
-    Class-wrapper for extractors which adds additional MLP (may be useful for classification losses).
+    Class-wrapper for extractors which an additional MLP.
 
     """
 
-    constructors = {
-        "vits16_224_mlp_384": partial(
-            get_vit_and_mlp,
-            arch_vit="vits16",
-            normalise_features_vit=False,
-            use_multi_scale_vit=False,
-            mlp_features=[384],
-        )
-    }
-
-    pretrained_models = {
-        "vits16_224_mlp_384_inshop": {
-            "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
-            "hash": "35244966",
-            "fname": "vits16_224_mlp_384_inshop.ckpt",
-        }
-    }
+    # We update this dictionary later, see `self.from_pretrained()` method
+    pretrained_models: Dict[str, Any] = {"vits16_224_mlp_384_inshop": None}
 
     def __init__(
         self,
         extractor: IExtractor,
         mlp_features: List[int],
         weights: Optional[Union[str, Path]] = None,
-        strict_load: bool = True,
         train_backbone: bool = False,
     ):
         """
@@ -70,24 +32,30 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
             mlp_features: Sizes of projection layers
             weights: Path to weights file or ``None`` for random initialization
-            strict_load: Whether to use ``self.load_state_dict`` with strict argument
+            train_backbone: set ``False`` if you want to train only MLP head
 
         """
         IExtractor.__init__(self)
-        self.train_backbone = train_backbone
+
         self.extractor = extractor
-        self.projection = MLP(self.extractor.feat_dim, mlp_features)
+        self.mlp_features = mlp_features
+        self.train_backbone = train_backbone
+
+        self.projection = MLP(self.extractor.feat_dim, self.mlp_features)
+
         if weights:
             if weights in self.pretrained_models:
                 pretrained = self.pretrained_models[weights]  # type: ignore
                 weights = download_checkpoint(
-                    url_or_fid=pretrained["url"], hash_md5=pretrained["hash"], fname=pretrained["fname"]
+                    url_or_fid=pretrained["url"],  # type: ignore
+                    hash_md5=pretrained["hash"],  # type: ignore
+                    fname=pretrained["fname"],  # type: ignore
                 )
 
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
-            self.load_state_dict(loaded, strict=strict_load)
+            self.load_state_dict(loaded, strict=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         with torch.set_grad_enabled(self.train_backbone):
@@ -97,7 +65,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
     @property
     def feat_dim(self) -> int:
-        return self.projection.out_features
+        return self.mlp_features[-1]
 
     def freeze(self) -> None:
         self.train_backbone = False
@@ -105,5 +73,29 @@ class ExtractorWithMLP(IExtractor, IFreezable):
     def unfreeze(self) -> None:
         self.train_backbone = True
 
+    @classmethod
+    def from_pretrained(cls, weights: str) -> "IExtractor":
+        # The current class is a kind of metaclass, since it takes another model as a constructor's argument.
+        # Thus, we must include other models into `self.pretrained_models()` dictionary.
+        # The problem is that if we put these models into a class field, they will be instantiated even if we simply
+        # import something from the current module. To avoid this behaviour we hide pretrained models in this method.
 
-__all__ = ["ExtractorWithMLP", "get_vit_and_mlp"]
+        cls.pretrained_models.update(
+            {
+                "vits16_224_mlp_384_inshop": {  # type: ignore
+                    "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
+                    "hash": "35244966",
+                    "fname": "vits16_224_mlp_384_inshop.ckpt",
+                    "init_args": {
+                        "extractor": ViTExtractor(None, "vits16", normalise_features=False, use_multi_scale=False),
+                        "mlp_features": [384],
+                        "train_backbone": True,
+                    },
+                }
+            }
+        )
+
+        return super().from_pretrained(weights)
+
+
+__all__ = ["ExtractorWithMLP"]
