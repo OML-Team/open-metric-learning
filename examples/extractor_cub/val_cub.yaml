@@ -3,7 +3,7 @@ devices: 1
 precision: 32
 
 dataset_root: data/CUB_200_2011/
-dataframe_name: df.csv
+dataframe_name: df_with_bboxes.csv
 
 bs_val: 256
 num_workers: 8
