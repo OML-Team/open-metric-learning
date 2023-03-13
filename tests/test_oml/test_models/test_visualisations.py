@@ -41,3 +41,20 @@ def test_visualisation(draw_function: Any, image: Union[np.ndarray, Image.Image]
 
     assert 0 <= image_modified.min() <= image_modified.max() <= 255
     assert image_modified.shape == IMAGE_SIZE
+
+
+@pytest.mark.parametrize(
+    "draw_function",
+    [
+        ViTExtractor(None, "vits16", normalise_features=False).draw_attention,
+        ResnetExtractor(None, "resnet50", normalise_features=False, gem_p=None, remove_fc=False).draw_gradcam,
+    ],
+)
+def test_visualisation_2(draw_function: Any) -> None:
+    np_image = get_numpy_image().astype(np.uint8)
+    pil_image = Image.fromarray(np_image)
+
+    out1 = draw_function(np_image)
+    out2 = np.array(draw_function(pil_image))
+
+    assert (out1 == out2).all()
