@@ -23,7 +23,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
             "hash": "35244966",
             "fname": "vits16_224_mlp_384_inshop.ckpt",
             "init_args": {
-                "extractor": lambda: ViTExtractor(None, "vits16", normalise_features=False, use_multi_scale=False),
+                "extractor_creator": lambda: ViTExtractor(None, "vits16", False, use_multi_scale=False),
                 "mlp_features": [384],
                 "train_backbone": True,
             },
@@ -91,7 +91,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
         # constructors into lambda functions.
 
         ini = cls.pretrained_models[weights]["init_args"]
-        ini["extractor"] = ini["extractor"]()  # type: ignore
+        ini["extractor"] = ini.pop("extractor_creator")()  # type: ignore
 
         return super().from_pretrained(weights)
 
