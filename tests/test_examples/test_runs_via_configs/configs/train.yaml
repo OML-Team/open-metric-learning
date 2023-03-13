@@ -3,7 +3,7 @@ postfix: "deepfashion"
 seed: 42
 precision: 32
 accelerator: cpu
-devices: 1
+devices: 2
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df.csv
@@ -31,18 +31,22 @@ criterion:
     in_features: 384
     num_classes: 4
 
-
 defaults:
   - optimizer: sgd
   - sampler: balance
 
 model:
-  name: vit
+  name: extractor_with_mlp
   args:
-    arch: vits8
-    normalise_features: False
-    use_multi_scale: False
-    weights: null
+    mlp_features: [384]
+    weights: vits16_224_mlp_384_inshop
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: vits16_dino
+        arch: vits16
 
 scheduling:
   scheduler_interval: epoch
