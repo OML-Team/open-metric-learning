@@ -191,13 +191,14 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```python
 import torch
 
+from oml.const import MOCK_DATASET_PATH
 from oml.inference.flat import inference_on_images
 from oml.models import ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc_torch import pairwise_dist
 
-_, df_val = download_mock_dataset(dataset_root=".")
+_, df_val = download_mock_dataset(dataset_root=MOCK_DATASET_PATH)
 queries = df_val[df_val["is_query"]]["path"].tolist()
 galleries = df_val[df_val["is_gallery"]]["path"].tolist()
 
