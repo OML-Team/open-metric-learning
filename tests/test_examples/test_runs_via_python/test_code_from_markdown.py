@@ -29,6 +29,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
         ("[comment]:zoo-start\n", "[comment]:zoo-end\n"),
         ("[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
+        ("[comment]:usage-retrieval-start\n", "[comment]:usage-retrieval-end\n"),
     ],
 )
 def test_code_blocks_in_readme(start_indicator: str, end_indicator: str) -> None:

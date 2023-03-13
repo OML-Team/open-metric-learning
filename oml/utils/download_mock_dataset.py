@@ -45,6 +45,9 @@ def download_mock_dataset(dataset_root: Union[str, Path], check_md5: bool = True
     df_train = df[df["split"] == "train"].reset_index(drop=True)
     df_val = df[df["split"] == "validation"].reset_index(drop=True)
 
+    df_val["is_query"] = df_val["is_query"].astype(bool)
+    df_val["is_gallery"] = df_val["is_gallery"].astype(bool)
+
     return df_train, df_val
 
 

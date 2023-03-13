@@ -183,6 +183,41 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 </details>
 ㅤ
 
+<details>
+<summary>Using a trained model for retrieval</summary>
+<p>
+
+[comment]:usage-retrieval-start
+```python
+import torch
+
+from oml.inference.flat import inference_on_images
+from oml.models import ViTExtractor
+from oml.registry.transforms import get_transforms_for_pretrained
+from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.misc_torch import pairwise_dist
+
+_, df_val = download_mock_dataset(dataset_root=".")
+queries = df_val[df_val["is_query"]]["path"].tolist()
+galleries = df_val[df_val["is_gallery"]]["path"].tolist()
+
+model = ViTExtractor.from_pretrained("vits16_dino")
+transform, _ = get_transforms_for_pretrained("vits16_dino")
+
+args = {"num_workers": 0, "batch_size": 8}
+features_queries = inference_on_images(model, paths=queries, transform=transform, **args)
+features_galleries = inference_on_images(model, paths=galleries, transform=transform, **args)
+
+dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
+ii_closest = torch.argmin(dist_mat, dim=1)
+
+print(f"Indices of the items closest to queries: {ii_closest}")
+```
+[comment]:usage-retrieval-end
+</p>
+</details>
+ㅤ
+
 **Postprocessing**
 
 You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
