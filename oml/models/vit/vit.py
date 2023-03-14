@@ -2,7 +2,9 @@ from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
+import PIL
 import torch
+from PIL.Image import Image as TPILImage
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
@@ -17,7 +19,7 @@ from oml.models.vit.hubconf import (  # type: ignore
 )
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
-from oml.utils.misc_torch import normalise
+from oml.utils.misc_torch import normalise, temporary_setting_model_mode
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 
@@ -159,16 +161,27 @@ class ViTExtractor(IExtractor):
         # v /= v.norm(dim=1)  # we don't want to shift the norms values
         return v
 
-    def draw_attention(self, image: np.ndarray) -> np.ndarray:
+    def draw_attention(self, image: Union[TPILImage, np.ndarray]) -> np.ndarray:
         """
+        Args:
+            image: An image with pixel values in the range of ``[0..255]``.
+
+        Returns:
+            An image with drawn attention maps.
+
         Visualization of the multi-head attention on a particular image.
 
         """
         return vis_vit(vit=self, image=image)
 
 
-def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
-    vit.eval()
+def vis_vit(
+    vit: ViTExtractor, image: Union[TPILImage, np.ndarray], mean: TNormParam = MEAN, std: TNormParam = STD
+) -> np.ndarray:
+    need_to_convert = not isinstance(image, np.ndarray)
+
+    if need_to_convert:
+        image = np.asarray(image)
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]
 
@@ -182,8 +195,9 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
     w_feat_map = img_tensor.shape[-2] // patch_size
     h_feat_map = img_tensor.shape[-1] // patch_size
 
-    with torch.no_grad():
-        attentions = vit.model.get_last_selfattention(img_tensor)
+    with temporary_setting_model_mode(vit, set_train=False):
+        with torch.no_grad():
+            attentions = vit.model.get_last_selfattention(img_tensor)
 
     nh = attentions.shape[1]
 
@@ -203,6 +217,9 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
     arr = sum(attentions[i] * 1 / attentions.shape[0] for i in range(attentions.shape[0]))
 
     arr = show_cam_on_image(image / image.max(), 0.6 * arr / arr.max())  # type: ignore
+
+    if need_to_convert:
+        arr = PIL.Image.fromarray(arr)
 
     return arr
 

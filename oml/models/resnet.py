@@ -159,6 +159,12 @@ class ResnetExtractor(IExtractor):
 
     def draw_gradcam(self, image: Union[np.ndarray, TPILImage]) -> Union[np.ndarray, TPILImage]:
         """
+        Args:
+            image: An image with pixel values in the range of ``[0..255]``.
+
+        Returns:
+            An image with drawn gradients.
+
         Visualization of the gradients on a particular image using `GradCam`_.
 
         .. _GradCam: https://arxiv.org/abs/1610.02391
@@ -167,7 +173,7 @@ class ResnetExtractor(IExtractor):
         if self.remove_fc:
             raise ValueError("This method does not work if there is no FC layer in the model.")
 
-        need_to_convert = type(image) == TPILImage
+        need_to_convert = not isinstance(image, np.ndarray)
 
         if need_to_convert:
             image = np.asarray(image)
