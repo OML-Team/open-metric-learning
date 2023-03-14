@@ -1,4 +1,5 @@
 import os
+import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
@@ -68,6 +69,12 @@ def initialize_logging(cfg: TCfg) -> Union[bool, NeptuneLogger]:
 
     """
     if ("NEPTUNE_API_TOKEN" in os.environ.keys()) and (cfg["neptune_project"] is not None):
+        warnings.warn(
+            "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
+            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it. You can use"
+            "Tensorboard logger instead, for this simply leave <NEPTUNE_API_TOKEN> unfilled."
+        )
+
         cwd = Path.cwd()
         logger = NeptuneLogger(
             api_key=os.environ["NEPTUNE_API_TOKEN"],
