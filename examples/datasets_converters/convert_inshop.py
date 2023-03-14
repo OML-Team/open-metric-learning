@@ -68,10 +68,10 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
 
     cols_to_pick = ["label", "path", "split", "is_query", "is_gallery", "category"]
 
-    if no_bboxes:
-        df["path"] = df["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
+    df["path"] = df["image_name"].apply(lambda x: Path(dataset_root) / x.replace("img/", "img_highres/"))
 
-    else:
+    need_bboxes = not no_bboxes
+    if need_bboxes:
         bbox_cols = ["x_1", "x_2", "y_1", "y_2"]
         cols_to_pick.extend(bbox_cols)
         df_bbox = txt_to_df(list_bbox_inshop)
@@ -80,7 +80,6 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
 
         df = df.merge(df_bbox, on="image_name", how="inner")
         df.reset_index(inplace=True, drop=True)
-        df["path"] = df["image_name"].apply(lambda x: Path(dataset_root) / x)
 
     df["category"] = df["path"].apply(lambda x: x.parent.parent.name)
 
