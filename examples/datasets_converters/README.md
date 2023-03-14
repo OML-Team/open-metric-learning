@@ -114,7 +114,13 @@ After a dataset is ready, simply run the converter. It will create `df.csv` if y
 `--no-bboxes` parameter or `df_with_bboxes.csv` otherwise in your dataset folder.
 
 ```shell
+python convert_<dataset>.py --dataset_root=/path/to/dataset
+# produces /path/to/dataset/df.csv
+```
+or
+```shell
 python convert_<dataset>.py --dataset_root=/path/to/dataset --no_bboxes
+# produces /path/to/dataset/df_with_bboxes.csv
 ```
 
 Note, you can find our pretrained checkpoints for these datasets in the
