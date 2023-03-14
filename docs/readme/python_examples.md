@@ -130,7 +130,8 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 [comment]:lightning-end
 </p>
 </details>
-ㅤ
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1bVUgdBGWvQgCkba2YtaIRVlUQUz7Q60Z?usp=share_link)
 
 <details>
 <summary>Training + Validation [Lightning Distributed]</summary>
@@ -181,6 +182,8 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 [comment]:lightning-ddp-end
 </p>
 </details>
+
+*Colab: there is no Colab link since it provides only single-GPU machines.*
 ㅤ
 
 **Postprocessing**
