@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import torch
 from torchvision.ops import MLP
@@ -17,8 +17,18 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
     """
 
-    # We update this dictionary later, see `self.from_pretrained()` method
-    pretrained_models: Dict[str, Any] = {"vits16_224_mlp_384_inshop": None}
+    pretrained_models = {
+        "vits16_224_mlp_384_inshop": {  # type: ignore
+            "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
+            "hash": "35244966",
+            "fname": "vits16_224_mlp_384_inshop.ckpt",
+            "init_args": {
+                "extractor_creator": lambda: ViTExtractor(None, "vits16", False, use_multi_scale=False),
+                "mlp_features": [384],
+                "train_backbone": True,
+            },
+        }
+    }
 
     def __init__(
         self,
@@ -75,25 +85,13 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
     @classmethod
     def from_pretrained(cls, weights: str) -> "IExtractor":
-        # The current class is a kind of metaclass, since it takes another model as a constructor's argument.
-        # Thus, we must include other models into `self.pretrained_models()` dictionary.
-        # The problem is that if we put these models into a class field, they will be instantiated even if we simply
-        # import something from the current module. To avoid this behaviour we hide pretrained models in this method.
+        # The current class takes another model as a constructor's argument, so, they need to be
+        # in the `self.pretrained_models`. The problem is these models will be instantiated even if we simply
+        # import something from the current module. To avoid it we added the logic of wrapping/unwrapping
+        # constructors into lambda functions.
 
-        cls.pretrained_models.update(
-            {
-                "vits16_224_mlp_384_inshop": {  # type: ignore
-                    "url": f"{STORAGE_CKPTS}/inshop/vits16_224_mlp_384_inshop.ckpt",
-                    "hash": "35244966",
-                    "fname": "vits16_224_mlp_384_inshop.ckpt",
-                    "init_args": {
-                        "extractor": ViTExtractor(None, "vits16", normalise_features=False, use_multi_scale=False),
-                        "mlp_features": [384],
-                        "train_backbone": True,
-                    },
-                }
-            }
-        )
+        ini = cls.pretrained_models[weights]["init_args"]
+        ini["extractor"] = ini.pop("extractor_creator")()  # type: ignore
 
         return super().from_pretrained(weights)
 
