@@ -134,6 +134,7 @@ def pl_train(cfg: TCfg) -> None:
         logger=logger,
         precision=cfg.get("precision", 32),
         **trainer_engine_params,
+        **cfg.get("lightning_trainer_extra_args", {}),
     )
 
     if is_ddp:

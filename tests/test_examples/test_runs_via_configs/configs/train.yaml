@@ -74,6 +74,9 @@ valid_period: 1
 
 neptune_project: null
 
+lightning_trainer_extra_args:
+  max_time: "00:12:00:00"  # 12h
+
 tags:
   - mock
 
