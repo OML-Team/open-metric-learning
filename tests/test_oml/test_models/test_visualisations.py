@@ -15,7 +15,7 @@ def get_image_pillow() -> Image.Image:
 
 
 def get_numpy_image() -> np.ndarray:
-    return np.random.randint(0, 256, size=IMAGE_SIZE)
+    return np.random.randint(0, 256, size=IMAGE_SIZE, dtype=np.uint8)
 
 
 @pytest.mark.parametrize(
@@ -51,7 +51,7 @@ def test_visualisation(draw_function: Any, image: Union[np.ndarray, Image.Image]
     ],
 )
 def test_visualisation_2(draw_function: Any) -> None:
-    np_image = get_numpy_image().astype(np.uint8)
+    np_image = get_numpy_image()
     pil_image = Image.fromarray(np_image)
 
     out1 = draw_function(np_image)

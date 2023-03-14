@@ -163,6 +163,12 @@ class ViTExtractor(IExtractor):
 
     def draw_attention(self, image: Union[TPILImage, np.ndarray]) -> np.ndarray:
         """
+        Args:
+            image: An image with pixel values in the range of ``[0..255]``.
+
+        Returns:
+            An image with drawn attention maps.
+
         Visualization of the multi-head attention on a particular image.
 
         """
@@ -172,7 +178,7 @@ class ViTExtractor(IExtractor):
 def vis_vit(
     vit: ViTExtractor, image: Union[TPILImage, np.ndarray], mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> np.ndarray:
-    need_to_convert = type(image) == TPILImage
+    need_to_convert = type(image) != np.ndarray
 
     if need_to_convert:
         image = np.asarray(image)
