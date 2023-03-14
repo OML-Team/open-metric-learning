@@ -488,6 +488,8 @@ print(f"Indices of the items closest to queries: {ii_closest}")
 [comment]:usage-retrieval-end
 </p>
 </details>
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 ㅤ
 
 **Postprocessing**
