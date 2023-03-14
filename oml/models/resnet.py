@@ -173,7 +173,7 @@ class ResnetExtractor(IExtractor):
         if self.remove_fc:
             raise ValueError("This method does not work if there is no FC layer in the model.")
 
-        need_to_convert = type(image) != np.ndarray
+        need_to_convert = not isinstance(image, np.ndarray)
 
         if need_to_convert:
             image = np.asarray(image)

@@ -178,7 +178,7 @@ class ViTExtractor(IExtractor):
 def vis_vit(
     vit: ViTExtractor, image: Union[TPILImage, np.ndarray], mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> np.ndarray:
-    need_to_convert = type(image) != np.ndarray
+    need_to_convert = not isinstance(image, np.ndarray)
 
     if need_to_convert:
         image = np.asarray(image)
