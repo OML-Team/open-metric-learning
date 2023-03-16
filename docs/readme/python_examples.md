@@ -215,18 +215,19 @@ features_galleries = inference_on_images(model, paths=galleries, transform=trans
 
 # Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
 use_knn = True
+top_k = 3
 
 if use_knn:
     from sklearn.neighbors import NearestNeighbors
     knn = NearestNeighbors(algorithm="auto", p=2)
     knn.fit(features_galleries)
-    ii_closest = knn.kneighbors(features_queries, n_neighbors=10)
+    dists, ii_closest = knn.kneighbors(features_queries, n_neighbors=top_k, return_distance=True)
 
 else:
     dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
-    ii_closest = torch.argmin(dist_mat, dim=1)
+    dists, ii_closest = torch.topk(dist_mat, dim=1, k=top_k, largest=False)
 
-print(f"The indices of the items closest to queries are: {ii_closest}")
+print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 ```
 [comment]:usage-retrieval-end
 </p>
