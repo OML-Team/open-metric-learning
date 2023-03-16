@@ -483,10 +483,20 @@ args = {"num_workers": 0, "batch_size": 8}
 features_queries = inference_on_images(model, paths=queries, transform=transform, **args)
 features_galleries = inference_on_images(model, paths=galleries, transform=transform, **args)
 
-dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
-ii_closest = torch.argmin(dist_mat, dim=1)
+# Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
+use_knn = True
 
-print(f"Indices of the items closest to queries: {ii_closest}")
+if use_knn:
+    from sklearn.neighbors import NearestNeighbors
+    knn = NearestNeighbors(algorithm="auto", p=2)
+    knn.fit(features_galleries)
+    ii_closest = knn.kneighbors(features_queries, n_neighbors=10)
+
+else:
+    dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
+    ii_closest = torch.argmin(dist_mat, dim=1)
+
+print(f"The indices of the items closest to queries are: {ii_closest}")
 ```
 [comment]:usage-retrieval-end
 </p>
