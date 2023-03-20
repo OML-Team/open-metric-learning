@@ -17,7 +17,7 @@ from oml.const import (
     PATHS_KEY,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.models.siamese import LinearTrivialDistanceSiamese
+from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import compare_dicts_recursively, one_hot
 

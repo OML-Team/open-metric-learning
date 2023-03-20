@@ -5,9 +5,9 @@ import pytest
 import torch
 
 from oml.interfaces.models import IExtractor, IPairwiseModel
-from oml.models.projection import ExtractorWithMLP
+from oml.models.meta.projection import ExtractorWithMLP
+from oml.models.meta.siamese import ConcatSiamese
 from oml.models.resnet import ResnetExtractor
-from oml.models.siamese import ConcatSiamese
 from oml.models.vit.clip import ViTCLIPExtractor
 from oml.models.vit.vit import ViTExtractor
 

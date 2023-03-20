@@ -9,7 +9,7 @@ from torch import Tensor
 
 from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
 from oml.interfaces.models import IPairwiseModel
-from oml.models.siamese import LinearTrivialDistanceSiamese
+from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
 from oml.utils.misc import flatten_dict, one_hot
 from oml.utils.misc_torch import normalise, pairwise_dist

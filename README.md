@@ -523,6 +523,7 @@ The documentation for related classes is available via the [link](https://open-m
 <p>
 
 [comment]:postprocessor-start
+
 ```python
 from pprint import pprint
 
@@ -534,7 +535,7 @@ from oml.datasets.base import DatasetWithLabels, DatasetQueryGallery
 from oml.inference.flat import inference_on_dataframe
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.pairs import PairsMiner
-from oml.models.siamese import ConcatSiamese
+from oml.models.meta.siamese import ConcatSiamese
 from oml.models.vit.vit import ViTExtractor
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.samplers.balance import BalanceSampler
@@ -548,7 +549,7 @@ download_mock_dataset(dataset_root)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 transform = get_normalisation_resize_torch(im_size=64)
 
-embeddings_train, embeddings_val, df_train, df_val = \
+embeddings_train, embeddings_val, df_train, df_val =
     inference_on_dataframe(dataset_root, "df.csv", extractor=extractor, transforms_extraction=transform)
 
 # We are building Siamese model on top of existing weights and train it to recognize positive/negative pairs

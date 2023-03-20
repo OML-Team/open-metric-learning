@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from oml.models.siamese import LinearTrivialDistanceSiamese
+from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.utils.misc_torch import elementwise_dist
 
 

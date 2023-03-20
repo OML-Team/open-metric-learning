@@ -7,8 +7,8 @@ from torch import Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
 from oml.inference.flat import inference_on_images
+from oml.models.meta.siamese import TrivialDistanceSiamese
 from oml.models.resnet import ResnetExtractor
-from oml.models.siamese import TrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
 from oml.transforms.images.utils import TTransforms
