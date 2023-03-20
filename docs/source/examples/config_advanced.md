@@ -25,7 +25,7 @@ Your `config.yaml` and `train.py` may look like this:
 ```yaml
 ...
 
-augs:
+transforms_train:
   name: custom_augmentations
   args: {}
 
@@ -56,7 +56,7 @@ class CustomModel(IExtractor):
         self.resnet = resnet18(pretrained=pretrained)
 
     def forward(self, x):
-        self.resnet(x)
+        return self.resnet(x)
 
     @property
     def feat_dim(self):
