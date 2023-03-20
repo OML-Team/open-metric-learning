@@ -118,7 +118,6 @@ class ResnetExtractor(IExtractor):
             state_dict = load_moco_weights(moco_path)
 
         elif str(weights).endswith("_imagenet1k_v1"):
-            constructor = self.constructors[self.arch]
             state_dict = constructor(weights="IMAGENET1K_V1").state_dict()
 
         else:
