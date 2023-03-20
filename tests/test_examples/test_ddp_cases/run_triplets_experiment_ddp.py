@@ -17,9 +17,7 @@ from oml.lightning.entrypoints.parser import parse_engine_params_from_config
 from oml.lightning.modules.ddp import ModuleDDP, TTrainDataloaders, TValDataloaders
 from oml.losses.triplet import TripletLossPlain
 from oml.miners.inbatch_all_tri import get_available_triplets
-from oml.transforms.images.albumentations.transforms import (
-    get_normalisation_resize_albu,
-)
+from oml.transforms.images.albumentations import get_normalisation_resize_albu
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import set_global_seed
 

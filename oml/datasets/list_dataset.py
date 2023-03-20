@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 from oml.const import INDEX_KEY, INPUT_TENSORS_KEY
 from oml.exceptions import InvalidBBoxesException
-from oml.transforms.images.torchvision.transforms import get_normalisation_torch
+from oml.transforms.images.torchvision import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
 

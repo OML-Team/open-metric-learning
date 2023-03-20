@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import Dataset
 
 from oml.const import INDEX_KEY, INPUT_TENSORS_KEY
-from oml.transforms.images.albumentations.transforms import get_normalisation_albu
+from oml.transforms.images.albumentations import get_normalisation_albu
 from oml.utils.images.images import TImReader, imread_cv2
 
 TPath = Union[Path, str]
