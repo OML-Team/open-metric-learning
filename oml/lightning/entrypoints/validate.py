@@ -20,7 +20,7 @@ from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
-def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
+def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
     This is an entrypoint for the model validation in metric learning setup.
 
@@ -93,4 +93,4 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     return trainer, logs
 
 
-__all__ = ["pl_val"]
+__all__ = ["extractor_validation_pipeline"]

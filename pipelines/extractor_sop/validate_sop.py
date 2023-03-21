@@ -1,12 +1,12 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.validate import pl_val
+from oml.lightning.entrypoints.validate import extractor_validation_pipeline
 
 
 @hydra.main(config_path=".", config_name="val_sop.yaml")
 def main_hydra(cfg: DictConfig) -> None:
-    pl_val(cfg)
+    extractor_validation_pipeline(cfg)
 
 
 if __name__ == "__main__":

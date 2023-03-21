@@ -44,32 +44,32 @@ from omegaconf import DictConfig
 from torchvision.models import resnet18
 
 from oml.interfaces.models import IExtractor
-from oml.lightning.entrypoints.train import pl_train
+from oml.lightning.entrypoints.train import extractor_training_pipeline
 from oml.registry.models import EXTRACTORS_REGISTRY
 from oml.registry.transforms import TRANSFORMS_REGISTRY
 
 
 class CustomModel(IExtractor):
 
-    def __init__(self, pretrained):
-        super().__init__()
-        self.resnet = resnet18(pretrained=pretrained)
+  def __init__(self, pretrained):
+    super().__init__()
+    self.resnet = resnet18(pretrained=pretrained)
 
-    def forward(self, x):
-        return self.resnet(x)
+  def forward(self, x):
+    return self.resnet(x)
 
-    @property
-    def feat_dim(self):
-        return self.resnet.fc.out_features
+  @property
+  def feat_dim(self):
+    return self.resnet.fc.out_features
 
 
 def get_custom_augs() -> t.Compose:
-    return t.Compose([
-        t.RandomHorizontalFlip(),
-        t.RandomGrayscale(),
-        t.ToTensor(),
-        t.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+  return t.Compose([
+    t.RandomHorizontalFlip(),
+    t.RandomGrayscale(),
+    t.ToTensor(),
+    t.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+  ])
 
 
 TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs
@@ -78,11 +78,11 @@ EXTRACTORS_REGISTRY["custom_model"] = CustomModel
 
 @hydra.main(config_path="configs", config_name="train.yaml")
 def main_hydra(cfg: DictConfig) -> None:
-    pl_train(cfg)
+  extractor_training_pipeline(cfg)
 
 
 if __name__ == "__main__":
-    main_hydra()
+  main_hydra()
 ```
 
 The same logic works for models, samplers, losses, etc.

@@ -57,7 +57,7 @@ def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     return loader_train, loader_val
 
 
-def pl_train(cfg: TCfg) -> None:
+def extractor_training_pipeline(cfg: TCfg) -> None:
     """
     This is an entrypoint for the model training in metric learning setup.
 
@@ -143,4 +143,4 @@ def pl_train(cfg: TCfg) -> None:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loaders_val)
 
 
-__all__ = ["pl_train"]
+__all__ = ["extractor_training_pipeline"]

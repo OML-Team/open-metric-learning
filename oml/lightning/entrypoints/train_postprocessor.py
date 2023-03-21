@@ -110,7 +110,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     return loader_train, loader_val
 
 
-def pl_train_postprocessor(cfg: DictConfig) -> None:
+def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     load_dotenv()
 
     set_global_seed(cfg["seed"])
@@ -187,4 +187,4 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
         trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loader_val)
 
 
-__all__ = ["pl_train_postprocessor"]
+__all__ = ["postprocessor_training_pipeline"]
