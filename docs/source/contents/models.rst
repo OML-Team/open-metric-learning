@@ -38,8 +38,38 @@ ResnetExtractor
 
 ExtractorWithMLP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.projection.ExtractorWithMLP
+.. autoclass:: oml.models.meta.projection.ExtractorWithMLP
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
+
+LinearTrivialDistanceSiamese
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.meta.siamese.LinearTrivialDistanceSiamese
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+
+TrivialDistanceSiamese
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.meta.siamese.TrivialDistanceSiamese
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+
+ConcatSiamese
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.models.meta.siamese.ConcatSiamese
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: forward
+    .. automethod:: predict
+    .. automethod:: freeze
+    .. automethod:: unfreeze
