@@ -538,7 +538,7 @@ from oml.models.siamese import ConcatSiamese
 from oml.models.vit.vit import ViTExtractor
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.samplers.balance import BalanceSampler
-from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
+from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 # Let's start with saving embeddings of a pretrained extractor for which we want to build a postprocessor

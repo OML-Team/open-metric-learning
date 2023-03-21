@@ -34,7 +34,7 @@ from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
-from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
+from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.misc import (
     dictconfig_to_dict,
     flatten_dict,

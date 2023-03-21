@@ -1,12 +1,12 @@
 from typing import Any, Dict, Tuple
 
-from oml.transforms.images.albumentations.transforms import (
+from oml.transforms.images.albumentations import (
     get_augs_albu,
     get_normalisation_albu,
     get_normalisation_resize_albu,
     get_normalisation_resize_albu_clip,
 )
-from oml.transforms.images.torchvision.transforms import (
+from oml.transforms.images.torchvision import (
     get_augs_hypvit,
     get_augs_torch,
     get_normalisation_resize_hypvit,

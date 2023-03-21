@@ -6,7 +6,7 @@ from torch import Tensor
 from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY
 from oml.datasets.list_dataset import ListDataset, TBBoxes
 from oml.interfaces.datasets import IPairsDataset
-from oml.transforms.images.torchvision.transforms import get_normalisation_torch
+from oml.transforms.images.torchvision import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader, imread_pillow
 

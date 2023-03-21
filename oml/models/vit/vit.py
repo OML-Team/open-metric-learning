@@ -17,7 +17,7 @@ from oml.models.vit.hubconf import (  # type: ignore
     dino_vits8,
     dino_vits16,
 )
-from oml.transforms.images.albumentations.transforms import get_normalisation_albu
+from oml.transforms.images.albumentations import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
 from oml.utils.misc_torch import normalise, temporary_setting_model_mode
 

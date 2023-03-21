@@ -13,7 +13,7 @@ from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet15
 from oml.interfaces.models import IExtractor
 from oml.models.pooling import GEM
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.transforms.images.albumentations.transforms import get_normalisation_albu
+from oml.transforms.images.albumentations import get_normalisation_albu
 from oml.utils.io import download_checkpoint
 from oml.utils.misc_torch import get_device, normalise
 
