@@ -260,7 +260,7 @@ make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
 
-## Get started using Pipelines API
+## Get started using Pipelines
 
 Using configs is the best option if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the
