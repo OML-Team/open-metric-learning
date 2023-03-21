@@ -61,7 +61,7 @@ That is how OML differs from PML:
   By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
   widely used in the examples and custom `train` / `test` functions are used instead.
 
-We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
+We believe that having Pipelines, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
 
 </p>
 </details>
@@ -203,7 +203,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
 
-Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
+Yes. To run the experiment with [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
 `.csv` table with 5 predefined columns).

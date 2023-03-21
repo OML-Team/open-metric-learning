@@ -21,7 +21,7 @@ build_readme:
 	cat docs/readme/documentation.md >> ${README_FILE}
 	echo "\n## Installation\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
-	echo "\n## Get started using Config API\n" >> ${README_FILE}
+	echo "\n## Get started using Pipelines API\n" >> ${README_FILE}
 	cat docs/readme/get_started_config.md >> ${README_FILE}
 	echo "\n## Get started using Python\n" >> ${README_FILE}
 	cat docs/readme/python_examples.md >> ${README_FILE}

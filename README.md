@@ -81,7 +81,7 @@ That is how OML differs from PML:
   By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
   widely used in the examples and custom `train` / `test` functions are used instead.
 
-We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
+We believe that having Pipelines, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
 
 </p>
 </details>
@@ -223,7 +223,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
 
-Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
+Yes. To run the experiment with [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
 `.csv` table with 5 predefined columns).
@@ -260,7 +260,7 @@ make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
 
-## Get started using Config API
+## Get started using Pipelines API
 
 Using configs is the best option if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the
@@ -690,7 +690,7 @@ for batch in tqdm(train_loader):
 Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
 we recommend you to pick `distances.LpDistance(p=2)`.
 
-To use content from PyTorch Metric Learning with our Config API just follow the standard
+To use content from PyTorch Metric Learning with our Pipelines just follow the standard
 [tutorial](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc)
 of adding custom loss.
 
