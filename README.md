@@ -58,7 +58,7 @@ and it includes a rich collection of losses, miners, distances, and reducers; th
 Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
 That is how OML differs from PML:
 
-* OML has [Config API](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html)
+* OML has [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
   which allows training models by preparing a config and your data in the required format
   (it's like converting data into COCO format to train a detector from [mmdetection](https://github.com/open-mmlab/mmdetection)).
 
@@ -79,7 +79,7 @@ That is how OML differs from PML:
   and the
   [PMLs one](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb).
   By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
-  in the examples and custom `train` / `test` functions are used instead.
+  widely used in the examples and custom `train` / `test` functions are used instead.
 
 We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
 
@@ -210,7 +210,7 @@ No, you don't. OML is a framework-agnostic. Despite we use PyTorch Lightning as 
 runner for the experiments, we also keep the possibility to run everything on pure PyTorch.
 Thus, only the tiny part of OML is Lightning-specific and we keep this logic separately from
 other code (see `oml.lightning`). Even when you use Lightning, you don't need to know it, since
-we provide ready to use [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+we provide ready to use [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/).
 
 The possibility of using pure PyTorch and modular structure of the code leaves a room for utilizing
 OML with your favourite framework after the implementation of the necessary wrappers.
@@ -223,7 +223,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
 
-Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/)
+Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
 `.csv` table with 5 predefined columns).
@@ -264,7 +264,7 @@ make docker_build RUNTIME=gpu
 
 Using configs is the best option if your dataset and pipeline are standard enough or if you are not
 experienced in Machine Learning or Python. You can find more details in the
-[examples](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+[Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/) folder.
 
 ## Get started using Python
 
@@ -513,8 +513,8 @@ to check the examples above first).
 In the example below we train a siamese model to re-rank top retrieval outputs of the original model
 by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
 
-For the Config-API analogue of the pipeline below, please, check the
-[config](https://github.com/OML-Team/open-metric-learning/blob/main/examples/sop/configs_experimental/train_postprocessor_sop.yaml).
+You can also check the corresponding
+[pipeline](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/sop/configs_experimental/train_postprocessor_sop.yaml) analogue.
 The documentation for related classes is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html).
 *Note, this functionality is new and a work still in progress.*
 
@@ -697,16 +697,16 @@ of adding custom loss.
 ## Zoo
 
 Below are the models trained with OML on 4 public datasets.
-For more details about the training process and configs, please, visit *examples* submodule and it's
-[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+For more details about the training process and configs, please, visit
+[Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/).
 All metrics below were obtained on the images with the sizes of **224 x 224**:
 
 |                      model                      | cmc1  |         dataset          |                                              weights                                              |                                          experiment                                          |
 |:-----------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|
-| `ViTExtractor.from_pretrained("vits16_inshop")` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/extractor_inshop) |
-|  `ViTExtractor.from_pretrained("vits16_sop")`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/extractor_sop)   |
-| `ViTExtractor.from_pretrained("vits16_cars")`   | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/extractor_cars)  |
-|  `ViTExtractor.from_pretrained("vits16_cub")`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/extractor_cub)   |
+| `ViTExtractor.from_pretrained("vits16_inshop")` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     | [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/extractor_inshop) |
+|  `ViTExtractor.from_pretrained("vits16_sop")`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/extractor_sop)   |
+| `ViTExtractor.from_pretrained("vits16_cars")`   | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/extractor_cars)  |
+|  `ViTExtractor.from_pretrained("vits16_cub")`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/extractor_cub)   |
 
 We also provide an integration with the models pretrained by other researchers.
 All metrics below were obtained on the images with the sizes of **224 x 224**:

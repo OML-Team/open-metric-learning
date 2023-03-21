@@ -25,7 +25,7 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     This is an entrypoint for the model validation in metric learning setup.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
-    For more details look at ``examples/README.md``
+    For more details look at ``pipelines/README.md``
 
     """
     cfg = dictconfig_to_dict(cfg)

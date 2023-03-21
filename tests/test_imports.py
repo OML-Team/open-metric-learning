@@ -38,16 +38,16 @@ def get_files_with_imports() -> List[str]:
     folder_with_tests = PROJECT_ROOT / "tests"
     tests_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_tests.rglob("*.py"))
 
-    folder_with_examples = PROJECT_ROOT / "examples"
-    examples_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_tests.rglob("*.py"))
+    pipelines_folder = PROJECT_ROOT / "pipelines"
+    pipelines_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_tests.rglob("*.py"))
 
     notebooks_files = sorted(
         str(fname.relative_to(PROJECT_ROOT))
-        for fname in folder_with_examples.rglob("*.ipynb")
+        for fname in pipelines_folder.rglob("*.ipynb")
         if fname.parent.name != ".ipynb_checkpoints"
     )
 
-    return scriptes_files + tests_files + examples_files + notebooks_files
+    return scriptes_files + tests_files + pipelines_files + notebooks_files
 
 
 def find_imports_in_script(fname: Path) -> List[str]:

@@ -21,7 +21,7 @@ def load_version() -> str:
 setup(
     # technical things
     version=load_version(),
-    packages=find_packages(exclude=["ci", "docs", "examples", "tests*"]),
+    packages=find_packages(exclude=["ci", "docs", "pipelines", "tests*"]),
     python_requires=">=3.7,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
     include_package_data=True,

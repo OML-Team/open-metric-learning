@@ -38,7 +38,7 @@ and it includes a rich collection of losses, miners, distances, and reducers; th
 Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
 That is how OML differs from PML:
 
-* OML has [Config API](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html)
+* OML has [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
   which allows training models by preparing a config and your data in the required format
   (it's like converting data into COCO format to train a detector from [mmdetection](https://github.com/open-mmlab/mmdetection)).
 
@@ -59,7 +59,7 @@ That is how OML differs from PML:
   and the
   [PMLs one](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb).
   By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
-  in the examples and custom `train` / `test` functions are used instead.
+  widely used in the examples and custom `train` / `test` functions are used instead.
 
 We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
 
@@ -190,7 +190,7 @@ No, you don't. OML is a framework-agnostic. Despite we use PyTorch Lightning as 
 runner for the experiments, we also keep the possibility to run everything on pure PyTorch.
 Thus, only the tiny part of OML is Lightning-specific and we keep this logic separately from
 other code (see `oml.lightning`). Even when you use Lightning, you don't need to know it, since
-we provide ready to use [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+we provide ready to use [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/).
 
 The possibility of using pure PyTorch and modular structure of the code leaves a room for utilizing
 OML with your favourite framework after the implementation of the necessary wrappers.
@@ -203,7 +203,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
 
-Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/)
+Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
 `.csv` table with 5 predefined columns).

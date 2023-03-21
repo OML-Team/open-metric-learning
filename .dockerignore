@@ -6,8 +6,8 @@ dataset
 lightning_logs/
 notebooks/
 dist/*
-tests/test_examples/**/mock_dataset/
-tests/test_examples/**/logs/
+tests/test_runs/**/mock_dataset/
+tests/test_runs/**/logs/
 mock_dataset/
 logs/
 docs/build

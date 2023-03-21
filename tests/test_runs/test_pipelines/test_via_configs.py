@@ -12,7 +12,7 @@ from oml.const import PROJECT_ROOT
 
 warnings.filterwarnings("ignore")
 
-SCRIPTS_PATH = PROJECT_ROOT / "tests/test_examples/test_runs_via_configs/"
+SCRIPTS_PATH = PROJECT_ROOT / "tests/test_runs/test_pipelines/"
 
 
 def accelerator_devices_pairs() -> List[Tuple[str, int]]:

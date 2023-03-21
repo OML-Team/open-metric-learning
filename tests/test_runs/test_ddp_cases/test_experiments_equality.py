@@ -24,7 +24,7 @@ step which is equal for each experiment, `N` - number of devices,
 
 
 # TODO: check internal `/` on widnows
-exp_file = PROJECT_ROOT / "tests/test_examples/test_ddp_cases/run_triplets_experiment_ddp.py"
+exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_triplets_experiment_ddp.py"
 
 
 def test_epochs_are_equal() -> None:

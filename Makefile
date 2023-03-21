@@ -46,15 +46,15 @@ download_mock_dataset:
 run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	$(JUPYTER_CMD) --execute examples/visualization.ipynb
+	$(JUPYTER_CMD) --execute pipelines/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
 	clear
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_sop.py     --dataset_root  data/Stanford_Online_Products
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_cars.py    --dataset_root  data/CARS196
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_sop.py     --dataset_root  data/Stanford_Online_Products
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cars.py    --dataset_root  data/CARS196
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
 
 .PHONY: run_precommit
 run_precommit:
