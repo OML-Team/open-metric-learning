@@ -44,7 +44,7 @@ from omegaconf import DictConfig
 from torchvision.models import resnet18
 
 from oml.interfaces.models import IExtractor
-from oml.lightning.entrypoints.train import extractor_training_pipeline
+from oml.lightning.pipelines.train import extractor_training_pipeline
 from oml.registry.models import EXTRACTORS_REGISTRY
 from oml.registry.transforms import TRANSFORMS_REGISTRY
 

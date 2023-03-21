@@ -1,7 +1,7 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.train_postprocessor import (
+from oml.lightning.pipelines.train_postprocessor import (
     postprocessor_training_pipeline,  # type: ignore
 )
 

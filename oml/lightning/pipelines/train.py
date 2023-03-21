@@ -8,7 +8,8 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.base import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.entrypoints.parser import (
+from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
+from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     initialize_logging,
     parse_ckpt_callback_from_config,
@@ -16,7 +17,6 @@ from oml.lightning.entrypoints.parser import (
     parse_sampler_from_config,
     parse_scheduler_from_config,
 )
-from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg

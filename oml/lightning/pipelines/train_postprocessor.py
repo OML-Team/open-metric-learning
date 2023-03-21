@@ -15,17 +15,17 @@ from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.inference.flat import inference_on_dataframe
 from oml.interfaces.models import IPairwiseModel
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.entrypoints.parser import (
+from oml.lightning.modules.pairwise_postprocessing import (
+    PairwiseModule,
+    PairwiseModuleDDP,
+)
+from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     initialize_logging,
     parse_ckpt_callback_from_config,
     parse_engine_params_from_config,
     parse_sampler_from_config,
     parse_scheduler_from_config,
-)
-from oml.lightning.modules.pairwise_postprocessing import (
-    PairwiseModule,
-    PairwiseModuleDDP,
 )
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.miners.pairs import PairsMiner

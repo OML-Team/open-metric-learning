@@ -1,7 +1,7 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.validate import extractor_validation_pipeline
+from oml.lightning.pipelines.validate import extractor_validation_pipeline
 
 
 @hydra.main(config_path=".", config_name="val_cars.yaml")

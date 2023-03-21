@@ -13,8 +13,8 @@ from torch.utils.data import DataLoader
 from oml.const import INPUT_TENSORS_KEY, MOCK_DATASET_PATH, TMP_PATH
 from oml.datasets.triplet import TriDataset, TTriplet, tri_collate
 from oml.ddp.utils import sync_dicts_ddp
-from oml.lightning.entrypoints.parser import parse_engine_params_from_config
 from oml.lightning.modules.ddp import ModuleDDP, TTrainDataloaders, TValDataloaders
+from oml.lightning.pipelines.parser import parse_engine_params_from_config
 from oml.losses.triplet import TripletLossPlain
 from oml.miners.inbatch_all_tri import get_available_triplets
 from oml.transforms.images.albumentations import get_normalisation_resize_albu

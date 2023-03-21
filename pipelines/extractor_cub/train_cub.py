@@ -1,7 +1,7 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.train import extractor_training_pipeline
+from oml.lightning.pipelines.train import extractor_training_pipeline
 
 
 @hydra.main(config_path=".", config_name="train_cub.yaml")

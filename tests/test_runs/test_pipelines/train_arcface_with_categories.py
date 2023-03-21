@@ -2,7 +2,7 @@ import hydra
 from omegaconf import DictConfig
 
 from oml.const import MOCK_DATASET_PATH
-from oml.lightning.entrypoints.train import extractor_training_pipeline
+from oml.lightning.pipelines.train import extractor_training_pipeline
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import dictconfig_to_dict
 
