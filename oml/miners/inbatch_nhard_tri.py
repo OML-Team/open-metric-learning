@@ -30,7 +30,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
     ):
         """
         Args:
-            n_positive: keep ``n_positive`` positive pipelines with large distances. If the value is a range, minimal
+            n_positive: keep ``n_positive`` positive samples with large distances. If the value is a range, minimal
                 value has to be less than the available amount of labels in batches
             n_negative: keep ``n_negative`` negative pipelines with small distances
 
