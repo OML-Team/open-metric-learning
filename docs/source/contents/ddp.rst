@@ -32,7 +32,7 @@ EmbeddingMetricsDDP
 
 ModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.modules.module_ddp.ModuleDDP
+.. autoclass:: oml.lightning.modules.ddp.ModuleDDP
     :undoc-members:
     :show-inheritance:
 

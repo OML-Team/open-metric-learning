@@ -1,7 +1,5 @@
-Pairwise Processing
+Retrieval Post-Processing
 =============================
-
-Note, this part of the library is under construction.
 
 .. toctree::
    :titlesonly:
@@ -16,24 +14,6 @@ IDistancesPostprocessor
     :show-inheritance:
 
     .. automethod:: process
-
-IPairwiseModel
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.models.IPairwiseModel
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: forward
-    .. automethod:: predict
-
-IPairsDataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IPairsDataset
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: __getitem__
 
 PairwisePostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,51 +41,3 @@ PairwiseImagesPostprocessor
 
     .. automethod:: __init__
     .. automethod:: inference
-
-LinearTrivialDistanceSiamese
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.LinearTrivialDistanceSiamese
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: forward
-
-TrivialDistanceSiamese
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.TrivialDistanceSiamese
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: forward
-
-ConcatSiamese
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.siamese.ConcatSiamese
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: forward
-    .. automethod:: predict
-    .. automethod:: freeze
-    .. automethod:: unfreeze
-
-EmbeddingPairsDataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.pairs.EmbeddingPairsDataset
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: __getitem__
-
-ImagePairsDataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.pairs.ImagePairsDataset
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: __getitem__

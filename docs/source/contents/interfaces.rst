@@ -17,6 +17,14 @@ IExtractor
     .. automethod:: extract
     .. automethod:: from_pretrained
 
+IPairwiseModel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.models.IPairwiseModel
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: forward
+    .. automethod:: predict
 
 IFreezable
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,6 +67,15 @@ IDatasetQueryGallery
     :undoc-members:
     :show-inheritance:
 
+    .. automethod:: __getitem__
+
+IPairsDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IPairsDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
     .. automethod:: __getitem__
 
 IBasicMetric
