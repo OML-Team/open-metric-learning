@@ -4,8 +4,9 @@ from omegaconf import DictConfig
 from oml.lightning.pipelines.train import extractor_training_pipeline
 
 
-@hydra.main(config_path=".", config_name="extractor_train.yaml")
+@hydra.main(config_path="", config_name="train_sop.yaml")
 def main_hydra(cfg: DictConfig) -> None:
+    print("Training model on SOP dataset.")
     extractor_training_pipeline(cfg)
 
 

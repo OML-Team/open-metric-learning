@@ -4,7 +4,7 @@ from omegaconf import DictConfig
 from oml.lightning.pipelines.train import extractor_training_pipeline
 
 
-@hydra.main(config_path=".", config_name="train_inshop.yaml")
+@hydra.main(config_path="", config_name="extractor_train.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     extractor_training_pipeline(cfg)
 
