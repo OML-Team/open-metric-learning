@@ -62,7 +62,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     This is an entrypoint for the model training in metric learning setup.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
-    For more details look at ``pipelines/README.md``
+    For more details look at ``pipelines/features_extraction/README.md``
 
     """
     # Here we try to load NEPTUNE_API_TOKEN from .env file
