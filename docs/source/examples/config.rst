@@ -1,6 +1,6 @@
-Get started using Config API
+Get started using Pipelines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. mdinclude:: ../../../examples/README.md
+.. mdinclude:: ../../../pipelines/README.md
 
-.. mdinclude:: config_advanced.md
+.. mdinclude:: pipelines_advanced.md

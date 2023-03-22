@@ -5,7 +5,7 @@ import torch
 from pytorch_lightning.plugins import DDPPlugin
 
 from oml.const import TCfg
-from oml.lightning.entrypoints.parser import parse_engine_params_from_config
+from oml.lightning.pipelines.parser import parse_engine_params_from_config
 
 
 def compare_params(cfg: TCfg, expected_params: TCfg) -> None:

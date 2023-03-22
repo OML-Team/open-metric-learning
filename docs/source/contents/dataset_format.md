@@ -1,6 +1,6 @@
 To reuse as many OML's functions as possible, you need to prepare a `.csv` file in the required format.
 It's not obligatory, especially if you implement your own Dataset in Python, but the format is required in case
-of usage built-in datasets or Config-API. You can find the tiny example dataset [here](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4).
+of usage built-in datasets or Pipelines. You can find the tiny example dataset [here](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4).
 
 Required columns:
 * `label` - integer value indicates the label.
