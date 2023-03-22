@@ -6,7 +6,7 @@ from oml.lightning.pipelines.train_postprocessor import (
 )
 
 
-@hydra.main(config_path="", config_name="postprocessor_train.yaml")
+@hydra.main(config_path=".", config_name="postprocessor_train.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     postprocessor_training_pipeline(cfg)
 
