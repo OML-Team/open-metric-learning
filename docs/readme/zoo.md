@@ -27,28 +27,3 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 |        `ViTExtractor.from_pretrained("vitb8_dino")`         |          0.689           |       0.599        |    0.506     |  0.313   |
 |    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`    |          0.493           |       0.267        |    0.264     |  0.149   |
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")` |          0.515           |       0.284        |    0.455     |  0.247   |
-
-### How to use models from Zoo?
-
-[comment]:zoo-start
-```python
-from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
-from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-
-model = ViTExtractor.from_pretrained("vits16_dino")
-transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
-
-img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
-img_tensor = transforms(img)
-# img_tensor = transforms(image=img)["image"]  # for transforms from Albumentations
-
-features = model(img_tensor.unsqueeze(0))
-
-# Check other available models:
-print(list(ViTExtractor.pretrained_models.keys()))
-
-# Load checkpoint saved on a disk:
-model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
-```
-[comment]:zoo-end
