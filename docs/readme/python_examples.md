@@ -243,8 +243,8 @@ to check the examples above first).
 In the example below we train a siamese model to re-rank top retrieval outputs of the original model
 by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
 
-For the Config-API analogue of the pipeline below, please, check the
-[config](https://github.com/OML-Team/open-metric-learning/blob/main/examples/sop/configs_experimental/train_postprocessor_sop.yaml).
+You can also check the corresponding
+[pipeline](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/postprocessing/pairwise_postprocessing) analogue.
 The documentation for related classes is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html).
 *Note, this functionality is new and a work still in progress.*
 

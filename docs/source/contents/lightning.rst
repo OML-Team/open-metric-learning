@@ -23,10 +23,14 @@ RetrievalModule
 
     .. automethod:: __init__
 
-pl_train
+extractor_training_pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.lightning.entrypoints.train.pl_train
+.. autofunction:: oml.lightning.pipelines.train.extractor_training_pipeline
 
-pl_val
+extractor_validation_pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: oml.lightning.entrypoints.validate.pl_val
+.. autofunction:: oml.lightning.pipelines.validate.extractor_validation_pipeline
+
+postprocessor_training_pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.lightning.pipelines.train_postprocessor.postprocessor_training_pipeline
