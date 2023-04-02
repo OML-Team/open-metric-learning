@@ -11,7 +11,7 @@ from oml.interfaces.models import IExtractor, IFreezable
 from oml.lightning.modules.ddp import ModuleDDP
 
 
-class RetrievalModule(pl.LightningModule):
+class ExtractorModule(pl.LightningModule):
     """
     This is a base module to train your model with Lightning.
 
@@ -126,7 +126,7 @@ class RetrievalModule(pl.LightningModule):
                 self.model.freeze()
 
 
-class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
+class ExtractorModuleDDP(ExtractorModule, ModuleDDP):
     """
     This is a base module for the training of your model with Lightning in DDP.
 
@@ -140,7 +140,7 @@ class RetrievalModuleDDP(RetrievalModule, ModuleDDP):
         **kwargs: Any,
     ):
         ModuleDDP.__init__(self, loaders_train=loaders_train, loaders_val=loaders_val)
-        RetrievalModule.__init__(self, *args, **kwargs)
+        ExtractorModule.__init__(self, *args, **kwargs)
 
 
-__all__ = ["RetrievalModule", "RetrievalModuleDDP"]
+__all__ = ["ExtractorModule", "ExtractorModuleDDP"]

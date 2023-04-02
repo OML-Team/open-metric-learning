@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.base import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.modules.extractor import RetrievalModule, RetrievalModuleDDP
+from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     parse_engine_params_from_config,
@@ -48,9 +48,9 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
     module_kwargs = {}
     if is_ddp:
         module_kwargs["loaders_val"] = loader_val
-        module_constructor = RetrievalModuleDDP
+        module_constructor = ExtractorModuleDDP
     else:
-        module_constructor = RetrievalModule  # type: ignore
+        module_constructor = ExtractorModule  # type: ignore
 
     pl_model = module_constructor(
         model=extractor,

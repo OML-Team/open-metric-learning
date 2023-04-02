@@ -366,7 +366,7 @@ import pytorch_lightning as pl
 import torch
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.extractor import RetrievalModule
+from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -394,7 +394,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics())
 
 # run
-pl_model = RetrievalModule(model, criterion, optimizer)
+pl_model = ExtractorModule(model, criterion, optimizer)
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0)
 trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 ```
@@ -415,7 +415,7 @@ import pytorch_lightning as pl
 import torch
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.extractor import RetrievalModuleDDP
+from oml.lightning.modules.extractor import ExtractorModuleDDP
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetricsDDP
@@ -443,7 +443,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP())  # DDP specific
 
 # run
-pl_model = RetrievalModuleDDP(model=model, criterion=criterion, optimizer=optimizer,
+pl_model = ExtractorModuleDDP(model=model, criterion=criterion, optimizer=optimizer,
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 
