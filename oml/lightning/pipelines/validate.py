@@ -22,7 +22,8 @@ from oml.utils.misc import dictconfig_to_dict
 
 def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
-    This is an entrypoint for the model validation in metric learning setup.
+    This pipeline allow you to validate a feature extractor which
+    represents images as feature vectors.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
     For more details look at ``pipelines/features_extraction/README.md``

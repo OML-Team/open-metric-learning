@@ -59,7 +59,8 @@ def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
 
 def extractor_training_pipeline(cfg: TCfg) -> None:
     """
-    This is an entrypoint for the model training in metric learning setup.
+    This pipeline allow you to train and validate a feature extractor which
+    represents images as feature vectors.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
     For more details look at ``pipelines/features_extraction/README.md``
