@@ -1,6 +1,4 @@
 Below are the models trained with OML on 4 public datasets.
-For more details about the training process and configs, please, visit
-[Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/).
 All metrics below were obtained on the images with the sizes of **224 x 224**:
 
 |                      model                      | cmc1  |         dataset          |                                              weights                                              |                                          experiment                                          |

@@ -4,7 +4,7 @@ Dataset format
 To reuse as much from OML as possible, you need to prepare a `.csv` file in the required format.
 It's not obligatory, especially if you implement your own Dataset, but the format is required in case
 of usage built-in datasets or Pipelines. You check out the
-`tiny dataset <[here](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4>`_
+`tiny dataset <https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4>`_
 as an example.
 
 Required columns:
