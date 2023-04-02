@@ -90,7 +90,6 @@ metrics = calculator.compute_metrics()
 <p>
 
 [comment]:lightning-start
-
 ```python
 import pytorch_lightning as pl
 import torch
@@ -139,7 +138,6 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 <p>
 
 [comment]:lightning-ddp-start
-
 ```python
 import pytorch_lightning as pl
 import torch

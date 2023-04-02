@@ -360,7 +360,6 @@ metrics = calculator.compute_metrics()
 <p>
 
 [comment]:lightning-start
-
 ```python
 import pytorch_lightning as pl
 import torch
@@ -409,7 +408,6 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 <p>
 
 [comment]:lightning-ddp-start
-
 ```python
 import pytorch_lightning as pl
 import torch
@@ -607,8 +605,6 @@ import torch
 from tqdm import tqdm
 
 from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -652,8 +648,6 @@ import torch
 from tqdm import tqdm
 
 from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
