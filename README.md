@@ -360,12 +360,13 @@ metrics = calculator.compute_metrics()
 <p>
 
 [comment]:lightning-start
+
 ```python
 import pytorch_lightning as pl
 import torch
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.retrieval import RetrievalModule
+from oml.lightning.modules.extractor import RetrievalModule
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -374,7 +375,7 @@ from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root =  "mock_dataset/"
+dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model
@@ -408,12 +409,13 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 <p>
 
 [comment]:lightning-ddp-start
+
 ```python
 import pytorch_lightning as pl
 import torch
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.retrieval import RetrievalModuleDDP
+from oml.lightning.modules.extractor import RetrievalModuleDDP
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetricsDDP
@@ -445,7 +447,8 @@ pl_model = RetrievalModuleDDP(model=model, criterion=criterion, optimizer=optimi
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 
-ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(), "replace_sampler_ddp": False} # DDP specific
+ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(),
+            "replace_sampler_ddp": False}  # DDP specific
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```
