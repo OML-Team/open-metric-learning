@@ -22,7 +22,7 @@ from oml.utils.misc import dictconfig_to_dict
 
 def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
-    This pipeline allow you to validate a feature extractor which
+    This pipeline allows you to validate a feature extractor which
     represents images as feature vectors.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
