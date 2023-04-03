@@ -111,6 +111,14 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
 
 
 def postprocessor_training_pipeline(cfg: DictConfig) -> None:
+    """
+    This pipeline allows you to train and validate a pairwise postprocessor
+    which fixes mistakes of a feature extractor in retrieval setup.
+
+    The config can be specified as a dictionary or with hydra: https://hydra.cc/.
+    For more details look at ``pipelines/postprocessing/pairwise_postprocessing/README.md``
+
+    """
     load_dotenv()
 
     set_global_seed(cfg["seed"])

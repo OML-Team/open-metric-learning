@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.base import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
+from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     parse_engine_params_from_config,
@@ -22,10 +22,11 @@ from oml.utils.misc import dictconfig_to_dict
 
 def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
     """
-    This is an entrypoint for the model validation in metric learning setup.
+    This pipeline allows you to validate a feature extractor which
+    represents images as feature vectors.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
-    For more details look at ``pipelines/README.md``
+    For more details look at ``pipelines/features_extraction/README.md``
 
     """
     cfg = dictconfig_to_dict(cfg)
@@ -47,9 +48,9 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
     module_kwargs = {}
     if is_ddp:
         module_kwargs["loaders_val"] = loader_val
-        module_constructor = RetrievalModuleDDP
+        module_constructor = ExtractorModuleDDP
     else:
-        module_constructor = RetrievalModule  # type: ignore
+        module_constructor = ExtractorModule  # type: ignore
 
     pl_model = module_constructor(
         model=extractor,

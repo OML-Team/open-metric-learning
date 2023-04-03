@@ -15,9 +15,9 @@ MetricValCallback
 
     .. automethod:: __init__
 
-RetrievalModule
+ExtractorModule
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.modules.retrieval.RetrievalModule
+.. autoclass:: oml.lightning.modules.extractor.ExtractorModule
     :undoc-members:
     :show-inheritance:
 
@@ -30,3 +30,7 @@ extractor_training_pipeline
 extractor_validation_pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.lightning.pipelines.validate.extractor_validation_pipeline
+
+postprocessor_training_pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.lightning.pipelines.train_postprocessor.postprocessor_training_pipeline

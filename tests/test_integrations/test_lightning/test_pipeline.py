@@ -77,7 +77,7 @@ class DummyTripletModule(DummyCommonModule):
         return loss
 
 
-class DummyRetrievalModule(DummyCommonModule):
+class DummyExtractorModule(DummyCommonModule):
     def __init__(self, im_size: int):
         super().__init__(im_size=im_size)
         self.criterion = TripletLossWithMiner(margin=None, need_logs=True)
@@ -157,7 +157,7 @@ def test_lightning(
         create_callback = create_triplet_callback
     elif pipeline == "retrieval":
         create_dataloader = partial(create_retrieval_dataloader, n_labels=n_labels, n_instances=n_instances)
-        lightning_module = DummyRetrievalModule(im_size=im_size)
+        lightning_module = DummyExtractorModule(im_size=im_size)
         create_callback = create_retrieval_callback
     else:
         raise ValueError

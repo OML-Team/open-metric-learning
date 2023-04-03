@@ -38,9 +38,9 @@ ModuleDDP
 
     .. automethod:: __init__
 
-RetrievalModuleDDP
+ExtractorModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.modules.retrieval.RetrievalModuleDDP
+.. autoclass:: oml.lightning.modules.retrieval.ExtractorModuleDDP
     :undoc-members:
     :show-inheritance:
 

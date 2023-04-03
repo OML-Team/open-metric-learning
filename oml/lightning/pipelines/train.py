@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from oml.const import TCfg
 from oml.datasets.base import get_retrieval_datasets
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
-from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
+from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     initialize_logging,
@@ -59,10 +59,11 @@ def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
 
 def extractor_training_pipeline(cfg: TCfg) -> None:
     """
-    This is an entrypoint for the model training in metric learning setup.
+    This pipeline allows you to train and validate a feature extractor which
+    represents images as feature vectors.
 
     The config can be specified as a dictionary or with hydra: https://hydra.cc/.
-    For more details look at ``pipelines/README.md``
+    For more details look at ``pipelines/features_extraction/README.md``
 
     """
     # Here we try to load NEPTUNE_API_TOKEN from .env file
@@ -91,9 +92,9 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
     if is_ddp:
         module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
-        module_constructor = RetrievalModuleDDP
+        module_constructor = ExtractorModuleDDP
     else:
-        module_constructor = RetrievalModule  # type: ignore
+        module_constructor = ExtractorModule  # type: ignore
 
     pl_module = module_constructor(
         model=extractor,
