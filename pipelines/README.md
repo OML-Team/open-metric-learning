@@ -1,8 +1,86 @@
 ## What are Pipelines?
-Pipelines provide a way to run metric learning experiments via changing only the config file.
-All you need is to prepare the `.csv` table which describes your dataset
-(the format is explained [here](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html)), so the converter
-can be implemented in any programming language.
+Pipelines are predefined collection of scripts/recipes that provide a way to run metric learning
+experiments via changing only the config file.
+You only need to prepare the `.csv` table which describes your dataset
+(the format is explained [here](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html)).
+
+Pipelines may help you if:
+* You have a dataset which format can be aligned with one required by a pipeline
+* You need reproducibility for you experiments
+* Prefer changing config rather diving into the code
+It will not work if:
+* You need to implement some specific logic
+
+At this moment OML has the following pipelines:
+* training + validation for feature extractor
+* training + validation for pairwise postprocessor for feature extractor
+* standalone validation for feature extractor (possibly joined together with postprocessor)
+
+todo: add links
+
+## Minimal example of Pipeline
+Each Pipeline is built around 3 components:
+* Config file
+* Registry of classes & functions (it maps confi)
+* Code which implements logic of a run
+
+Let's consider oversimplified example.
+
+`config.yaml`:
+
+[comment]:config-start
+```.yaml
+model:
+  name: resnet50
+  args:
+    weights: IMAGENET1K_V1
+
+device: cpu
+```
+[comment]:config-end
+
+`registry.py`:
+
+[comment]:registry-start
+```python
+from torchvision.models import resnet18, resnet50
+
+MODELS_REGISTRY = {"resnet18": resnet18, "resnet50": resnet50}
+
+def get_model(config):
+  return MODELS_REGISTRY[config["name"]](**config["args"])
+
+
+```
+[comment]:registry-end
+
+`run.py`
+
+[comment]:script-start
+```python
+import hydra
+import torch
+from registry import get_model
+
+@hydra.main(config_name="config.yaml")
+def main(config):
+  model = get_model(config["model"]).eval()
+  inp = torch.ones((1, 3, 32, 32)).float()
+  output = model(inp.to(config["device"]))
+
+main()
+```
+[comment]:script-end
+
+Shell command:
+
+[comment]:shell-start
+```shell
+python run.py model.args.weights=null
+
+```
+[comment]:shell-end
+
 
 ## How to work with a config?
 We use [Hydra](https://hydra.cc/docs/intro/) as a parser for `.yaml` configs.

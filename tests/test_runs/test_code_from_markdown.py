@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -43,3 +44,25 @@ def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: 
         subprocess.run(f"python {tmp_fname}", check=True, shell=True)
     finally:
         Path(tmp_fname).unlink()
+
+
+def test_minimal_pipeline_example() -> None:
+    readme_file = PROJECT_ROOT / "pipelines" / "README.md"
+    registry_text = find_code_block(readme_file, "[comment]:registry-start\n", "[comment]:registry-end\n")
+    config_text = find_code_block(readme_file, "[comment]:config-start\n", "[comment]:config-end\n")
+    script_text = find_code_block(readme_file, "[comment]:script-start\n", "[comment]:script-end\n")
+    command_text = find_code_block(readme_file, "[comment]:shell-start\n", "[comment]:shell-end\n")
+
+    with open("registry.py", "w") as r:
+        r.write(registry_text)
+
+    with open("config.yaml", "w") as c:
+        c.write(config_text)
+
+    with open("run.py", "w") as r:
+        r.write(script_text)
+
+    os.system(command_text)
+
+    for fname in ["registry.py", "config.yaml", "run.py"]:
+        Path(fname).unlink()
