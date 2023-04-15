@@ -4,6 +4,7 @@ For the details of exact Pipeline, please, visit the corresponding page:
 * [postprocessing](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (for feature extractor)
 
 ## What are Pipelines?
+
 Pipelines are predefined collection of scripts/recipes that provide a way to run metric learning
 experiments via changing only the config.
 You need to prepare the `.csv` file which describes your dataset
@@ -18,15 +19,43 @@ They will not work if:
 * You deal with a corner case and flexibility of an existing Pipeline isn't enough
 
 ## Minimal example of Pipeline
+
 Each Pipeline is built around 3 components:
 * Config file
-* Registry of classes & functions (it takes config of some entity and returns a python object)
-* Script which implements logic of a pipeline
+* Registry of classes & functions
+* Entrypoint function for a Pipeline + script to run it
 
-Let's consider an oversimplified example: we create a model and apply it to a tensor of ones
-using the predefined device:
+Let's consider an oversimplified example: we create a model and "validate" it via
+applying it to a tensor of ones using the predefined device:
 
-`config.yaml`:
+`pipeline.py` (implements the logic of a Pipeline, **part of OML package**):
+
+[comment]:pipeline-start
+```python
+import torch
+from registry import get_model
+
+def toy_validation(config):
+  model = get_model(config["model"]).eval()
+  inp = torch.ones((1, 3, 32, 32)).float()
+  output = model(inp.to(config["device"]))
+```
+[comment]:pipeline-end
+
+`registry.py` (maps config of some entity to a python constructor, **part of OML package**):
+
+[comment]:registry-start
+```python
+from torchvision.models import resnet18, resnet50
+
+MODELS_REGISTRY = {"resnet18": resnet18, "resnet50": resnet50}
+
+def get_model(config):
+  return MODELS_REGISTRY[config["name"]](**config["args"])
+```
+[comment]:registry-end
+
+`config.yaml` (describes the whole run, **your local file**):
 
 [comment]:config-start
 ```yaml
@@ -39,36 +68,19 @@ device: cpu
 ```
 [comment]:config-end
 
-`registry.py`:
-
-[comment]:registry-start
-```python
-from torchvision.models import resnet18, resnet50
-
-MODELS_REGISTRY = {"resnet18": resnet18, "resnet50": resnet50}
-
-def get_model(config):
-  return MODELS_REGISTRY[config["name"]](**config["args"])
-
-
-```
-[comment]:registry-end
-
-`run.py`:
+`validate.py` (script which calls pipeline, **your local file**):
 
 [comment]:script-start
 ```python
 import hydra
-import torch
-from registry import get_model
+from pipeline import toy_validation
 
 @hydra.main(config_name="config.yaml")
-def toy_pipeline(config):
-  model = get_model(config["model"]).eval()
-  inp = torch.ones((1, 3, 32, 32)).float()
-  output = model(inp.to(config["device"]))
+def main_hydra(cfg):
+    toy_validation(cfg)
 
-toy_pipeline()
+if __name__ == "__main__":
+    main_hydra()
 ```
 [comment]:script-end
 
@@ -85,7 +97,15 @@ python run.py model.args.weights=null
 Note, we use [Hydra](https://hydra.cc/docs/intro/) as a config parser. One of its abilities
 is to change part of the config from a command line, as showed above.
 
+## How to set up work with Pipelines?
+
+The recommended way is the following:
+1. Install OML: `pip install open-metric-learning`
+2. Go to Pipeline's page and copy the needed `.py` script and its `.yaml` to your working directory.
+3. Run script via command line.
+
 ## Building blocks of Pipelines
+
 Like every python program Pipelines consist of functions and objects, that sum up in the desired logic.
 Some of them, like model or optimizer, may be completely replaced via config.
 Others, like trainer or metrics calculator will stay there anyway, but you can change their behaviour
@@ -174,3 +194,16 @@ model:
 
 The same logic works for optimisers, samplers, losses, etc., depending on the exact Pipeline
 and its building blocks.
+
+## Configuration via config is not flexible enough in my case
+
+Let's say you want to change the implementation of `Dataset`, which is not configurable
+in a pipeline of your interest. In other words, you can only change its initial arguments,
+but cannot replace the corresponding class.
+
+In this case, you can copy the source code of the main pipeline
+entrypoint function and modify it as you want.
+For example, if you want to train your feature extractor with your own implementation of `Dataset`,
+you need to copy & modify
+[extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline).
+To find an entrypoint function for other pipelines simply check what is used inside `train_*.py`.

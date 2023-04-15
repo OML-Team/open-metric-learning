@@ -1,4 +1,4 @@
 Pipelines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO:
+TODO: Add information about corresponding pipelines.
