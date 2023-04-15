@@ -18,14 +18,6 @@ Pipelines may help you if:
 They will not work if:
 * You deal with a corner case and flexibility of an existing Pipeline isn't enough
 
-## How to work with Pipelines?
-
-The recommended way is the following:
-1. Install OML: `pip install open-metric-learning`
-2. Prepare your dataset in the required [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html). (There are [converters](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/datasets_converters) for 4 popular datasets).
-3. Go to Pipeline's folder and copy `.py` script and its `.yaml` to your workdir. Modify the config if needed.
-4. Run the script via command line.
-
 ## Minimal example of a Pipeline
 
 Each Pipeline is built around 3 components:
@@ -104,6 +96,15 @@ python run.py model.args.weights=null
 
 Note, we use [Hydra](https://hydra.cc/docs/intro/) as a config parser. One of its abilities
 is to change part of the config from a command line, as showed above.
+
+
+## How to work with Pipelines?
+
+The recommended way is the following:
+1. Install OML: `pip install open-metric-learning`
+2. Prepare your dataset in the required [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html). (There are [converters](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/datasets_converters) for 4 popular datasets).
+3. Go to Pipeline's folder and copy `.py` script and its `.yaml` to your workdir. Modify the config if needed.
+4. Run the script via command line.
 
 ## Building blocks of Pipelines
 
