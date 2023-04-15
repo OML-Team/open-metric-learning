@@ -18,7 +18,15 @@ Pipelines may help you if:
 They will not work if:
 * You deal with a corner case and flexibility of an existing Pipeline isn't enough
 
-## Minimal example of Pipeline
+## How to work with Pipelines?
+
+The recommended way is the following:
+1. Install OML: `pip install open-metric-learning`
+2. Prepare your dataset in the required [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html). (There are [converters](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/datasets_converters) for 4 popular datasets).
+3. Go to Pipeline's folder and copy `.py` script and its `.yaml` to your workdir. Modify the config if needed.
+4. Run the script via command line.
+
+## Minimal example of a Pipeline
 
 Each Pipeline is built around 3 components:
 * Config file
@@ -96,13 +104,6 @@ python run.py model.args.weights=null
 
 Note, we use [Hydra](https://hydra.cc/docs/intro/) as a config parser. One of its abilities
 is to change part of the config from a command line, as showed above.
-
-## How to set up work with Pipelines?
-
-The recommended way is the following:
-1. Install OML: `pip install open-metric-learning`
-2. Go to Pipeline's page and copy the needed `.py` script and its `.yaml` to your working directory.
-3. Run script via command line.
 
 ## Building blocks of Pipelines
 
@@ -206,4 +207,4 @@ entrypoint function and modify it as you want.
 For example, if you want to train your feature extractor with your own implementation of `Dataset`,
 you need to copy & modify
 [extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline).
-To find an entrypoint function for other pipelines simply check what is used inside `train_*.py`.
+To find an entrypoint function for other pipelines simply check what is used inside the desired `*.py` file.
