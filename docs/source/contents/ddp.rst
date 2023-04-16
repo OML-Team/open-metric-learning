@@ -40,7 +40,7 @@ ModuleDDP
 
 ExtractorModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.modules.retrieval.ExtractorModuleDDP
+.. autoclass:: oml.lightning.modules.extractor.ExtractorModuleDDP
     :undoc-members:
     :show-inheritance:
 
