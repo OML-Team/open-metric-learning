@@ -48,23 +48,27 @@ def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: 
 def test_minimal_pipeline_example() -> None:
     readme_file = PROJECT_ROOT / "pipelines" / "README.md"
     registry_text = find_code_block(readme_file, "[comment]:registry-start\n", "[comment]:registry-end\n")
+    pipeline_text = find_code_block(readme_file, "[comment]:pipeline-start\n", "[comment]:pipeline-end\n")
     config_text = find_code_block(readme_file, "[comment]:config-start\n", "[comment]:config-end\n")
-    script_text = find_code_block(readme_file, "[comment]:script-start\n", "[comment]:script-end\n")
+    validate_text = find_code_block(readme_file, "[comment]:script-start\n", "[comment]:script-end\n")
     command_text = find_code_block(readme_file, "[comment]:shell-start\n", "[comment]:shell-end\n")
 
     with open("registry.py", "w") as r:
         r.write(registry_text)
 
+    with open("pipeline.py", "w") as r:
+        r.write(pipeline_text)
+
     with open("config.yaml", "w") as c:
         c.write(config_text)
 
-    with open("run.py", "w") as r:
-        r.write(script_text)
+    with open("validate.py", "w") as r:
+        r.write(validate_text)
 
     try:
         subprocess.run(command_text, check=True, shell=True)
     except Exception as e:
         raise e
     finally:
-        for fname in ["registry.py", "config.yaml", "run.py"]:
+        for fname in ["registry.py", "config.yaml", "validate.py", "pipeline.py"]:
             Path(fname).unlink()
