@@ -1,4 +1,3 @@
-import os
 import subprocess
 from pathlib import Path
 
@@ -62,7 +61,10 @@ def test_minimal_pipeline_example() -> None:
     with open("run.py", "w") as r:
         r.write(script_text)
 
-    os.system(command_text)
-
-    for fname in ["registry.py", "config.yaml", "run.py"]:
-        Path(fname).unlink()
+    try:
+        subprocess.run(command_text, check=True, shell=True)
+    except Exception as e:
+        raise e
+    finally:
+        for fname in ["registry.py", "config.yaml", "run.py"]:
+            Path(fname).unlink()

@@ -7,8 +7,8 @@ For the details of the exact Pipeline, please, visit the corresponding page:
 
 Pipelines are a predefined collection of scripts/recipes that provide a way to run metric learning
 experiments by changing only the config.
-You need to prepare the `.csv` file which describes your dataset
-(the format is explained [here](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html)).
+Pipelines require your data to pe prepared in a special `.csv` file, described in details
+[here](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 
 Pipelines may help you if:
 * You have a dataset which format can be aligned with one required by a pipeline
@@ -17,6 +17,14 @@ Pipelines may help you if:
 
 They will not work if:
 * You deal with a corner case and the flexibility of an existing Pipeline isn't enough
+
+## How to work with Pipelines?
+
+The recommended way is the following:
+1. Install OML: `pip install open-metric-learning`
+2. Prepare your dataset in the required [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html). (There are [converters](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/datasets_converters) for 4 popular datasets).
+3. Go to Pipeline's folder and copy `.py` script and its `.yaml` to your workdir. Modify the config if needed.
+4. Run the script via the command line.
 
 ## Minimal example of a Pipeline
 
@@ -88,23 +96,12 @@ Shell command:
 
 [comment]:shell-start
 ```shell
-
 python run.py model.args.weights=null
-
 ```
 [comment]:shell-end
 
 Note, we use [Hydra](https://hydra.cc/docs/intro/) as a config parser. One of its abilities
 is to change part of the config from a command line, as showed above.
-
-
-## How to work with Pipelines?
-
-The recommended way is the following:
-1. Install OML: `pip install open-metric-learning`
-2. Prepare your dataset in the required [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html). (There are [converters](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/datasets_converters) for 4 popular datasets).
-3. Go to Pipeline's folder and copy `.py` script and its `.yaml` to your workdir. Modify the config if needed.
-4. Run the script via the command line.
 
 ## Building blocks of Pipelines
 
@@ -207,5 +204,5 @@ In this case, you can copy the source code of the main pipeline
 entrypoint function and modify it as you want.
 For example, if you want to train your feature extractor with your own implementation of `Dataset`,
 you need to copy & modify
-[extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline).
+[extractor_training_pipeline](https://github.com/OML-Team/open-metric-learning/blob/d3ff382afa89d2c36faa307c4369c0fd4f3c2362/oml/lightning/pipelines/train.py#L60).
 To find an entrypoint function for other pipelines simply check what is used inside the desired `*.py` file.
