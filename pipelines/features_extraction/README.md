@@ -31,9 +31,9 @@ That is why we combined TripletLoss with its miner, see
 
 
 <div align="center">
-<img src="https://i.ibb.co/xmJ5tRx/extractor-train.png">
+<img src="https://i.ibb.co/FYNkbbg/extractor-train.png">
 <div align="left">
-Training schema for TripletLoss.
+
 
 ## Validation
 
@@ -48,9 +48,9 @@ Validation part consists of the following steps:
    or others.
 
 <div align="center">
-<img src="https://i.ibb.co/b12NLpZ/extractor-validation.png">
+<img src="https://i.ibb.co/kcVb7YH/extractor-validation.png">
 <div align="left">
-Validation schema.
+
 
 ## Customization
 
