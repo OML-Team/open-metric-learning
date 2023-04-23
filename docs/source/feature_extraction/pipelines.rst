@@ -1,4 +1,1 @@
-Pipelines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-TODO: Add content about Pipelines for Features Extractor.
+.. mdinclude:: ../../../pipelines/features_extraction/README.md

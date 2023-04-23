@@ -1,37 +1,82 @@
-# FEATURES EXTRACTION PIPELINES
+# Pipelines: features extraction
 
-These pipelines allow you to train and validate models that represent images as feature vectors, aka feature extractors.
+These pipelines allow you to train and validate models that represent images as feature vectors, in other words,
+train feature extractors.
 Basically, there are two pipelines:
-* [extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline) including training and validation
-* [extractor_validation_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-validation-pipeline) for a stand-alone validation
+* [extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline) including training + validation
+* [extractor_validation_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-validation-pipeline) including validation only
 
-**Training part** implies using losses, well-established for metric learning, such as the angular losses
-(like *ArcFace*) or the contrastive losses (like *TripletLoss*).
-The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
+You can see the [analogues](file:///Users/alex/Projects/open-metric-learning/docs/build/html/feature_extraction/python_examples.html) in Python.
 
-Thus, **training part** consists of:
-   1. Use [DataLoader](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html) + [Sampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html) to form batches.
-   2. *[Only for losses based on combinations]* Use [Miner](https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html) to form meaningful triplets.
-   3. Compute [loss](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html), update gradients.
+## Training
+This pipeline support two types of losses:
+* Contrastive ones, like [TripletLoss](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer).
+  They require special
+  [Miner](https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html)
+  and
+  [Batches Sampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html).
+  Miner produces triplets exploiting different strategies like
+  [hard mining](https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html#hardtripletsminer),
+  in its turn Sampler guarantees that batch contains enough
+  different labels to form at least one triplet so miner can do its job.
 
-**Validation part** consists of:
-  1. Accumulating all the embeddings in [EmbeddingMetrics](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#embeddingmetrics).
-  2. Calculating distances between queries and galleries.
-  3. *[Optional]* Applying some specific retrieval postprocessing [techniques](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html).
-  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision@k*.
+* Classification ones, like [ArcFace](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#arcfaceloss).
+  They have no mining step by design and batch sampling strategy is optional for them.
+  For these losses we consider the output of the layer before the classification head (which is a part of criterion in our implementation)
+  as a feature vector.
 
-### Building blocks that can be changed:
-
-|      Block       |                                                                                                                                     |       registry       |
-|:----------------:|:-----------------------------------------------------------------------------------------------------------------------------------:|:--------------------:|
-|  transforms val  |                                                                                                                                     | TRANSFORMS_REGISTRY  |
-|      model       |   Must be a successor of [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor)    |                      |
-|     sampler      |                                                                                                                                     |                      |
-|    criterion     |                     A criterion which takes `(features, labels)` as input and returns loss, see predifined ones                     |                      |
-|    optimizer     |  PyTorch optimizer, see the predefined [configs](https://github.com/OML-Team/open-metric-learning/tree/main/oml/configs/optimizer)  |                      |
-|   lr scheduler   |  PyTorch scheduler, see the predefined [configs](https://github.com/OML-Team/open-metric-learning/tree/main/oml/configs/scheduler)  |                      |
+Note! Despite the different nature of the losses above, they share the same forward signature: `forward(features, labels)`.
+That is why we combined TripletLoss with its miner, see
+[TripletLossWithMiner](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer).
 
 
-![Extractor train](../../docs/images/extractor_train.png)
+<div align="center">
+<img src="https://i.ibb.co/xmJ5tRx/extractor-train.png">
+<div align="left">
+Training schema for TripletLoss.
 
-![Extractor validation](../../docs/images/extractor_validation.png)
+## Validation
+
+Validation part consists of the following steps:
+1. Accumulating all the embeddings in [EmbeddingMetrics](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#embeddingmetrics).
+2. Calculating distances between queries and galleries.
+3. [Optional] Applying some specific retrieval postprocessing [techniques](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html) like re-ranking.
+4. Calculating retrieval metrics like
+   [CMC@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-cmc),
+   [Precision@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-precision),
+   [MeanAveragePrecision@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-map)
+   or others.
+
+<div align="center">
+<img src="https://i.ibb.co/5995V9Q/extractor-validation.png">
+<div align="left">
+Validation schema.
+
+## Customization
+
+Pipelines are built around blocks like model, criterion, optimizer and so on.
+Some of them can be replaced by existing entities from OML or by your custom implementations, see the customisation
+[instruction](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/pipelines#how-to-use-my-own-implementation-of-loss-model-augmentations-etc).
+
+In feature extraction pipelines you can replace:
+
+|   Name in config   |                                                                                                                                                                    Requirements                                                                                                                                                                    | Where to add my implementation? |                                Where to find the existing implementations?                                |
+|:------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------:|:---------------------------------------------------------------------------------------------------------:|
+| `transforms_train` |                                                                                                              Callable, see [available](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/transforms/images).                                                                                                               |      `TRANSFORMS_REGISTRY`      | [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/transforms)   |
+|  `transforms_val`  |                                                                                                              Callable, see [available](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/transforms/images).                                                                                                               |      `TRANSFORMS_REGISTRY`      |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/transforms)  |
+|      `model`       |                                                                A successor of [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor), see [available](https://open-metric-learning.readthedocs.io/en/latest/contents/models.html).                                                                |      `EXTRACTORS_REGISTRY`      |    [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/model)     |
+|     `sampler`      | For losses with a miner: one guarantees the correct work of a miner, see [available](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html). For classification losses: no restrictions, set `null` for [RandomSampler](https://pytorch.org/docs/stable/data.html?highlight=random+sampler#torch.utils.data.RandomSampler). |       `SAMPLERS_REGISTRY`       |   [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/sampler)    |
+|    `criterion`     |                 The following signature is required: `forward(features, labels)`. For contrastive losses: mining is implemented inside the forward pass. For classification losses: a classification head is a part of of criterion. See [available](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html).                  |        `LOSSES_REGISTRY`        |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/criterion)   |
+|    `optimizer`     |                                                                                                                                                            A normal PyTorch optimizer.                                                                                                                                                             |      `OPTIMIZERS_REGISTRY`      |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/optimizer)   |
+|    `scheduling`    |                                                                           A normal PyTorch lr scheduler, structured in Lightning [format](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/tests/test_runs/test_pipelines/configs/train.yaml#L51).                                                                            |      `SCHEDULERS_REGISTRY`      |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/scheduler)   |
+
+
+## Tips
+
+* If you don't know what parameters to pick for
+  [BalanceSampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html#balancesampler),
+  simply set `n_labels` equal to the median size of your classes, and set `n_instances` as big as your GPU allows for the given `n_labels`.
+* Margin, todo
+* Normalisation, todo
+* Visualisations, todo
+* Notebook, todo
