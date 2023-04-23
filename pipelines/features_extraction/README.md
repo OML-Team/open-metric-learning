@@ -48,7 +48,7 @@ Validation part consists of the following steps:
    or others.
 
 <div align="center">
-<img src="https://i.ibb.co/5995V9Q/extractor-validation.png">
+<img src="https://i.ibb.co/b12NLpZ/extractor-validation.png">
 <div align="left">
 Validation schema.
 
