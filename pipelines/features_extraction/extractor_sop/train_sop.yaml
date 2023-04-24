@@ -76,7 +76,7 @@ optimizer:
 scheduling: null
 
 
-# to use neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
+# to use Neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
 neptune_project: null
 
 

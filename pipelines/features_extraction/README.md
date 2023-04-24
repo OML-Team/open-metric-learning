@@ -67,7 +67,7 @@ In feature extraction pipelines you can customize:
 |  `transforms_val`  |                                                                                                              Callable, see [available](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/transforms/images).                                                                                                               |      `TRANSFORMS_REGISTRY`      |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/transforms)  |
 |      `model`       |                                                                A successor of [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor), see [available](https://open-metric-learning.readthedocs.io/en/latest/contents/models.html).                                                                |      `EXTRACTORS_REGISTRY`      |    [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/model)     |
 |     `sampler`      | For losses with a miner: one guarantees the correct work of a miner, see [available](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html). For classification losses: no restrictions, set `null` for [RandomSampler](https://pytorch.org/docs/stable/data.html?highlight=random+sampler#torch.utils.data.RandomSampler). |       `SAMPLERS_REGISTRY`       |   [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/sampler)    |
-|    `criterion`     |                 The following signature is required: `forward(features, labels)`. For contrastive losses: mining is implemented inside the forward pass. For classification losses: a classification head is a part of of criterion. See [available](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html).                  |        `LOSSES_REGISTRY`        |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/criterion)   |
+|    `criterion`     |                   The following signature is required: `forward(features, labels)`. For contrastive losses: mining is implemented inside the forward pass. For classification losses: a classification head is a part of criterion. See [available](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html).                   |        `LOSSES_REGISTRY`        |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/criterion)   |
 |    `optimizer`     |                                                                                                                                                            A normal PyTorch optimizer.                                                                                                                                                             |      `OPTIMIZERS_REGISTRY`      |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/optimizer)   |
 |    `scheduling`    |                                                                           A normal PyTorch lr scheduler, structured in Lightning [format](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/tests/test_runs/test_pipelines/configs/train.yaml#L51).                                                                            |      `SCHEDULERS_REGISTRY`      |  [configs](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/oml/configs/scheduler)   |
 
@@ -75,18 +75,18 @@ In feature extraction pipelines you can customize:
 ## Tips
 
 We left plenty of comments in the [training config](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/pipelines/features_extraction/extractor_cars/train_cars.yaml)
-for CARS dataset, so you can start with checking it out.
+for the CARS dataset, so you can start checking it out.
 
 
 * If you don't know what parameters to pick for
   [BalanceSampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html#balancesampler),
   simply set `n_labels` equal to the median size of your classes, and set `n_instances` as big as your GPU allows for the given `n_labels`.
 * Tips for [TripletLossWithMiner](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer):
-  * Margin value `0.2` may be a good choice if your model produces normalised features.
+  * The margin value of `0.2` may be a good choice if your model produces normalised features.
   * Triplet loss may struggle with a mode collapse: the situation when your loss goes down,
-    but then fluctuates on plateau on the level of margin value, which means that positive and negative distances both equal to zero.
-    In this case, you can try to use [soft version](https://arxiv.org/abs/1703.07737) of triplet loss instead (just set `margin: null`).
+    but then fluctuates on a plateau on the level of margin value, which means that positive and negative distances both equal to zero.
+    In this case, you can try to use the [soft version](https://arxiv.org/abs/1703.07737) of triplet loss instead (just set `margin: null`).
     You can also switch between mining strategies (*hard* / *all*).
   * Don't use `margin: null` if you normalise features since it breaks gradients flow (it can be seen from formulas).
-* Set `log_images: True` to see the images where model's performance was worst.
+* Set `log_images: True` to see the images where the model's performance was worst.
 * You can analyse your trained model in [visualization.ipynb](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/pipelines/features_extraction/visualization.ipynb).

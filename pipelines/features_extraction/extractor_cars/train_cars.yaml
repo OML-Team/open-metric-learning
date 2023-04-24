@@ -1,17 +1,17 @@
 postfix: metric_learning_cars  # it will be used as a postfix for logs folder and as a tag for Neptune logger
 
 seed: 42  # fix random seed
-precision: 32  # use 32 for single precision and 16 for half precision, if your GPU support it
+precision: 32  # use 32 for single precision and 16 for half-precision, if your GPU support it
 accelerator: gpu  # cpu or gpu
 devices: 1  # number of devices to use or list of the exact devices, we will use DDP for gpu accelerator and devices > 1
 
-dataframe_name: df_with_bboxes.csv  # dataframe filename, see documentation for the desired format
+dataframe_name: df_with_bboxes.csv  # dataframe filename, see the documentation for the desired format
 dataset_root: data/CARS196/  # path to the dataset
 logs_root: logs/CARS196/  # logs root folder
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}  # logs folder for the current experiment
 
 num_workers: 20  # number of workers to use in DataLoader
-cache_size: 0  # set number of images you wish to cache in train & val datasets
+cache_size: 0  # set the number of images you wish to cache in train & val datasets
 
 transforms_train:  # transformations that will be applied in train dataset
   name: augs_albu
@@ -23,7 +23,7 @@ transforms_val:  # transformations that will be applied in val dataset
   args:
     im_size: 224
 
-sampler:  # batch sampler, in this case effective batch size is 20 * 10 = 200
+sampler:  # batch sampler, in this case, effective batch size is 20 * 10 = 200
   name: balance
   args:
     n_labels: 20  # there are ~200 classes in CARS dataset, which means 1 epoch includes only 200/20 = 10 batches (so, we see all the labels during the epoch, but not all the samples)
@@ -33,7 +33,7 @@ bs_val: 512  # validation batch size, usually it's larger than the training one 
 max_epochs: 10000  # number of epochs to train
 valid_period: 10  # since 1 epoch is really short (only 10 batches, as shown above), we avoid running expensive validation procedure every epoch
 
-log_images: False  # set True if you want to see images where model performed worse
+log_images: False  # set True if you want to see images where the model performed worse
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
@@ -42,12 +42,12 @@ metric_args:
   fmr_vals: [0.01]  # to calculate fmr@0.01
   pfc_variance: [0.5, 0.9, 0.99]  # to calculate pfc@0.5, pfc@0.9, pfc@0.99
   return_only_main_category: True  # set False if you want to see metric graphs for all the categories (doesn't matter for CARS, since it contains no categories)
-  visualize_only_main_category: True  # set False to see images where model performed worse for each separated category (doesn't matter for CARS, since it contains no categories)
+  visualize_only_main_category: True  # set False to see images where the model performed worse for each separated category (doesn't matter for CARS, since it contains no categories)
 
 
 # the best checkpoint is determined by the value of metric_for_checkpointing.
 # "OVERALL" means we picked the metric calculated over all the categories.
-# it can be replaced by the name of exact category (but it's not the case of CARS dataset containing no categories).
+# it can be replaced by the name of the exact category (but it's not the case for CARS dataset containing no categories).
 # you can check other metrics in your logger.
 metric_for_checkpointing: OVERALL/cmc/1
 
@@ -56,7 +56,7 @@ metric_for_checkpointing: OVERALL/cmc/1
 model:
   name: vit
   args:
-    normalise_features: False  # this is the only place in pipeline where features normalisation can be set
+    normalise_features: False  # this is the only place in the pipeline where features normalisation can be set
     use_multi_scale: False  # set True to use Test-Time-Augmentations, it usually boosts metrics, but requires several forwards (3 forwards, in this particular case)
     weights: vits16_dino  # <vits16_dino> is a key related to one of the models from Zoo, thus, it will be downloaded automatically. You can also use a path to your local checkpoint
     arch: vits16  # one of vit's architectures
@@ -66,10 +66,10 @@ criterion:
   name: triplet_with_miner
   args:
     need_logs: True  # set True to log values like positive distance, negative distance, number of active triplets and so on
-    margin: null  # <null> means that we use soft version of Triplet Loss here. In this case features normalisation in the model has to be turned off so gradients can flow normally
+    margin: null  # <null> means that we use the soft version of Triplet Loss here. In this case, features normalisation in the model has to be turned off so gradients can flow normally
     reduction: mean
     miner:
-      name: all_triplets  # We collect all the possible triplets in the batch. Based on sampler's parameters it's ~10^3 * 20^2 = 400.000 triplets
+      name: all_triplets  # We collect all the possible triplets in the batch. Based on the sampler's parameters it's ~10^3 * 20^2 = 400.000 triplets
       args: {}
 
 
@@ -83,10 +83,10 @@ optimizer:
 scheduling: null
 
 
-# to use neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
-neptune_project: null  # the name of your neptune project
+# to use Neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
+neptune_project: null  # the name of your Neptune project
 
-# these tags will be applied to a run if neptune logger was used
+# these tags will be applied to a run if Neptune logger was used
 # they may be useful to navigate among your runs
 tags:
   - ${postfix}
