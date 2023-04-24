@@ -1,12 +1,13 @@
 # Pipelines: features extraction
 
 These pipelines allow you to train and validate models that represent images as feature vectors, in other words,
-train feature extractors.
-Basically, there are two pipelines:
+train feature extractors. Basically, there are two pipelines:
 * [extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline) including training + validation
 * [extractor_validation_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-validation-pipeline) including validation only
 
 You can see the [analogues](file:///Users/alex/Projects/open-metric-learning/docs/build/html/feature_extraction/python_examples.html) in Python.
+
+It is expected that the dataset will be in the desired [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 
 ## Training
 This pipeline support two types of losses:
@@ -26,7 +27,7 @@ This pipeline support two types of losses:
   as a feature vector.
 
 Note! Despite the different nature of the losses above, they share the same forward signature: `forward(features, labels)`.
-That is why we combined TripletLoss with its miner, see
+That is why mining is happening inside the forward pass, see
 [TripletLossWithMiner](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer).
 
 
@@ -58,7 +59,7 @@ Pipelines are built around blocks like model, criterion, optimizer and so on.
 Some of them can be replaced by existing entities from OML or by your custom implementations, see the customisation
 [instruction](https://github.com/OML-Team/open-metric-learning/tree/pipeline_readme/pipelines#how-to-use-my-own-implementation-of-loss-model-augmentations-etc).
 
-In feature extraction pipelines you can replace:
+In feature extraction pipelines you can customize:
 
 |   Name in config   |                                                                                                                                                                    Requirements                                                                                                                                                                    | Where to add my implementation? |                                Where to find the existing implementations?                                |
 |:------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------:|:---------------------------------------------------------------------------------------------------------:|
@@ -73,10 +74,17 @@ In feature extraction pipelines you can replace:
 
 ## Tips
 
+* We left plenty of comments in the [training config](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/pipelines/features_extraction/extractor_cars/train_cars.yaml)
+  for CARS dataset, so you can start with checking it out.
 * If you don't know what parameters to pick for
   [BalanceSampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html#balancesampler),
   simply set `n_labels` equal to the median size of your classes, and set `n_instances` as big as your GPU allows for the given `n_labels`.
-* Margin, todo
-* Normalisation, todo
-* Visualisations, todo
-* Notebook, todo
+* Tips for [TripletLossWithMiner](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer):
+  * Margin value `0.2` may be a good choice if your model produces normalised features.
+  * Triplet loss may struggle with a mode collapse: the situation when your loss goes down,
+    but then fluctuates on plateau on the level of margin value, which means that positive and negative distances both equal to zero.
+    In this case, you can try to use [soft version](https://arxiv.org/abs/1703.07737) of triplet loss instead (just set `margin: null`).
+    You can also switch between mining strategies (*hard* / *all*).
+  * Don't use `margin: null` if you normalise features since it breaks gradients flow (it can be seen from formulas).
+* Set `log_images: True` to see the images where model's performance was worst.
+* You can analyse your trained model in [visualization.ipynb](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/pipelines/features_extraction/visualization.ipynb).
