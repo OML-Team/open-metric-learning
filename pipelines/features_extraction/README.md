@@ -74,8 +74,10 @@ In feature extraction pipelines you can customize:
 
 ## Tips
 
-* We left plenty of comments in the [training config](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/pipelines/features_extraction/extractor_cars/train_cars.yaml)
-  for CARS dataset, so you can start with checking it out.
+We left plenty of comments in the [training config](https://github.com/OML-Team/open-metric-learning/blob/pipeline_readme/pipelines/features_extraction/extractor_cars/train_cars.yaml)
+for CARS dataset, so you can start with checking it out.
+
+
 * If you don't know what parameters to pick for
   [BalanceSampler](https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html#balancesampler),
   simply set `n_labels` equal to the median size of your classes, and set `n_instances` as big as your GPU allows for the given `n_labels`.
