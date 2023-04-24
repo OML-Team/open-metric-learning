@@ -163,28 +163,6 @@ Thus, utilising simple heuristics and avoiding heavy math we are able to perform
 </details>
 
 <details>
-<summary>How does OML work under the hood? </summary>
-<p>
-
-**Training part** implies using losses, well-established for metric learning, such as the angular losses
-(like *ArcFace*) or the combinations based losses (like *TripletLoss* or *ContrastiveLoss*).
-The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
-Thus, during the training we:
-   1. Use `DataLoader` + `Sampler` to form batches (for example `BalanceSampler`)
-   2. [Only for losses based on combinations] Use `Miner` to form effective pairs or triplets, including those which utilize a memory bank.
-   3. Compute loss.
-
-**Validation part** consists of several steps:
-  1. Accumulating all of the embeddings (`EmbeddingMetrics`).
-  2. Calculating distances between them with respect to query/gallery split.
-  3. Applying some specific retrieval techniques like query reranking or score normalisation.
-  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision@k*.
-
-</p>
-</details>
-
-
-<details>
 <summary>What about Self-Supervised Learning?</summary>
 <p>
 
