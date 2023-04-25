@@ -2,7 +2,7 @@ import inspect
 
 from oml.registry.losses import LOSSES_REGISTRY
 from oml.registry.miners import MINERS_REGISTRY
-from oml.registry.models import EXTRACTORS_REGISTRY
+from oml.registry.models import EXTRACTORS_REGISTRY, PAIRWISE_MODELS_REGISTRY
 from oml.registry.optimizers import OPTIMIZERS_REGISTRY
 from oml.registry.samplers import SAMPLERS_REGISTRY
 from oml.registry.schedulers import SCHEDULERS_REGISTRY

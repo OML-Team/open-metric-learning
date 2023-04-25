@@ -76,8 +76,7 @@ optimizer:
 scheduling: null
 
 
-# To use neptune you should also specify NEPTUNE_API_TOKEN in
-# .env file or via `export NEPTUNE_API_TOKEN=...`
+# to use Neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
 neptune_project: null
 
 
