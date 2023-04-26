@@ -35,7 +35,7 @@ defaults:
   - optimizer: sgd
   - sampler: balance
 
-model:
+extractor:
   name: extractor_with_mlp
   args:
     mlp_features: [384]

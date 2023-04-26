@@ -13,7 +13,7 @@ transforms_val:
   args:
     im_size: 224
 
-model:
+extractor:
   name: vit
   args:
     arch: vits16

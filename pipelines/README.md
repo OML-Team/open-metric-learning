@@ -96,7 +96,7 @@ Shell command:
 
 [comment]:shell-start
 ```shell
-python validate.py model.args.weights=null
+python validate.py extractor.args.weights=null
 ```
 [comment]:shell-end
 
@@ -106,24 +106,24 @@ is to change part of the config from a command line, as showed above.
 ## Building blocks of Pipelines
 
 Like every Python program Pipelines consist of functions and objects, that sum up in the desired logic.
-Some of them, like model or optimizer, may be completely replaced via config.
+Some of them, like extractor or optimizer, may be completely replaced via config.
 Others, like a trainer or a metrics calculator will stay there anyway, but you can change their behaviour
 via config as well.
 
-Let's say, you work with one of the Pipelines, and it assumes that a model must be a successor of
+Let's say, you work with one of the Pipelines, and it assumes that a extractor must be a successor of
 [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor)
-interface. You have two options if you want to use another model:
+interface. You have two options if you want to use another extractor:
 * You can check the existing successors of `IExtractor` in the library and pick one of them;
 * Or you can implement your successor, see the section below for details.
 
 To see what exact parts of each config can be modified, please, visit their subpages.
 
-## How to use my own implementation of loss, model, etc.?
+## How to use my own implementation of loss, extractor, etc.?
 
 You should put a constructor of your Python object inside the corresponding registry by some key.
 It allows you to access this object in the config file by that key.
 
-Let's consider an example of using custom augmentations & model to train your feature extractor.
+Let's consider an example of using custom augmentations & extractor to train your feature extractor.
 
 Your `train.py` and `config.yaml` may look like this:
 ```python
@@ -138,7 +138,7 @@ from oml.registry.models import EXTRACTORS_REGISTRY
 from oml.registry.transforms import TRANSFORMS_REGISTRY
 
 
-class CustomModel(IExtractor):
+class CustomExtractor(IExtractor):
 
   def __init__(self, pretrained):
     super().__init__()
@@ -162,9 +162,9 @@ def get_custom_augs() -> t.Compose:
   ])
 
 
-# Put model & transforms constructors to the registries
+# Put extractor & transforms constructors to the registries
 TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs
-EXTRACTORS_REGISTRY["custom_model"] = CustomModel
+EXTRACTORS_REGISTRY["custom_extractor"] = CustomExtractor
 
 
 @hydra.main(config_path="configs", config_name="train.yaml")
@@ -183,8 +183,8 @@ transforms_train:
   name: custom_augmentations  # this name is a key for transforms registry we set above
   args: {}  # our augmentations have no obligatory initial arguments
 
-model:
-  name: custom_model  # this name is a key for models registry we set above
+extractor:
+  name: custom_extractor  # this name is a key for models registry we set above
   args:
     pretrained: True  # our model has one argument that has to be set
 

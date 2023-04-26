@@ -46,7 +46,7 @@ log_images: False
 
 metric_for_checkpointing: OVERALL/cmc/1
 
-model:
+extractor:
   name: vit
   args:
     normalise_features: False

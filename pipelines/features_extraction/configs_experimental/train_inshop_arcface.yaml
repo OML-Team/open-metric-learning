@@ -45,7 +45,7 @@ log_images: True
 
 metric_for_checkpointing: OVERALL/cmc/1
 
-model:
+extractor:
   name: vit_clip
   args:
     arch: vitb16_224
