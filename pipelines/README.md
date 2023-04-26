@@ -96,7 +96,7 @@ Shell command:
 
 [comment]:shell-start
 ```shell
-python validate.py extractor.args.weights=null
+python validate.py model.args.weights=null
 ```
 [comment]:shell-end
 
