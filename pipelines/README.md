@@ -110,7 +110,7 @@ Some of them, like extractor or optimizer, may be completely replaced via config
 Others, like a trainer or a metrics calculator will stay there anyway, but you can change their behaviour
 via config as well.
 
-Let's say, you work with one of the Pipelines, and it assumes that a extractor must be a successor of
+Let's say, you work with one of the Pipelines, and it assumes that an extractor must be a successor of
 [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor)
 interface. You have two options if you want to use another extractor:
 * You can check the existing successors of `IExtractor` in the library and pick one of them;
