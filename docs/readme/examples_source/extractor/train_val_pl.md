@@ -21,10 +21,10 @@ dataset_root =  "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
@@ -36,7 +36,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics())
 
 # run
-pl_model = ExtractorModule(model, criterion, optimizer)
+pl_model = ExtractorModule(extractor, criterion, optimizer)
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0)
 trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 ```

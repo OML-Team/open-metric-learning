@@ -70,7 +70,8 @@ In feature extraction pipelines you can customize:
 |    `criterion`     |                   The following signature is required: `forward(features, labels)`. For contrastive losses: mining is implemented inside the forward pass. For classification losses: a classification head is a part of criterion. See [available](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html).                   |         `LOSSES_REGISTRY`         | [configs](https://github.com/OML-Team/open-metric-learning/tree/main/oml/configs/criterion)  |
 |    `optimizer`     |                                                                                                                                                            A normal PyTorch optimizer.                                                                                                                                                             |       `OPTIMIZERS_REGISTRY`       | [configs](https://github.com/OML-Team/open-metric-learning/tree/main/oml/configs/optimizer)  |
 |    `scheduling`    |                                                                                 A normal PyTorch lr scheduler, structured in Lightning [format](https://github.com/OML-Team/open-metric-learning/blob/main/tests/test_runs/test_pipelines/configs/train.yaml#L51).                                                                                 |       `SCHEDULERS_REGISTRY`       | [configs](https://github.com/OML-Team/open-metric-learning/tree/main/oml/configs/scheduler)  |
-* The exact registry has to be imported via: `from oml.registry import X_REGISTRY`.
+
+*The exact registry has to be imported via: `from oml.registry import X_REGISTRY`.
 
 ## Tips
 

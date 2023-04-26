@@ -53,7 +53,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
         module_constructor = ExtractorModule  # type: ignore
 
     pl_model = module_constructor(
-        model=extractor,
+        extractor=extractor,
         criterion=None,
         optimizer=None,
         scheduler=None,

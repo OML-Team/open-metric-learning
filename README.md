@@ -269,8 +269,8 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 dataset_root = "mock_dataset/"
 df_train, _ = download_mock_dataset(dataset_root)
 
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
+optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
@@ -278,7 +278,7 @@ sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
-    embeddings = model(batch["input_tensors"])
+    embeddings = extractor(batch["input_tensors"])
     loss = criterion(embeddings, batch["labels"])
     loss.backward()
     optimizer.step()
@@ -309,12 +309,12 @@ df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)
 queries = df_val[df_val["is_query"]]["path"].tolist()
 galleries = df_val[df_val["is_gallery"]]["path"].tolist()
 
-model = ViTExtractor.from_pretrained("vits16_dino")
+extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 args = {"num_workers": 0, "batch_size": 8}
-features_queries = inference_on_images(model, paths=queries, transform=transform, **args)
-features_galleries = inference_on_images(model, paths=galleries, transform=transform, **args)
+features_queries = inference_on_images(extractor, paths=queries, transform=transform, **args)
+features_galleries = inference_on_images(extractor, paths=galleries, transform=transform, **args)
 
 # Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
 use_knn = True
