@@ -1,7 +1,7 @@
 This page is a good place to start and get an overview of Pipelines approach in general.
 For the details of the exact Pipeline, please, visit the corresponding page:
 * [features_extraction](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
-* [postprocessing](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (for feature extractor)
+* [postprocessing](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (for results retrieved by feature extractor)
 
 ## What are Pipelines?
 

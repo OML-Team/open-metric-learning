@@ -26,12 +26,13 @@ build_readme:
 	echo "\n## Installation\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
 	# Python examples
-	echo "\n## Examples\n" >> ${README_FILE}
+	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/train.md >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
+	cat docs/readme/examples.md >> ${README_FILE}
 	# Pipelines
-	echo "\n## Pipelines\n" >> ${README_FILE}
-	cat docs/readme/get_started_config.md >> ${README_FILE}
+	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
+	cat docs/readme/pipelines.md >> ${README_FILE}
 	# Zoo
 	echo "\n## Zoo\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}

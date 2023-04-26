@@ -1,7 +1,24 @@
-# Postprocessing Research
+# Pairwise postprocessing (re-ranking)
 
-In this section we will train a simple feature extractor using the vanilla Triplet Margin Loss, after that we will
-train a postprocessor, which corrects `top_n` results, retrieved by the first model.
+This Pipeline is based on the following study, completed by OML's team:
+
+### [STIR: Siamese Transformer for Image Retrieval Postprocessing](link).
+
+In this work, we first construct a baseline model trained with
+triplet loss with hard negatives mining that performs at the state of the art
+level but remains simple. Second, we introduce a novel
+approach for image retrieval postprocessing called Siamese Transformer
+for Image Retrieval (STIR) that reranks several top outputs in a single
+forward pass. Unlike previously proposed Reranking Transformers, STIR
+does not rely on global/local feature extraction and directly compares a
+query image and a retrieved candidate on pixel level with the usage of
+attention mechanism. The resulting approach defines a new state of the
+art on standard image retrieval datasets: Stanford Online Products and
+DeepFashion In-shop.
+
+[OPEN INTERACTIVE DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/).
+
+![](https://i.ibb.co/CMd56Dd/stir2.png)
 
 ## I. Train & validate a feature extractor
 
