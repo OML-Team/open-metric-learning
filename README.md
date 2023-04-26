@@ -16,7 +16,7 @@
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
-## FAQ
+## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -226,7 +226,7 @@ You can also read some extra materials related to OML:
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
 
-## Installation
+## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
 OML is available in PyPI:
 
@@ -353,7 +353,7 @@ See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipel
 * Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 * Retrieval postprocessor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (re-ranking)
 
-## Zoo
+## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/zoo.html)
 
 Below are the models trained with OML on 4 public datasets.
 All metrics below were obtained on the images with the sizes of **224 x 224**:
@@ -408,7 +408,7 @@ model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", norm
 ```
 [comment]:zoo-end
 
-## Contributing guide
+## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
 
 We welcome new contributors! Please, see our:
 * [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/from_readme/contributing.html)
