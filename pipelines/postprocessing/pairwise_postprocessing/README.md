@@ -1,8 +1,8 @@
 # Pairwise postprocessing (re-ranking)
 
-This Pipeline is based on the following study, completed by OML's team:
+This Pipeline is based on the following study, completed by the OML's team:
 
-### [STIR: Siamese Transformer for Image Retrieval Postprocessing](link).
+### [STIR: Siamese Transformer for Image Retrieval Postprocessing](link)
 
 In this work, we first construct a baseline model trained with
 triplet loss with hard negatives mining that performs at the state of the art
@@ -16,9 +16,13 @@ attention mechanism. The resulting approach defines a new state of the
 art on standard image retrieval datasets: Stanford Online Products and
 DeepFashion In-shop.
 
-[OPEN INTERACTIVE DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/).
+[**OPEN INTERACTIVE DEMO**](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/).
+
+<div align="center">
 
 ![](https://i.ibb.co/CMd56Dd/stir2.png)
+
+<div align="left">
 
 ## I. Train & validate a feature extractor
 

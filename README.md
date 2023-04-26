@@ -248,7 +248,7 @@ make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
 
-## Examples
+## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
 <details>
 <summary>Training</summary>
@@ -344,7 +344,7 @@ See [extra code snippets](https://open-metric-learning.readthedocs.io/en/latest/
 * Training with losses from PML
 * Training with losses from PML advanced (passing distance, reducer, miner)
 
-## Pipelines
+## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 
 Pipelines provide a way to run metric learning experiments via changing only the config file.
 All you need is to prepare your dataset in a required format.
