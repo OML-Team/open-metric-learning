@@ -15,7 +15,7 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 dataset_root =  "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root)
 
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 
@@ -25,7 +25,7 @@ calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():
     for batch in tqdm(val_loader):
-        batch["embeddings"] = model(batch["input_tensors"])
+        batch["embeddings"] = extractor(batch["input_tensors"])
         calculator.update_data(batch)
 
 metrics = calculator.compute_metrics()

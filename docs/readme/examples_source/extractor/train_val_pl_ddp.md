@@ -22,7 +22,7 @@ dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
@@ -37,7 +37,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP())  # DDP specific
 
 # run
-pl_model = ExtractorModuleDDP(model=model, criterion=criterion, optimizer=optimizer,
+pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimizer=optimizer,
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 

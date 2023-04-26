@@ -18,12 +18,12 @@ df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)
 queries = df_val[df_val["is_query"]]["path"].tolist()
 galleries = df_val[df_val["is_gallery"]]["path"].tolist()
 
-model = ViTExtractor.from_pretrained("vits16_dino")
+extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 args = {"num_workers": 0, "batch_size": 8}
-features_queries = inference_on_images(model, paths=queries, transform=transform, **args)
-features_galleries = inference_on_images(model, paths=galleries, transform=transform, **args)
+features_queries = inference_on_images(extractor, paths=queries, transform=transform, **args)
+features_galleries = inference_on_images(extractor, paths=galleries, transform=transform, **args)
 
 # Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
 use_knn = True
