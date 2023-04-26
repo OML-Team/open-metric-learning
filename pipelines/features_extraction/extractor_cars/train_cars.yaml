@@ -52,8 +52,8 @@ metric_args:
 metric_for_checkpointing: OVERALL/cmc/1
 
 
-# model to train
-model:
+# extractor to train
+extractor:
   name: vit
   args:
     normalise_features: False  # this is the only place in the pipeline where features normalisation can be set

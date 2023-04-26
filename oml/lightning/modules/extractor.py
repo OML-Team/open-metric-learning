@@ -19,7 +19,7 @@ class ExtractorModule(pl.LightningModule):
 
     def __init__(
         self,
-        model: IExtractor,
+        extractor: IExtractor,
         criterion: nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: Optional[_LRScheduler] = None,
@@ -34,7 +34,7 @@ class ExtractorModule(pl.LightningModule):
         """
 
         Args:
-            model: Model to train
+            extractor: Extractor to train
             criterion: Criterion to optimize
             optimizer: Optimizer
             scheduler: Learning rate scheduler
@@ -51,7 +51,7 @@ class ExtractorModule(pl.LightningModule):
         """
         pl.LightningModule.__init__(self)
 
-        self.model = model
+        self.model = extractor
         self.criterion = criterion
         self.optimizer = optimizer
 
@@ -66,7 +66,7 @@ class ExtractorModule(pl.LightningModule):
 
         self.freeze_n_epochs = freeze_n_epochs
         assert freeze_n_epochs == 0 or isinstance(
-            model, IFreezable
+            extractor, IFreezable
         ), f"Model must be {IFreezable.__name__} to use this."
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

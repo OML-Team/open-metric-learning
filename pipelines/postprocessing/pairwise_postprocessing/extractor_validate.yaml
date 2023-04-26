@@ -16,7 +16,7 @@ transforms_val:
 
 weights: /path/to/extractor.ckpt  # <---- specify path to an extractor
 
-model:
+extractor:
   name: vit
   args:
     arch: vits16

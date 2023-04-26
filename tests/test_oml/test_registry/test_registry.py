@@ -47,7 +47,7 @@ def get_opt() -> Optimizer:
 @pytest.mark.parametrize(
     "folder_name,registry,factory_fun,runtime_args",
     [
-        ("model", EXTRACTORS_REGISTRY, get_extractor, None),
+        ("extractor", EXTRACTORS_REGISTRY, get_extractor, None),
         ("criterion", LOSSES_REGISTRY, get_criterion, None),
         ("miner", MINERS_REGISTRY, get_miner, None),
         ("optimizer", OPTIMIZERS_REGISTRY, get_optimizer, {"params": get_params()}),

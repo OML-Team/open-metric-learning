@@ -38,7 +38,7 @@ defaults:
   - optimizer: adam
   - sampler: balance
 
-model:
+extractor:
   name: resnet
   args:
     arch: resnet50_projector
