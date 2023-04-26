@@ -97,7 +97,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
         module_constructor = ExtractorModule  # type: ignore
 
     pl_module = module_constructor(
-        model=extractor,
+        extractor=extractor,
         criterion=criterion,
         optimizer=optimizer,
         input_tensors_key=loader_train.dataset.input_tensors_key,
