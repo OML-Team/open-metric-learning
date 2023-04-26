@@ -80,7 +80,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
     loader_train, loaders_val = get_retrieval_loaders(cfg)
-    extractor = get_extractor_by_cfg(cfg["model"])
+    extractor = get_extractor_by_cfg(cfg["extractor"])
     criterion = get_criterion_by_cfg(cfg["criterion"], **{"label2category": loader_train.dataset.get_label2category()})
     optimizable_parameters = [
         {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
