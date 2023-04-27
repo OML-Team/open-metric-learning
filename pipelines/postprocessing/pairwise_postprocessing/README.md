@@ -5,7 +5,7 @@
 
 This Pipeline is based on the following study, completed by the OML's team:
 
-### [STIR: Siamese Transformer for Image Retrieval Postprocessing](link)
+### [STIR: Siamese Transformer for Image Retrieval Postprocessing](https://arxiv.org/abs/2304.13393v1)
 
 In this work, we first construct a baseline model trained with
 triplet loss with hard negatives mining that performs at the state of the art
