@@ -1,5 +1,8 @@
 # Pipelines: features extraction
 
+*If you are new to Pipelines idea, you can start with
+[general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).*
+
 These pipelines allow you to train and validate models that represent images as feature vectors, in other words,
 train feature extractors. Basically, there are two pipelines:
 * [extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline) including training + validation

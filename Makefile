@@ -17,28 +17,29 @@ build_readme:
 	# Header
 	cat docs/readme/header.md >> ${README_FILE}
 	# FAQ
-	echo "\n## FAQ\n" >> ${README_FILE}
+	echo "\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n" >> ${README_FILE}
 	cat docs/readme/faq.md >> ${README_FILE}
 	# Documentation
 	echo "\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n" >> ${README_FILE}
 	cat docs/readme/documentation.md >> ${README_FILE}
 	# Installation
-	echo "\n## Installation\n" >> ${README_FILE}
+	echo "\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
 	# Python examples
-	echo "\n## Examples\n" >> ${README_FILE}
+	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/train.md >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
+	cat docs/readme/examples.md >> ${README_FILE}
 	# Pipelines
-	echo "\n## Pipelines\n" >> ${README_FILE}
-	cat docs/readme/get_started_config.md >> ${README_FILE}
+	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
+	cat docs/readme/pipelines.md >> ${README_FILE}
 	# Zoo
-	echo "\n## Zoo\n" >>${README_FILE}
+	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/zoo.html)\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}
 	echo "\n### How to use models from Zoo?\n" >> ${README_FILE}
 	cat docs/readme/examples_source/zoo/models_usage.md >> ${README_FILE}
 	# Contributing
-	echo "\n## Contributing guide\n" >> ${README_FILE}
+	echo "\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n" >> ${README_FILE}
 	cat docs/readme/contributing.md >> ${README_FILE}
 	# Acknowledgments
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
