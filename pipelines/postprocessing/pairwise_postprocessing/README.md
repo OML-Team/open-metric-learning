@@ -19,7 +19,7 @@ attention mechanism. The resulting approach defines a new state of the
 art on standard image retrieval datasets: Stanford Online Products and
 DeepFashion In-shop.
 
-[**OPEN INTERACTIVE DEMO**](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/).
+[OPEN INTERACTIVE DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
 
 <div align="center">
 
