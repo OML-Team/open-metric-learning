@@ -223,6 +223,11 @@ You can also read some extra materials related to OML:
 [Post in Russian on Habr](https://habr.com/ru/company/ods/blog/695380/) |
 [Post in Chinese on CSDN](https://blog.csdn.net/fermion0217/article/details/127932087), translated by Chia-Chen Chang.
 
+* The
+[DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
+for our paper
+[STIR: Siamese Transformers for Image Retrieval Postprocessing](https://arxiv.org/abs/2304.13393)
+
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
 
@@ -338,7 +343,7 @@ print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 
-[**Schemas, explanations and tips**](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/pipelines.html#training)
+[**Schemas, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 illustrating the code below.
 
 See [extra code snippets](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html), including:

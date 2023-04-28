@@ -14,7 +14,10 @@ You can see the [analogues](https://open-metric-learning.readthedocs.io/en/lates
 
 It is expected that the dataset will be in the desired
 [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
-You can see a tiny figures dataset as an example.
+You can see a tiny
+[figures](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=share_link)
+dataset as an example.
+
 
 This pipeline support two types of losses:
 * Contrastive ones, like [TripletLoss](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer).
