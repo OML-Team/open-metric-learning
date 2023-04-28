@@ -1,11 +1,16 @@
 Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using Python-API is the most flexible, but knowledge-requiring approach.
-You are not limited by our project structure and you can use only that part of the functionality which you need.
-You can start with fully working code snippets below that train, validate and inference the model
+Using Python-API is the most flexible approach:
+you are not limited by our project & config structures and you can use only the needed part of OML's functionality.
+You will find code snippets below to train, validate and inference the model
 on a tiny dataset of
 `figures <https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing>`_.
+Here are more details regarding dataset
+`format <https://open-metric-learning.readthedocs.io/en/latest/oml/data.html>`_.
+
+`Schemas, explanations and tips <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/pipelines.html#training>`_
+illustrating the code below.
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train.md
 
