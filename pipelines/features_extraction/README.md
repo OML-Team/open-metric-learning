@@ -1,7 +1,7 @@
 # Pipelines: features extraction
 
-*If you are new to Pipelines idea, you can start with
-[general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).*
+If you are new to Pipelines idea, you can start with
+[general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).
 
 These pipelines allow you to train and validate models that represent images as feature vectors, in other words,
 train feature extractors. Basically, there are two pipelines:
@@ -10,7 +10,9 @@ train feature extractors. Basically, there are two pipelines:
 
 You can see the [analogues](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html) in Python.
 
-It is expected that the dataset will be in the desired [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
+It is expected that the dataset will be in the desired
+[format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
+You can see a tiny figures dataset as an example.
 
 ## Training
 This pipeline support two types of losses:

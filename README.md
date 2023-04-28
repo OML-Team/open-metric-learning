@@ -337,6 +337,8 @@ print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 </details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
+[Here](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/pipelines.html#training)
+you will find the schemas, explanations and tips illustrating the examples above.
 
 See [extra code snippets](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html), including:
 * Training + Validation with Lightning

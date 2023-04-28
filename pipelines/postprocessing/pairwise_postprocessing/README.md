@@ -1,7 +1,7 @@
 # Pairwise postprocessing (re-ranking)
 
-*If you are new to Pipelines idea, you can start with
-[general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).*
+If you are new to Pipelines idea, you can start with
+[general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).
 
 This Pipeline is based on the following study, completed by the OML's team:
 
