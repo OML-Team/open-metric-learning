@@ -9,8 +9,8 @@ on a tiny dataset of
 Here are more details regarding dataset
 `format <https://open-metric-learning.readthedocs.io/en/latest/oml/data.html>`_.
 
-`Here <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/pipelines.html#training>`_
-you will find the schemas, explanations and tips illustrating the code below.
+`Schemas, explanations and tips <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/pipelines.html#training>`_
+illustrating the code below.
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train.md
 

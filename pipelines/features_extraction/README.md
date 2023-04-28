@@ -10,11 +10,12 @@ train feature extractors. Basically, there are two pipelines:
 
 You can see the [analogues](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html) in Python.
 
+## Training
+
 It is expected that the dataset will be in the desired
 [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 You can see a tiny figures dataset as an example.
 
-## Training
 This pipeline support two types of losses:
 * Contrastive ones, like [TripletLoss](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer).
   They require special
