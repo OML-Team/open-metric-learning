@@ -11,5 +11,5 @@ by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
 The documentation for related classes is available via the `link <https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html>`_.
 
 You can also check the corresponding
-`pipeline <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing>`_
+`pipeline <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing>`_
 analogue.
