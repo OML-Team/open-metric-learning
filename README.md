@@ -344,7 +344,6 @@ print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 
 [**Schemas, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
-illustrating the code below.
 
 See [extra code snippets](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html), including:
 * Training + Validation with Lightning
