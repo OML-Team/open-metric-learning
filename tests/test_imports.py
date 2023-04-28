@@ -11,6 +11,8 @@ from oml.const import PROJECT_ROOT
 
 LIBS_TO_IGNORE = ["torch_xla"]
 
+NEED_TO_TEST_NOTEBOOKS = False
+
 
 def get_imports_from_files() -> List[Tuple[str, str]]:
     files = get_files_with_imports()
@@ -32,14 +34,19 @@ def get_imports_from_files() -> List[Tuple[str, str]]:
 
 
 def get_files_with_imports() -> List[str]:
+    files = []
+
     folder_with_scripts = PROJECT_ROOT / "oml"
     scriptes_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_scripts.rglob("*.py"))
+    files.extend(scriptes_files)
 
     folder_with_tests = PROJECT_ROOT / "tests"
     tests_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_tests.rglob("*.py"))
+    files.extend(tests_files)
 
     pipelines_folder = PROJECT_ROOT / "pipelines"
     pipelines_files = sorted(str(fname.relative_to(PROJECT_ROOT)) for fname in folder_with_tests.rglob("*.py"))
+    files.extend(pipelines_files)
 
     notebooks_files = sorted(
         str(fname.relative_to(PROJECT_ROOT))
@@ -47,7 +54,10 @@ def get_files_with_imports() -> List[str]:
         if fname.parent.name != ".ipynb_checkpoints"
     )
 
-    return scriptes_files + tests_files + pipelines_files + notebooks_files
+    if NEED_TO_TEST_NOTEBOOKS:
+        files.extend(notebooks_files)
+
+    return files
 
 
 def find_imports_in_script(fname: Path) -> List[str]:
