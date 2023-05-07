@@ -18,6 +18,10 @@ You can see a tiny
 [figures](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=share_link)
 dataset as an example.
 
+To get used to terminology you can check the
+[Glossary](https://github.com/OML-Team/open-metric-learning#faq)
+(naming convention).
+
 
 This pipeline support two types of losses:
 * Contrastive ones, like [TripletLoss](https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#tripletlosswithminer).
