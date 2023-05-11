@@ -126,7 +126,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
         ids_p = []
         ids_n = []
 
-        for idx_anch in torch.arange(len(labels))[torch.logical_not(ignore_anchor_mask)]:
+        for idx_anch in torch.arange(len(labels), device=distmat.device)[torch.logical_not(ignore_anchor_mask)]:
             positives = hardest_positive[idx_anch_pos == idx_anch][self.positive_slice]
             negatives = hardest_negative[idx_anch_neg == idx_anch][self.negative_slice]
 
