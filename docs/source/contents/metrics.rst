@@ -17,8 +17,8 @@ EmbeddingMetrics
     .. automethod:: setup
     .. automethod:: update_data
     .. automethod:: compute_metrics
-    .. automethod:: get_worst_queries_ids
     .. automethod:: get_plot_for_queries
+    .. automethod:: get_worst_queries_ids
     .. automethod:: get_plot_for_worst_queries
     .. automethod:: visualize
 

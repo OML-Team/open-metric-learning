@@ -9,19 +9,18 @@ There are two options to log your experiments when working with Pipelines:
 * `Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_ — is active by default. It will log charts
   (losses, metrics, statistics) and visualisation of model's mistakes for further analysis.
 
-
-* `Neptune <https://neptune.ai/>`_  — an option for advanced logging & collaboration.
-  It will log the same information as Tensorboard, but also the original source code, all the configs for easier reproducibility
-  and telemetry as GPU/CPU/Memory utilization.
+* `Neptune <https://neptune.ai/>`_  — an option for advanced logging & collaboration with a team.
+  It will log everything logged by Tensorboard, but also the original source code, all the configs for easier reproducibility
+  and telemetry such as GPU, CPU and Memory utilization.
   To activate Neptune you need to set ``neptune_project`` in a config file and provide your ``NEPTUNE_API_TOKEN`` as env variable.
-  Thus, the resulting command may look like:
+  Thus, the resulting training command may look like this:
 
   .. code-block:: bash
 
       export NEPTUNE_API_TOKEN=your_token python train.py
 
 
-Let's consider an example of what you get using `Neptune` for
+Let's consider an example of what you get using `Neptune` for the
 `feature extractor <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction>`_
 pipeline.
 
@@ -32,19 +31,19 @@ pipeline.
     :alt: Graphs
 
 
-On the example above you can observe the graphs of:
+In the example above you can observe the graphs of:
 
 * `Metrics <https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html>`_
-  such as ``CMC@1``, ``Precision@5``, ``MAP@5``, which were provided in a config file as ``metric_args``. Note,
-  you can set ``metrics_args.return_only_main_category: False``
-  to log metrics independently for each category (if your dataset has ones).
+  such as ``CMC@1``, ``Precision@5``, ``MAP@5``, which were provided in a config file as ``metric_args``.
+  Note, you can set ``metrics_args.return_only_main_category: False``
+  to log metrics independently for each of the categories (if your dataset has ones).
 
 * Loss values averaged over batches and epochs.
-  Some of built-in OML's losses have their unique additional statics that are also logged.
+  Some of the built-in OML's losses have their unique additional statics that is also logged.
   We used
   `TripletLossWithMargin <https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#oml.losses.triplet.TripletLossWithMiner>`_
-  for our example, which comes along with tracking of
-  positive distances, negative distances and a fraction of active triplets (for which loss is greater than zero).
+  in our example, which comes along with tracking
+  positive distances, negative distances and a fraction of active triplets (those for which loss is greater than zero).
 
 
 .. image:: https://i.ibb.co/Xx4kQrB/errors-neptune-oml.png
@@ -53,31 +52,32 @@ On the example above you can observe the graphs of:
     :alt: Model's mistakes
 
 
-You can see above the worst model's predictions in terms of
+The image above shows the worst model's predictions in terms of
 `MAP@5 <https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-map>`_
 metric.
-In particular, there are:
+In particular, each row contains:
 
 * A query (blue)
-* Five closest items from gallery to the given query & the corresponding distances (they are all red because they are incorrect)
-* At most two ground truths (gray), to get an idea what model should return
-* Slide-bar that helps to estimate your model's progress from epoch to epoch.
+* Five closest items from a gallery to the given query & the corresponding distances (they are all red because they are irrelevant to the query)
+* At most two ground truths (grey), to get an idea of what model should return
+
+There is also the slide bar that helps to estimate your model's progress from epoch to epoch
 
 
 Logging in Python
 =================
 
-Generally, log whatever information you want working with Python using the tool of your choice.
-We just provide some tips how to get this information.
+Generally, log whatever information you want using the tool of your choice.
+We just provide some tips on how to get this information.
 There are two main sources of logs:
 
-* Criterion (Loss). Some of built-in OML's losses have their unique additional statics,
-  which can be found in the ``last_logs`` field. See **Training** in the `examples <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_..
+* Criterion (loss). Some of the built-in OML's losses have their unique additional statics,
+  which is stored in the ``last_logs`` field. See **Training** in the `examples <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
 
 * Metrics calculator — `EmbeddingMetrics <https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#embeddingmetrics>`_.
   It has plenty of methods useful for logging. See **Validation** in the `examples <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
 
-We also recommend you to take a look at:
+We also recommend you take a look at:
 
 * `Visualisation notebook <https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/features_extraction/visualization.ipynb>`_
   for interactive errors analysis and visualizing attention maps.
