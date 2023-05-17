@@ -20,7 +20,7 @@ extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics()
+calculator = EmbeddingMetrics(extra_keys=("paths",))
 calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():
@@ -29,6 +29,16 @@ with torch.no_grad():
         calculator.update_data(batch)
 
 metrics = calculator.compute_metrics()
+
+# Logging
+print(calculator.metrics)  # metrics
+print(calculator.metrics_unreduced)  # metrics without averaging over queries
+
+# Visualisation
+calculator.get_plot_for_queries(query_ids=[0, 2], n_instances=5)  # draw predictions on predefined queries
+calculator.get_plot_for_worst_queries(metric_name="OVERALL/map/5", n_queries=2, n_instances=5)  # draw mistakes
+calculator.visualize()  # draw mistakes for all the available metrics
+
 ```
 [comment]:vanilla-validation-end
 </p>

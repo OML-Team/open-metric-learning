@@ -21,7 +21,7 @@ extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
@@ -31,6 +31,10 @@ for batch in tqdm(train_loader):
     loss.backward()
     optimizer.step()
     optimizer.zero_grad()
+
+    # info for logging: positive/negative distances, number of active triplets
+    print(criterion.last_logs)
+
 ```
 [comment]:vanilla-train-end
 </p>
