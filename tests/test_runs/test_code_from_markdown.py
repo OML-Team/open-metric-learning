@@ -23,13 +23,13 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
 @pytest.mark.parametrize(
     "fname,start_indicator,end_indicator",
     [
-        # ("extractor/train.md", "[comment]:vanilla-train-start\n", "[comment]:vanilla-train-end\n"),
+        ("extractor/train.md", "[comment]:vanilla-train-start\n", "[comment]:vanilla-train-end\n"),
         ("extractor/val.md", "[comment]:vanilla-validation-start\n", "[comment]:vanilla-validation-end\n"),
-        # ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
-        # ("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
-        # ("extractor/retrieval_usage.md", "[comment]:usage-retrieval-start\n", "[comment]:usage-retrieval-end\n"),
-        # ("zoo/models_usage.md", "[comment]:zoo-start\n", "[comment]:zoo-end\n"),
-        # ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
+        ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
+        ("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
+        ("extractor/retrieval_usage.md", "[comment]:usage-retrieval-start\n", "[comment]:usage-retrieval-end\n"),
+        ("zoo/models_usage.md", "[comment]:zoo-start\n", "[comment]:zoo-end\n"),
+        ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
     ],
 )
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:
