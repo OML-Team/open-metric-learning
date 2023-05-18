@@ -39,7 +39,7 @@ In the example above you can observe the graphs of:
   to log metrics independently for each of the categories (if your dataset has ones).
 
 * Loss values averaged over batches and epochs.
-  Some of the built-in OML's losses have their unique additional statics that is also logged.
+  Some of the built-in OML's losses have their unique additional statistics that is also logged.
   We used
   `TripletLossWithMargin <https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html#oml.losses.triplet.TripletLossWithMiner>`_
   in our example, which comes along with tracking
