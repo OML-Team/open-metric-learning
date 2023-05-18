@@ -17,6 +17,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
    oml/contributing
    oml/data
    oml/pipelines_general
+   oml/logging
 
 .. toctree::
    :caption: Features extraction

@@ -248,7 +248,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
         """
-        Visualize worst queries by metrics.
+        Visualize worst queries by all the available metrics.
         """
         metrics_flat = flatten_dict(self.metrics, ignored_keys=self.metrics_to_exclude_from_visualization)
         figures = []
