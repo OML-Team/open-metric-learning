@@ -102,5 +102,6 @@ for the CARS dataset, so you can start checking it out.
     In this case, you can try to use the [soft version](https://arxiv.org/abs/1703.07737) of triplet loss instead (just set `margin: null`).
     You can also switch between mining strategies (*hard* / *all*).
   * Don't use `margin: null` if you normalise features since it breaks gradients flow (it can be proved mathematically).
-* Set `log_images: True` to see the images where the model's performance was worst.
-* You can analyse your trained extractor in [visualization.ipynb](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/features_extraction/visualization.ipynb).
+* Check out [Logging & Visualization](https://open-metric-learning.readthedocs.io/en/latest/oml/logging.html) to learn more
+  about built-in possibilities such as
+  tracking metrics, losses, geometric statistics over embeddings, visual inspection of a model's predictions and so on.
