@@ -71,7 +71,7 @@ Generally, log whatever information you want using the tool of your choice.
 We just provide some tips on how to get this information.
 There are two main sources of logs:
 
-* Criterion (loss). Some of the built-in OML's losses have their unique additional statics,
+* Criterion (loss). Some of the built-in OML's losses have their unique additional statistics,
   which is stored in the ``last_logs`` field. See **Training** in the `examples <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
 
 * Metrics calculator — `EmbeddingMetrics <https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#embeddingmetrics>`_.
