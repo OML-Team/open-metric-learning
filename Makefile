@@ -34,7 +34,7 @@ build_readme:
 	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
 	cat docs/readme/pipelines.md >> ${README_FILE}
 	# Zoo
-	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/zoo.html)\n" >>${README_FILE}
+	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}
 	echo "\n### How to use models from Zoo?\n" >> ${README_FILE}
 	cat docs/readme/examples_source/zoo/models_usage.md >> ${README_FILE}

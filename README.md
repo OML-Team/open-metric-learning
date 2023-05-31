@@ -364,7 +364,7 @@ See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipel
 * Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 * Retrieval postprocessor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (re-ranking)
 
-## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/zoo.html)
+## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
 
 Below are the models trained with OML on 4 public datasets.
 All metrics below were obtained on the images with the sizes of **224 x 224**:

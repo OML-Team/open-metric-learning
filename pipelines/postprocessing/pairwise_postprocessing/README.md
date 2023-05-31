@@ -11,7 +11,7 @@ In this work, we first construct a baseline model trained with
 triplet loss with hard negatives mining that performs at the state of the art
 level but remains simple. Second, we introduce a novel
 approach for image retrieval postprocessing called Siamese Transformer
-for Image Retrieval (STIR) that reranks several top outputs in a single
+for Image Retrieval (STIR) that re-ranks several top outputs in a single
 forward pass. Unlike previously proposed Reranking Transformers, STIR
 does not rely on global/local feature extraction and directly compares a
 query image and a retrieved candidate on pixel level with the usage of
@@ -19,7 +19,9 @@ attention mechanism. The resulting approach defines a new state of the
 art on standard image retrieval datasets: Stanford Online Products and
 DeepFashion In-shop.
 
-[OPEN INTERACTIVE DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
+[OPEN INTERACTIVE DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/) |
+[demo's repository](https://github.com/OML-Team/postprocessing_demo)
+
 
 <div align="center">
 
