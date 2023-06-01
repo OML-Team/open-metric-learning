@@ -11,7 +11,7 @@ from oml.const import PROJECT_ROOT
 
 LIBS_TO_IGNORE = ["torch_xla"]
 
-NEED_TO_TEST_NOTEBOOKS = False
+NEED_TO_TEST_NOTEBOOKS = True
 
 
 def get_imports_from_files() -> List[Tuple[str, str]]:
