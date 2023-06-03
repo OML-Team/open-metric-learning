@@ -173,3 +173,47 @@ def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
     precisions_upd = calc_retrieval_metrics(distances=distances_upd, **args)["precision"]
     assert math.isclose(precisions_upd[1], 1)
     assert math.isclose(precisions_upd[3], 2 / 3, abs_tol=1e-5)
+
+
+class RandomPairwise(IPairwiseModel):
+    def __init__(self):  # type: ignore
+        super(RandomPairwise, self).__init__()
+        self.parameter = torch.nn.Linear(1, 1)
+
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return torch.sigmoid(torch.rand(x1.shape[0]))
+
+    def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return self.forward(x1, x2)
+
+
+@pytest.mark.parametrize("top_n", [2, 4, 5])
+def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
+    # The idea of the test is that postprocessing of first n elements
+    # cannot change cmc@n and precision@n
+
+    # Let's construct some random input
+    query_embeddings_perfect, gallery_embeddings_perfect, query_labels, gallery_labels = perfect_case()
+    query_embeddings = torch.rand_like(query_embeddings_perfect)
+    gallery_embeddings = torch.rand_like(gallery_embeddings_perfect)
+    mask_gt = query_labels.unsqueeze(-1) == gallery_labels
+
+    distances = pairwise_dist(query_embeddings, gallery_embeddings)
+
+    args = {
+        "cmc_top_k": (top_n,),
+        "precision_top_k": (top_n,),
+        "fmr_vals": tuple(),
+        "map_top_k": tuple(),
+        "mask_gt": mask_gt,
+    }
+
+    metrics_before = calc_retrieval_metrics(distances=distances, **args)
+
+    model = RandomPairwise()
+    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n, batch_size=4, num_workers=0)
+    distances_upd = processor.process(distances=distances, queries=query_embeddings, galleries=gallery_embeddings)
+
+    metrics_after = calc_retrieval_metrics(distances=distances_upd, **args)
+
+    assert metrics_before == metrics_after
