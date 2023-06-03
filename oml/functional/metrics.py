@@ -77,11 +77,9 @@ def calc_retrieval_metrics(
     precision_top_k_clipped = clip_max(precision_top_k, gallery_sz)
     map_top_k_clipped = clip_max(map_top_k, gallery_sz)
 
-    max_k = max([*cmc_top_k, *precision_top_k, *map_top_k])
-    max_k = min(max_k, gallery_sz)
+    all_k = list({*cmc_top_k, *precision_top_k, *map_top_k})
 
-    _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
-    gt_tops = take_2d(mask_gt, ii_top_k)
+    gt_tops = _get_gt_tops(distances, mask_gt, all_k)
     n_gt = mask_gt.sum(dim=1)
 
     metrics: TMetricsDict = defaultdict(dict)
@@ -561,6 +559,55 @@ def extract_pos_neg_dists(
         pos_dist = distances[mask_gt]
         neg_dist = distances[~mask_gt]
     return pos_dist, neg_dist
+
+
+def _get_gt_tops(distances: Tensor, mask_gt: Tensor, all_k: List[int]) -> Tensor:
+    """Get ``gt_tops`` matrix for the given distances.
+
+    Args:
+        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
+        mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
+        all_k: Values ``k`` for which the metrics will be evaluated.
+
+    Returns:
+        Matrix ``gt_tops`` where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
+        ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
+        with the smallest distances to the corresponding queries.
+
+    """
+    max_k = max(all_k)
+    max_k = min(max_k, distances.shape[1])
+    distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
+    while max_k < distances.shape[1] - 2 and torch.any(distances_tops[:, max_k - 1] == distances_tops[:, max_k]):
+        max_k += 1
+        distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
+    gt_tops = take_2d(mask_gt, ii_top_k)
+    gt_tops = _sort_gt_tops(gt_tops, distances_tops, all_k)
+    return gt_tops
+
+
+def _sort_gt_tops(gt_tops: Tensor, distances_tops: Tensor, top_k: List[int]) -> Tensor:
+    """Sort ``gt_tops`` values correspondent to the same distance values
+
+    Args:
+        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
+                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
+                 with the smallest distances to the corresponding queries.
+        distances_tops: Matrix with top distances.
+        top_k: Values of ``k`` for which it is required to stabilize ``gt_tops``.
+
+    Returns:
+        Sorted version of ``gt_tops``.
+    """
+    for k in top_k:
+        if k >= distances_tops.shape[1]:
+            continue
+        for i in torch.where(distances_tops[:, k - 1] == distances_tops[:, k])[0]:
+            same_distance_indeces = torch.where(distances_tops[i, :] == distances_tops[i, k - 1])[0]
+            low = same_distance_indeces[0]
+            up = same_distance_indeces[-1] + 1
+            gt_tops[i, low:up] = torch.sort(gt_tops[i, low:up])[0]
+    return gt_tops
 
 
 def _to_tensor(array: Union[np.ndarray, Tensor]) -> Tensor:
