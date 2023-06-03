@@ -71,6 +71,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
         Args:
             features: Features with the shape of ``[batch_size, feature_size]``
             labels: Labels with the size of ``batch_size``
+            *_: Anything here will be ignored
             ignore_anchor_mask: Parameter allows you to specify the ids of features that cannot be used as anchors. Can
             be useful with memory banks to create triplets in which at least one vector will have gradients.
 
