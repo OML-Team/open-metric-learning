@@ -41,6 +41,7 @@ class TriDataset(Dataset):
                           We keep positive pairs, but generale negative ones randomly.
                           After this procedure you dataset's length will increased (1 + expand_ratio) times
             f_imread: Function to read image from disk
+            cache_size: Size of the dataset's cache
             index_key: Key to put samples' ids into the batches
 
         """

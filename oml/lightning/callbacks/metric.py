@@ -31,6 +31,7 @@ class MetricValCallback(Callback):
         """
         Args:
             metric: Metric
+            log_images: Set ``True`` if you want to have visual logging
             loader_idx: Idx of the loader to calculate metric for
             samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
                 so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
