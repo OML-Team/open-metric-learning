@@ -67,6 +67,7 @@ def test_dataloader_iter(images: List[Path]) -> None:
 @pytest.mark.parametrize("im_paths,bboxes", [get_images_and_boxes(), get_images_and_boxes_with_nones()])
 def test_list_dataset_iter(im_paths: Sequence[Path], bboxes: Sequence[Optional[TBBox]]) -> None:
     dataset = ListDataset(im_paths, bboxes)
+
     dataloader = DataLoader(dataset)
     for batch, box in zip(dataloader, bboxes):
         image = batch[dataset.input_tensors_key]
