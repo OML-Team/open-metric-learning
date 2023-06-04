@@ -562,7 +562,7 @@ def extract_pos_neg_dists(
 
 
 def _get_gt_tops(distances: Tensor, mask_gt: Tensor, all_k: List[int]) -> Tensor:
-    """Get ``gt_tops`` matrix for the given distances.
+    """Get ``gt_tops`` matrix with the ground truth for the top values of the given distances.
 
     Args:
         distances: Distance matrix with the shape of ``[query_size, gallery_size]``
@@ -576,7 +576,7 @@ def _get_gt_tops(distances: Tensor, mask_gt: Tensor, all_k: List[int]) -> Tensor
 
     """
     max_k = max(all_k)
-    max_k = min(max_k, distances.shape[1])
+    max_k = min(max_k, distances.shape[1] - 1)
     distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
     while max_k < distances.shape[1] - 2 and torch.any(distances_tops[:, max_k - 1] == distances_tops[:, max_k]):
         max_k += 1
@@ -603,9 +603,9 @@ def _sort_gt_tops(gt_tops: Tensor, distances_tops: Tensor, top_k: List[int]) -> 
         if k >= distances_tops.shape[1]:
             continue
         for i in torch.where(distances_tops[:, k - 1] == distances_tops[:, k])[0]:
-            same_distance_indeces = torch.where(distances_tops[i, :] == distances_tops[i, k - 1])[0]
-            low = same_distance_indeces[0]
-            up = same_distance_indeces[-1] + 1
+            same_distance_indices = torch.where(distances_tops[i, :] == distances_tops[i, k - 1])[0]
+            low = same_distance_indices[0]
+            up = same_distance_indices[-1] + 1
             gt_tops[i, low:up] = torch.sort(gt_tops[i, low:up])[0]
     return gt_tops
 

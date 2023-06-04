@@ -296,3 +296,35 @@ def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
         pos_dist = torch.zeros(10)
         neg_dist = torch.ones(10)
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+
+
+def test_retrieval_metrics_stability() -> None:
+    distances = torch.tensor(
+        [
+            [1, 1, 1, 2, 3, 4],
+            [1, 1, 1, 2, 3, 4],
+            [1, 2, 2, 2, 2, 3],
+            [1, 2, 2, 2, 2, 3],
+            [1, 2, 3, 3, 3, 3],
+            [1, 2, 3, 3, 3, 3],
+        ],
+        dtype=torch.float,
+    )
+    mask_gt = torch.tensor(
+        [
+            [1, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+            [0, 1, 0, 1, 0, 0],
+            [0, 1, 1, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0],
+        ],
+        dtype=torch.int,
+    )
+    top_k = (1, 2, 3, 4, 5)
+    metrics = calc_retrieval_metrics(
+        distances, mask_gt, cmc_top_k=top_k, precision_top_k=top_k, map_top_k=top_k, fmr_vals=tuple(), reduce=False
+    )
+    for metric_name, metric_values in metrics.items():
+        for k, v in metric_values.items():
+            assert torch.all(v[:-1:2] == v[1::2]), f"{metric_name}@{k} is not stable: {v}."  # type: ignore
