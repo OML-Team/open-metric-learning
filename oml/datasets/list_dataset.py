@@ -52,12 +52,9 @@ class ListDataset(Dataset):
             index_key: Key to put samples' ids into the batches
 
         """
-        self.input_tensors_key = input_tensors_key
-        self.index_key = index_key
-
         data = defaultdict(list)
         data[PATHS_COLUMN] = list(map(str, filenames_list))
-        data[LABELS_COLUMN] = [None] * len(filenames_list)
+        data[LABELS_COLUMN] = ["none"] * len(filenames_list)
 
         if bboxes is not None:
             for bbox in bboxes:
@@ -80,8 +77,12 @@ class ListDataset(Dataset):
             index_key=index_key,
         )
 
+        self.input_tensors_key = input_tensors_key
+        self.index_key = index_key
+        self.paths_key = self._dataset.paths_key
+
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {self.input_tensors_key: self._dataset[idx][self.input_tensors_key], self.index_key: idx}
+        return self._dataset[idx]
 
     def __len__(self) -> int:
         return len(self._dataset)

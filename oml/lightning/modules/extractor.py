@@ -20,8 +20,8 @@ class ExtractorModule(pl.LightningModule):
     def __init__(
         self,
         extractor: IExtractor,
-        criterion: nn.Module,
-        optimizer: torch.optim.Optimizer,
+        criterion: Optional[nn.Module] = None,
+        optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[_LRScheduler] = None,
         scheduler_interval: str = "step",
         scheduler_frequency: int = 1,
@@ -92,6 +92,9 @@ class ExtractorModule(pl.LightningModule):
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model.extract(batch[self.input_tensors_key])
         return {**batch, **{self.embeddings_key: embeddings}}
+
+    def predict_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
+        return self.validation_step(batch, batch_idx)
 
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:

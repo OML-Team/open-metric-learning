@@ -95,3 +95,5 @@ INDEX_KEY = "idx"
 
 PAIR_1ST_KEY = "input_tensors_1"
 PAIR_2ND_KEY = "input_tensors_2"
+
+IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]

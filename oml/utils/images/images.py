@@ -1,6 +1,10 @@
+import multiprocessing as mp
+from functools import partial
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Union
+from typing import Callable, List, Optional, Union
+
+from tqdm import tqdm
 
 try:
     from albumentations.augmentations.functional import pad
@@ -96,6 +100,24 @@ def get_img_with_bbox(im_path: str, bbox: torch.Tensor, color: TColor) -> np.nda
 
 def square_pad(img: np.ndarray) -> np.ndarray:
     return pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=PAD_COLOR)
+
+
+def try_to_open_image(im_path: Path, f_imread: TImReader) -> Optional[str]:
+    try:
+        _ = f_imread(im_path)
+        return None
+    except Exception:
+        return str(im_path)
+
+
+def find_broken_images(images_list: List[Path], f_imread: TImReader, num_processes: int = 10) -> List[str]:
+    try_to_open_image_ = partial(try_to_open_image, f_imread=f_imread)
+
+    with mp.Pool(processes=num_processes) as p:
+        results = list(tqdm(p.imap(try_to_open_image_, images_list), total=len(images_list)))
+
+    results = list(filter(lambda x: x is not None, results))
+    return results
 
 
 __all__ = [
