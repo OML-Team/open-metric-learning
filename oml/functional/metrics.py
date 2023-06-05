@@ -578,9 +578,12 @@ def _get_gt_tops(distances: Tensor, mask_gt: Tensor, all_k: List[int]) -> Tensor
     max_k = max(all_k)
     max_k = min(max_k, distances.shape[1] - 1)
     distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
-    while max_k < distances.shape[1] - 2 and torch.any(distances_tops[:, max_k - 1] == distances_tops[:, max_k]):
-        max_k += 1
-        distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
+    new_max_k = max_k
+    while new_max_k < distances.shape[1] - 2 and torch.any(
+        distances_tops[:, max_k - 1] == distances_tops[:, new_max_k]
+    ):
+        new_max_k += 1
+        distances_tops, ii_top_k = torch.topk(distances, k=new_max_k + 1, largest=False)
     gt_tops = take_2d(mask_gt, ii_top_k)
     gt_tops = _sort_gt_tops(gt_tops, distances_tops, all_k)
     return gt_tops
