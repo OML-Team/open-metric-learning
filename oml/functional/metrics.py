@@ -594,7 +594,7 @@ def _estimate_suitable_max_k(distances: Tensor, max_k: int) -> int:
         New value of ``max_k``
     """
     distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
-    n_same_distances = []
+    n_same_distances = [0]
     for i in torch.where(distances_tops[:, max_k - 1] == distances_tops[:, max_k])[0]:
         n_same_distances.append(
             torch.sum(distances[i, :] == distances_tops[i, max_k - 1])
