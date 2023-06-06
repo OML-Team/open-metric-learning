@@ -1,0 +1,29 @@
+accelerator: gpu
+devices: 1
+precision: 32
+
+data_dir: data/
+save_dir: "."
+
+bs: 64
+num_workers: 10
+
+transforms_predict:
+  name: norm_resize_hypvit_torch
+  args:
+    im_size: 224
+    crop_size: 224
+
+extractor:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_inshop
+
+hydra:
+  run:
+    dir: ${save_dir}
+  searchpath:
+   - pkg://oml.configs
