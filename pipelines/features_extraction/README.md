@@ -66,6 +66,10 @@ Validation part consists of the following steps:
 <div align="left">
 
 
+## Prediction / Inference
+
+ToDo
+
 ## Customization
 
 Pipelines are built around blocks like model, criterion, optimizer and so on.
