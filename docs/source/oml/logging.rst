@@ -17,7 +17,7 @@ There are two options to log your experiments when working with Pipelines:
 
   .. code-block:: bash
 
-      export NEPTUNE_API_TOKEN=your_token 
+      export NEPTUNE_API_TOKEN=your_token
       python train.py
 
 

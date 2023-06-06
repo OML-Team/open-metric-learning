@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import IMAGE_EXTENSIONS, TCfg
 from oml.datasets.list_dataset import ListDataset
+from oml.ddp.utils import get_world_size_safe, is_main_process, sync_dicts_ddp
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
 from oml.registry.models import get_extractor_by_cfg
@@ -50,6 +51,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     pl_model = ExtractorModule(extractor=extractor)
 
     trainer_engine_params = parse_engine_params_from_config(cfg)
+    trainer_engine_params["replace_sampler_ddp"] = True
     trainer = pl.Trainer(precision=cfg.get("precision", 32), **trainer_engine_params)
     predictions = trainer.predict(model=pl_model, dataloaders=loader, return_predictions=True)
 
@@ -58,13 +60,17 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
         paths.extend(prediction[dataset.paths_key])
         embeddings.extend(prediction[pl_model.embeddings_key].tolist())
 
-    paths = list(map(str, paths))
+    paths = sync_dicts_ddp({"key": list(map(str, paths))}, get_world_size_safe())["key"]
+    embeddings = sync_dicts_ddp({"key": embeddings}, get_world_size_safe())["key"]
 
-    save_path = Path(cfg["save_dir"]) / "predictions.json"
-    with open(save_path, "w") as f:
-        json.dump(dict(zip(paths, embeddings)), f)
+    if is_main_process():
+        data_to_save = dict(zip(paths, embeddings))
+        save_path = Path(cfg["save_dir"]) / "predictions.json"
 
-    print(f"{len(paths)} predictions have been saved to {save_path}")
+        with open(save_path, "w") as f:
+            json.dump(data_to_save, f)
+
+        print(f"{len(paths)} predictions have been saved to {save_path}")
 
 
 __all__ = ["extractor_prediction_pipeline"]
