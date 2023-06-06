@@ -298,7 +298,8 @@ def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
 
 
-def test_retrieval_metrics_stability() -> None:
+@pytest.mark.parametrize("top_k", ((1,), (2,), (3,), (4,), (5,)))
+def test_retrieval_metrics_stability(top_k: Tuple[int]) -> None:
     distances = torch.tensor(
         [
             [1, 1, 1, 2, 3, 4],
@@ -321,7 +322,6 @@ def test_retrieval_metrics_stability() -> None:
         ],
         dtype=torch.int,
     )
-    top_k = (1, 2, 3, 4, 5)
     metrics = calc_retrieval_metrics(
         distances, mask_gt, cmc_top_k=top_k, precision_top_k=top_k, map_top_k=top_k, fmr_vals=tuple(), reduce=False
     )

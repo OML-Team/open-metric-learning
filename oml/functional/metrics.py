@@ -575,18 +575,33 @@ def _get_gt_tops(distances: Tensor, mask_gt: Tensor, all_k: List[int]) -> Tensor
         with the smallest distances to the corresponding queries.
 
     """
-    max_k = max(all_k)
-    max_k = min(max_k, distances.shape[1] - 1)
+    max_k = min(max(all_k), distances.shape[1] - 1)
+    max_k = _estimate_suitable_max_k(distances, max_k)
     distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
-    new_max_k = max_k
-    while new_max_k < distances.shape[1] - 2 and torch.any(
-        distances_tops[:, max_k - 1] == distances_tops[:, new_max_k]
-    ):
-        new_max_k += 1
-        distances_tops, ii_top_k = torch.topk(distances, k=new_max_k + 1, largest=False)
     gt_tops = take_2d(mask_gt, ii_top_k)
     gt_tops = _sort_gt_tops(gt_tops, distances_tops, all_k)
     return gt_tops
+
+
+def _estimate_suitable_max_k(distances: Tensor, max_k: int) -> int:
+    """Find ``max_k`` such that ``distances[:, max_k] != distances[:, max_k - 1]``.
+
+    Args:
+        distances: Distance matrix with the shape of ``[query_size, gallery_size]``.
+        max_k: initial value of ``max_k``.
+
+    Returns:
+        New value of ``max_k``
+    """
+    distances_tops, ii_top_k = torch.topk(distances, k=max_k + 1, largest=False)
+    n_same_distances = []
+    for i in torch.where(distances_tops[:, max_k - 1] == distances_tops[:, max_k])[0]:
+        n_same_distances.append(
+            torch.sum(distances[i, :] == distances_tops[i, max_k - 1])
+            - torch.sum(distances_tops[i, :] == distances_tops[i, max_k - 1])
+        )
+    max_k += max(n_same_distances)
+    return max_k
 
 
 def _sort_gt_tops(gt_tops: Tensor, distances_tops: Tensor, top_k: List[int]) -> Tensor:
@@ -602,9 +617,7 @@ def _sort_gt_tops(gt_tops: Tensor, distances_tops: Tensor, top_k: List[int]) -> 
     Returns:
         Sorted version of ``gt_tops``.
     """
-    for k in top_k:
-        if k >= distances_tops.shape[1]:
-            continue
+    for k in range(distances_tops.shape[1]):
         for i in torch.where(distances_tops[:, k - 1] == distances_tops[:, k])[0]:
             same_distance_indices = torch.where(distances_tops[i, :] == distances_tops[i, k - 1])[0]
             low = same_distance_indices[0]
