@@ -69,3 +69,5 @@ hydra:
     dir: ${logs_root}
   searchpath:
    - pkg://oml.configs
+  job:
+    chdir: True

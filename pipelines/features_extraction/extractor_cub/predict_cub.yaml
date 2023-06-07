@@ -26,3 +26,5 @@ hydra:
     dir: ${save_dir}
   searchpath:
    - pkg://oml.configs
+  job:
+    chdir: True
