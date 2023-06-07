@@ -16,7 +16,7 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
-from pytorch_lightning.loggers import NeptuneLogger
+from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 
 
 dataset_root =  "mock_dataset/"
@@ -38,7 +38,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
 
 # logging
-logger = True  # For TensorBoard
+logger = TensorBoardLogger(".")  # For TensorBoard
 # logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)  # For Neptune
 
 # run

@@ -105,7 +105,7 @@ class MetricValCallback(Callback):
                 fig.canvas.draw()
                 data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
                 data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
+                pl_module.logger.experiment.add_image(log_str, np.transpose(data, (2, 0, 1)), pl_module.current_epoch)
             else:
                 raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
 
