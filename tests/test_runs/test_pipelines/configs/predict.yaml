@@ -1,0 +1,30 @@
+precision: 32
+accelerator: cpu
+devices: 2
+
+data_dir: path_to_replace
+save_dir: "."
+
+bs: 4
+num_workers: 0
+
+transforms_predict:
+  name: norm_resize_torch
+  args:
+    im_size: 64
+
+extractor:
+  name: vit
+  args:
+    normalise_features: False
+    use_multi_scale: False
+    weights: vits16_dino
+    arch: vits16
+
+
+
+hydra:
+  run:
+    dir: ${save_dir}
+  searchpath:
+   - pkg://oml.configs
