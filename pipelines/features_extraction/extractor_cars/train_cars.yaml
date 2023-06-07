@@ -101,3 +101,5 @@ hydra:
     dir: ${hydra_dir}
   searchpath:
    - pkg://oml.configs  # it allows to use predefined configs of models, optimizers and so on from oml.configs as nested blocks, see Hydra's socs
+  job:
+    chdir: True

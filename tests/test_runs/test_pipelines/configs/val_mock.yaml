@@ -57,3 +57,5 @@ extractor:
 hydra:
   run:
     dir: ${logs_root}
+  job:
+    chdir: True

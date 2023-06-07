@@ -33,3 +33,5 @@ metric_args:
 hydra:
   searchpath:
    - pkg://oml.configs
+  job:
+    chdir: True

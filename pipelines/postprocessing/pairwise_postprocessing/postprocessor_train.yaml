@@ -121,3 +121,5 @@ hydra:
     dir: ${hydra_dir}
   searchpath:
     - pkg://oml.configs
+  job:
+    chdir: True
