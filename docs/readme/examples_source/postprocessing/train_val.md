@@ -3,6 +3,7 @@
 <p>
 
 [comment]:postprocessor-start
+
 ```python
 from pprint import pprint
 
@@ -28,8 +29,8 @@ download_mock_dataset(dataset_root)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 transform = get_normalisation_resize_torch(im_size=64)
 
-embeddings_train, embeddings_val, df_train, df_val = \
-    inference_on_dataframe(dataset_root, "df.csv", extractor=extractor, transforms_extraction=transform)
+embeddings_train, embeddings_val, df_train, df_val =
+    inference_on_dataframe(dataset_root, "df.csv", extractor=extractor, transforms=transform)
 
 # We are building Siamese model on top of existing weights and train it to recognize positive/negative pairs
 siamese = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])

@@ -80,7 +80,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         dataset_root=cfg["dataset_root"],
         output_cache_path=cache_file,
         dataframe_name=cfg["dataframe_name"],
-        transforms_extraction=get_transforms_by_cfg(cfg["transforms_extraction"]),
+        transforms=get_transforms_by_cfg(cfg["transforms_extraction"]),
         num_workers=cfg["num_workers"],
         batch_size=cfg["batch_size_inference"],
         use_fp16=int(cfg.get("precision", 32)) == 16,

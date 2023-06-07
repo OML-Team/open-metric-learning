@@ -92,7 +92,7 @@ def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
 
     # rm images without pairs from train
     n_orig = len(df)
-    mask_non_single_images = df.groupby("label").label.transform("count") > 1
+    mask_non_single_images = df.groupby("label").label.transforms("count") > 1
     df = df[mask_non_single_images | (df["split"] == "validation")]
     df.reset_index(drop=True, inplace=True)
     print(f"Dropped {n_orig - len(df)} items from train with only 1 image.")
