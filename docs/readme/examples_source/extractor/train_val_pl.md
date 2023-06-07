@@ -1,5 +1,5 @@
 <details>
-<summary>Training + Validation [Lightning]</summary>
+<summary>Training + Validation [Lightning and Neptune logging]</summary>
 <p>
 
 [comment]:lightning-start
@@ -16,6 +16,8 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models.vit.vit import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
+from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
+
 
 dataset_root =  "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
@@ -33,12 +35,17 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sa
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics())
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
+
+# logging
+logger = TensorBoardLogger(".")  # For TensorBoard
+# logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)  # For Neptune
 
 # run
 pl_model = ExtractorModule(extractor, criterion, optimizer)
-trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0)
+trainer = pl.Trainer(max_epochs=3, callbacks=[metric_callback], num_sanity_val_steps=0, logger=logger)
 trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+
 ```
 [comment]:lightning-end
 </p>

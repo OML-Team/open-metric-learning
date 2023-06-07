@@ -17,7 +17,7 @@ There are two options to log your experiments when working with Pipelines:
 
   .. code-block:: bash
 
-      export NEPTUNE_API_TOKEN=your_token 
+      export NEPTUNE_API_TOKEN=your_token
       python train.py
 
 
@@ -68,7 +68,25 @@ There is also the slide bar that helps to estimate your model's progress from ep
 Logging in Python
 =================
 
-Generally, log whatever information you want using the tool of your choice.
+
+Using Lightning
+"""""""""""""""
+
+The easiest is to use
+`Lightning <https://github.com/Lightning-AI/lightning>`_'s
+integrations with
+`Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_
+or
+`Neptune <https://neptune.ai/>`_.
+
+Take a look at the following example:
+`Training + Validation [Lightning and Neptune logging] <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
+
+
+Using plain Python
+""""""""""""""""""
+
+Log whatever information you want using the tool of your choice.
 We just provide some tips on how to get this information.
 There are two main sources of logs:
 
