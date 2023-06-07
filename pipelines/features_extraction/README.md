@@ -3,12 +3,13 @@
 If you are new to Pipelines idea, you can start with
 [general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).
 
-These pipelines allow you to train and validate models that represent images as feature vectors, in other words,
-train feature extractors. Basically, there are two pipelines:
+These particular pipelines allow you to train, validate and inference models that represent images as feature vectors.
+In this section we explain how the following pipelines work under the hood:
 * [extractor_training_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-training-pipeline) including training + validation
 * [extractor_validation_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-validation-pipeline) including validation only
+* [extractor_prediction_pipeline](https://open-metric-learning.readthedocs.io/en/latest/contents/lightning.html#extractor-prediction-pipeline) including saving extracted features
 
-You can see the [analogues](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html) in Python.
+Pipelines also have the corresponding [analogues](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html) in plain Python.
 
 ## Training
 
@@ -68,7 +69,8 @@ Validation part consists of the following steps:
 
 ## Prediction / Inference
 
-ToDo
+Prediction pipeline runs inference of a trained model and saves extracted features to the disk.
+Note, to speed up inference you can easily turn on multi GPU setup in the corresponding config file.
 
 ## Customization
 
