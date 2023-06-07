@@ -1,5 +1,5 @@
 <details>
-<summary>Prediction with postprocessing</summary>
+<summary>Postprocessor: Predict</summary>
 <p>
 
 [comment]:postprocessor-pred-start
