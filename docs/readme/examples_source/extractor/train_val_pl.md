@@ -38,8 +38,8 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=["paths",]), log_images=True);
 
 # logging
-logger = False
-# logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)
+logger = True  # For TensorBoard
+# logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)  # For Neptune
 
 # run
 pl_model = ExtractorModule(model, criterion, optimizer)
