@@ -8,6 +8,9 @@ by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
 
 .. mdinclude:: ../../../docs/readme/examples_source/postprocessing/train_val.md
 
+.. mdinclude:: ../../../docs/readme/examples_source/postprocessing/predict.md
+ㅤ
+
 The documentation for related classes is available via the `link <https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html>`_.
 
 You can also check the corresponding

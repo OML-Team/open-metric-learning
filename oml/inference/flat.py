@@ -52,7 +52,7 @@ def inference_on_dataframe(
     dataset_root: Union[Path, str],
     dataframe_name: str,
     extractor: IExtractor,
-    transforms_extraction: TTransforms,
+    transforms: TTransforms,
     output_cache_path: Optional[Union[str, Path]] = None,
     num_workers: int = 0,
     batch_size: int = 128,
@@ -72,7 +72,7 @@ def inference_on_dataframe(
         embeddings = inference_on_images(
             model=extractor,
             paths=df[PATHS_COLUMN],
-            transform=transforms_extraction,
+            transform=transforms,
             num_workers=num_workers,
             batch_size=batch_size,
             verbose=True,
