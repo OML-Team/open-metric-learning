@@ -617,7 +617,7 @@ def _sort_gt_tops(gt_tops: Tensor, distances_tops: Tensor, top_k: List[int]) -> 
     Returns:
         Sorted version of ``gt_tops``.
     """
-    for k in range(distances_tops.shape[1]):
+    for k in range(0, distances_tops.shape[1], 2):
         for i in torch.where(distances_tops[:, k - 1] == distances_tops[:, k])[0]:
             same_distance_indices = torch.where(distances_tops[i, :] == distances_tops[i, k - 1])[0]
             low = same_distance_indices[0]
