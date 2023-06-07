@@ -3,7 +3,6 @@
 <p>
 
 [comment]:postprocessor-start
-
 ```python
 from pprint import pprint
 

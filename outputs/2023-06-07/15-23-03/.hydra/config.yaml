@@ -1,0 +1,5 @@
+model:
+  name: resnet50
+  args:
+    weights: null
+device: cpu
