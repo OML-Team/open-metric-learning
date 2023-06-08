@@ -10,7 +10,7 @@ First, you need to download a dataset and make sure that your files tree matches
 <summary>CARS 196</summary>
 <p>
 
-[Dataset page.](https://ai.stanford.edu/~jkrause/cars/car_dataset.html)
+[Dataset page.](https://www.kaggle.com/datasets/arghyadutta1/cars196)
 
 The dataset contains 16,185 images of 196 labels of cars.
 The data is split into 8,144 training images and 8,041 testing images,
