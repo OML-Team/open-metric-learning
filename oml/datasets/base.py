@@ -239,7 +239,7 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     In other words, for the desired query item, the gallery is the rest of the validation dataset.
 
     Thus, if you want to perform this kind of validation process (`1 vs rest`) you should simply return
-    ``is_query == True`` and ``is_gallery == True`` for every item in the dataset sa the same time.
+    ``is_query == True`` and ``is_gallery == True`` for every item in the dataset as the same time.
 
     """
 
