@@ -7,7 +7,7 @@ For the details of the exact Pipeline, please, visit the corresponding page:
 
 Pipelines are a predefined collection of scripts/recipes that provide a way to run metric learning
 experiments by changing only the config.
-Pipelines require your data to pe prepared in a special `.csv` file, described in details
+Pipelines require your data to be prepared in a special `.csv` file, described in details
 [here](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 
 Pipelines may help you if:
