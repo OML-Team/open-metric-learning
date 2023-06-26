@@ -7,9 +7,7 @@ import torch
 from tqdm import tqdm
 
 from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
@@ -25,7 +23,8 @@ train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 
 # PML specific
 # criterion = losses.TripletMarginLoss(margin=0.2, triplets_per_anchor="all")
-criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(), embedding_size=extractor.feat_dim)  # for classification-like losses
+criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(),
+                               embedding_size=extractor.feat_dim)  # for classification-like losses
 
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)

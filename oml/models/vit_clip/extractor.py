@@ -5,7 +5,7 @@ import torch
 
 from oml.interfaces.models import IExtractor
 from oml.models.utils import TStateDict, filter_state_dict, patch_device_and_float
-from oml.models.vit.vision_transformer_clip import VisionTransformer
+from oml.models.vit_clip.external.model import VisionTransformer
 from oml.utils.io import download_checkpoint
 
 _OPENAI_URL = "https://openaipublic.azureedge.net/clip/models"

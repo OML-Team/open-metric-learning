@@ -3,6 +3,7 @@
 <p>
 
 [comment]:lightning-start
+
 ```python
 import pytorch_lightning as pl
 import torch
@@ -13,13 +14,12 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 
-
-dataset_root =  "mock_dataset/"
+dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model
@@ -35,7 +35,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sa
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key, ]), log_images=True)
 
 # logging
 logger = TensorBoardLogger(".")  # For TensorBoard

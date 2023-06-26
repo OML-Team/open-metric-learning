@@ -11,7 +11,7 @@ from torch import nn
 from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.hubconf import (  # type: ignore
+from oml.models.vit_dino.external.hubconf import (  # type: ignore
     dino_vitb8,
     dino_vitb16,
     dino_vits8,
@@ -58,6 +58,13 @@ class ViTExtractor(IExtractor):
             "fname": "vitb8_dino.ckpt",
             "init_args": {"arch": "vitb8", "normalise_features": False},
         },
+        # unicom checkpoints
+        "FP16-ViT-B-16": {
+            "url": "https://github.com/deepglint/unicom/releases/download/b16/FP16-ViT-B-16.pt",
+            "hash": "7adebf",
+            "fname": "FP16-ViT-B-32.pt",
+            "init_args": {"arch": "vitb16", "normalise_features": False},
+        },
         # our pretrained checkpoints
         "vits16_inshop": {
             "url": [f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
@@ -73,7 +80,7 @@ class ViTExtractor(IExtractor):
         },
         "vits16_cub": {
             "url": [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
-            "hash": "e82633",
+            "hash": None,
             "fname": "vits16_cub.ckpt",
             "init_args": {"arch": "vits16", "normalise_features": False},
         },

@@ -4,6 +4,7 @@
 <p>
 
 [comment]:lightning-ddp-start
+
 ```python
 import pytorch_lightning as pl
 import torch
@@ -14,7 +15,7 @@ from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetricsDDP
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
@@ -41,7 +42,8 @@ pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimize
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 
-ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(), "replace_sampler_ddp": False} # DDP specific
+ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(),
+            "replace_sampler_ddp": False}  # DDP specific
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```
