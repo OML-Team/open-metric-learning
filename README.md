@@ -260,7 +260,6 @@ make docker_build RUNTIME=gpu
 <p>
 
 [comment]:vanilla-train-start
-
 ```python
 import torch
 from tqdm import tqdm
@@ -268,7 +267,7 @@ from tqdm import tqdm
 from oml.datasets.base import DatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
@@ -284,14 +283,14 @@ sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
-  embeddings = extractor(batch["input_tensors"])
-  loss = criterion(embeddings, batch["labels"])
-  loss.backward()
-  optimizer.step()
-  optimizer.zero_grad()
+    embeddings = extractor(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
 
-  # info for logging: positive/negative distances, number of active triplets
-  print(criterion.last_logs)
+    # info for logging: positive/negative distances, number of active triplets
+    print(criterion.last_logs)
 
 ```
 [comment]:vanilla-train-end
@@ -311,7 +310,7 @@ from tqdm import tqdm
 
 from oml.datasets.base import DatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 dataset_root = "mock_dataset/"
@@ -326,9 +325,9 @@ calculator = EmbeddingMetrics(extra_keys=("paths",))
 calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():
-  for batch in tqdm(val_loader):
-    batch["embeddings"] = extractor(batch["input_tensors"])
-    calculator.update_data(batch)
+    for batch in tqdm(val_loader):
+        batch["embeddings"] = extractor(batch["input_tensors"])
+        calculator.update_data(batch)
 
 metrics = calculator.compute_metrics()
 
@@ -352,7 +351,6 @@ calculator.visualize()  # draw mistakes for all the available metrics
 <p>
 
 [comment]:lightning-start
-
 ```python
 import pytorch_lightning as pl
 import torch
@@ -363,7 +361,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
@@ -384,7 +382,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sa
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key, ]), log_images=True)
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
 
 # logging
 logger = TensorBoardLogger(".")  # For TensorBoard
