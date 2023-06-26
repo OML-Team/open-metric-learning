@@ -303,7 +303,6 @@ for batch in tqdm(train_loader):
 <p>
 
 [comment]:vanilla-validation-start
-
 ```python
 import torch
 from tqdm import tqdm
