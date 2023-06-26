@@ -4,7 +4,6 @@
 <p>
 
 [comment]:lightning-ddp-start
-
 ```python
 import pytorch_lightning as pl
 import torch
@@ -42,8 +41,7 @@ pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimize
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 
-ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(),
-            "replace_sampler_ddp": False}  # DDP specific
+ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(), "replace_sampler_ddp": False}  # DDP specific
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```

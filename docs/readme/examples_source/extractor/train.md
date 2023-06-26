@@ -3,7 +3,6 @@
 <p>
 
 [comment]:vanilla-train-start
-
 ```python
 import torch
 from tqdm import tqdm
