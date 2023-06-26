@@ -3,7 +3,6 @@
 <p>
 
 [comment]:postprocessor-pred-start
-
 ```python
 import torch
 from torch.utils.data import DataLoader
