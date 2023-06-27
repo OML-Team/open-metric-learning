@@ -9,7 +9,7 @@ Models
 
 ViTExtractor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.vit.vit.ViTExtractor
+.. autoclass:: oml.models.vit_dino.extractor.ViTExtractor
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +19,7 @@ ViTExtractor
 
 ViTCLIPExtractor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.vit.clip.ViTCLIPExtractor
+.. autoclass:: oml.models.vit_clip.extractor.ViTCLIPExtractor
     :undoc-members:
     :show-inheritance:
 
@@ -28,7 +28,7 @@ ViTCLIPExtractor
 
 ResnetExtractor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.models.resnet.ResnetExtractor
+.. autoclass:: oml.models.resnet.extractor.ResnetExtractor
     :undoc-members:
     :show-inheritance:
 

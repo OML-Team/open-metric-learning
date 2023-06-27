@@ -13,13 +13,12 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 
-
-dataset_root =  "mock_dataset/"
+dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
 
 # model

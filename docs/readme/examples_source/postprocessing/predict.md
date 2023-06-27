@@ -10,8 +10,7 @@ from torch.utils.data import DataLoader
 from oml.const import PATHS_COLUMN
 from oml.datasets.base import DatasetQueryGallery
 from oml.inference.flat import inference_on_dataframe
-from oml.models.meta.siamese import ConcatSiamese
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ConcatSiamese, ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.utils.download_mock_dataset import download_mock_dataset

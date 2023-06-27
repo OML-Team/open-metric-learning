@@ -108,11 +108,17 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     save_path = str(CKPT_SAVE_ROOT / fname)
 
     if Path(save_path).exists():
-        if calc_file_hash(save_path).startswith(hash_md5):
+        actual_hash = calc_file_hash(save_path)
+        if actual_hash.startswith(hash_md5):
             print("Checkpoint is already here.")
             return save_path
         else:
-            print("Checkpoint is already here, but hashed don't match. " "We will remove the old checkpoint.")
+            print(
+                f"Checkpoint is already here, but hashed don't match. "
+                f"{actual_hash} != {hash_md5}."
+                f"We will remove the old checkpoint: "
+                f"{save_path}."
+            )
             Path(save_path).unlink()
 
     print("Downloading checkpoint...")

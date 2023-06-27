@@ -8,9 +8,9 @@ from oml.models.meta.siamese import (
     LinearTrivialDistanceSiamese,
     TrivialDistanceSiamese,
 )
-from oml.models.resnet import ResnetExtractor
-from oml.models.vit.clip import ViTCLIPExtractor
-from oml.models.vit.vit import ViTExtractor
+from oml.models.resnet.extractor import ResnetExtractor
+from oml.models.vit_clip.extractor import ViTCLIPExtractor
+from oml.models.vit_dino.extractor import ViTExtractor
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 EXTRACTORS_REGISTRY = {

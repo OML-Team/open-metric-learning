@@ -9,10 +9,10 @@ from tqdm import tqdm
 
 from oml.datasets.base import DatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root =  "mock_dataset/"
+dataset_root = "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()

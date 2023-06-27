@@ -10,7 +10,7 @@ from tqdm import tqdm
 from oml.datasets.base import DatasetWithLabels
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 

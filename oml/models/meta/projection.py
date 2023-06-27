@@ -7,7 +7,7 @@ from torchvision.ops import MLP
 from oml.const import STORAGE_CKPTS
 from oml.interfaces.models import IExtractor, IFreezable
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.vit import ViTExtractor
+from oml.models.vit_dino.extractor import ViTExtractor
 from oml.utils.io import download_checkpoint
 
 

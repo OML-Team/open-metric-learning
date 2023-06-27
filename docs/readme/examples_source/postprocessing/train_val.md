@@ -14,8 +14,7 @@ from oml.datasets.base import DatasetWithLabels, DatasetQueryGallery
 from oml.inference.flat import inference_on_dataframe
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.pairs import PairsMiner
-from oml.models.meta.siamese import ConcatSiamese
-from oml.models.vit.vit import ViTExtractor
+from oml.models import ConcatSiamese, ViTExtractor
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.samplers.balance import BalanceSampler
 from oml.transforms.images.torchvision import get_normalisation_resize_torch

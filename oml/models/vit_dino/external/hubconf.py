@@ -17,7 +17,7 @@
 import torch
 from torchvision.models.resnet import resnet50
 
-import oml.models.vit.vision_transformer as vits
+import oml.models.vit_dino.external.vision_transformer as vits
 
 dependencies = ["torch", "torchvision"]
 
