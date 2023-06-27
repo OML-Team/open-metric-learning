@@ -1,1 +1,93 @@
-# placeholder for a new model
+from pathlib import Path
+from typing import Optional, Union
+
+import torch
+from external.model import load
+from external.vision_transformer import VisionTransformer, build_model
+
+from oml.const import CKPT_SAVE_ROOT
+from oml.interfaces.models import IExtractor
+from oml.models.utils import remove_prefix_from_state_dict
+from oml.utils.misc_torch import normalise
+
+
+def unicom_vitb32() -> VisionTransformer:
+    return build_model("ViT-B/32")
+
+
+def unicom_vitb16() -> VisionTransformer:
+    return build_model("ViT-B/16")
+
+
+def unicom_vitl14() -> VisionTransformer:
+    return build_model("ViT-L/14")
+
+
+def unicom_vitl14_336px() -> VisionTransformer:
+    return build_model("ViT-L/14@336px")
+
+
+class ViTUnicomExtractor(IExtractor):
+    constructors = {
+        "vitb32_unicom": unicom_vitb32,
+        "vitb16_unicom": unicom_vitb16,
+        "vitl14_unicom": unicom_vitl14,
+        "vitl14_336px_unicom": unicom_vitl14_336px,
+    }
+
+    pretrained_models = {
+        "vitb32_unicom": {
+            "download_fn": lambda: load("ViT-B/32", download_root=CKPT_SAVE_ROOT),
+            "fname": "FP16-ViT-B-32.pt",
+            "init_args": {"arch": "vitb32_unicom", "normalise_features": False},
+        },
+        "vitb16_unicom": {
+            "download_fn": lambda: load("ViT-B/16", download_root=CKPT_SAVE_ROOT),
+            "fname": "FP16-ViT-B-16.pt",
+            "init_args": {"arch": "vitb16_unicom", "normalise_features": False},
+        },
+        "vitl14_unicom": {
+            "download_fn": lambda: load("ViT-L/14", download_root=CKPT_SAVE_ROOT),
+            "fname": "FP16-ViT-L-14.pt",
+            "init_args": {"arch": "vitl14_unicom", "normalise_features": False},
+        },
+        "vitl14_336px_unicom": {
+            "download_fn": lambda: load("ViT-L/14@336px", download_root=CKPT_SAVE_ROOT),
+            "fname": "FP16-ViT-L-14-336px.pt",
+            "init_args": {"arch": "vitl14_336px_unicom", "normalise_features": False},
+        },
+    }
+
+    def __init__(self, weights: Optional[Union[Path, str]], arch: str, normalise_features: bool):
+        assert arch in self.constructors
+        super(IExtractor, self).__init__()
+
+        self.arch = arch
+        self.normalise_features = normalise_features
+
+        self.model = self.constructors[arch]()
+
+        if weights is None:
+            return
+        elif weights in self.constructors:
+            self.model, _ = self.pretrained_models[weights]["download_fn"]()  # type: ignore
+        else:
+            ckpt = torch.load(weights, map_location="cpu")
+            state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
+            ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
+            self.model.load_state_dict(ckpt, strict=True)
+
+    @property
+    def feat_dim(self) -> int:
+        return {"vitb32_unicom": 768, "vitb16_unicom": 768, "vitl14_unicom": 768, "vitl14_336px_unicom": 768}[self.arch]
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.model(x)
+
+        if self.normalise_features:
+            x = normalise(x)
+
+        return x
+
+
+__all__ = ["ViTUnicomExtractor"]
