@@ -114,7 +114,7 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
             return save_path
         else:
             print(
-                f"Checkpoint is already here, but hashed don't match. "
+                f"Checkpoint is already here, but hashes don't match. "
                 f"{actual_hash} != {hash_md5}."
                 f"We will remove the old checkpoint: "
                 f"{save_path}."

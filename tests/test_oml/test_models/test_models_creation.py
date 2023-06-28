@@ -10,8 +10,10 @@ from oml.models.meta.siamese import ConcatSiamese
 from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models.vit_unicom.extractor import ViTUnicomExtractor
 
 SKIP_LARGE_CKPT = True
+LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152"]
 
 vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits16"}
 
@@ -21,6 +23,7 @@ vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits
     [
         (ViTExtractor, vit_args),
         (ViTCLIPExtractor, {"normalise_features": False, "arch": "vitb32_224"}),
+        (ViTUnicomExtractor, {"normalise_features": False, "arch": "vitb32_unicom"}),
         (ResnetExtractor, {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "arch": "resnet50"}),
         (ExtractorWithMLP, {"extractor": ViTExtractor(None, **vit_args), "mlp_features": [128]}),  # type: ignore
     ],
@@ -44,9 +47,10 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
 
     # 3. Test pretrained
     for weights in constructor.pretrained_models.keys():
-        if (("vitl" in weights) or ("resnet101" in weights) or ("resnet152" in weights)) and SKIP_LARGE_CKPT:
+        if any([nm in weights for nm in LARGE_CKPT_NAMES]) and SKIP_LARGE_CKPT:
             continue
-        extractor = constructor.from_pretrained(weights=weights)
+
+        extractor = constructor.from_pretrained(weights=weights).eval()
         extractor.extract(im)
 
     assert torch.allclose(features1, features2)

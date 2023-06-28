@@ -1,5 +1,6 @@
 from typing import Any, Dict, Tuple
 
+from oml.models.vit_unicom.external.vision_transformer import _transform  # type: ignore
 from oml.transforms.images.albumentations import (
     get_augs_albu,
     get_normalisation_albu,
@@ -68,6 +69,10 @@ TRANSFORMS_FOR_PRETRAINED = {
     "vits16_cars": get_normalisation_resize_albu(im_size=224),
     "vits16_cub": get_normalisation_resize_albu(im_size=224),
     "vits16_224_mlp_384_inshop": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "vitb32_unicom": _transform(224),
+    "vitb16_unicom": _transform(224),
+    "vitl14_unicom": _transform(224),
+    "vitl14_336px_unicom": _transform(336),
 }
 
 
