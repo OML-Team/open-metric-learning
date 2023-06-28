@@ -79,13 +79,15 @@ class ViTUnicomExtractor(IExtractor):
 
     @property
     def feat_dim(self) -> int:
-        return {"vitb32_unicom": 768, "vitb16_unicom": 768, "vitl14_unicom": 768, "vitl14_336px_unicom": 768}[self.arch]
+        return {"vitb32_unicom": 512, "vitb16_unicom": 768, "vitl14_unicom": 768, "vitl14_336px_unicom": 768}[self.arch]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
 
         if self.normalise_features:
             x = normalise(x)
+
+        print(x.shape)
 
         return x
 
