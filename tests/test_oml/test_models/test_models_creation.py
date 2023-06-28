@@ -10,7 +10,7 @@ from oml.models.meta.siamese import ConcatSiamese
 from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
-from oml.models.vit_unicom.unicom import ViTUnicomExtractor
+from oml.models.vit_unicom.extractor import ViTUnicomExtractor
 
 SKIP_LARGE_CKPT = True
 LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152"]

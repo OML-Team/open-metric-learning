@@ -11,7 +11,7 @@ from oml.models.meta.siamese import (
 from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
-from oml.models.vit_unicom.unicom import ViTUnicomExtractor
+from oml.models.vit_unicom.extractor import ViTUnicomExtractor
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 EXTRACTORS_REGISTRY = {
