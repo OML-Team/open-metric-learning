@@ -38,22 +38,18 @@ class ViTUnicomExtractor(IExtractor):
     pretrained_models = {
         "vitb32_unicom": {
             "download_fn": lambda: load("ViT-B/32", download_root=CKPT_SAVE_ROOT),
-            "fname": "FP16-ViT-B-32.pt",
             "init_args": {"arch": "vitb32_unicom", "normalise_features": True},
         },
         "vitb16_unicom": {
             "download_fn": lambda: load("ViT-B/16", download_root=CKPT_SAVE_ROOT),
-            "fname": "FP16-ViT-B-16.pt",
             "init_args": {"arch": "vitb16_unicom", "normalise_features": True},
         },
         "vitl14_unicom": {
             "download_fn": lambda: load("ViT-L/14", download_root=CKPT_SAVE_ROOT),
-            "fname": "FP16-ViT-L-14.pt",
             "init_args": {"arch": "vitl14_unicom", "normalise_features": True},
         },
         "vitl14_336px_unicom": {
             "download_fn": lambda: load("ViT-L/14@336px", download_root=CKPT_SAVE_ROOT),
-            "fname": "FP16-ViT-L-14-336px.pt",
             "init_args": {"arch": "vitl14_336px_unicom", "normalise_features": True},
         },
     }
@@ -86,8 +82,6 @@ class ViTUnicomExtractor(IExtractor):
 
         if self.normalise_features:
             x = normalise(x)
-
-        print(x.shape)
 
         return x
 
