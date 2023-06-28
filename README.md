@@ -481,6 +481,7 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 
 |                            model                            | Stanford Online Products | DeepFashion InShop | CUB 200 2011 | CARS 196 |
 |:-----------------------------------------------------------:|:------------------------:|:------------------:|:------------:|:--------:|
+|            `ViTUnicomExtractor("vitb16_unicom")`            |          0.704           |       0.747        |    0.853     |  0.919   |
 |    `ViTCLIPExtractor.from_pretrained("sber_vitb32_224")`    |          0.547           |       0.514        |    0.448     |  0.618   |
 |    `ViTCLIPExtractor.from_pretrained("sber_vitb16_224")`    |          0.565           |       0.565        |    0.524     |  0.648   |
 |    `ViTCLIPExtractor.from_pretrained("sber_vitl14_224")`    |          0.512           |       0.555        |    0.606     |  0.707   |
@@ -493,6 +494,10 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 |        `ViTExtractor.from_pretrained("vitb8_dino")`         |          0.689           |       0.599        |    0.506     |  0.313   |
 |    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`    |          0.493           |       0.267        |    0.264     |  0.149   |
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")` |          0.515           |       0.284        |    0.455     |  0.247   |
+
+**The metrics may be different from the ones reported by papers,
+because the version of train/val split and usage of bounding boxes may differ.
+Particularly, we used bounding boxes during the evaluation.*
 
 ### How to use models from Zoo?
 
