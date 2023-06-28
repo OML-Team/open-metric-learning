@@ -76,9 +76,6 @@ def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
         std: the standard deviation of the normal distribution
         a: the minimum cutoff value
         b: the maximum cutoff value
-    Examples:
-        >>> w = torch.empty(3, 5)
-        >>> nn.init.trunc_normal_(w)
     """
     with torch.no_grad():
         return _trunc_normal_(tensor, mean, std, a, b)
