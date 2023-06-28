@@ -13,7 +13,7 @@ from oml.models.vit_dino.extractor import ViTExtractor
 from oml.models.vit_unicom.unicom import ViTUnicomExtractor
 
 SKIP_LARGE_CKPT = True
-LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152", "vitl14_336px_unicom"]
+LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152"]
 
 vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits16"}
 

@@ -2,29 +2,29 @@ from pathlib import Path
 from typing import Optional, Union
 
 import torch
-from external.model import load
-from external.vision_transformer import VisionTransformer, build_model
 
 from oml.const import CKPT_SAVE_ROOT
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
+from oml.models.vit_unicom.external import vision_transformer
+from oml.models.vit_unicom.external.model import load  # type: ignore
 from oml.utils.misc_torch import normalise
 
 
-def unicom_vitb32() -> VisionTransformer:
-    return build_model("ViT-B/32")
+def unicom_vitb32() -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-B/32")  # type: ignore
 
 
-def unicom_vitb16() -> VisionTransformer:
-    return build_model("ViT-B/16")
+def unicom_vitb16() -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-B/16")  # type: ignore
 
 
-def unicom_vitl14() -> VisionTransformer:
-    return build_model("ViT-L/14")
+def unicom_vitl14() -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-L/14")  # type: ignore
 
 
-def unicom_vitl14_336px() -> VisionTransformer:
-    return build_model("ViT-L/14@336px")
+def unicom_vitl14_336px() -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-L/14@336px")  # type: ignore
 
 
 class ViTUnicomExtractor(IExtractor):
@@ -39,22 +39,22 @@ class ViTUnicomExtractor(IExtractor):
         "vitb32_unicom": {
             "download_fn": lambda: load("ViT-B/32", download_root=CKPT_SAVE_ROOT),
             "fname": "FP16-ViT-B-32.pt",
-            "init_args": {"arch": "vitb32_unicom", "normalise_features": False},
+            "init_args": {"arch": "vitb32_unicom", "normalise_features": True},
         },
         "vitb16_unicom": {
             "download_fn": lambda: load("ViT-B/16", download_root=CKPT_SAVE_ROOT),
             "fname": "FP16-ViT-B-16.pt",
-            "init_args": {"arch": "vitb16_unicom", "normalise_features": False},
+            "init_args": {"arch": "vitb16_unicom", "normalise_features": True},
         },
         "vitl14_unicom": {
             "download_fn": lambda: load("ViT-L/14", download_root=CKPT_SAVE_ROOT),
             "fname": "FP16-ViT-L-14.pt",
-            "init_args": {"arch": "vitl14_unicom", "normalise_features": False},
+            "init_args": {"arch": "vitl14_unicom", "normalise_features": True},
         },
         "vitl14_336px_unicom": {
             "download_fn": lambda: load("ViT-L/14@336px", download_root=CKPT_SAVE_ROOT),
             "fname": "FP16-ViT-L-14-336px.pt",
-            "init_args": {"arch": "vitl14_336px_unicom", "normalise_features": False},
+            "init_args": {"arch": "vitl14_336px_unicom", "normalise_features": True},
         },
     }
 
