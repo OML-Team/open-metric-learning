@@ -15,14 +15,28 @@ on:
 
 
 jobs:
-  tests:
+  short_tests:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Build OML
       run: |
         make docker_build RUNTIME=cpu
-    - name: Tests OML
+    - name: Short Tests OML
       run: |
-        make docker_tests RUNTIME=cpu
+        make docker_short_tests RUNTIME=cpu
+
+  all_tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Build OML
+      run: |
+        make docker_build RUNTIME=cpu
+    - name: All Tests OML
+      run: |
+        make docker_all_tests RUNTIME=cpu

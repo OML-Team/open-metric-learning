@@ -23,7 +23,7 @@ step which is equal for each experiment, `N` - number of devices,
 """
 
 
-# TODO: check internal `/` on widnows
+# TODO: check internal `/` on windows
 exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_triplets_experiment_ddp.py"
 
 

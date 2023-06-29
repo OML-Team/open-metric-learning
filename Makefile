@@ -49,12 +49,13 @@ build_readme:
 
 # ====================================== TESTS ======================================
 
-.PHONY: download_mock_dataset
-download_mock_dataset:
-	python oml/utils/download_mock_dataset.py
+.PHONY: run_all_tests
+run_tests:
+	pytest --disable-warnings -sv tests
+	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
+	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
-.PHONY: run_tests
-run_tests: download_mock_dataset
+.PHONY: run_short_tests
 	pytest --disable-warnings -sv -m "not long" tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
@@ -77,9 +78,13 @@ run_precommit:
 docker_build:
 	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME) -f ci/Dockerfile .
 
-.PHONY: docker_tests
+.PHONY: docker_all_tests
 docker_tests:
-	docker run -t $(IMAGE_NAME) make run_tests
+	docker run -t $(IMAGE_NAME) make run_all_tests
+
+.PHONY: docker_short_tests
+docker_tests:
+	docker run -t $(IMAGE_NAME) make run_short_tests
 
 .PHONY: build_wheel
 build_wheel:
