@@ -7,7 +7,7 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import dictconfig_to_dict
 
 
-@hydra.main(config_path="configs", config_name="val_mock.yaml", version_base=HYDRA_VERSION)
+@hydra.main(config_path="configs", config_name="validate.yaml", version_base=HYDRA_VERSION)
 def main_hydra(cfg: DictConfig) -> None:
     cfg = dictconfig_to_dict(cfg)
     download_mock_dataset(MOCK_DATASET_PATH)
