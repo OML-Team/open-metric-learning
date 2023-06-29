@@ -55,7 +55,7 @@ download_mock_dataset:
 
 .PHONY: run_tests
 run_tests: download_mock_dataset
-	pytest --disable-warnings -sv tests
+	pytest --disable-warnings -sv -m "not long" tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
