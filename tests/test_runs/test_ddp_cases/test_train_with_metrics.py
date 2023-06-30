@@ -34,6 +34,7 @@ runnings.
 exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_retrieval_experiment_ddp.py"
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("batch_size", [10, 19])
 @pytest.mark.parametrize("max_epochs", [2])
 @pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-2)])
