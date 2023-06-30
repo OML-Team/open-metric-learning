@@ -11,6 +11,7 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 from tests.test_oml.test_ddp.utils import init_ddp, run_in_ddp
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("batch_size", [1, 4])
 @pytest.mark.parametrize("world_size,n_paths", [(3, 5), (3, 6)])
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
