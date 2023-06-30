@@ -25,12 +25,14 @@ TRANSFORMS_ALBU = {
     "norm_resize_albu_clip": get_normalisation_resize_albu_clip,
 }
 
+
 TRANSFORMS_TORCH = {
     "augs_torch": get_augs_torch,
     "norm_torch": get_normalisation_torch,
     "norm_resize_torch": get_normalisation_resize_torch,
     "augs_hypvit_torch": get_augs_hypvit,
     "norm_resize_hypvit_torch": get_normalisation_resize_hypvit,
+    "xxx": _transform,
 }
 
 TRANSFORMS_REGISTRY = {**TRANSFORMS_ALBU, **TRANSFORMS_TORCH}

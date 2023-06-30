@@ -2,25 +2,22 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: data/Stanford_Online_Products/
+dataset_root: /home/lexibender/data/Stanford_Online_Products/
 dataframe_name: df.csv
 
 bs_val: 512
 num_workers: 20
 
 transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
+  name: xxx
+  args: {}
 
 extractor:
-  name: vit
+  name: vit_unicom
   args:
-    arch: vits16
+    arch: vitb16_unicom
+    weights: vitb16_unicom
     normalise_features: True
-    use_multi_scale: False
-    weights: vits16_sop
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]

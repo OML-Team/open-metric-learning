@@ -2,31 +2,29 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: data/CARS196/
-dataframe_name: df_with_bboxes.csv
+dataset_root: /home/lexibender/data/Stanford_Online_Products/
+dataframe_name: df.csv
 
-bs_val: 256
-num_workers: 8
+bs_val: 512
+num_workers: 20
 
 transforms_val:
-  name: norm_resize_albu
+  name: norm_resize_torch
   args:
     im_size: 224
 
 extractor:
-  name: vit
+  name: vit_unicom
   args:
-    arch: vits16
-    normalise_features: False
-    use_multi_scale: False
-    weights: vits16_cars
+    arch: vitb16_unicom
+    weights: vitb16_unicom
+    normalise_features: True
+
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 5]
   map_top_k: [5]
-  precision_top_k: [5]
-  fmr_vals: [0.01]
   pfc_variance: [0.5, 0.9, 0.99]
   return_only_main_category: False
   visualize_only_main_category: True
