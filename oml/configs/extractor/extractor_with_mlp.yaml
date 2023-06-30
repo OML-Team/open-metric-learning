@@ -7,5 +7,5 @@ args:
     args:
       normalise_features: False
       use_multi_scale: False
-      weights: vits16_dino
+      weights: null
       arch: vits16

@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List, Tuple
 
+import pytest
 import torch
 from torch import nn
 
@@ -27,6 +28,7 @@ step which is equal for each experiment, `N` - number of devices,
 exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_triplets_experiment_ddp.py"
 
 
+@pytest.mark.long
 def test_epochs_are_equal() -> None:
     max_epochs = 2
     models = {}
