@@ -1,5 +1,5 @@
 name: vit_unicom
 args:
   arch: vitb32_unicom
-  weights: vitb32_unicom
+  weights: null
   normalise_features: True
