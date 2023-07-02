@@ -335,11 +335,11 @@ def _convert_image_to_rgb(image):
     return image.convert("RGB")
 
 
-def _transform(n_px):
+def transform(im_size):
     return Compose(
         [
-            Resize(n_px, interpolation=InterpolationMode.BICUBIC),
-            CenterCrop(n_px),
+            Resize(im_size, interpolation=InterpolationMode.BICUBIC),
+            CenterCrop(im_size),
             _convert_image_to_rgb,
             ToTensor(),
             Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
@@ -349,12 +349,12 @@ def _transform(n_px):
 
 def load_model_and_transform(name="ViT-L/14@336px"):
     if name == "ViT-B/32":
-        return build_model(name), _transform(224)
+        return build_model(name), transform(224)
     elif name == "ViT-B/16":
-        return build_model(name), _transform(224)
+        return build_model(name), transform(224)
     elif name == "ViT-L/14":
-        return build_model(name), _transform(224)
+        return build_model(name), transform(224)
     elif name == "ViT-L/14@336px":
-        return build_model(name), _transform(336)
+        return build_model(name), transform(336)
     else:
         raise
