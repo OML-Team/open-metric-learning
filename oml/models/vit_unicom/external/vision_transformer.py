@@ -335,7 +335,7 @@ def _convert_image_to_rgb(image):
     return image.convert("RGB")
 
 
-def get_unicom_transforms(im_size=224):
+def transform(im_size=224):
     return Compose(
         [
             Resize(im_size, interpolation=InterpolationMode.BICUBIC),
@@ -349,12 +349,12 @@ def get_unicom_transforms(im_size=224):
 
 def load_model_and_transform(name="ViT-L/14@336px"):
     if name == "ViT-B/32":
-        return build_model(name), get_unicom_transforms(224)
+        return build_model(name), transform(224)
     elif name == "ViT-B/16":
-        return build_model(name), get_unicom_transforms(224)
+        return build_model(name), transform(224)
     elif name == "ViT-L/14":
-        return build_model(name), get_unicom_transforms(224)
+        return build_model(name), transform(224)
     elif name == "ViT-L/14@336px":
-        return build_model(name), get_unicom_transforms(336)
+        return build_model(name), transform(336)
     else:
         raise

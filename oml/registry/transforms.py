@@ -31,7 +31,7 @@ TRANSFORMS_TORCH = {
     "norm_resize_torch": get_normalisation_resize_torch,
     "augs_hypvit_torch": get_augs_hypvit,
     "norm_resize_hypvit_torch": get_normalisation_resize_hypvit,
-    "unicom_transforms": unicom.get_unicom_transforms,  # type: ignore
+    "unicom_transforms": unicom.transform,  # type: ignore
 }
 
 TRANSFORMS_REGISTRY = {**TRANSFORMS_ALBU, **TRANSFORMS_TORCH}
@@ -70,10 +70,10 @@ TRANSFORMS_FOR_PRETRAINED = {
     "vits16_cars": get_normalisation_resize_albu(im_size=224),
     "vits16_cub": get_normalisation_resize_albu(im_size=224),
     "vits16_224_mlp_384_inshop": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
-    "vitb32_unicom": unicom.get_unicom_transforms(224),  # type: ignore
-    "vitb16_unicom": unicom.get_unicom_transforms(224),  # type: ignore
-    "vitl14_unicom": unicom.get_unicom_transforms(224),  # type: ignore
-    "vitl14_336px_unicom": unicom.get_unicom_transforms(336),  # type: ignore
+    "vitb32_unicom": unicom.transform(224),  # type: ignore
+    "vitb16_unicom": unicom.transform(224),  # type: ignore
+    "vitl14_unicom": unicom.transform(224),  # type: ignore
+    "vitl14_336px_unicom": unicom.transform(336),  # type: ignore
 }
 
 
