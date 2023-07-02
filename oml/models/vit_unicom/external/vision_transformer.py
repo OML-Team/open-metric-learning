@@ -335,7 +335,7 @@ def _convert_image_to_rgb(image):
     return image.convert("RGB")
 
 
-def transform(im_size=224):
+def transform(im_size):
     return Compose(
         [
             Resize(im_size, interpolation=InterpolationMode.BICUBIC),
