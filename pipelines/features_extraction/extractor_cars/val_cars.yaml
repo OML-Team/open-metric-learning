@@ -2,14 +2,18 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: /home/lexibender/data/Stanford_Online_Products/
+#dataset_root: /home/lexibender/data/Stanford_Online_Products/
+#dataset_root: /home/lexibender/data/DeepFashion_InShop/
+#dataset_root: /home/lexibender/data/CUB_200_2011/
+dataset_root: /home/lexibender/data/CARS196/
+
 dataframe_name: df.csv
 
 bs_val: 512
 num_workers: 20
 
 transforms_val:
-  name: norm_resize_torch
+  name: unicom_transforms
   args:
     im_size: 224
 
