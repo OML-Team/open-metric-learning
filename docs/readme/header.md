@@ -15,3 +15,15 @@
 <div align="left">
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
+
+### Trusted by
+
+<a href="https://www.newyorker.de/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/New_Yorker.svg/1280px-New_Yorker.svg.png" width="100"/></a>
+<a href="https://docs.neptune.ai/" target="_blank"><img src="https://docs.neptune.ai/assets/neptune.svg" width="100"/></a>
+<a href="https://www.hse.ru/en/" target="_blank"><img src="https://www.hse.ru/data/2020/11/16/1367274044/HSE_University_blue.jpg.(230x86x123).jpg" width="100"/></a>
+
+Epoch8 [todo]
+
+*There is a number of people from [HSE University](https://www.hse.ru/en/) who have heavily used OML in their theses. 
+[[1]](https://github.com/nastygorodi/PROJECT-Deep_Metric_Learning)
+[[2]](https://github.com/nik-fedorov/term_paper_metric_learning)
