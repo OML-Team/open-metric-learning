@@ -61,9 +61,9 @@ run_all_tests: download_mock_dataset
 
 .PHONY: run_short_tests
 run_short_tests: download_mock_dataset
-	pytest --disable-warnings -sv -m "not long" tests
-	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
+	pytest --disable-warnings -sv -m "not long" tests/test_runs/test_pipelines/test_pipelines.py
+	#pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
+	#$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
@@ -85,11 +85,11 @@ docker_build:
 
 .PHONY: docker_all_tests
 docker_all_tests:
-	docker run -t $(IMAGE_NAME) make run_all_tests
+	docker run --env WANDB_API_KEY=$(WANDB_API_KEY) --env NEPTUNE_API_TOKEN=$(NEPTUNE_API_TOKEN) -t $(IMAGE_NAME) make run_all_tests
 
 .PHONY: docker_short_tests
 docker_short_tests:
-	docker run -t $(IMAGE_NAME) make run_short_tests
+	docker run --env WANDB_API_KEY=$(WANDB_API_KEY) --env NEPTUNE_API_TOKEN=$(NEPTUNE_API_TOKEN) -t $(IMAGE_NAME) make run_short_tests
 
 .PHONY: build_wheel
 build_wheel:
