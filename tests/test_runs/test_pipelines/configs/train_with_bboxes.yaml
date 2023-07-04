@@ -72,8 +72,6 @@ metric_for_checkpointing: OVERALL/cmc/5
 max_epochs: 2
 valid_period: 2
 
-neptune_project: null
-
 tags:
   - mock
 

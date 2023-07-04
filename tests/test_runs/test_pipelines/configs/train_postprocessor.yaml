@@ -99,7 +99,10 @@ metric_args:
   return_only_main_category: False
   visualize_only_main_category: False
 
-neptune_project: null
+logger:
+  name: tensorboard
+  args:
+    save_dir: "."
 
 tags:
   - mock

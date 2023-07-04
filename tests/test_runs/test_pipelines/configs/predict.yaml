@@ -21,8 +21,6 @@ extractor:
     weights: vits16_dino
     arch: vits16
 
-
-
 hydra:
   run:
     dir: ${save_dir}

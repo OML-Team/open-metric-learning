@@ -76,7 +76,11 @@ metric_for_checkpointing: OVERALL/precision/5
 max_epochs: 2
 valid_period: 1
 
-neptune_project: null
+logger:
+  name: neptune
+  args:
+    project: "oml-team/test"
+
 
 lightning_trainer_extra_args:
   max_time: "00:12:00:00"  # 12h

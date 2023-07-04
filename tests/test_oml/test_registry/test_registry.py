@@ -7,6 +7,7 @@ from torch import nn
 from torch.optim import Optimizer
 
 from oml.const import CONFIGS_PATH, TCfg
+from oml.registry.loggers import LOGGERS_REGISTRY, get_logger
 from oml.registry.losses import LOSSES_REGISTRY, get_criterion
 from oml.registry.miners import MINERS_REGISTRY, get_miner
 from oml.registry.models import (
@@ -29,7 +30,7 @@ from oml.registry.transforms import (
     get_transforms,
     get_transforms_for_pretrained,
 )
-from oml.utils.misc import dictconfig_to_dict
+from oml.utils.misc import dictconfig_to_dict, load_dotenv
 
 
 def get_sampler_kwargs_runtime() -> Any:
@@ -56,9 +57,12 @@ def get_opt() -> Optimizer:
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
         ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
         ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
+        ("logger", LOGGERS_REGISTRY, get_logger, None),
     ],
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
+    load_dotenv()
+
     for obj_name in registry.keys():
         cfg = dictconfig_to_dict(OmegaConf.load(CONFIGS_PATH / folder_name / f"{obj_name}.yaml"))
         args = cfg["args"]
