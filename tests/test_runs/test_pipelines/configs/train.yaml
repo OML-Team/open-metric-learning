@@ -77,9 +77,9 @@ max_epochs: 2
 valid_period: 1
 
 logger:
-  name: neptune
+  name: tensorboard
   args:
-    project: "oml-team/test"
+    logdir: "."
 
 
 lightning_trainer_extra_args:

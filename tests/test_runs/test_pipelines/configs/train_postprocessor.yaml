@@ -92,7 +92,7 @@ postprocessor:
     use_fp16: True
 
 metric_for_checkpointing: OVERALL/cmc/1
-log_images: True
+log_images: False
 metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]

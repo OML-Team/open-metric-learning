@@ -61,9 +61,9 @@ run_all_tests: download_mock_dataset
 
 .PHONY: run_short_tests
 run_short_tests: download_mock_dataset
-	pytest --disable-warnings -sv -m "not long"  tests/test_oml/test_registry/test_registry.py
-	#pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	#$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
+	pytest --disable-warnings -sv -m "not long" tests
+	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
+	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:

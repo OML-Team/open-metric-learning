@@ -60,9 +60,9 @@ max_epochs: 2
 valid_period: 1
 
 logger:
-  name: wandb
+  name: tensorboard
   args:
-    project: "test_project"
+    logdir: "."
 
 tags:
   - mock
