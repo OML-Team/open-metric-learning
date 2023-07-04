@@ -61,7 +61,7 @@ def get_opt() -> Optimizer:
     ],
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
-    load_dotenv()
+    load_dotenv()  # we need to load tokens for cloud loggers (Neptune, W & B)
 
     for obj_name in registry.keys():
         cfg = dictconfig_to_dict(OmegaConf.load(CONFIGS_PATH / folder_name / f"{obj_name}.yaml"))

@@ -62,7 +62,7 @@ valid_period: 1
 logger:
   name: tensorboard
   args:
-    logdir: "."
+    save_dir: "."
 
 tags:
   - mock

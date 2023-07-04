@@ -83,8 +83,22 @@ optimizer:
 scheduling: null
 
 
-# to use Neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
-neptune_project: null  # the name of your Neptune project
+# There are several options for logging:
+#logger:
+#  name: tensorboard
+#  args:
+#    save_dir: "."
+
+logger:
+  name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
+  args:
+    project: "oml-team/test"
+
+#logger:
+#  name: wandb  # requires <WANDB_API_KEY> as global env
+#  args:
+#    project: "test_project"
+
 
 # these tags will be applied to a run if Neptune logger was used
 # they may be useful to navigate among your runs

@@ -79,8 +79,7 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
     if isinstance(logger, NeptuneLogger):
         warnings.warn(
             "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
-            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it. You can use"
-            "Tensorboard logger instead, for this simply leave <NEPTUNE_API_TOKEN> unfilled."
+            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it."
         )
         logger.log_hyperparams(dict_to_log)
         upload_files_to_neptune_cloud(logger, cfg)

@@ -73,10 +73,10 @@ optimizer:
 
 scheduling: null
 
-
-# to use Neptune, please, provide its token via `export NEPTUNE_API_TOKEN=...`
-neptune_project: null
-
+logger:
+  name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
+  args:
+    project: "oml-team/test"
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
