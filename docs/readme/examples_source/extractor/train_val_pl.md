@@ -1,5 +1,5 @@
 <details>
-<summary>Training + Validation [Lightning and Neptune logging]</summary>
+<summary>Training + Validation [Lightning and logging]</summary>
 <p>
 
 [comment]:lightning-start
@@ -16,7 +16,7 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
-from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
+from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
 
 dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
@@ -36,9 +36,16 @@ val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
 
-# logging
-logger = TensorBoardLogger(".")  # For TensorBoard
-# logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)  # For Neptune
+# 1) Logging with Tensorboard
+logger = TensorBoardLogger(".")
+
+# 2) Logging with Neptune
+# logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)
+
+# 3) Logging with Weights and Biases
+# import os
+# os.environ["WANDB_API_KEY"] = ""
+# logger = WandbLogger(name="test_project", log_model=False)
 
 # run
 pl_model = ExtractorModule(extractor, criterion, optimizer)

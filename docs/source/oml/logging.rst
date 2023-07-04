@@ -4,22 +4,55 @@ Logging & Visualization
 Logging in `Pipelines <https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html>`_
 ===========================================================================================================
 
-There are two options to log your experiments when working with Pipelines:
+There are three options to log your experiments when working with Pipelines:
 
-* `Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_ — is active by default. It will log charts
-  (losses, metrics, statistics) and visualisation of model's mistakes for further analysis.
+* `Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_ — is active by default if there is no ``logger`` in config.
+  It will log charts (losses, metrics, statistics) and visualisation of model's mistakes for further analysis.
+  If you want to change the logging directory, you may configure the logger explicitly:
+
+  .. code-block:: yaml
+
+    ...
+    logger:
+      name: tensorboard
+      args:
+        save_dir: "."
+    ...
 
 * `Neptune <https://neptune.ai/>`_  — an option for advanced logging & collaboration with a team.
   It will log everything logged by Tensorboard, but also the original source code, all the configs for easier reproducibility
   and telemetry such as GPU, CPU and Memory utilization.
-  To activate Neptune you need to set ``neptune_project`` in a config file and provide your ``NEPTUNE_API_TOKEN`` as env variable.
-  Thus, the resulting training command may look like this:
+  Your config and run command may look like this:
+
+  .. code-block:: yaml
+
+    ...
+    logger:
+      name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
+      args:
+        project: "oml-team/test"
+    ...
 
   .. code-block:: bash
 
-      export NEPTUNE_API_TOKEN=your_token
-      python train.py
+      export NEPTUNE_API_TOKEN=your_token; python train.py
 
+* `Weights and Biases <https://wandb.ai/site>`_ — an option for advanced logging & collaboration with a team.
+  The functionality & usage is similar to the Neptune's ones.
+  Your config and run command may look like this:
+
+  .. code-block:: yaml
+
+      ...
+      logger:
+          name: wandb
+          args:
+            project: "test_project"
+      ...
+
+  .. code-block:: bash
+
+      export WANDB_API_KEY=your_token; python train.py
 
 Let's consider an example of what you get using `Neptune` for the
 `feature extractor <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction>`_
@@ -75,12 +108,12 @@ Using Lightning
 The easiest is to use
 `Lightning <https://github.com/Lightning-AI/lightning>`_'s
 integrations with
-`Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_
-or
-`Neptune <https://neptune.ai/>`_.
+`Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_,
+`Neptune <https://neptune.ai/>`_ or
+`Weights and Biases <https://wandb.ai/site>`_.
 
 Take a look at the following example:
-`Training + Validation [Lightning and Neptune logging] <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
+`Training + Validation [Lightning and logging] <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
 
 
 Using plain Python
