@@ -1,7 +1,7 @@
 name: extractor_with_mlp
 args:
   mlp_features: [384]
-  weights: vits16_224_mlp_384_inshop
+  weights: null
   extractor:
     name: vit
     args:
