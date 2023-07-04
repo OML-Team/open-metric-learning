@@ -410,7 +410,7 @@ logger = TensorBoardLogger(".")
 # 3) Logging with Weights and Biases
 # import os
 # os.environ["WANDB_API_KEY"] = ""
-# logger = WandbLogger(name="test_project", log_model=False)
+# logger = WandbLogger(project="test_project", log_model=False)
 
 # run
 pl_model = ExtractorModule(extractor, criterion, optimizer)
