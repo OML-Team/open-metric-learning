@@ -52,7 +52,7 @@ extractor:
     arch: vits16
     normalise_features: False
     use_multi_scale: True
-    weights: vits16_dino
+    weights: null
 
 hydra:
   run:
