@@ -1,21 +1,16 @@
-import os
-import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
-import albumentations as albu
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.plugins import DDPPlugin
 
-from oml.const import PROJECT_ROOT, TCfg
+from oml.const import TCfg
 from oml.datasets.base import DatasetWithLabels
 from oml.interfaces.samplers import IBatchSampler
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import get_transforms_by_cfg
-from oml.utils.misc import dictconfig_to_dict, flatten_dict
+from oml.utils.misc import dictconfig_to_dict
 
 
 def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
@@ -60,64 +55,6 @@ def check_is_config_for_ddp(cfg: TCfg) -> bool:
     return bool(cfg["strategy"])
 
 
-def initialize_logging(cfg: TCfg) -> Union[bool, NeptuneLogger]:
-    """
-    Logger initialisation.
-
-    If Neptune Logger is used, we also upload to its cloud some files
-    which are good to have for reproducibility.
-
-    """
-    if ("NEPTUNE_API_TOKEN" in os.environ.keys()) and (cfg["neptune_project"] is not None):
-        warnings.warn(
-            "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
-            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it. You can use"
-            "Tensorboard logger instead, for this simply leave <NEPTUNE_API_TOKEN> unfilled."
-        )
-
-        cwd = Path.cwd()
-        logger = NeptuneLogger(
-            api_key=os.environ["NEPTUNE_API_TOKEN"],
-            project=cfg["neptune_project"],
-            tags=list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd.name],
-            log_model_checkpoints=False,
-        )
-        dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
-        logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
-        upload_files_to_neptune_cloud(logger, cfg)
-
-    else:
-        print(f"Your current logger is not able to log your files, you can use {NeptuneLogger.__name__} for this.")
-        logger = True
-
-    return logger
-
-
-def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
-    assert isinstance(logger, NeptuneLogger)
-
-    # save transforms as files
-    for key, val in cfg.items():
-        if "transforms" in key:
-            try:
-                transforms = get_transforms_by_cfg(cfg[key])
-                if isinstance(transforms, albu.Compose):
-                    transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
-                    albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
-                    logger.run[key].upload(str(transforms_file))
-            except Exception:
-                print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
-
-    # log source code
-    source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
-        map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
-    )
-    logger.run["code"].upload_files(source_files)
-
-    # log dataset
-    logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
-
-
 def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> Dict[str, Any]:
     if cfg.get("scheduling"):
         scheduler_kwargs = {
@@ -159,8 +96,6 @@ def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
 __all__ = [
     "parse_engine_params_from_config",
     "check_is_config_for_ddp",
-    "initialize_logging",
-    "upload_files_to_neptune_cloud",
     "parse_scheduler_from_config",
     "parse_sampler_from_config",
     "parse_ckpt_callback_from_config",
