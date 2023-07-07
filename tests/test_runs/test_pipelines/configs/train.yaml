@@ -39,13 +39,13 @@ extractor:
   name: extractor_with_mlp
   args:
     mlp_features: [384]
-    weights: vits16_224_mlp_384_inshop
+    weights: null
     extractor:
       name: vit
       args:
         normalise_features: False
         use_multi_scale: False
-        weights: vits16_dino
+        weights: null
         arch: vits16
 
 scheduling:
@@ -76,7 +76,11 @@ metric_for_checkpointing: OVERALL/precision/5
 max_epochs: 2
 valid_period: 1
 
-neptune_project: null
+logger:
+  name: tensorboard
+  args:
+    save_dir: "."
+
 
 lightning_trainer_extra_args:
   max_time: "00:12:00:00"  # 12h

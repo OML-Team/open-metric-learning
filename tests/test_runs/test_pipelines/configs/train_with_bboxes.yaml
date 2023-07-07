@@ -45,7 +45,7 @@ extractor:
     gem_p: 7.0
     remove_fc: True
     normalise_features: False
-    weights: resnet50_moco_v2
+    weights: null
 
 scheduling:
   scheduler_interval: epoch
@@ -65,14 +65,12 @@ metric_args:
   return_only_main_category: True
   visualize_only_main_category: True
 
-log_images: False
+log_images: True
 
 metric_for_checkpointing: OVERALL/cmc/5
 
 max_epochs: 2
 valid_period: 2
-
-neptune_project: null
 
 tags:
   - mock

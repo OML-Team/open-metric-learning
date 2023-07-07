@@ -1,17 +1,22 @@
-import os
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import albumentations as albu
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import NeptuneLogger
+from pytorch_lightning.loggers import (
+    LightningLoggerBase,
+    NeptuneLogger,
+    TensorBoardLogger,
+    WandbLogger,
+)
 from pytorch_lightning.plugins import DDPPlugin
 
 from oml.const import PROJECT_ROOT, TCfg
 from oml.datasets.base import DatasetWithLabels
 from oml.interfaces.samplers import IBatchSampler
+from oml.registry.loggers import get_logger_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
@@ -60,35 +65,38 @@ def check_is_config_for_ddp(cfg: TCfg) -> bool:
     return bool(cfg["strategy"])
 
 
-def initialize_logging(cfg: TCfg) -> Union[bool, NeptuneLogger]:
-    """
-    Logger initialisation.
+def parse_logger_from_config(cfg: TCfg) -> LightningLoggerBase:
+    logger = TensorBoardLogger(".") if cfg.get("logger", None) is None else get_logger_by_cfg(cfg["logger"])
+    return logger
 
-    If Neptune Logger is used, we also upload to its cloud some files
-    which are good to have for reproducibility.
 
-    """
-    if ("NEPTUNE_API_TOKEN" in os.environ.keys()) and (cfg["neptune_project"] is not None):
+def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
+    logger = parse_logger_from_config(cfg)
+    cwd = Path.cwd().name
+
+    dict_to_log = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep="|")
+
+    if isinstance(logger, NeptuneLogger):
         warnings.warn(
             "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
-            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it. You can use"
-            "Tensorboard logger instead, for this simply leave <NEPTUNE_API_TOKEN> unfilled."
+            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it."
         )
-
-        cwd = Path.cwd()
-        logger = NeptuneLogger(
-            api_key=os.environ["NEPTUNE_API_TOKEN"],
-            project=cfg["neptune_project"],
-            tags=list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd.name],
-            log_model_checkpoints=False,
-        )
-        dict_to_log = {**dictconfig_to_dict(cfg), **{"dir": cwd}}
-        logger.log_hyperparams(flatten_dict(dict_to_log, sep="|"))
+        logger.log_hyperparams(dict_to_log)
         upload_files_to_neptune_cloud(logger, cfg)
 
+        tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
+        logger.run["sys/tags"].add(tags)
+
+    elif isinstance(logger, WandbLogger):
+        logger.log_hyperparams(dict_to_log)
+        # todo: upload files
+        # todo: add tags
+
+    elif isinstance(logger, TensorBoardLogger):
+        pass
+
     else:
-        print(f"Your current logger is not able to log your files, you can use {NeptuneLogger.__name__} for this.")
-        logger = True
+        raise ValueError(f"Unexpected logger {type(logger)}")
 
     return logger
 

@@ -22,7 +22,7 @@ extractor:
   args:
     normalise_features: False
     use_multi_scale: False
-    weights: vits16_dino
+    weights: null
     arch: vits16
 
 transforms_extraction:
@@ -92,14 +92,17 @@ postprocessor:
     use_fp16: True
 
 metric_for_checkpointing: OVERALL/cmc/1
-log_images: True
+log_images: False
 metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
   return_only_main_category: False
   visualize_only_main_category: False
 
-neptune_project: null
+logger:
+  name: tensorboard
+  args:
+    save_dir: "."
 
 tags:
   - mock
