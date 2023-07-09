@@ -13,7 +13,7 @@ from pytorch_lightning.loggers import (
 )
 from pytorch_lightning.plugins import DDPPlugin
 
-from oml.const import PROJECT_ROOT, TCfg
+from oml.const import OML_PATH, TCfg
 from oml.datasets.base import DatasetWithLabels
 from oml.interfaces.samplers import IBatchSampler
 from oml.registry.loggers import get_logger_by_cfg
@@ -21,6 +21,8 @@ from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict, flatten_dict
+
+import wandb
 
 
 def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
@@ -75,22 +77,22 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
     cwd = Path.cwd().name
 
     dict_to_log = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep="|")
+    logger.log_hyperparams(dict_to_log)
+
+    upload_files_to_logger_cloud(logger, cfg)
 
     if isinstance(logger, NeptuneLogger):
         warnings.warn(
             "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
             "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it."
         )
-        logger.log_hyperparams(dict_to_log)
-        upload_files_to_neptune_cloud(logger, cfg)
 
         tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
         logger.run["sys/tags"].add(tags)
 
     elif isinstance(logger, WandbLogger):
-        logger.log_hyperparams(dict_to_log)
-        # todo: upload files
-        # todo: add tags
+        tags = tuple(cfg.get("tags", [])) + (cfg.get("postfix", ""), cwd)
+        logger.experiment.tags += tags
 
     elif isinstance(logger, TensorBoardLogger):
         pass
@@ -101,9 +103,7 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
     return logger
 
 
-def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
-    assert isinstance(logger, NeptuneLogger)
-
+def upload_files_to_logger_cloud(logger: LightningLoggerBase, cfg: TCfg) -> None:
     # save transforms as files
     for key, val in cfg.items():
         if "transforms" in key:
@@ -112,18 +112,58 @@ def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
                 if isinstance(transforms, albu.Compose):
                     transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
                     albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
-                    logger.run[key].upload(str(transforms_file))
+
+                    if isinstance(logger, NeptuneLogger):
+                        logger.run[key].upload(str(transforms_file))
+                    elif isinstance(logger, WandbLogger):
+                        logger.experiment.save(str(transforms_file))
+
             except Exception:
                 print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
 
-    # log source code
-    source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
-        map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
-    )
-    logger.run["code"].upload_files(source_files)
+    if isinstance(logger, NeptuneLogger):
+        # log source code
+        source_files = list(map(lambda x: str(x), OML_PATH.glob("**/*.py"))) + list(
+            map(lambda x: str(x), OML_PATH.glob("**/*.yaml"))
+        )
+        logger.run["code"].upload_files(source_files)
 
-    # log dataset
-    logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
+        # log dataset
+        logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))   # log dataset
+
+    elif isinstance(logger, WandbLogger):
+        # log source code
+        code = wandb.Artifact('source_code', type='code')
+        code.add_dir(OML_PATH, name='oml')
+        logger.experiment.use_artifact(code)
+
+        # log dataset
+        logger.experiment.config["dataset"] = str(Path(cfg["dataset_root"]) / cfg["dataframe_name"])
+
+
+# def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
+#     assert isinstance(logger, NeptuneLogger)
+#
+#     # save transforms as files
+#     for key, val in cfg.items():
+#         if "transforms" in key:
+#             try:
+#                 transforms = get_transforms_by_cfg(cfg[key])
+#                 if isinstance(transforms, albu.Compose):
+#                     transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
+#                     albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
+#                     logger.run[key].upload(str(transforms_file))
+#             except Exception:
+#                 print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
+#
+#     # log source code
+#     source_files = list(map(lambda x: str(x), OML_PATH.glob("**/*.py"))) + list(
+#         map(lambda x: str(x), OML_PATH.glob("**/*.yaml"))
+#     )
+#     logger.run["code"].upload_files(source_files)
+#
+#     # log dataset
+#     logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
 
 
 def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> Dict[str, Any]:
