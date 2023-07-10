@@ -141,31 +141,6 @@ def upload_files_to_logger_cloud(logger: LightningLoggerBase, cfg: TCfg) -> None
         logger.experiment.config["dataset"] = str(Path(cfg["dataset_root"]) / cfg["dataframe_name"])
 
 
-# def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
-#     assert isinstance(logger, NeptuneLogger)
-#
-#     # save transforms as files
-#     for key, val in cfg.items():
-#         if "transforms" in key:
-#             try:
-#                 transforms = get_transforms_by_cfg(cfg[key])
-#                 if isinstance(transforms, albu.Compose):
-#                     transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
-#                     albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
-#                     logger.run[key].upload(str(transforms_file))
-#             except Exception:
-#                 print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
-#
-#     # log source code
-#     source_files = list(map(lambda x: str(x), OML_PATH.glob("**/*.py"))) + list(
-#         map(lambda x: str(x), OML_PATH.glob("**/*.yaml"))
-#     )
-#     logger.run["code"].upload_files(source_files)
-#
-#     # log dataset
-#     logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
-
-
 def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> Dict[str, Any]:
     if cfg.get("scheduling"):
         scheduler_kwargs = {
