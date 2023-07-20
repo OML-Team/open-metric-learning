@@ -53,17 +53,22 @@ build_readme:
 download_mock_dataset:
 	python oml/utils/download_mock_dataset.py
 
+.PHONY: wandb_login
+wandb_login:
+	export WANDB_API_KEY=$(WANDB_API_KEY); wandb login
+
 .PHONY: run_all_tests
-run_all_tests: download_mock_dataset
+run_all_tests: download_mock_dataset wandb_login
 	pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
 .PHONY: run_short_tests
-run_short_tests: download_mock_dataset
-	pytest --disable-warnings -sv -m "not long" tests
-	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
+run_short_tests: download_mock_dataset wandb_login
+	pytest -sv tests/test_oml/test_registry/test_registry.py::test_registry
+#	pytest --disable-warnings -sv -m "not long" tests
+#	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
+#	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
