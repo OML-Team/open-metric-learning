@@ -16,6 +16,7 @@ repos:
   - id: mixed-line-ending
   - id: pretty-format-json
     args: [--autofix]
+    exclude: \.ipynb$
 
 
 # autoformat code with black formatter
