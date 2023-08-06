@@ -128,6 +128,10 @@ class MetricValCallback(Callback):
 
         if self.log_images:
             self._log_images(pl_module=pl_module)
+            
+    def on_save_checkpoint(self, trainer: pl.Trainer, pl_module: pl.LightningModule, checkpoint) -> None:
+        if "criterion.weight" in checkpoint['state_dict']:
+            del checkpoint['state_dict']['criterion.weight']
 
     def _raise_computation_error(self) -> Exception:
         raise ValueError(
