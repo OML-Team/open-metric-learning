@@ -125,7 +125,7 @@ class ResnetExtractor(IExtractor):
 
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
         state_dict = remove_prefix_from_state_dict(state_dict, "layer4.")  # type: ignore
-        self.model.load_state_dict(state_dict, strict=True)
+        self.model.load_state_dict(state_dict, strict=False)
 
         if self.remove_fc:
             self.model.fc = nn.Identity()
