@@ -21,7 +21,8 @@ def get_cache_folder() -> Path:
         raise ValueError(f"Unexpected platform {platform}.")
 
 
-PROJECT_ROOT = Path(__file__).parent.parent
+OML_PATH = Path(__file__).parent
+PROJECT_ROOT = OML_PATH.parent
 CACHE_PATH = get_cache_folder()
 TMP_PATH = Path(tempfile.gettempdir())
 
