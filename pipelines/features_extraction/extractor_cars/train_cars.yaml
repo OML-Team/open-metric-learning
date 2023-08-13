@@ -89,15 +89,15 @@ scheduling: null
 #  args:
 #    save_dir: "."
 
-logger:
-  name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
-  args:
-    project: "oml-team/test"
-
 #logger:
-#  name: wandb  # requires <WANDB_API_KEY> as global env
+#  name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
 #  args:
-#    project: "test_project"
+#    project: "oml-team/test"
+
+logger:
+  name: wandb  # requires <WANDB_API_KEY> as global env
+  args:
+    project: "test_project"
 
 
 # these tags will be applied to a run if Neptune logger was used
