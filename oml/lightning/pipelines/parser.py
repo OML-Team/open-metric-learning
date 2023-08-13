@@ -76,6 +76,8 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
 
     dict_to_log = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep="|")
 
+    tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
+
     if isinstance(logger, NeptuneLogger):
         warnings.warn(
             "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
@@ -83,16 +85,12 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
         )
         logger.log_hyperparams(dict_to_log)
         upload_files_to_neptune_cloud(logger, cfg)
-
-        tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
         logger.run["sys/tags"].add(tags)
 
     elif isinstance(logger, WandbLogger):
         logger.log_hyperparams(dict_to_log)
         upload_files_to_wandb_cloud(logger, cfg)
-
-        # tags = tuple(cfg.get("tags", [])) + (cfg.get("postfix", ""), cwd)
-        # logger.experiment.tags += tags
+        logger.experiment.tags = list(filter(lambda x: len(x) > 0, tags))  # it fails in the case of empty tag
 
     elif isinstance(logger, TensorBoardLogger):
         pass

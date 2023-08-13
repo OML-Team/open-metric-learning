@@ -67,7 +67,7 @@ metric_args:
   return_only_main_category: False
   visualize_only_main_category: True
 
-log_images: False
+log_images: True
 
 metric_for_checkpointing: OVERALL/precision/5
 
@@ -75,9 +75,9 @@ max_epochs: 2
 valid_period: 1
 
 logger:
-  name: wandb
+  name: tensorboard
   args:
-    project: ".test_project"
+    save_dir: "."
 
 
 lightning_trainer_extra_args:
