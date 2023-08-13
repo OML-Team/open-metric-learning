@@ -109,9 +109,9 @@ metric_args:
   visualize_only_main_category: True
 
 logger:
-  name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
+  name: wandb  # requires <WANDB_API_KEY> as global env
   args:
-    project: "oml-team/test"
+    project: "test_project"
 
 tags:
   - postprocessing
