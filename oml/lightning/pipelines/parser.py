@@ -1,9 +1,9 @@
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional, List, Tuple
+from typing import Any, Dict, Optional
 
-import albumentations as albu
 import torch
+import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import (
     LightningLoggerBase,
@@ -19,10 +19,8 @@ from oml.interfaces.samplers import IBatchSampler
 from oml.registry.loggers import get_logger_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import get_transforms_by_cfg
+from oml.registry.transforms import save_transforms_as_files
 from oml.utils.misc import dictconfig_to_dict, flatten_dict
-
-import wandb
 
 
 def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
@@ -93,8 +91,8 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
         logger.log_hyperparams(dict_to_log)
         upload_files_to_wandb_cloud(logger, cfg)
 
-        tags = tuple(cfg.get("tags", [])) + (cfg.get("postfix", ""), cwd)
-        logger.experiment.tags += tags
+        # tags = tuple(cfg.get("tags", [])) + (cfg.get("postfix", ""), cwd)
+        # logger.experiment.tags += tags
 
     elif isinstance(logger, TensorBoardLogger):
         pass
@@ -103,26 +101,6 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
         raise ValueError(f"Unexpected logger {type(logger)}")
 
     return logger
-
-
-def save_transforms_as_files(cfg: TCfg) -> List[Tuple[str, str]]:
-    """
-    Function saves transforms as files in local filesystem and returns list of tuples
-    (transform_cfg_key, path_to_transform_file) for each transform
-    """
-    result = []
-
-    for key, val in cfg.items():
-        if "transforms" in key:
-            try:
-                transforms = get_transforms_by_cfg(cfg[key])
-                if isinstance(transforms, albu.Compose):
-                    transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
-                    albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
-                    result.append((key, transforms_file))
-            except Exception:
-                print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
-    return result
 
 
 def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
@@ -146,10 +124,12 @@ def upload_files_to_wandb_cloud(logger: WandbLogger, cfg: TCfg) -> None:
     assert isinstance(logger, WandbLogger)
 
     # log transforms as files
-    transforms = wandb.Artifact("transforms", type="transforms")
-    for key, transforms_file in save_transforms_as_files(cfg):
-        transforms.add_file(transforms_file)
-    logger.experiment.log_artifact(transforms)
+    keys_files = save_transforms_as_files(cfg)
+    if keys_files:
+        transforms = wandb.Artifact("transforms", type="transforms")
+        for _, transforms_file in keys_files:
+            transforms.add_file(transforms_file)
+        logger.experiment.log_artifact(transforms)
 
     # log source code
     code = wandb.Artifact("source_code", type="code")

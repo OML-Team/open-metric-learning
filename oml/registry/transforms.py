@@ -1,4 +1,7 @@
-from typing import Any, Dict, Tuple
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import albumentations as albu
 
 import oml.models.vit_unicom.external.vision_transformer as unicom  # type: ignore
 from oml.transforms.images.albumentations import (
@@ -83,6 +86,26 @@ def get_transforms_for_pretrained(weights: str) -> Tuple[TTransforms, TImReader]
     return transforms, im_reader
 
 
+def save_transforms_as_files(cfg: TCfg) -> List[Tuple[str, str]]:
+    """
+    Function saves transforms as files in local filesystem and returns list of tuples
+    (transform_cfg_key, path_to_transform_file) for each transform
+    """
+    keys_files = []
+
+    for key, val in cfg.items():
+        if "transforms" in key:
+            try:
+                transforms = get_transforms_by_cfg(cfg[key])
+                if isinstance(transforms, albu.Compose):
+                    transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
+                    albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
+                    keys_files.append((key, transforms_file))
+            except Exception:
+                print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
+    return keys_files
+
+
 __all__ = [
     "TRANSFORMS_TORCH",
     "TRANSFORMS_ALBU",
@@ -90,4 +113,5 @@ __all__ = [
     "get_transforms",
     "get_transforms_by_cfg",
     "get_transforms_for_pretrained",
+    "save_transforms_as_files",
 ]
