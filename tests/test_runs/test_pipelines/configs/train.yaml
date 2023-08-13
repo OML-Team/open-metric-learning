@@ -1,5 +1,3 @@
-postfix: "deepfashion"
-
 seed: 42
 precision: 32
 accelerator: cpu
@@ -69,7 +67,7 @@ metric_args:
   return_only_main_category: False
   visualize_only_main_category: True
 
-log_images: False
+log_images: True
 
 metric_for_checkpointing: OVERALL/precision/5
 

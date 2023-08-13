@@ -2,8 +2,8 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import albumentations as albu
 import torch
+import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import (
     LightningLoggerBase,
@@ -13,13 +13,13 @@ from pytorch_lightning.loggers import (
 )
 from pytorch_lightning.plugins import DDPPlugin
 
-from oml.const import PROJECT_ROOT, TCfg
+from oml.const import OML_PATH, TCfg
 from oml.datasets.base import DatasetWithLabels
 from oml.interfaces.samplers import IBatchSampler
 from oml.registry.loggers import get_logger_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import get_transforms_by_cfg
+from oml.registry.transforms import save_transforms_as_files
 from oml.utils.misc import dictconfig_to_dict, flatten_dict
 
 
@@ -76,6 +76,8 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
 
     dict_to_log = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep="|")
 
+    tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
+
     if isinstance(logger, NeptuneLogger):
         warnings.warn(
             "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
@@ -83,14 +85,12 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
         )
         logger.log_hyperparams(dict_to_log)
         upload_files_to_neptune_cloud(logger, cfg)
-
-        tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
         logger.run["sys/tags"].add(tags)
 
     elif isinstance(logger, WandbLogger):
         logger.log_hyperparams(dict_to_log)
-        # todo: upload files
-        # todo: add tags
+        upload_files_to_wandb_cloud(logger, cfg)
+        logger.experiment.tags = list(filter(lambda x: len(x) > 0, tags))  # it fails in the case of empty tag
 
     elif isinstance(logger, TensorBoardLogger):
         pass
@@ -104,26 +104,40 @@ def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
 def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
     assert isinstance(logger, NeptuneLogger)
 
-    # save transforms as files
-    for key, val in cfg.items():
-        if "transforms" in key:
-            try:
-                transforms = get_transforms_by_cfg(cfg[key])
-                if isinstance(transforms, albu.Compose):
-                    transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
-                    albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
-                    logger.run[key].upload(str(transforms_file))
-            except Exception:
-                print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
+    # log transforms as files
+    for key, transforms_file in save_transforms_as_files(cfg):
+        logger.run[key].upload(transforms_file)
 
     # log source code
-    source_files = list(map(lambda x: str(x), PROJECT_ROOT.glob("**/*.py"))) + list(
-        map(lambda x: str(x), PROJECT_ROOT.glob("**/*.yaml"))
+    source_files = list(map(lambda x: str(x), OML_PATH.glob("**/*.py"))) + list(
+        map(lambda x: str(x), OML_PATH.glob("**/*.yaml"))
     )
     logger.run["code"].upload_files(source_files)
 
     # log dataset
     logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
+
+
+def upload_files_to_wandb_cloud(logger: WandbLogger, cfg: TCfg) -> None:
+    assert isinstance(logger, WandbLogger)
+
+    # log transforms as files
+    keys_files = save_transforms_as_files(cfg)
+    if keys_files:
+        transforms = wandb.Artifact("transforms", type="transforms")
+        for _, transforms_file in keys_files:
+            transforms.add_file(transforms_file)
+        logger.experiment.log_artifact(transforms)
+
+    # log source code
+    code = wandb.Artifact("source_code", type="code")
+    code.add_dir(OML_PATH, name="oml")
+    logger.experiment.log_artifact(code)
+
+    # log dataset
+    dataset = wandb.Artifact("dataset", type="dataset")
+    dataset.add_file(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
+    logger.experiment.log_artifact(dataset)
 
 
 def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> Dict[str, Any]:
@@ -169,6 +183,7 @@ __all__ = [
     "check_is_config_for_ddp",
     "initialize_logging",
     "upload_files_to_neptune_cloud",
+    "upload_files_to_wandb_cloud",
     "parse_scheduler_from_config",
     "parse_sampler_from_config",
     "parse_ckpt_callback_from_config",

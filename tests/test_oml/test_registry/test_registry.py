@@ -1,7 +1,9 @@
 # type: ignore
+from pathlib import Path
 from typing import Any, Dict
 
 import pytest
+import yaml
 from omegaconf import OmegaConf
 from torch import nn
 from torch.optim import Optimizer
@@ -29,6 +31,7 @@ from oml.registry.transforms import (
     TRANSFORMS_REGISTRY,
     get_transforms,
     get_transforms_for_pretrained,
+    save_transforms_as_files,
 )
 from oml.utils.misc import dictconfig_to_dict, load_dotenv
 
@@ -102,3 +105,43 @@ def test_pretrained_extractors_have_transforms() -> None:
             _ = get_transforms_for_pretrained(pretrained_weights)
 
     assert True
+
+
+def test_saving_transforms_as_files() -> None:
+    cfg = """
+
+    num_workers: 0
+
+    # we want to save it
+    transforms_train:
+        name: norm_resize_albu
+        args:
+          im_size: 64
+
+    # we don't want to save it because there is
+    # no serialization mechanism for torch
+    transforms_val:
+      name: norm_resize_torch
+      args:
+        im_size: 48
+
+    criterion:
+      name: triplet_with_miner
+      args:
+        margin: null
+        reduction: mean
+        need_logs: True
+        miner:
+          name: triplets_with_memory
+          args:
+            bank_size_in_batches: 2
+            tri_expand_k: 3
+
+    """
+    cfg = yaml.safe_load(cfg)
+    save_transforms_as_files(cfg)
+
+    assert Path("transforms_train.yaml").exists()
+    assert not Path("transforms_val.yaml").exists()
+
+    Path("transforms_train.yaml").unlink()

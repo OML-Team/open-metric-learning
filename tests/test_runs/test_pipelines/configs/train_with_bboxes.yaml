@@ -1,5 +1,3 @@
-postfix: "deepfashion"
-
 seed: 42
 precision: 32
 accelerator: cpu
