@@ -74,9 +74,9 @@ optimizer:
 scheduling: null
 
 logger:
-  name: neptune  # requires <NEPTUNE_API_TOKEN> as global env
+  name: wandb  # requires <WANDB_API_KEY> as global env
   args:
-    project: "oml-team/test"
+    project: "test_project"
 
 hydra_dir: ${logs_root}/${logs_folder}/
 
