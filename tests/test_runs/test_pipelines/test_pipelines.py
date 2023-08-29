@@ -77,3 +77,14 @@ def test_validation(accelerator: str, devices: int) -> None:
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_predict(accelerator: str, devices: int) -> None:
     run("predict.py", accelerator, devices)
+
+#test train->load piplines arface
+
+#resnet
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train_arface_resnet(accelerator: str, devices: int) -> None:
+    run("train_arc_resnet.py", accelerator, devices)
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_valid_arface_resnet(accelerator: str, devices: int) -> None:
+    run("valid_arc_resnet.py", accelerator, devices)
