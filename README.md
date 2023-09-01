@@ -21,7 +21,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
 <a href="https://www.newyorker.de/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/New_Yorker.svg/1280px-New_Yorker.svg.png" width="100"/></a>ㅤㅤ
 <a href="https://www.epoch8.co/" target="_blank"><img src="https://i.ibb.co/GdNVTyt/Screenshot-2023-07-04-at-11-19-24.png" width="100"/></a>ㅤㅤ
 <a href="https://www.meituan.com" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/6/61/Meituan_English_Logo.png" width="100"/></a>ㅤㅤ
-<a href="https://constructor.io/" target="_blank"><img src="https://constructor.io/wp-content/uploads/2023/02/Constructor-Logo800x298.png" width="100"/></a>
+<a href="https://constructor.io/" target="_blank"><img src="https://rethink.industries/wp-content/uploads/2022/04/constructor.io-logo.png" width="100"/></a>
 
 
 <a href="https://www.ox.ac.uk/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/2/2f/University_of_Oxford.svg/2560px-University_of_Oxford.svg.png" width="120"/></a>ㅤㅤ
