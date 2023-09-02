@@ -30,20 +30,18 @@ criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 val_dataset_1 = DatasetQueryGallery(df_val, dataset_root=dataset_root,
                                   transform=get_normalisation_resize_torch(im_size=224))
 val_loader = torch.utils.data.DataLoader(val_dataset_1, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[val_dataset_1.paths_key, ],
-                                                            cmc_top_k=[], precision_top_k=[], pfc_variance=[]),
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[val_dataset_1.paths_key, ]),
                                     log_images=False, loader_idx=0)
 
 # 2nd validation dataset
 val_dataset_2 = DatasetQueryGallery(df_val, dataset_root=dataset_root,
                                     transform=get_normalisation_resize_torch(im_size=224))
 val_loader_2 = torch.utils.data.DataLoader(val_dataset_2, batch_size=4)
-metric_callback_2 = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[val_dataset_2.paths_key, ],
-                                                              cmc_top_k=[], precision_top_k=[], pfc_variance=[]),
+metric_callback_2 = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[val_dataset_2.paths_key, ]),
                                       log_images=False, loader_idx=1)
 
 # run validation
-pl_model = ExtractorModule(extractor, None, None)
+pl_model = ExtractorModule(extractor, criterion, optimizer)
 trainer = pl.Trainer(max_epochs=3, callbacks=[metric_callback, metric_callback_2], num_sanity_val_steps=0)
 metrics_lightning = trainer.validate(pl_model, dataloaders=(val_loader, val_loader_2))
 
