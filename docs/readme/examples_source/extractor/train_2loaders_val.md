@@ -54,6 +54,3 @@ print(metric_callback_2.metric.metrics)
 [comment]:lightning-2loaders-end
 </p>
 </details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1bVUgdBGWvQgCkba2YtaIRVlUQUz7Q60Z?usp=share_link)
-

@@ -20,6 +20,8 @@ illustrating the code below.
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_pl_ddp.md
 
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/train_2loaders_val.md
+
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage.md
 
 Usage with PyTorch Metric Learning
