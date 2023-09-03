@@ -22,9 +22,6 @@ df_train, df_val = download_mock_dataset(dataset_root)
 # model
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
-optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-
 
 # 1st validation dataset
 val_dataset_1 = DatasetQueryGallery(df_val, dataset_root=dataset_root,
