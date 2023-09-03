@@ -43,8 +43,8 @@ metric_args:
   map_top_k: [5]
   fmr_vals: []  # Since InShop is a big dataset you should be careful with increasing of the memory footprint, which is needed to calculate fmr
   pfc_variance: [0.5, 0.9, 0.99]
-  return_only_main_category: True
-  visualize_only_main_category: True
+  return_only_overall_category: True
+  visualize_only_overall_category: True
 
 log_images: True
 
