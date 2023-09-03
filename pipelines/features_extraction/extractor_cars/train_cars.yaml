@@ -41,8 +41,8 @@ metric_args:
   map_top_k: [5]  # wo calculate map@5
   fmr_vals: [0.01]  # to calculate fmr@0.01
   pfc_variance: [0.5, 0.9, 0.99]  # to calculate pfc@0.5, pfc@0.9, pfc@0.99
-  return_only_main_category: True  # set False if you want to see metric graphs for all the categories (doesn't matter for CARS, since it contains no categories)
-  visualize_only_main_category: True  # set False to see images where the model performed worse for each separated category (doesn't matter for CARS, since it contains no categories)
+  return_only_overall_category: True  # set False if you want to see metric graphs for all the categories (doesn't matter for CARS, since it contains no categories)
+  visualize_only_overall_category: True  # set False to see images where the model performed worse for each separated category (doesn't matter for CARS, since it contains no categories)
 
 
 # the best checkpoint is determined by the value of metric_for_checkpointing.

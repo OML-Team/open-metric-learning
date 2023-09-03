@@ -79,8 +79,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         categories_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
-        return_only_main_category: bool = False,
-        visualize_only_main_category: bool = True,
+        return_only_overall_category: bool = False,
+        visualize_only_overall_category: bool = True,
         verbose: bool = True,
     ):
         """
@@ -107,8 +107,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
              affect calculations.
-            return_only_main_category: Whether you want to return only the main category from ``.compute_metrics()``
-            visualize_only_main_category: Whether you want to visualize only the main category with ``.visualize()``
+            return_only_overall_category: Set ``True`` if you want to return only the aggregated metrics
+            visualize_only_overall_category: Set ``False`` if you want to visualize each category separately
             verbose: Set ``True`` if you want to print metrics
 
         """
@@ -131,8 +131,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics = None
         self.metrics_unreduced = None
 
-        self.visualize_only_main_category = visualize_only_main_category
-        self.return_only_main_category = return_only_main_category
+        self.visualize_only_overall_category = visualize_only_overall_category
+        self.return_only_overall_category = return_only_overall_category
 
         self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
@@ -233,7 +233,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics_unreduced = metrics  # type: ignore
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
-        if self.return_only_main_category:
+        if self.return_only_overall_category:
             metric_to_return = {
                 self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])  # type: ignore
             }
@@ -254,7 +254,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         figures = []
         titles = []
         for metric_name in metrics_flat:
-            if self.visualize_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
+            if self.visualize_only_overall_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
                 continue
             fig = self.get_plot_for_worst_queries(
                 metric_name=metric_name, n_queries=LOG_TOPK_ROWS_PER_METRIC, n_instances=LOG_TOPK_IMAGES_PER_ROW

@@ -69,7 +69,7 @@ In the example above you can observe the graphs of:
 
 * `Metrics <https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html>`_
   such as ``CMC@1``, ``Precision@5``, ``MAP@5``, which were provided in a config file as ``metric_args``.
-  Note, you can set ``metrics_args.return_only_main_category: False``
+  Note, you can set ``metrics_args.return_only_overall_category: False``
   to log metrics independently for each of the categories (if your dataset has ones).
 
 * Loss values averaged over batches and epochs.

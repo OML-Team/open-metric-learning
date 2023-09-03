@@ -105,8 +105,8 @@ metric_args:
   map_top_k: [5, 10]
   fmr_vals: []
   pfc_variance: []
-  return_only_main_category: True
-  visualize_only_main_category: True
+  return_only_overall_category: True
+  visualize_only_overall_category: True
 
 logger:
   name: wandb  # requires <WANDB_API_KEY> as global env

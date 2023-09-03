@@ -59,8 +59,8 @@ metric_args:
   fmr_vals: []
   precision_top_k: []
   pfc_variance: []
-  return_only_main_category: True
-  visualize_only_main_category: True
+  return_only_overall_category: True
+  visualize_only_overall_category: True
 
 hydra:
   searchpath:
