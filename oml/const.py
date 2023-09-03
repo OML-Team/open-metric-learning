@@ -41,7 +41,7 @@ STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
-MOCK_DATASET_MD5 = "f725276646677ce3d63fd4c7d8a7f666"
+MOCK_DATASET_MD5 = "834217be572da33ee729b87c43a86f8b"
 
 REQUESTS_TIMEOUT = 120.0
 
