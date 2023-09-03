@@ -43,8 +43,8 @@ metric_args:
   cmc_top_k: [1, 5]
   map_top_k: [5]
   precision_top_k: [1, 5]
-  return_only_main_category: False
-  visualize_only_main_category: True
+  return_only_overall_category: False
+  visualize_only_overall_category: True
 
 extractor:
   name: vit

@@ -48,8 +48,8 @@ bs_val: 2
 
 metric_args:
   cmc_top_k: [1, 5]
-  return_only_main_category: True
-  visualize_only_main_category: True
+  return_only_overall_category: True
+  visualize_only_overall_category: True
 
 log_images: False
 
