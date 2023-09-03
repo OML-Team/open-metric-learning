@@ -31,8 +31,11 @@ def download_mock_dataset(dataset_root: Union[str, Path], check_md5: bool = True
 
     if not check_exists_and_validate_md5(dataset_root, MOCK_DATASET_MD5 if check_md5 else None):
         try:
+            print("Downloading from oml.daloroserver.com")
             download_folder_from_remote_storage(remote_folder=MOCK_DATASET_PATH.name, local_folder=str(dataset_root))
+            assert check_exists_and_validate_md5(dataset_root, MOCK_DATASET_MD5 if check_md5 else None)
         except Exception:
+            print("We could not download from oml.daloroserver.com, let's try Google Drive.")
             gdown.download_folder(url=MOCK_DATASET_URL_GDRIVE, output=str(dataset_root))
     else:
         print(f"Mock dataset has been downloaded already to {dataset_root}")

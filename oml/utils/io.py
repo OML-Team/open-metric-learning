@@ -47,9 +47,13 @@ def check_exists_and_validate_md5(path: Union[str, Path], md5: Optional[str] = N
         return True
 
     if path.is_dir():
-        return calc_folder_hash(path) == md5
+        existing_hash = calc_folder_hash(path)
     else:
-        return calc_file_hash(path) == md5
+        existing_hash = calc_file_hash(path)
+
+    print(f"Existing hash: {existing_hash}, expected hash: {md5}")
+
+    return existing_hash == md5
 
 
 def download_file_from_url(url: str, fname: Optional[str] = None, timeout: float = REQUESTS_TIMEOUT) -> Optional[bytes]:
