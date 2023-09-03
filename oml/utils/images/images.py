@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 try:
@@ -120,6 +121,16 @@ def find_broken_images(images_list: List[Path], f_imread: TImReader, num_process
     return results
 
 
+def figure_to_nparray(fig: plt.Figure) -> np.ndarray:
+    """
+    Converts a matplotlib figure to a numpy array with RGB channels and no alpha channel.
+    """
+    fig.canvas.draw()
+    data = np.array(fig.canvas.renderer.buffer_rgba())[..., :3]
+    plt.close(fig)
+    return data
+
+
 __all__ = [
     "TImage",
     "TImReader",
@@ -129,4 +140,5 @@ __all__ = [
     "draw_bbox",
     "get_img_with_bbox",
     "square_pad",
+    "figure_to_nparray",
 ]

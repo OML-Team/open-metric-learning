@@ -3,7 +3,6 @@ from typing import Any, Optional
 
 import numpy as np
 import pytorch_lightning as pl
-from matplotlib import pyplot as plt
 from neptune.new.types import File
 from pytorch_lightning import Callback
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
@@ -13,6 +12,7 @@ from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
 from oml.lightning.modules.ddp import ModuleDDP
+from oml.utils.images.images import figure_to_nparray
 from oml.utils.misc import flatten_dict
 
 
@@ -103,16 +103,13 @@ class MetricValCallback(Callback):
             if isinstance(pl_module.logger, NeptuneLogger):
                 pl_module.logger.experiment[log_str].log(File.as_image(fig))
             elif isinstance(pl_module.logger, WandbLogger):
-                fig.canvas.draw()
-                fig_img = np.array(fig.canvas.renderer.buffer_rgba())[..., :3]
+                fig_img = figure_to_nparray(fig)
                 pl_module.logger.log_image(images=[fig_img], key=metric_log_str)
-                plt.close(fig)
             elif isinstance(pl_module.logger, TensorBoardLogger):
-                fig.canvas.draw()
-                data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-                data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                pl_module.logger.experiment.add_image(log_str, np.transpose(data, (2, 0, 1)), pl_module.current_epoch)
-                plt.close(fig)
+                fig_img = figure_to_nparray(fig)
+                pl_module.logger.experiment.add_image(
+                    log_str, np.transpose(fig_img, (2, 0, 1)), pl_module.current_epoch
+                )
             else:
                 raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
 
