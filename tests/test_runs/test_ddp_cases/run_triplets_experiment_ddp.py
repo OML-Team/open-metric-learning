@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 import torch
 from pytorch_lightning import Trainer
-from pytorch_lightning.utilities.types import EPOCH_OUTPUT
 from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -49,17 +48,24 @@ class DummyModule(ModuleDDP):
         )
         self.criterion = TripletLossPlain(margin=None)
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
+        self.training_step_outputs: List[Any] = []
+        self.validation_step_outputs: List[Any] = []
+
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int) -> Dict[str, Any]:
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
+
+        self.validation_step_outputs.append(batch)
         return {**batch, **{"embeddings": embeddings}}
 
-    def training_step(self, batch: Dict[str, Any], batch_idx: int) -> Dict[str, Any]:
+    def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int) -> Dict[str, Any]:
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
         loss = self.criterion(embeddings)
         batch["loss"] = loss
+
+        self.training_step_outputs.append(batch)
         return batch
 
-    def check_and_save_ids(self, outputs: EPOCH_OUTPUT, mode: str) -> None:
+    def check_and_save_ids(self, outputs: List[Any], mode: str) -> None:
         assert mode in ("train", "val")
         world_size = self.trainer.world_size
 
@@ -76,11 +82,11 @@ class DummyModule(ModuleDDP):
         pattern = self.save_path_train_ids_pattern if mode == "train" else self.save_path_val_ids_pattern
         torch.save(ids_per_step_synced, pattern.format(experiment=self.exp_num, epoch=self.trainer.current_epoch))
 
-    def training_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
-        self.check_and_save_ids(outputs, "train")
+    def on_train_epoch_end(self) -> None:
+        self.check_and_save_ids(self.training_step_outputs, "train")
 
-    def validation_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
-        self.check_and_save_ids(outputs, "val")
+    def on_validation_epoch_end(self) -> None:
+        self.check_and_save_ids(self.validation_step_outputs, "val")
 
     def on_train_end(self) -> None:
         torch.save(self.model, self.save_path_ckpt_pattern.format(experiment=self.exp_num))

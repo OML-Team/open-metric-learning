@@ -1,12 +1,8 @@
 import os
 from typing import Any, Dict, Union
 
-from pytorch_lightning.loggers import (
-    LightningLoggerBase,
-    NeptuneLogger,
-    TensorBoardLogger,
-    WandbLogger,
-)
+from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
+from pytorch_lightning.loggers.logger import Logger
 
 from oml.const import TCfg
 from oml.utils.misc import dictconfig_to_dict
@@ -21,7 +17,7 @@ TOKEN_ERROR_MESSAGE = (
 )
 
 
-def get_logger(name: str, **kwargs: Dict[str, Any]) -> LightningLoggerBase:
+def get_logger(name: str, **kwargs: Dict[str, Any]) -> Logger:
     if (name in CLOUD_TOKEN_NAMES) and (CLOUD_TOKEN_NAMES[name] not in os.environ):
         token_name = CLOUD_TOKEN_NAMES[name]
         raise ValueError(TOKEN_ERROR_MESSAGE.format(name.upper(), token_name, token_name))
@@ -29,7 +25,7 @@ def get_logger(name: str, **kwargs: Dict[str, Any]) -> LightningLoggerBase:
     return LOGGERS_REGISTRY[name](**kwargs)
 
 
-def get_logger_by_cfg(cfg: TCfg) -> Union[bool, LightningLoggerBase]:
+def get_logger_by_cfg(cfg: TCfg) -> Union[bool, Logger]:
     cfg = dictconfig_to_dict(cfg)
     logger = get_logger(cfg["name"], **cfg["args"])
     return logger

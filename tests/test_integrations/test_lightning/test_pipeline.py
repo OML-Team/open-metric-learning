@@ -177,8 +177,7 @@ def test_lightning(
         max_epochs=2,
         enable_progress_bar=False,
         num_nodes=1,
-        gpus=None,
-        replace_sampler_ddp=False,
+        use_distributed_sampler=False,
         callbacks=callbacks,
         num_sanity_val_steps=0,
     )

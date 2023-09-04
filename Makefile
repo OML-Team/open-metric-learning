@@ -51,7 +51,7 @@ build_readme:
 
 .PHONY: download_mock_dataset
 download_mock_dataset:
-	python oml/utils/download_mock_dataset.py
+	python3 oml/utils/download_mock_dataset.py
 
 .PHONY: wandb_login
 wandb_login:
