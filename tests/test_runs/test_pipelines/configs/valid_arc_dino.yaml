@@ -13,15 +13,13 @@ logs_root: logs
 num_workers: 0
 bs_val: 2
 
-
 extractor:
-  name: resnet
+  name: vit
   args:
-    arch: resnet50
-    normalise_features: True
-    remove_fc: False
-    gem_p: 1
-    weights: /Users/kodin/checkpoints/checkpoints/best.ckpt
+    normalise_features: True  
+    use_multi_scale: False  
+    arch: vits16 
+    weights: /Users/kodin/checkpoints_clip/checkpoints/best.ckpt
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]

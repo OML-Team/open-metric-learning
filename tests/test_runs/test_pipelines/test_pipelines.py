@@ -34,13 +34,13 @@ def rm_logs(cfg_name: Path) -> None:
         shutil.rmtree(cfg["logs_root"])
 
 
-def run(file: str, accelerator: str, devices: int) -> None:
+def run(file: str, accelerator: str, devices: int, rm_log=True) -> None:
     cmd = f"python {str(SCRIPTS_PATH / file)} ++accelerator='{accelerator}' ++devices='{devices}'"
     subprocess.run(cmd, check=True, shell=True)
-
-    rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
-
-
+    if rm_log:
+        rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
+        
+        
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train(accelerator: str, devices: int) -> None:
     run("train.py", accelerator, devices)
@@ -78,13 +78,22 @@ def test_validation(accelerator: str, devices: int) -> None:
 def test_predict(accelerator: str, devices: int) -> None:
     run("predict.py", accelerator, devices)
 
-#test train->load piplines arface
-
+                #   test train->load piplines arface   #
 #resnet
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_arface_resnet(accelerator: str, devices: int) -> None:
-    run("train_arc_resnet.py", accelerator, devices)
+    run("train_arc_resnet.py", accelerator, devices, rm_log=False)
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_valid_arface_resnet(accelerator: str, devices: int) -> None:
     run("valid_arc_resnet.py", accelerator, devices)
+
+#dino
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train_arface_dino(accelerator: str, devices: int) -> None:
+    run("train_arc_dino.py", accelerator, devices, rm_log=False)
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_valid_arface_dino(accelerator: str, devices: int) -> None:
+    file = "valid_arc_dino.py"
+    run(file, accelerator, devices)

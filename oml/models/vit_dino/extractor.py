@@ -10,7 +10,7 @@ from torch import nn
 
 from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
 from oml.interfaces.models import IExtractor
-from oml.models.utils import remove_prefix_from_state_dict
+from oml.models.utils import remove_prefix_from_state_dict, remove_criterion_in_state_dict
 from oml.models.vit_dino.external.hubconf import (  # type: ignore
     dino_vitb8,
     dino_vitb16,
@@ -126,6 +126,7 @@ class ViTExtractor(IExtractor):
 
         ckpt = torch.load(weights, map_location="cpu")
         state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
+        state_dict = remove_criterion_in_state_dict(state_dict)
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
         self.model.load_state_dict(ckpt, strict=True)
 
