@@ -69,13 +69,13 @@ class DummyModule(ModuleDDP):
         self.training_step_outputs: List[Any] = []
         self.validation_step_outputs: List[Any] = []
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int) -> Dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         embeddings = self.model(batch[DummyDataset.input_name])
 
         self.validation_step_outputs.append(batch)
         return {**batch, **{"embeddings": embeddings}}
 
-    def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int) -> Dict[str, Any]:
+    def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         embeddings = self.model(batch[DummyDataset.input_name])
         loss = self.criterion(embeddings, batch[DummyDataset.labels_name])
         batch["loss"] = loss

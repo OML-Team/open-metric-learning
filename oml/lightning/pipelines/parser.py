@@ -44,7 +44,7 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
         devices = len(devices)
 
     if (isinstance(devices, int) and devices > 1) or (isinstance(devices, (list, tuple)) and len(devices) > 1):
-        strategy = DDPStrategy()
+        strategy = DDPStrategy(find_unused_parameters=True)
     else:
         strategy = "auto"
 

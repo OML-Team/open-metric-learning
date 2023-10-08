@@ -141,7 +141,7 @@ def test_saving_transforms_as_files() -> None:
     cfg = yaml.safe_load(cfg)
     save_transforms_as_files(cfg)
 
-    assert Path("transforms_train.yaml").exists()
-    assert not Path("transforms_val.yaml").exists()
+    assert Path(".hydra/transforms_train.yaml").exists()
+    assert not Path(".hydra/transforms_val.yaml").exists()
 
-    Path("transforms_train.yaml").unlink()
+    Path(".hydra/transforms_train.yaml").unlink()

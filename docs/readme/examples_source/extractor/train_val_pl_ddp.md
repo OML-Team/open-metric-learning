@@ -17,6 +17,7 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
+from pytorch_lightning.strategies import DDPStrategy
 
 dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
@@ -41,7 +42,7 @@ pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimize
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 
-ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPStrategy(), "use_distributed_sampler": False}  # DDP specific
+ddp_args = {"accelerator": "cpu", "devices": 2, "strategy": DDPStrategy(), "use_distributed_sampler": False}  # DDP specific  # unused in Strategy?
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```

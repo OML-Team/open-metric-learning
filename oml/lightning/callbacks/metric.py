@@ -7,6 +7,7 @@ from neptune.new.types import File
 from pytorch_lightning import Callback
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
+from torch.utils.data import DataLoader
 
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
@@ -54,11 +55,14 @@ class MetricValCallback(Callback):
         self._collected_samples = 0
         self._ready_to_accumulate = False
 
-    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
-        return self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int = 0) -> int:
+        loaders = (
+            [trainer.val_dataloaders] if isinstance(trainer.val_dataloaders, DataLoader) else trainer.val_dataloaders
+        )
+        return self.samples_in_getitem * len(loaders[dataloader_idx].dataset)
 
     def on_validation_batch_start(
-        self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
@@ -75,7 +79,7 @@ class MetricValCallback(Callback):
         outputs: Optional[STEP_OUTPUT],
         batch: Any,
         batch_idx: int,
-        dataloader_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
@@ -147,7 +151,7 @@ err_message_loaders_is_not_patched = (
     f"3) If you call 'trainer.fit(...)' or 'trainer.validate(...)' method with loaders as argument, PytorchLightning "
     f"will ignore loaders from 'train_dataloader' and 'val_dataloader' methods. Please avoid substituting loaders to "
     f"this functions, instead use '{ModuleDDP.__name__}'\n"
-    f"4) Check that the flag 'use_distributed_sampler=False' in the trainer constructor, because we do this "
+    f"4) Check that the flag 'replace_sampler_ddp=False' in the trainer constructor, because we do this "
     f"replacement in '{ModuleDDP.__name__}' constructor\n"
     f"5) Turn off the 'overfit_batches' parameter in 'pl.Trainer'."
 )
@@ -166,8 +170,11 @@ class MetricValCallbackDDP(MetricValCallback):
         assert isinstance(metric, IMetricDDP), "Metric has to support DDP interface"
         super().__init__(metric, *args, **kwargs)
 
-    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
-        len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
+    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int = 0) -> int:
+        loaders = (
+            [trainer.val_dataloaders] if isinstance(trainer.val_dataloaders, DataLoader) else trainer.val_dataloaders
+        )
+        len_dataset = len(loaders[dataloader_idx].dataset)
         if trainer.world_size > 1:
             # we use padding in DDP and sequential sampler for validation
             len_dataset = ceil(len_dataset / trainer.world_size)
