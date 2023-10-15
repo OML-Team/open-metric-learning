@@ -66,34 +66,34 @@ class ViTCLIPExtractor(IExtractor):
 
     pretrained_models: Dict[str, Any] = {
         # checkpoints pretrained by OpenAI
-        # "openai_vitb16_224": {
-        #     "url": f"{_OPENAI_URL}/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
-        #     "hash": "44c3d804ecac03d9545ac1a3adbca3a6",
-        #     "is_jitted": True,
-        #     "fname": "openai_vitb16_224.ckpt",
-        #     "init_args": {"arch": "vitb16_224", "normalise_features": False},
-        # },
-        # "openai_vitb32_224": {
-        #     "url": f"{_OPENAI_URL}/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
-        #     "hash": "3ba34e387b24dfe590eeb1ae6a8a122b",
-        #     "is_jitted": True,
-        #     "fname": "openai_vitb32_224.ckpt",
-        #     "init_args": {"arch": "vitb32_224", "normalise_features": False},
-        # },
-        # "openai_vitl14_224": {
-        #     "url": f"{_OPENAI_URL}/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
-        #     "hash": "096db1af569b284eb76b3881534822d9",
-        #     "is_jitted": True,
-        #     "fname": "openai_vitl14_224.ckpt",
-        #     "init_args": {"arch": "vitl14_224", "normalise_features": False},
-        # },
-        # "openai_vitl14_336": {
-        #     "url": f"{_OPENAI_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px",
-        #     "hash": "b311058cae50cb10fbfa2a44231c9473",
-        #     "is_jitted": True,
-        #     "fname": "openai_vitl14_336.ckpt",
-        #     "init_args": {"arch": "vitl14_336", "normalise_features": False},
-        # },
+        "openai_vitb16_224": {
+            "url": f"{_OPENAI_URL}/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt",
+            "hash": "44c3d804ecac03d9545ac1a3adbca3a6",
+            "is_jitted": True,
+            "fname": "openai_vitb16_224.ckpt",
+            "init_args": {"arch": "vitb16_224", "normalise_features": False},
+        },
+        "openai_vitb32_224": {
+            "url": f"{_OPENAI_URL}/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
+            "hash": "3ba34e387b24dfe590eeb1ae6a8a122b",
+            "is_jitted": True,
+            "fname": "openai_vitb32_224.ckpt",
+            "init_args": {"arch": "vitb32_224", "normalise_features": False},
+        },
+        "openai_vitl14_224": {
+            "url": f"{_OPENAI_URL}/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt",
+            "hash": "096db1af569b284eb76b3881534822d9",
+            "is_jitted": True,
+            "fname": "openai_vitl14_224.ckpt",
+            "init_args": {"arch": "vitl14_224", "normalise_features": False},
+        },
+        "openai_vitl14_336": {
+            "url": f"{_OPENAI_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
+            "hash": "b311058cae50cb10fbfa2a44231c9473",
+            "is_jitted": True,
+            "fname": "openai_vitl14_336.ckpt",
+            "init_args": {"arch": "vitl14_336", "normalise_features": False},
+        },
         # checkpoints pretrained by SberbankAI
         "sber_vitb16_224": {
             "url": f"{_SBER_URL}/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",

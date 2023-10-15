@@ -41,9 +41,9 @@ def run(file: str, accelerator: str, devices: int) -> None:
     rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
 
 
-# @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-# def test_train(accelerator: str, devices: int) -> None:
-#     run("train.py", accelerator, devices)
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train(accelerator: str, devices: int) -> None:
+    run("train.py", accelerator, devices)
 
 
 @pytest.mark.long
@@ -52,28 +52,28 @@ def test_train_with_bboxes(accelerator: str, devices: int) -> None:
     run("train_with_bboxes.py", accelerator, devices)
 
 
-# @pytest.mark.long
-# @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-# def test_train_with_categories(accelerator: str, devices: int) -> None:
-#     run("train_with_categories.py", accelerator, devices)
-#
-#
-# @pytest.mark.long
-# @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-# def test_train_arcface_with_categories(accelerator: str, devices: int) -> None:
-#     run("train_arcface_with_categories.py", accelerator, devices)
-#
-#
-# @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-# def test_train_postprocessor(accelerator: str, devices: int) -> None:
-#     run("train_postprocessor.py", accelerator, devices)
-#
-#
-# @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-# def test_validation(accelerator: str, devices: int) -> None:
-#     run("validate.py", accelerator, devices)
-#
-#
-# @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-# def test_predict(accelerator: str, devices: int) -> None:
-#     run("predict.py", accelerator, devices)
+@pytest.mark.long
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train_with_categories(accelerator: str, devices: int) -> None:
+    run("train_with_categories.py", accelerator, devices)
+
+
+@pytest.mark.long
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train_arcface_with_categories(accelerator: str, devices: int) -> None:
+    run("train_arcface_with_categories.py", accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train_postprocessor(accelerator: str, devices: int) -> None:
+    run("train_postprocessor.py", accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_validation(accelerator: str, devices: int) -> None:
+    run("validate.py", accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_predict(accelerator: str, devices: int) -> None:
+    run("predict.py", accelerator, devices)
