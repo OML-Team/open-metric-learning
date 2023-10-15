@@ -1,6 +1,6 @@
 numpy>=1.17.2, <1.23.1
 torch>=2.0
-pytorch-lightning>=2.0
+pytorch-lightning>=2.1.0
 torchvision
 albumentations>=1.0
 opencv-python>=4.1.1
