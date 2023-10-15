@@ -68,7 +68,7 @@ log_images: True
 metric_for_checkpointing: OVERALL/cmc/5
 
 max_epochs: 2
-valid_period: 1  # todo it was 2
+valid_period: 1  # todo it was 2: the problem is vit model checkpoint callback
 
 tags:
   - mock

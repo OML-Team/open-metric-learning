@@ -42,7 +42,7 @@ pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimize
                               loaders_train=train_loader, loaders_val=val_loader  # DDP specific
                               )
 
-ddp_args = {"accelerator": "cpu", "devices": 2, "strategy": DDPStrategy(), "use_distributed_sampler": False}  # DDP specific  # unused in Strategy?
+ddp_args = {"accelerator": "cpu", "devices": 2, "strategy": DDPStrategy(), "use_distributed_sampler": False}  # DDP specific
 trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```
