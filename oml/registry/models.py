@@ -1,6 +1,8 @@
 from typing import Any, Dict
 from warnings import warn
 
+from torch import nn
+
 from oml.interfaces.models import IExtractor, IPairwiseModel
 from oml.models.meta.projection import ExtractorWithMLP
 from oml.models.meta.siamese import (
@@ -36,7 +38,7 @@ def raise_if_needed(extractor_cfg: TCfg, kwargs: Dict[str, Any], model_name: str
         warn(f"There are weights provided for {model_name}. They can overwrite internal extractor's weights.")
 
 
-def _get_model(model_name: str, registry: Dict[str, Any], **kwargs: Dict[str, Any]) -> IExtractor:
+def _get_model(model_name: str, registry: Dict[str, Any], **kwargs: Dict[str, Any]) -> nn.Module:
     if "extractor" in kwargs:  # for nested models
         extractor_cfg = kwargs.pop("extractor")
         inside_extractor = get_extractor_by_cfg(extractor_cfg)

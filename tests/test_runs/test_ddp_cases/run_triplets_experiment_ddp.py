@@ -52,14 +52,18 @@ class DummyModule(ModuleDDP):
         self.validation_step_outputs: List[Any] = []
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
-        print(dataloader_idx, "gggg")
+        if batch_idx == 0:
+            self.validation_step_outputs = []
+
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
 
         self.validation_step_outputs.append(batch)
         return {**batch, **{"embeddings": embeddings}}
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
-        print(dataloader_idx, "gggg")
+        if batch_idx == 0:
+            self.training_step_outputs = []
+
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
         loss = self.criterion(embeddings)
         batch["loss"] = loss
