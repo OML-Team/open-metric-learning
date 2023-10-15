@@ -12,6 +12,7 @@ mock_dataset/
 logs/
 docs/build
 tmp.py
+tmp.ipynb
 *outputs*
 
 # __________________________________
