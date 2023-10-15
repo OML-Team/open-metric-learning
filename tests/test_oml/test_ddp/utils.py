@@ -19,11 +19,13 @@ def init_ddp(rank: int, world_size: int) -> None:
     if world_size == 0:
         pass
     else:
-        init_process_group(backend="gloo",
-                           rank=rank,
-                           world_size=world_size,
-                           timeout=timedelta(seconds=10),
-                           init_method=f"file://{CONN_FILE}")
+        init_process_group(
+            backend="gloo",
+            rank=rank,
+            world_size=world_size,
+            timeout=timedelta(seconds=10),
+            init_method=f"file://{CONN_FILE}",
+        )
     set_global_seed(1)
 
 
