@@ -103,7 +103,14 @@ class DummyModule(ModuleDDP):
 
         assert len(output_batches_synced) == len(output_batches) * world_size
         max_num_not_unique_batches = world_size - 1
-        assert len(output_batches_synced) - len(set(output_batches_synced)) <= max_num_not_unique_batches
+
+        n_batches_synced = len(output_batches_synced)
+        n_batches_synced_unique = len(set(output_batches_synced))
+        assert n_batches_synced - n_batches_synced_unique <= max_num_not_unique_batches, (
+            n_batches_synced,
+            n_batches_synced_unique,
+            max_num_not_unique_batches,
+        )
 
     def configure_optimizers(self) -> Any:
         return Adam(params=self.parameters(), lr=0.5)
