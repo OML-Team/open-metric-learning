@@ -189,7 +189,7 @@ class MetricValCallbackDDP(MetricValCallback):
 
     @staticmethod
     def _check_loaders(trainer: "pl.Trainer") -> None:
-        if trainer.world_size > 1:
+        if trainer.world_size > 1 and trainer.val_dataloaders is not None:
             if not check_loaders_is_patched(trainer.val_dataloaders):
                 raise RuntimeError(err_message_loaders_is_not_patched)
 
