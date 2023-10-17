@@ -80,7 +80,7 @@ class DummyModule(ModuleDDP):
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         if batch_idx == 0:
-            self.validation_step_outputs = []
+            self.training_step_outputs = []
 
         embeddings = self.model(batch[DummyDataset.input_name])
         loss = self.criterion(embeddings, batch[DummyDataset.labels_name])
