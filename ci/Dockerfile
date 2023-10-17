@@ -35,3 +35,5 @@ RUN pip install --no-cache-dir -r requirements_dev.txt
 WORKDIR /oml-lib
 COPY . /oml-lib
 RUN pip install .
+
+CMD ["sh", "-c", "while true; do sleep 86400; done"]
