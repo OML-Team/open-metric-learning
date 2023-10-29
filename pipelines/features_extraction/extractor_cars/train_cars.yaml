@@ -4,6 +4,7 @@ seed: 42  # fix random seed
 precision: 32  # use 32 for single precision and 16 for half-precision, if your GPU support it
 accelerator: gpu  # cpu or gpu
 devices: 1  # number of devices to use or list of the exact devices, we will use DDP for gpu accelerator and devices > 1
+find_unused_parameters: False  # The parameter for DDPStrategy
 
 dataframe_name: df_with_bboxes.csv  # dataframe filename, see the documentation for the desired format
 dataset_root: data/CARS196/  # path to the dataset

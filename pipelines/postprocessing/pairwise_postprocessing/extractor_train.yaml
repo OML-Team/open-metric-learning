@@ -4,6 +4,7 @@ seed: 42
 precision: 16
 accelerator: gpu
 devices: 2
+find_unused_parameters: False
 
 dataset_root: /path/to/dataset/  # <---- specify path to your dataset
 logs_root: /path/to/logs/ # <---- specify path to your logs

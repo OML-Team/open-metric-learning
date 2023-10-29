@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 import torch
 from pytorch_lightning import Trainer
-from pytorch_lightning.utilities.types import EPOCH_OUTPUT
 from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -49,17 +48,30 @@ class DummyModule(ModuleDDP):
         )
         self.criterion = TripletLossPlain(margin=None)
 
-    def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
+        self.training_step_outputs: List[Any] = []
+        self.validation_step_outputs: List[Any] = []
+
+    def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
+        if batch_idx == 0:
+            self.validation_step_outputs = []
+
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
+
+        self.validation_step_outputs.append(batch)
         return {**batch, **{"embeddings": embeddings}}
 
-    def training_step(self, batch: Dict[str, Any], batch_idx: int) -> Dict[str, Any]:
+    def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
+        if batch_idx == 0:
+            self.training_step_outputs = []
+
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
         loss = self.criterion(embeddings)
         batch["loss"] = loss
+
+        self.training_step_outputs.append(batch)
         return batch
 
-    def check_and_save_ids(self, outputs: EPOCH_OUTPUT, mode: str) -> None:
+    def check_and_save_ids(self, outputs: List[Any], mode: str) -> None:
         assert mode in ("train", "val")
         world_size = self.trainer.world_size
 
@@ -67,7 +79,10 @@ class DummyModule(ModuleDDP):
         ids_flatten = list(chain(*ids_batches))
 
         ids_flatten_synced = sync_dicts_ddp({"ids_flatten": ids_flatten}, world_size)["ids_flatten"]
-        assert len(ids_flatten_synced) == len(ids_flatten) * world_size == len(set(ids_flatten_synced))
+        n_ids = len(ids_flatten_synced)
+        n_ids_unique = len(set(ids_flatten_synced))
+        n_ids_world_size = len(ids_flatten) * world_size
+        assert n_ids == n_ids_unique == n_ids_world_size, (n_ids, n_ids_unique, n_ids_world_size)
 
         ids_per_step = {step: ids for step, ids in enumerate(ids_batches)}
         ids_per_step_synced = sync_dicts_ddp(ids_per_step, world_size)  # type: ignore
@@ -76,11 +91,11 @@ class DummyModule(ModuleDDP):
         pattern = self.save_path_train_ids_pattern if mode == "train" else self.save_path_val_ids_pattern
         torch.save(ids_per_step_synced, pattern.format(experiment=self.exp_num, epoch=self.trainer.current_epoch))
 
-    def training_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
-        self.check_and_save_ids(outputs, "train")
+    def on_train_epoch_end(self) -> None:
+        self.check_and_save_ids(self.training_step_outputs, "train")
 
-    def validation_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
-        self.check_and_save_ids(outputs, "val")
+    def on_validation_epoch_end(self) -> None:
+        self.check_and_save_ids(self.validation_step_outputs, "val")
 
     def on_train_end(self) -> None:
         torch.save(self.model, self.save_path_ckpt_pattern.format(experiment=self.exp_num))

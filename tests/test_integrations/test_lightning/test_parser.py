@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 import torch
-from pytorch_lightning.plugins import DDPPlugin
+from pytorch_lightning.strategies import DDPStrategy
 
 from oml.const import TCfg
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
@@ -25,11 +25,10 @@ def compare_params(cfg: TCfg, expected_params: TCfg) -> None:
 def test_list_devices_cpu_accelerator(list_devices: List[int]) -> None:
     cfg = {"accelerator": "cpu", "devices": list_devices}
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": "cpu",
         "devices": len(list_devices),
-        "strategy": DDPPlugin() if len(list_devices) > 1 else None,
+        "strategy": DDPStrategy() if len(list_devices) > 1 else "auto",
     }
     compare_params(cfg, expected_params)
 
@@ -38,11 +37,10 @@ def test_list_devices_cpu_accelerator(list_devices: List[int]) -> None:
 def test_int_devices_cpu_accelerator(int_devices: int) -> None:
     cfg = {"accelerator": "cpu", "devices": int_devices}
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": "cpu",
         "devices": int_devices,
-        "strategy": DDPPlugin() if int_devices > 1 else None,
+        "strategy": DDPStrategy() if int_devices > 1 else "auto",
     }
     compare_params(cfg, expected_params)
 
@@ -51,11 +49,10 @@ def test_int_devices_cpu_accelerator(int_devices: int) -> None:
 def test_list_devices_gpu_accelerator(list_devices: List[int]) -> None:
     cfg = {"accelerator": "gpu", "devices": list_devices}
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": "gpu",
         "devices": list_devices,
-        "strategy": DDPPlugin() if len(list_devices) > 1 else None,
+        "strategy": DDPStrategy() if len(list_devices) > 1 else "auto",
     }
     compare_params(cfg, expected_params)
 
@@ -64,11 +61,10 @@ def test_list_devices_gpu_accelerator(list_devices: List[int]) -> None:
 def test_int_devices_gpu_accelerator(int_devices: int) -> None:
     cfg = {"accelerator": "gpu", "devices": int_devices}
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": "gpu",
         "devices": int_devices,
-        "strategy": DDPPlugin() if int_devices > 1 else None,
+        "strategy": DDPStrategy() if int_devices > 1 else "auto",
     }
     compare_params(cfg, expected_params)
 
@@ -84,17 +80,16 @@ def test_no_devices_no_accelerator(no_devices: TCfg, no_accelerator: TCfg) -> No
         accelerator = "gpu"
         devices = torch.cuda.device_count()
         if devices > 1:
-            strategy = DDPPlugin()
+            strategy = DDPStrategy()
         else:
-            strategy = None
+            strategy = "auto"
     else:
         accelerator = "cpu"
         devices = 1
-        strategy = None
+        strategy = "auto"
 
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": accelerator,
         "devices": devices,
         "strategy": strategy,
@@ -108,7 +103,7 @@ def test_no_devices_cpu_accelerator(no_devices: TCfg) -> None:
     cfg = {"accelerator": "cpu"}
     cfg.update(no_devices)
 
-    expected_params = {"gpus": None, "replace_sampler_ddp": False, "accelerator": "cpu", "devices": 1, "strategy": None}
+    expected_params = {"use_distributed_sampler": False, "accelerator": "cpu", "devices": 1, "strategy": "auto"}
     compare_params(cfg, expected_params)
 
 
@@ -119,11 +114,10 @@ def test_no_devices_gpu_accelerator(no_devices: TCfg) -> None:
 
     devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": "gpu",
         "devices": devices,
-        "strategy": DDPPlugin() if devices > 1 else None,
+        "strategy": DDPStrategy() if devices > 1 else "auto",
     }
     compare_params(cfg, expected_params)
 
@@ -135,11 +129,10 @@ def case_int_devices_no_accelerator(no_accelerator: TCfg, int_devices: int) -> N
     cfg.update(no_accelerator)
 
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": "gpu" if torch.cuda.is_available() else "cpu",
         "devices": int_devices,
-        "strategy": DDPPlugin() if int_devices > 1 else None,
+        "strategy": DDPStrategy() if int_devices > 1 else "auto",
     }
     compare_params(cfg, expected_params)
 
@@ -153,10 +146,9 @@ def case_list_devices_no_accelerator(no_accelerator: TCfg, list_devices: List[in
     accelerator = "gpu" if torch.cuda.is_available() else "cpu"
     devices = len(list_devices) if accelerator == "cpu" else list_devices
     expected_params = {
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
         "accelerator": accelerator,
         "devices": devices,
-        "strategy": DDPPlugin() if len(list_devices) > 1 else None,
+        "strategy": DDPStrategy() if len(list_devices) > 1 else "auto",
     }
     compare_params(cfg, expected_params)

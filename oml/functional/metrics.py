@@ -533,9 +533,17 @@ def calc_pcf(embeddings: Tensor, pfc_variance: Tuple[float, ...]) -> List[Tensor
     # The code below mirrors code from scikit-learn repository:
     # https://github.com/scikit-learn/scikit-learn/blob/f3f51f9b6/sklearn/decomposition/_pca.py#L491
     _check_if_in_range(pfc_variance, 0, 1, "pfc_variance")
-    pca = PCA(embeddings)
-    n_components = pca.calc_principal_axes_number(pfc_variance).to(embeddings)
-    return n_components / embeddings.shape[1]
+    try:
+        pca = PCA(embeddings)
+        n_components = pca.calc_principal_axes_number(pfc_variance).to(embeddings)
+        metric = n_components / embeddings.shape[1]
+    except Exception:
+        # Mostly we handle the following error here:
+        # >>> The algorithm failed to converge because the input matrix is ill-conditioned
+        # >>> or has too many repeated singular values
+        metric = [torch.tensor(float("nan"))] * len(pfc_variance)
+
+    return metric
 
 
 def extract_pos_neg_dists(

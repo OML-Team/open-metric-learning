@@ -58,7 +58,7 @@ def patch_float(module: nn.Module, float_node: torch.Node) -> None:
         for node in graph.findAllNodes("aten::to"):
             inputs = list(node.inputs())
             for i in [1, 2]:  # dtype can be the second or third argument to aten::to()
-                if inputs[i].node()["value"] == 5:
+                if "[value=5]" in repr(inputs[i]):
                     inputs[i].node().copyAttributes(float_node)
 
     for child in module.children():
@@ -79,7 +79,7 @@ def patch_device(module: nn.Module, device_node: torch.Node) -> None:
 
     for g in graphs:
         for node in g.findAllNodes("prim::Constant"):
-            if "value" in node.attributeNames() and str(node["value"]).startswith("cuda"):
+            if "value" in node.attributeNames() and ('value="cuda' in repr(node)):
                 node.copyAttributes(device_node)
 
     for child in module.children():

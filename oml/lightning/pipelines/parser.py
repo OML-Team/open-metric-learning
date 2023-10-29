@@ -5,13 +5,9 @@ from typing import Any, Dict, Optional
 import torch
 import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import (
-    LightningLoggerBase,
-    NeptuneLogger,
-    TensorBoardLogger,
-    WandbLogger,
-)
-from pytorch_lightning.plugins import DDPPlugin
+from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
+from pytorch_lightning.loggers.logger import Logger
+from pytorch_lightning.strategies import DDPStrategy
 
 from oml.const import OML_PATH, TCfg
 from oml.datasets.base import DatasetWithLabels
@@ -48,16 +44,15 @@ def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
         devices = len(devices)
 
     if (isinstance(devices, int) and devices > 1) or (isinstance(devices, (list, tuple)) and len(devices) > 1):
-        strategy = DDPPlugin()
+        strategy = DDPStrategy(find_unused_parameters=cfg.get("find_unused_parameters", False))
     else:
-        strategy = None
+        strategy = "auto"
 
     return {
         "devices": devices,
         "strategy": strategy,
         "accelerator": accelerator,
-        "gpus": None,
-        "replace_sampler_ddp": False,
+        "use_distributed_sampler": False,
     }
 
 
@@ -65,12 +60,12 @@ def check_is_config_for_ddp(cfg: TCfg) -> bool:
     return bool(cfg["strategy"])
 
 
-def parse_logger_from_config(cfg: TCfg) -> LightningLoggerBase:
+def parse_logger_from_config(cfg: TCfg) -> Logger:
     logger = TensorBoardLogger(".") if cfg.get("logger", None) is None else get_logger_by_cfg(cfg["logger"])
     return logger
 
 
-def initialize_logging(cfg: TCfg) -> LightningLoggerBase:
+def initialize_logging(cfg: TCfg) -> Logger:
     logger = parse_logger_from_config(cfg)
     cwd = Path.cwd().name
 

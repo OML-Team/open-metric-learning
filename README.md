@@ -7,12 +7,13 @@
 [![PyPI Status](https://pepy.tech/badge/open-metric-learning)](https://pepy.tech/project/open-metric-learning)
 [![Pipi version](https://img.shields.io/pypi/v/open-metric-learning.svg)](https://pypi.org/project/open-metric-learning/)
 ![example workflow](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_3.7-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.8-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.9-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.10-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/python-versions.yaml/badge.svg?)
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
+
+### **[NEW!] OpenMetricLearning 2.0 supports Torch 2.0 and Lightning 2.0 [NEW!]**
 
 ### Trusted by
 
@@ -24,7 +25,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
 <a href="https://constructor.io/" target="_blank"><img src="https://rethink.industries/wp-content/uploads/2022/04/constructor.io-logo.png" width="100"/></a>
 
 
-<a href="https://www.ox.ac.uk/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/2/2f/University_of_Oxford.svg/2560px-University_of_Oxford.svg.png" width="120"/></a>ㅤㅤ
+<a href="https://www.ox.ac.uk/" target="_blank"><img src="https://i.ibb.co/zhWL6tD/21-05-2019-16-08-10-6922268.png" width="120"/></a>ㅤㅤ
 <a href="https://www.hse.ru/en/" target="_blank"><img src="https://www.hse.ru/data/2020/11/16/1367274044/HSE_University_blue.jpg.(230x86x123).jpg" width="100"/></a>
 
 There is a number of people from

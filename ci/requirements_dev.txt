@@ -1,2 +1,4 @@
 jupyter>=1.0.0
 pytest>=7.2
+tensorboard
+pre-commit

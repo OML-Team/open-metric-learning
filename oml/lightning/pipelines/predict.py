@@ -51,7 +51,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     pl_model = ExtractorModule(extractor=extractor)
 
     trainer_engine_params = parse_engine_params_from_config(cfg)
-    trainer_engine_params["replace_sampler_ddp"] = True
+    trainer_engine_params["use_distributed_sampler"] = True
     trainer = pl.Trainer(precision=cfg.get("precision", 32), **trainer_engine_params)
     predictions = trainer.predict(model=pl_model, dataloaders=loader, return_predictions=True)
 
