@@ -13,6 +13,8 @@
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
+### **[NEW!] OpenMetricLEarning 2.0 supports Torch 2.0 and Lightning 2.0 [NEW!]**
+
 ### Trusted by
 
 <div align="center">
