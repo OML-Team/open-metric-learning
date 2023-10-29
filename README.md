@@ -13,8 +13,6 @@
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
-### **[NEW!] OpenMetricLearning 2.0 supports Torch 2.0 and Lightning 2.0 [NEW!]**
-
 ### Trusted by
 
 <div align="center">
@@ -35,6 +33,8 @@ universities who have used OML in their theses.
 [[1]](https://github.com/nilomr/open-metric-learning/tree/great-tit/great-tit-train)
 [[2]](https://github.com/nastygorodi/PROJECT-Deep_Metric_Learning)
 [[3]](https://github.com/nik-fedorov/term_paper_metric_learning)
+
+### **[NEW!] OML 2.0 supports Torch 2.0 and Lightning 2.0 [NEW!]**
 
 <div align="left">
 
