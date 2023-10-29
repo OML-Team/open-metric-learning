@@ -2,6 +2,7 @@ seed: 42
 precision: 32
 accelerator: cpu
 devices: 1
+find_unused_parameters: False
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df_with_category.csv

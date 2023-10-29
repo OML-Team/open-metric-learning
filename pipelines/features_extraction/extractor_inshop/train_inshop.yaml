@@ -4,6 +4,7 @@ seed: 42
 precision: 16
 accelerator: gpu
 devices: 2
+find_unused_parameters: False
 
 dataframe_name: df.csv
 dataset_root: data/DeepFashion_InShop/

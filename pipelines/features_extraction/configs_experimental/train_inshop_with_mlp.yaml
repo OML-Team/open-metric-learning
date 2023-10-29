@@ -1,4 +1,5 @@
 postfix: metric_learning
+find_unused_parameters: True
 
 seed: 42
 precision: 32

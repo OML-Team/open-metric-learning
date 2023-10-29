@@ -4,6 +4,7 @@ seed: 42
 precision: 32
 accelerator: gpu
 devices: 1
+find_unused_parameters: False
 
 dataframe_name: df_with_bboxes.csv
 dataset_root: data/CUB_200_2011/
