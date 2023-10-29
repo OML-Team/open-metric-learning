@@ -70,7 +70,9 @@ def check_retrieval_dataframe_format(
     if dataset_root is None:
         dataset_root = Path("")
 
-    assert all(df[PATHS_COLUMN].apply(lambda x: (dataset_root / x).exists()).to_list())
+    all_paths = df[PATHS_COLUMN].apply(lambda x: (dataset_root / x)).to_list()
+    non_existing_paths = list(filter(lambda x: not x.exists(), all_paths))
+    assert not non_existing_paths, f"Following paths do not exist: {non_existing_paths}"
 
     # check bboxes if exist
     if set(BBOXES_COLUMNS).intersection(set(list(df.columns))):
