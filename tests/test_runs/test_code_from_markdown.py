@@ -36,7 +36,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
 )  # fmt: skip
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:
     code = find_code_block(PROJECT_ROOT / "docs/readme/examples_source" / fname, start_indicator, end_indicator)
-    tmp_fname = "inference_with_groups.py"
+    tmp_fname = "tmp.py"
 
     with open(tmp_fname, "w") as f:
         f.write(code)
