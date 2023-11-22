@@ -77,6 +77,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         fmr_vals: Tuple[float, ...] = tuple(),
         pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
+        groups_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         return_only_overall_category: bool = False,
@@ -104,6 +105,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                           of variance that needs to be explained is greater than the percentage specified
                           by ``pfc_variance``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
+            groups_key: TODO
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
              affect calculations.
@@ -124,6 +126,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.pfc_variance = pfc_variance
 
         self.categories_key = categories_key
+        self.groups_key = groups_key
         self.postprocessor = postprocessor
 
         self.distance_matrix = None
@@ -140,6 +143,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
             keys_to_accumulate.append(self.categories_key)
+        if self.groups_key:
+            keys_to_accumulate.append(self.groups_key)
         if self.extra_keys:
             keys_to_accumulate.extend(list(extra_keys))
         if self.postprocessor:
@@ -163,10 +168,17 @@ class EmbeddingMetrics(IMetricVisualisable):
         labels = self.acc.storage[self.labels_key]
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
+        groups = self.acc.storage[self.groups_key]
 
         # Note, in some datasets part of the samples may appear in both query & gallery.
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        # todo: refactor
+        mask_to_ignore_qg = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        groups_query = groups[is_query]  # type: ignore
+        groups_gallery = groups[is_gallery]  # type: ignore
+        mask_to_ignore_groups = groups_query[..., None] == groups_gallery[None, ...]
+        mask_to_ignore = torch.logical_or(mask_to_ignore_qg, mask_to_ignore_groups)
+
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 

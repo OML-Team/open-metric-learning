@@ -11,6 +11,8 @@ from torch.utils.data import Dataset
 from oml.const import (
     CATEGORIES_COLUMN,
     CATEGORIES_KEY,
+    GROUP_COLUMN,
+    GROUP_KEY,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
@@ -56,6 +58,7 @@ class BaseDataset(Dataset):
         labels_key: str = LABELS_KEY,
         paths_key: str = PATHS_KEY,
         categories_key: Optional[str] = CATEGORIES_KEY,
+        group_key: Optional[str] = GROUP_KEY,
         x1_key: str = X1_KEY,
         x2_key: str = X2_KEY,
         y1_key: str = Y1_KEY,
@@ -83,6 +86,7 @@ class BaseDataset(Dataset):
             labels_key: Key to put labels into the batches
             paths_key: Key put paths into the batches
             categories_key: Key to put categories into the batches
+            group_key: TODO
             x1_key: Key to put ``x1`` into the batches
             x2_key: Key to put ``x2`` into the batches
             y1_key: Key to put ``y1`` into the batches
@@ -103,6 +107,7 @@ class BaseDataset(Dataset):
         self.labels_key = labels_key
         self.paths_key = paths_key
         self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
+        self.group_key = group_key if (GROUP_COLUMN in df.columns) else None
         self.index_key = index_key
 
         self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
@@ -165,6 +170,9 @@ class BaseDataset(Dataset):
 
         if self.categories_key:
             item[self.categories_key] = row[CATEGORIES_COLUMN]
+
+        if self.group_key:
+            item[self.group_key] = row[GROUP_COLUMN]
 
         if self.bboxes_exist:
             item.update(
