@@ -47,9 +47,10 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
 def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
-    assert (
-        (mask_gt & ~mask_to_ignore).any(1).all()
-    ), "There are queries without available correct answers in the gallery!"
+    is_valid = (mask_gt & ~mask_to_ignore).any(1).all()
+
+    if not is_valid:
+        raise RuntimeError("There are queries without available correct answers in the gallery!")
 
 
 class EmbeddingMetrics(IMetricVisualisable):

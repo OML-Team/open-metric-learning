@@ -1,9 +1,10 @@
 import pandas as pd
+import pytest
 import torch
 from torch import nn
 from tqdm import tqdm
 
-from oml.const import MOCK_DATASET_PATH, SEQUENCE_COLUMN
+from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, SEQUENCE_COLUMN
 from oml.datasets.base import DatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics, TMetricsDict_ByLabels
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -69,3 +70,19 @@ def test_invariants_in_validation_with_sequences_2() -> None:
     metrics_b = validation(df_b)
 
     assert compare_dicts_recursively(metrics_a, metrics_b)
+
+
+def test_invariants_in_validation_with_sequences_3() -> None:
+    # If labels == sequence, then every sample has no pull of right answers in gallery
+    # to pick from. Thus, we expect our validation to produce the error.
+
+    _, df = download_mock_dataset(MOCK_DATASET_PATH)
+
+    df_with_seq = df.copy()
+    df_with_seq[SEQUENCE_COLUMN] = df_with_seq[LABELS_COLUMN]
+
+    with pytest.raises(RuntimeError):
+        validation(df)
+        validation(df_with_seq)
+
+    assert True
