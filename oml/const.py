@@ -41,7 +41,7 @@ STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
-MOCK_DATASET_MD5 = "3f4d0a18d7aedb9ae8e48e5bcea7dfe7"
+MOCK_DATASET_MD5 = "f5f1f3d995491513578b9c29ec31393f"
 
 REQUESTS_TIMEOUT = 120.0
 
@@ -75,7 +75,7 @@ X1_COLUMN = "x_1"
 X2_COLUMN = "x_2"
 Y1_COLUMN = "y_1"
 Y2_COLUMN = "y_2"
-GROUP_COLUMN = "group"
+SEQUENCE_COLUMN = "group"
 
 OBLIGATORY_COLUMNS = [LABELS_COLUMN, PATHS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
 BBOXES_COLUMNS = [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]
@@ -94,7 +94,7 @@ X2_KEY = "x2"
 Y1_KEY = "y1"
 Y2_KEY = "y2"
 INDEX_KEY = "idx"
-GROUP_KEY = "group"
+SEQUENCE_KEY = "group"
 
 PAIR_1ST_KEY = "input_tensors_1"
 PAIR_2ND_KEY = "input_tensors_2"

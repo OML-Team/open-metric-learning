@@ -29,3 +29,10 @@
   browser.
 * If you want to add some new criterion, miner, model, optimizer, sampler, lr scheduler or transforms, don't forget to
   add it to the corresponding registry (see `oml.registry`) and also add a config file (see `oml.configs`).
+
+## How to add new functionality in Pipelines (Config-API)?
+* Implement your changes in `extractor_training_pipeline` and/or in `extractor_validation_pipeline`
+* Add a new test run or modify one of the existing tests. If adding a new test:
+  * Add config file: `tests/test_runs/test_pipelines/configs/train_or_validate_new_feature.yaml`
+  * Add python script: `tests/test_runs/test_pipelines/train_or_validate_new_feature.py`
+  * Add entry point to your test to: `tests/test_runs/test_pipelines/test_pipelines.py`

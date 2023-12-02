@@ -76,7 +76,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
         is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         postprocessor=postprocessor,
-        **cfg.get("metric_args", {})
+        sequence_key=valid_dataset.sequence_key ** cfg.get("metric_args", {}),
     )
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     clb_metric = metrics_clb_constructor(
