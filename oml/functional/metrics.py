@@ -170,16 +170,24 @@ def calc_gt_mask(
     return gt_mask
 
 
-def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]) -> Tensor:
-    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [is_query, is_gallery])
+def calc_mask_to_ignore(is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Tensor] = None) -> Tensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
-    is_query, is_gallery = map(_to_tensor, [is_query, is_gallery])
+    if sequence_ids is not None:
+        assert sequence_ids.ndim == 1
+        assert len(is_gallery) == len(sequence_ids)
 
     ids_query = torch.nonzero(is_query).squeeze()
     ids_gallery = torch.nonzero(is_gallery).squeeze()
+
+    # this mask excludes duplicates of queries from the gallery if any
     mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+
+    if sequence_ids is not None:
+        # this mask ignores gallery samples taken from the same sequence as a given query
+        mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
+        mask_to_ignore = torch.logical_or(mask_to_ignore, mask_to_ignore_seq)
 
     return mask_to_ignore
 

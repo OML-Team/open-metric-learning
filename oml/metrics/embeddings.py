@@ -169,19 +169,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         labels = self.acc.storage[self.labels_key]
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
+        sequence_ids = self.acc.storage[self.sequence_key] if self.sequence_key is not None else None
 
-        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
-
-        if self.sequence_key:
-            sequences = self.acc.storage[self.sequence_key]
-
-            # Note, in some datasets part of the samples may appear in both query & gallery.
-            # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-            # todo: refactor
-            sequences_query = sequences[is_query]  # type: ignore
-            sequences_gallery = sequences[is_gallery]  # type: ignore
-            mask_to_ignore_sequences = sequences_query[..., None] == sequences_gallery[None, ...]
-            mask_to_ignore = torch.logical_or(mask_to_ignore, mask_to_ignore_sequences)
+        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery, sequence_ids=sequence_ids)
 
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
