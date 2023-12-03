@@ -152,14 +152,9 @@ def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Ten
     return distances, mask_gt
 
 
-def calc_gt_mask(
-    labels: Union[np.ndarray, Tensor], is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]
-) -> Tensor:
-    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [labels, is_query, is_gallery])
+def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
-
-    labels, is_query, is_gallery = map(_to_tensor, [labels, is_query, is_gallery])
 
     query_mask = is_query == 1
     gallery_mask = is_gallery == 1
@@ -170,28 +165,31 @@ def calc_gt_mask(
     return gt_mask
 
 
-def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]) -> Tensor:
-    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [is_query, is_gallery])
+def calc_mask_to_ignore(is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Tensor] = None) -> Tensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
-    is_query, is_gallery = map(_to_tensor, [is_query, is_gallery])
+    if sequence_ids is not None:
+        assert sequence_ids.ndim == 1
+        assert len(is_gallery) == len(sequence_ids)
 
     ids_query = torch.nonzero(is_query).squeeze()
     ids_gallery = torch.nonzero(is_gallery).squeeze()
+
+    # this mask excludes duplicates of queries from the gallery if any
     mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
+
+    if sequence_ids is not None:
+        # this mask ignores gallery samples taken from the same sequence as a given query
+        mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
+        mask_to_ignore = torch.logical_or(mask_to_ignore, mask_to_ignore_seq)
 
     return mask_to_ignore
 
 
-def calc_distance_matrix(
-    embeddings: Union[np.ndarray, Tensor], is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]
-) -> Tensor:
-    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [embeddings, is_query, is_gallery])
+def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)
-
-    embeddings, is_query, is_gallery = map(_to_tensor, [embeddings, is_query, is_gallery])
 
     query_mask = is_query == 1
     gallery_mask = is_gallery == 1
@@ -569,15 +567,6 @@ def extract_pos_neg_dists(
         pos_dist = distances[mask_gt]
         neg_dist = distances[~mask_gt]
     return pos_dist, neg_dist
-
-
-def _to_tensor(array: Union[np.ndarray, Tensor]) -> Tensor:
-    if isinstance(array, Tensor):
-        return array
-    elif isinstance(array, np.ndarray):
-        return torch.from_numpy(array)
-    else:
-        raise TypeError("Wrong type")
 
 
 def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:

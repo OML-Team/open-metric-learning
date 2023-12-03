@@ -21,6 +21,8 @@ from oml.const import (
     LABELS_KEY,
     PATHS_COLUMN,
     PATHS_KEY,
+    SEQUENCE_COLUMN,
+    SEQUENCE_KEY,
     SPLIT_COLUMN,
     X1_COLUMN,
     X1_KEY,
@@ -56,6 +58,7 @@ class BaseDataset(Dataset):
         labels_key: str = LABELS_KEY,
         paths_key: str = PATHS_KEY,
         categories_key: Optional[str] = CATEGORIES_KEY,
+        sequence_key: Optional[str] = SEQUENCE_KEY,
         x1_key: str = X1_KEY,
         x2_key: str = X2_KEY,
         y1_key: str = Y1_KEY,
@@ -83,6 +86,7 @@ class BaseDataset(Dataset):
             labels_key: Key to put labels into the batches
             paths_key: Key put paths into the batches
             categories_key: Key to put categories into the batches
+            sequence_key: Key to put sequence ids into the batches
             x1_key: Key to put ``x1`` into the batches
             x2_key: Key to put ``x2`` into the batches
             y1_key: Key to put ``y1`` into the batches
@@ -103,6 +107,7 @@ class BaseDataset(Dataset):
         self.labels_key = labels_key
         self.paths_key = paths_key
         self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
+        self.sequence_key = sequence_key if (SEQUENCE_COLUMN in df.columns) else None
         self.index_key = index_key
 
         self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
@@ -165,6 +170,9 @@ class BaseDataset(Dataset):
 
         if self.categories_key:
             item[self.categories_key] = row[CATEGORIES_COLUMN]
+
+        if self.sequence_key:
+            item[self.sequence_key] = row[SEQUENCE_COLUMN]
 
         if self.bboxes_exist:
             item.update(

@@ -59,7 +59,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
         scheduler=None,
         input_tensors_key=valid_dataset.input_tensors_key,
         labels_key=valid_dataset.labels_key,
-        **module_kwargs
+        **module_kwargs,
     )
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
@@ -76,7 +76,8 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
         is_gallery_key=valid_dataset.is_gallery_key,
         extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         postprocessor=postprocessor,
-        **cfg.get("metric_args", {})
+        sequence_key=valid_dataset.sequence_key,
+        **cfg.get("metric_args", {}),
     )
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
     clb_metric = metrics_clb_constructor(

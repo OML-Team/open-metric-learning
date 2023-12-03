@@ -114,6 +114,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
         is_query_key=loaders_val.dataset.is_query_key,
         is_gallery_key=loaders_val.dataset.is_gallery_key,
         extra_keys=(loaders_val.dataset.paths_key, *loaders_val.dataset.bboxes_keys),
+        sequence_key=loaders_val.dataset.sequence_key,
         **cfg.get("metric_args", {}),
     )
 

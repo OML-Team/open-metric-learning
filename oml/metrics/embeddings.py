@@ -47,9 +47,10 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
 def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
-    assert (
-        (mask_gt & ~mask_to_ignore).any(1).all()
-    ), "There are queries without available correct answers in the gallery!"
+    is_valid = (mask_gt & ~mask_to_ignore).any(1).all()
+
+    if not is_valid:
+        raise RuntimeError("There are queries without available correct answers in the gallery!")
 
 
 class EmbeddingMetrics(IMetricVisualisable):
@@ -77,6 +78,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         fmr_vals: Tuple[float, ...] = tuple(),
         pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
+        sequence_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         return_only_overall_category: bool = False,
@@ -104,6 +106,7 @@ class EmbeddingMetrics(IMetricVisualisable):
                           of variance that needs to be explained is greater than the percentage specified
                           by ``pfc_variance``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
+            sequence_key: Key to take sequence ids from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
              affect calculations.
@@ -124,6 +127,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.pfc_variance = pfc_variance
 
         self.categories_key = categories_key
+        self.sequence_key = sequence_key
         self.postprocessor = postprocessor
 
         self.distance_matrix = None
@@ -140,6 +144,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
         if self.categories_key:
             keys_to_accumulate.append(self.categories_key)
+        if self.sequence_key:
+            keys_to_accumulate.append(self.sequence_key)
         if self.extra_keys:
             keys_to_accumulate.extend(list(extra_keys))
         if self.postprocessor:
@@ -163,10 +169,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         labels = self.acc.storage[self.labels_key]
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
+        sequence_ids = self.acc.storage[self.sequence_key] if self.sequence_key is not None else None
 
-        # Note, in some datasets part of the samples may appear in both query & gallery.
-        # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
-        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
+        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery, sequence_ids=sequence_ids)
+
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
         distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
