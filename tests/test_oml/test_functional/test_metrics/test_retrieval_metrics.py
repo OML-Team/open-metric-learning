@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import Callable, List, Tuple
 
-import numpy as np
 import pytest
 import torch
 
@@ -173,9 +172,9 @@ def test_on_synthetic_cases(
 
 
 def test_validate_dataset_good_case() -> None:
-    isq = np.r_[True, False, False, True, False, False]
-    isg = np.r_[False, True, True, False, True, True]
-    labels = np.r_[0, 0, 0, 1, 1, 1]
+    isq = torch.tensor([True, False, False, True, False, False], dtype=torch.bool)
+    isg = torch.tensor([False, True, True, False, True, True], dtype=torch.bool)
+    labels = torch.tensor([0, 0, 0, 1, 1, 1], dtype=torch.int)
 
     mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
     m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
@@ -183,10 +182,10 @@ def test_validate_dataset_good_case() -> None:
 
 
 def test_validate_dataset_bad_case() -> None:
-    with pytest.raises(AssertionError):
-        isq = np.r_[True, False, False, True, True]
-        isg = np.r_[False, True, True, False, True]
-        labels = np.r_[0, 0, 0, 1, 1]
+    with pytest.raises(RuntimeError):
+        isq = torch.tensor([True, False, False, True, True], dtype=torch.bool)
+        isg = torch.tensor([False, True, True, False, True], dtype=torch.bool)
+        labels = torch.tensor([0, 0, 0, 1, 1], dtype=torch.int)
 
         mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
         m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
