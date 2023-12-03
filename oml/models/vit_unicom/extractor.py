@@ -5,7 +5,7 @@ import torch
 
 from oml.const import CKPT_SAVE_ROOT
 from oml.interfaces.models import IExtractor
-from oml.models.utils import remove_prefix_from_state_dict
+from oml.models.utils import remove_prefix_from_state_dict, remove_criterion_in_state_dict
 from oml.models.vit_unicom.external import vision_transformer
 from oml.models.vit_unicom.external.model import load  # type: ignore
 from oml.utils.misc_torch import normalise
@@ -70,6 +70,7 @@ class ViTUnicomExtractor(IExtractor):
         else:
             ckpt = torch.load(weights, map_location="cpu")
             state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
+            state_dict = remove_criterion_in_state_dict(state_dict)
             ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
             self.model.load_state_dict(ckpt, strict=True)
 
