@@ -35,7 +35,9 @@ criterion:
 
 defaults:
   - optimizer: adam
-  - sampler: balance
+
+sampler: null
+bs_train: 6
 
 extractor:
   name: resnet

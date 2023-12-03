@@ -150,7 +150,11 @@ def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> 
 
 
 def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> Optional[IBatchSampler]:
-    if (not dataset.categories_key) and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys():
+    if (
+        (not dataset.categories_key)
+        and (cfg["sampler"] is not None)
+        and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys()
+    ):
         raise ValueError(
             "NOTE! You are trying to use Sampler which works with the information related"
             "to categories, but there is no <categories_key> in your Dataset."
