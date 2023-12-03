@@ -7,6 +7,7 @@ from oml.interfaces.models import IExtractor
 from oml.models.utils import TStateDict, filter_state_dict, patch_device_and_float
 from oml.models.vit_clip.external.model import VisionTransformer
 from oml.utils.io import download_checkpoint
+from oml.models.utils import remove_criterion_in_state_dict
 
 _OPENAI_URL = "https://openaipublic.azureedge.net/clip/models"
 _SBER_URL = "https://huggingface.co/sberbank-ai"
@@ -153,6 +154,7 @@ class ViTCLIPExtractor(IExtractor):
         else:
             state_dict = torch.load(Path(weights), map_location="cpu")
             state_dict = state_dict.get("state_dict", state_dict)
+            state_dict = remove_criterion_in_state_dict(state_dict)
             state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=True)
