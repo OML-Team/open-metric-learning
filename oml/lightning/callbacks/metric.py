@@ -1,6 +1,7 @@
 from math import ceil
 from typing import Any, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 from neptune.new.types import File
@@ -116,6 +117,8 @@ class MetricValCallback(Callback):
                 )
             else:
                 raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
+
+            plt.close(fig=fig)
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._ready_to_accumulate = False
