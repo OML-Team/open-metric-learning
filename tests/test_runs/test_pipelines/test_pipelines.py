@@ -43,7 +43,7 @@ def run(file: str, accelerator: str, devices: int, need_rm_logs: bool = True) ->
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_train(accelerator: str, devices: int) -> None:
+def test_train_and_validate(accelerator: str, devices: int) -> None:
     run("train.py", accelerator, devices, need_rm_logs=False)
     # it takes checpoints from the train stage
     run("validate.py", accelerator, devices, need_rm_logs=False)
