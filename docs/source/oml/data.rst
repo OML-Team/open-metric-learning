@@ -24,7 +24,7 @@ Optional columns:
   If only part of your images has bounding boxes, just fill the corresponding row with empty values.
 * ``sequence`` - comparable values to mark series of images in dataset, that will be excluded from recommendations on validation stage.
   For example, if you have a video dataset, you can mark all frames from one video with the same value in this column.
-  Then, when you will validate your model, all frames from one video will be excluded from recommendations.
+  Then, when you will validate your model, all frames from one video will be excluded from metric calculation.
 Check out the
 `examples <https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing>`_
 of valid dataset. You can also use helper to check if your dataset is in the right format:

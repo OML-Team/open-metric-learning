@@ -8,10 +8,10 @@ After that calculation of metric will be changed to the following:
 
 <img src="https://i.ibb.co/nwQcqMC/Images-Side-By-Side-Manim-CE-v0-18-0.png">
 
-| metric | example position | value |
-| --- |------------------|-------|
-| CMC@1 | top              | 1.0   |
-| CMC@1 | bottom           | 0.0   |
+| metric      | example position | value |
+|-------------|------------------|-------|
+| CMC@1       | top              | 1.0   |
+| CMC@1       | bottom           | 0.0   |
 | PRECISION@2 | top              | 0.5   |
 | PRECISION@2 | bottom           | 0.5   |
 
