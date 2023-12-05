@@ -6,6 +6,12 @@ from torch import nn
 TStateDict = OrderedDict[str, torch.Tensor]
 
 
+def remove_criterion_in_state_dict(state_dict: TStateDict) -> TStateDict:
+    if "criterion.weight" in state_dict:
+        del state_dict["criterion.weight"]
+    return state_dict
+
+
 def find_prefix_in_state_dict(state_dict: TStateDict, trial_key: str) -> str:
     k0 = [k for k in state_dict.keys() if trial_key in k][0]
     prefix = k0[: k0.index(trial_key)]
