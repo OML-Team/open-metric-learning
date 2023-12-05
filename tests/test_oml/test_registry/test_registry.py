@@ -60,8 +60,8 @@ def get_opt() -> Optimizer:
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
         ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
         ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
-        # We marked these secret required tests as "long" in order to skip them on push requests from
-        # public forks to OML. Nevertheless, the tests will be executed if PR is merged with all needed credentials.
+        # We marked these secret required tests as "long" to skip them on push requests from public
+        # forks to OML. Nevertheless, the tests will be executed if PR is merged with all the needed credentials.
         pytest.param("logger", LOGGERS_REGISTRY, get_logger, None, marks=pytest.mark.long),
     ],
 )
