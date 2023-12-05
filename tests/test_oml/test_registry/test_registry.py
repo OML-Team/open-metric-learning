@@ -60,7 +60,7 @@ def get_opt() -> Optimizer:
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
         ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
         ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
-        ("logger", LOGGERS_REGISTRY, get_logger, None),
+        pytest.param("logger", LOGGERS_REGISTRY, get_logger, None, marks=pytest.mark.long),
     ],
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
