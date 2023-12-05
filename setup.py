@@ -22,7 +22,7 @@ setup(
     # technical things
     version=load_version(),
     packages=find_packages(exclude=["ci", "docs", "pipelines", "tests*"]),
-    python_requires=">=3.7,<4.0",
+    python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
     include_package_data=True,
     long_description=Path("README.md").read_text(),
@@ -52,10 +52,10 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Image Recognition",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
     project_urls={
