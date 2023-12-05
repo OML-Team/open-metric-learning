@@ -12,7 +12,10 @@ from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet15
 
 from oml.interfaces.models import IExtractor
 from oml.models.resnet.pooling import GEM
-from oml.models.utils import remove_prefix_from_state_dict, remove_criterion_in_state_dict
+from oml.models.utils import (
+    remove_criterion_in_state_dict,
+    remove_prefix_from_state_dict,
+)
 from oml.transforms.images.albumentations import get_normalisation_albu
 from oml.utils.io import download_checkpoint
 from oml.utils.misc_torch import get_device, normalise
@@ -124,7 +127,7 @@ class ResnetExtractor(IExtractor):
             state_dict = torch.load(weights, map_location="cpu")
 
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
-        state_dict = remove_criterion_in_state_dict(state_dict)
+        state_dict = remove_criterion_in_state_dict(state_dict)  # type: ignore
         state_dict = remove_prefix_from_state_dict(state_dict, "layer4.")  # type: ignore
         self.model.load_state_dict(state_dict, strict=True)
 

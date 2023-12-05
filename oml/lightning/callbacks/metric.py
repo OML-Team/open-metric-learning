@@ -128,7 +128,6 @@ class MetricValCallback(Callback):
 
         if self.log_images:
             self._log_images(pl_module=pl_module)
-            
 
     def _raise_computation_error(self) -> Exception:
         raise ValueError(

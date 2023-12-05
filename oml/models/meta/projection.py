@@ -6,7 +6,10 @@ from torchvision.ops import MLP
 
 from oml.const import STORAGE_CKPTS
 from oml.interfaces.models import IExtractor, IFreezable
-from oml.models.utils import remove_prefix_from_state_dict
+from oml.models.utils import (
+    remove_criterion_in_state_dict,
+    remove_prefix_from_state_dict,
+)
 from oml.models.vit_dino.extractor import ViTExtractor
 from oml.utils.io import download_checkpoint
 
@@ -64,6 +67,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
 
             loaded = torch.load(weights, map_location="cpu")
             loaded = loaded.get("state_dict", loaded)
+            loaded = remove_criterion_in_state_dict(loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
             self.load_state_dict(loaded, strict=True)
 

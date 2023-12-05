@@ -34,16 +34,22 @@ def rm_logs(cfg_name: Path) -> None:
         shutil.rmtree(cfg["logs_root"])
 
 
-def run(file: str, accelerator: str, devices: int) -> None:
+def run(file: str, accelerator: str, devices: int, need_rm_logs: bool = True) -> None:
     cmd = f"python {str(SCRIPTS_PATH / file)} ++accelerator='{accelerator}' ++devices='{devices}'"
     subprocess.run(cmd, check=True, shell=True)
 
-    rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
+    if need_rm_logs:
+        rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train(accelerator: str, devices: int) -> None:
-    run("train.py", accelerator, devices)
+    run("train.py", accelerator, devices, need_rm_logs=False)
+    # it takes checpoints from the train stage
+    run("validate.py", accelerator, devices, need_rm_logs=False)
+
+    for file in ["train.py", "validate.py"]:
+        rm_logs(cfg_name=SCRIPTS_PATH / "configs" / file.replace(".py", ".yaml"))
 
 
 @pytest.mark.long
@@ -73,11 +79,6 @@ def test_train_arcface_with_categories(accelerator: str, devices: int) -> None:
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_postprocessor(accelerator: str, devices: int) -> None:
     run("train_postprocessor.py", accelerator, devices)
-
-
-@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
-def test_validation(accelerator: str, devices: int) -> None:
-    run("validate.py", accelerator, devices)
 
 
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())

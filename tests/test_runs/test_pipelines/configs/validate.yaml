@@ -47,12 +47,18 @@ metric_args:
   visualize_only_main_category: True
 
 extractor:
-  name: vit
+  name: extractor_with_mlp
   args:
-    arch: vits16
-    normalise_features: False
-    use_multi_scale: True
-    weights: null
+    mlp_features: [384]
+    weights: checkpoints/best.ckpt
+    extractor:
+      name: vit
+      args:
+        normalise_features: False
+        use_multi_scale: False
+        weights: null
+        arch: vits16
+
 
 hydra:
   run:
