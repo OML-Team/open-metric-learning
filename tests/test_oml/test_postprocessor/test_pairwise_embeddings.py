@@ -49,6 +49,7 @@ def shared_query_gallery_case() -> Tuple[Tensor, Tensor, Tensor]:
     return embeddings, is_query, is_gallery
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("top_n", [2, 5, 100])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
 def test_trivial_processing_does_not_change_distances_order(
@@ -90,6 +91,7 @@ def perfect_case() -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     return query_embeddings, gallery_embeddings, query_labels, gallery_labels
 
 
+@pytest.mark.long
 def test_trivial_processing_fixes_broken_perfect_case() -> None:
     """
     The idea of the test is the following:
@@ -149,6 +151,7 @@ class DummyPairwise(IPairwiseModel):
         return self.distances_to_return
 
 
+@pytest.mark.long
 def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
     """
     The idea of the test is similar to "test_trivial_processing_fixes_broken_perfect_case",
@@ -187,6 +190,7 @@ class RandomPairwise(IPairwiseModel):
         return self.forward(x1, x2)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("top_n", [2, 4, 5])
 def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     # The idea of the test is that postprocessing of first n elements

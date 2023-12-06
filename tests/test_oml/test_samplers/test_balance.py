@@ -98,6 +98,7 @@ def check_balance_batch_sampler_epoch(sampler: BalanceSampler, labels: List[int]
     assert len(sampler) * sampler.n_labels * sampler.n_instances == n_instances_sampled
 
 
+@pytest.mark.long
 def test_balance_batch_sampler(input_for_balance_batch_sampler: TLabels) -> None:
     for labels in input_for_balance_batch_sampler:
         n_labels_batch = randint(2, max(2, len(set(labels)) // 5))

@@ -21,6 +21,7 @@ def case1() -> Any:
     return input_dict, target_dict
 
 
+@pytest.mark.long
 def test_converter(case1) -> None:  # type: ignore
     input_dict, target_dict_gt = case1
 

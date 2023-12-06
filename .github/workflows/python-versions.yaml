@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test_installation:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,11 +21,11 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install OML
+    - name: Installation
       run: |
         python -m pip install --upgrade pip
         python -m pip install --upgrade pytest>=7.2
         python3 -m pip install -e .
-    - name: Run short tests
+    - name: Running short tests
       run: |
         make run_short_tests

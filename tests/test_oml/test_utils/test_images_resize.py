@@ -13,6 +13,7 @@ from oml.utils.images.images_resize import (
 )
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("constructor,allclose_func", [(np.array, np.allclose), (torch.tensor, torch.allclose)])
 def test_karesize_bboxes(constructor: Type, allclose_func: Callable[[Any], Any]) -> None:  # type: ignore
     min_dim = 200
@@ -39,6 +40,7 @@ def test_karesize_bboxes(constructor: Type, allclose_func: Callable[[Any], Any])
         assert allclose_func(prev_bboxes, raw_bboxes, rtol=1e-3)  # type: ignore
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("framework,ndim", [("np", 2), ("np", 3), ("torch", 2), ("torch", 2), ("torch", 4)])
 def test_karesize_images(framework: str, ndim: int) -> None:
     min_dim = 200
