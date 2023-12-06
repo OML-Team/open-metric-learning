@@ -5,7 +5,6 @@ import numpy as np
 import PIL
 import torch
 from PIL.Image import Image as TPILImage
-from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
 from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
@@ -182,6 +181,10 @@ class ViTExtractor(IExtractor):
 def vis_vit(
     vit: ViTExtractor, image: Union[TPILImage, np.ndarray], mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> np.ndarray:
+    from pytorch_grad_cam.utils.image import (
+        show_cam_on_image,  # this is the optional dependency
+    )
+
     need_to_convert = not isinstance(image, np.ndarray)
 
     if need_to_convert:
