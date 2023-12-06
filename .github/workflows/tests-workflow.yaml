@@ -1,4 +1,4 @@
-name: Tests
+name: Tests in Docker
 
 
 on:
@@ -21,10 +21,10 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Build OML
+    - name: Building docker
       run: |
         make docker_build RUNTIME=cpu
-    - name: Short Tests OML
+    - name: Running short tests
       run: |
         make docker_short_tests RUNTIME=cpu WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}
 
@@ -34,9 +34,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Build OML
+    - name: Building docker
       run: |
         make docker_build RUNTIME=cpu
-    - name: All Tests OML
+    - name: Running all tests
       run: |
         make docker_all_tests RUNTIME=cpu WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}
