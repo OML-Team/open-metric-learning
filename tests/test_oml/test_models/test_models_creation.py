@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Any, Dict
 
@@ -11,6 +12,7 @@ from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
 from oml.models.vit_unicom.extractor import ViTUnicomExtractor
+from oml.registry import EXTRACTORS_REGISTRY
 
 SKIP_LARGE_CKPT = True
 LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152"]
@@ -47,20 +49,20 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
     assert torch.allclose(features1, features2)
 
 
-# todo  # don't execute this test in the whole matrix of python versions
-# @pytest.mark.long
-# @pytest.mark.parametrize("constructor", list(EXTRACTORS_REGISTRY.values()))
-# def test_checkpoints_from_zoo(constructor: IExtractor) -> None:
-#     im = torch.randn(1, 3, 224, 224)
-#
-#     for weights in constructor.pretrained_models.keys():
-#         if any([nm in weights for nm in LARGE_CKPT_NAMES]) and SKIP_LARGE_CKPT:
-#             continue
-#
-#         extractor = constructor.from_pretrained(weights=weights).eval()
-#         extractor.extract(im)
-#
-#     assert True
+@pytest.mark.long
+@pytest.mark.skipif(os.getenv("DOWNLOAD_ZOO_IN_TESTS") != "yes", reason="It's a traffic consuming test.")
+@pytest.mark.parametrize("constructor", list(EXTRACTORS_REGISTRY.values()))
+def test_checkpoints_from_zoo(constructor: IExtractor) -> None:
+    im = torch.randn(1, 3, 224, 224)
+
+    for weights in constructor.pretrained_models.keys():
+        if any([nm in weights for nm in LARGE_CKPT_NAMES]) and SKIP_LARGE_CKPT:
+            continue
+
+        extractor = constructor.from_pretrained(weights=weights).eval()
+        extractor.extract(im)
+
+    assert True
 
 
 @pytest.mark.parametrize(
