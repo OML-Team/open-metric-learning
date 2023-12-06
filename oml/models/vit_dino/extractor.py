@@ -181,9 +181,8 @@ class ViTExtractor(IExtractor):
 def vis_vit(
     vit: ViTExtractor, image: Union[TPILImage, np.ndarray], mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> np.ndarray:
-    from pytorch_grad_cam.utils.image import (
-        show_cam_on_image,  # this is the optional dependency
-    )
+    # this is the optional dependency
+    from pytorch_grad_cam.utils.image import show_cam_on_image
 
     need_to_convert = not isinstance(image, np.ndarray)
 
