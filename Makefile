@@ -82,7 +82,7 @@ test_converters:
 run_precommit:
 	pre-commit install && pre-commit run -a
 
-# ====================================== INFRASTRUCTURE =============================
+# ====================================== DOCKER =============================
 
 .PHONY: docker_build
 docker_build:
@@ -95,6 +95,8 @@ docker_all_tests:
 .PHONY: docker_short_tests
 docker_short_tests:
 	docker run --env WANDB_API_KEY=$(WANDB_API_KEY) --env NEPTUNE_API_TOKEN=$(NEPTUNE_API_TOKEN) -t $(IMAGE_NAME) make run_short_tests
+
+# ====================================== PIP =============================
 
 .PHONY: build_wheel
 build_wheel:
