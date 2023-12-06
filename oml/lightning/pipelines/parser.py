@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import torch
-import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
 from pytorch_lightning.loggers.logger import Logger
@@ -114,23 +113,25 @@ def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
 
 
 def upload_files_to_wandb_cloud(logger: WandbLogger, cfg: TCfg) -> None:
+    from wandb import Artifact  # this is the optional dependency
+
     assert isinstance(logger, WandbLogger)
 
     # log transforms as files
     keys_files = save_transforms_as_files(cfg)
     if keys_files:
-        transforms = wandb.Artifact("transforms", type="transforms")
+        transforms = Artifact("transforms", type="transforms")
         for _, transforms_file in keys_files:
             transforms.add_file(transforms_file)
         logger.experiment.log_artifact(transforms)
 
     # log source code
-    code = wandb.Artifact("source_code", type="code")
+    code = Artifact("source_code", type="code")
     code.add_dir(OML_PATH, name="oml")
     logger.experiment.log_artifact(code)
 
     # log dataset
-    dataset = wandb.Artifact("dataset", type="dataset")
+    dataset = Artifact("dataset", type="dataset")
     dataset.add_file(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
     logger.experiment.log_artifact(dataset)
 
