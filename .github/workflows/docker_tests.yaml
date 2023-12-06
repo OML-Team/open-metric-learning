@@ -6,6 +6,14 @@ on:
       - main
 
 jobs:
+  skip:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Skip
+        run: |
+          echo "Skip docker tests for pull requests"
+
   all_tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
