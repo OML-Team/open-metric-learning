@@ -47,7 +47,7 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
     assert torch.allclose(features1, features2)
 
 
-# todo
+# todo  # don't execute this test in the whole matrix of python versions
 # @pytest.mark.long
 # @pytest.mark.parametrize("constructor", list(EXTRACTORS_REGISTRY.values()))
 # def test_checkpoints_from_zoo(constructor: IExtractor) -> None:
