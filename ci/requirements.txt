@@ -15,3 +15,7 @@ wandb>=0.15.4
 python-dotenv>=0.17.0
 validators>=0.18.0
 gdown>=4.0
+
+grad-cam>=1.4.6
+jupyter>=1.0.0
+tensorboard
