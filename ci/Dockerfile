@@ -18,8 +18,8 @@ RUN apt-get -y install git wget cmake openssh-server \
     libglib2.0-0 libgtk2.0-dev libxrender-dev libjpeg-dev zlib1g-dev
 
 ### Python
-RUN apt install -y python3.8-dev python3.8-distutils python3-pip
-RUN ln -sf /usr/bin/python3.8 /usr/bin/python && ln -sf /usr/bin/python3.8 /usr/bin/python3
+RUN apt install -y python3.9-dev python3.9-distutils python3-pip
+RUN ln -sf /usr/bin/python3.9 /usr/bin/python && ln -sf /usr/bin/python3.9 /usr/bin/python3
 ENV LD_LIBRARY_PATH "/usr/local/lib:$LD_LIBRARY_PATH"
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
