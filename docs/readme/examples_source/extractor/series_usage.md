@@ -1,4 +1,4 @@
-Main idea: The series of images overestimates the metric values (detail explanation below).\
+**Main idea**: The series of images overestimates the metric values (detail explanation below).\
 To overcome this you can use our "sequence" functionality.
 To use that you need add `sequence` column to [oml_dataset](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html) with the following format:
 
