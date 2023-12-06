@@ -5,8 +5,6 @@ import numpy as np
 import PIL.Image
 import torch
 from PIL.Image import Image as TPILImage
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet152
 
@@ -174,6 +172,10 @@ class ResnetExtractor(IExtractor):
         .. _GradCam: https://arxiv.org/abs/1610.02391
 
         """
+        # this is the optional dependency
+        from pytorch_grad_cam import GradCAM
+        from pytorch_grad_cam.utils.image import show_cam_on_image
+
         if self.remove_fc:
             raise ValueError("This method does not work if there is no FC layer in the model.")
 
