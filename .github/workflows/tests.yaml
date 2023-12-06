@@ -25,7 +25,7 @@ jobs:
     - name: Installation
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install -r requirements_tests.txt
+        python3 -m pip install -r ci/requirements_tests.txt
         python3 -m pip install -e .
     - name: Running short tests
       run: |
@@ -47,7 +47,7 @@ jobs:
     - name: Installation
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install -r requirements_tests.txt
+        python3 -m pip install -r ci/requirements_tests.txt
         python3 -m pip install -e .
     - name: Running all tests
       run: |
