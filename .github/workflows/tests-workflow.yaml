@@ -24,7 +24,7 @@ jobs:
     - name: Build OML
       run: |
         make docker_build RUNTIME=cpu
-    - name: Short Tests OML
+    - name: Short tests in Docker
       run: |
         make docker_short_tests RUNTIME=cpu WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}
 
@@ -37,6 +37,6 @@ jobs:
     - name: Build OML
       run: |
         make docker_build RUNTIME=cpu
-    - name: All Tests OML
+    - name: All tests in Docker
       run: |
         make docker_all_tests RUNTIME=cpu WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}

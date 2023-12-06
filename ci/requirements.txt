@@ -2,6 +2,7 @@ numpy>=1.21
 torch>=2.0
 pytorch-lightning>=2.0
 torchvision
+tensorboard
 albumentations>=1.0
 opencv-python>=4.1.1
 pillow>=8.2
