@@ -1,4 +1,4 @@
-name: Tests
+name: Tests in docker [python 3.8]
 
 
 on:
