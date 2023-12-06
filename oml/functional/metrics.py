@@ -66,7 +66,7 @@ def calc_retrieval_metrics(
         for k in top_k_arg:
             if k > gallery_sz:
                 warnings.warn(
-                    f"Your desired k={k} more than gallery_size={gallery_sz}."
+                    f"Your desired k={k} more than gallery_size={gallery_sz}. "
                     f"We'll calculate metrics with k limited by the gallery size."
                 )
 
