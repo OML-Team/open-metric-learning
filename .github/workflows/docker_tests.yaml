@@ -1,19 +1,14 @@
 name: Tests in Docker (3.8)
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
 
 jobs:
-  skip:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Skip
-        run: |
-          echo "Skip docker tests for pull requests"
-
   all_tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
