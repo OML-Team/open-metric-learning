@@ -169,6 +169,10 @@ def calc_mask_to_ignore(is_query: Tensor, is_gallery: Tensor, sequence_ids: Opti
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
+    if isinstance(sequence_ids, list):
+        # cast sequence to numpy array (handling cases when sequence_ids is a list of objects)
+        sequence_ids = np.array(sequence_ids)
+
     if sequence_ids is not None:
         assert sequence_ids.ndim == 1
         assert len(is_gallery) == len(sequence_ids)
@@ -182,7 +186,8 @@ def calc_mask_to_ignore(is_query: Tensor, is_gallery: Tensor, sequence_ids: Opti
     if sequence_ids is not None:
         # this mask ignores gallery samples taken from the same sequence as a given query
         mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
-        mask_to_ignore = torch.logical_or(mask_to_ignore, mask_to_ignore_seq)
+        mask_to_ignore = np.logical_or(mask_to_ignore, mask_to_ignore_seq)
+        mask_to_ignore = torch.tensor(mask_to_ignore, dtype=torch.bool)
 
     return mask_to_ignore
 
