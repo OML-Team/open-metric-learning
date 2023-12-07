@@ -22,7 +22,7 @@ from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
-from oml.utils.misc import dictconfig_to_dict, load_dotenv, set_global_seed
+from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 
 def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
@@ -66,10 +66,6 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     For more details look at ``pipelines/features_extraction/README.md``
 
     """
-    # Here we try to load NEPTUNE_API_TOKEN from .env file
-    # You can also set it up via `export NEPTUNE_API_TOKEN=...`
-    load_dotenv()
-
     set_global_seed(cfg["seed"])
 
     cfg = dictconfig_to_dict(cfg)
