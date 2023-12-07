@@ -18,7 +18,7 @@ def get_numpy_image() -> np.ndarray:
     return np.random.randint(0, 256, size=IMAGE_SIZE, dtype=np.uint8)
 
 
-@pytest.mark.long
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize(
     "draw_function",
     [
@@ -44,7 +44,7 @@ def test_visualisation(draw_function: Any, image: Union[np.ndarray, Image.Image]
     assert image_modified.shape == IMAGE_SIZE
 
 
-@pytest.mark.long
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize(
     "draw_function",
     [

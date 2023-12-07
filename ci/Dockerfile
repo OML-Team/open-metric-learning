@@ -29,7 +29,9 @@ RUN pip install Cython==0.29.28
 ### Python libs
 COPY ci/requirements.txt requirements.txt
 COPY ci/requirements_tests.txt requirements_tests.txt
+COPY ci/requirements_optional.txt requirements_optional.txt
 RUN pip install --no-cache-dir -r requirements.txt ${EXTRA_INDEX}
+RUN pip install --no-cache-dir -r requirements_optional.txt
 RUN pip install --no-cache-dir -r requirements_tests.txt
 
 WORKDIR /oml-lib
