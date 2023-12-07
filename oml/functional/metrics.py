@@ -165,13 +165,11 @@ def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor
     return gt_mask
 
 
-def calc_mask_to_ignore(is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Tensor] = None) -> Tensor:
+def calc_mask_to_ignore(
+    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.array]] = None
+) -> Tensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
-
-    if isinstance(sequence_ids, list):
-        # cast sequence to numpy array (handling cases when sequence_ids is a list of objects)
-        sequence_ids = np.array(sequence_ids)
 
     if sequence_ids is not None:
         assert sequence_ids.ndim == 1
