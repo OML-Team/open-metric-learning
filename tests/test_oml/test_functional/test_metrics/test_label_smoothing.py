@@ -4,6 +4,7 @@ import torch
 from oml.functional.label_smoothing import label_smoothing
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     ["num_classes", "ls", "expected_result"],
     [
@@ -18,6 +19,7 @@ def test_label_smoothing(num_classes: int, ls: float, expected_result: torch.Ten
     assert torch.allclose(expected_result, smoothed, atol=1e-5)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     ["num_classes", "ls", "expected_result", "l2c"],
     [

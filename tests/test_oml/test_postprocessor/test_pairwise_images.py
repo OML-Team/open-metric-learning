@@ -40,6 +40,7 @@ def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[T
     return distances, queries, galleries
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("top_n", [2, 5, 100])
 def test_trivial_processing_does_not_change_distances_order(top_n: int) -> None:
     extractor = ResnetExtractor(weights=None, arch="resnet18", normalise_features=True, gem_p=None, remove_fc=True)

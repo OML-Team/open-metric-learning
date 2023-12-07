@@ -31,6 +31,7 @@ def distmats_and_labels() -> List[Tuple[Tensor, List[int]]]:
     return list(zip(distmats, labels_list))
 
 
+@pytest.mark.long
 def test_hard_miner_from_features(features_and_labels) -> None:  # type: ignore
     """
     Args:
@@ -47,6 +48,7 @@ def test_hard_miner_from_features(features_and_labels) -> None:  # type: ignore
         assert len(ids_a) == len(labels)
 
 
+@pytest.mark.long
 def test_hard_miner_from_dist(distmats_and_labels) -> None:  # type: ignore
     """
     Args:
@@ -72,6 +74,7 @@ def test_hard_miner_from_dist(distmats_and_labels) -> None:  # type: ignore
         assert len(labels) == len(ids_a)
 
 
+@pytest.mark.long
 def test_hard_miner_manual() -> None:
     """
     Test on manual example.

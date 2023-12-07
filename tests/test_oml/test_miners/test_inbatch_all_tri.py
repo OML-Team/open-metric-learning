@@ -2,6 +2,7 @@
 import sys
 from typing import List, Tuple
 
+import pytest
 import torch
 
 from oml.miners.inbatch_all_tri import AllTripletsMiner, get_available_triplets_naive
@@ -11,6 +12,7 @@ from tests.test_oml.test_miners.shared_checkers import (
 )
 
 
+@pytest.mark.long
 def test_all_triplets_miner(features_and_labels: List[Tuple[torch.Tensor, List[int]]]) -> None:  # type: ignore
     """
     Args:
@@ -28,6 +30,7 @@ def test_all_triplets_miner(features_and_labels: List[Tuple[torch.Tensor, List[i
         check_triplets_consistency(ids_anchor=ids_a, ids_pos=ids_p, ids_neg=ids_n, labels=labels)
 
 
+@pytest.mark.long
 def test_compare_all_triplets_miner_with_naive_version(
     features_and_labels: List[Tuple[torch.Tensor, List[int]]]
 ) -> None:

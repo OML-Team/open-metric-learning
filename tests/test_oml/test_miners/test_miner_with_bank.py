@@ -25,6 +25,7 @@ def get_features_and_labels(
     return list(zip(features_out, labels_out))
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("bank_size_in_batches", [1, 3])
 @pytest.mark.parametrize("num_batches", [7, 10])
 @pytest.mark.parametrize("n_labels", [2, 5])
@@ -96,6 +97,7 @@ def test_top_miner_with_bank(
         assert len_triplet_bank == counter_same_triplets
 
 
+@pytest.mark.long
 def test_logs() -> None:
     ids_a = [0, 3, 6]
     ids_p = [1, 4, 7]
