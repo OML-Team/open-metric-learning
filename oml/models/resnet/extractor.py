@@ -127,6 +127,13 @@ class ResnetExtractor(IExtractor):
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
         state_dict = remove_criterion_in_state_dict(state_dict)  # type: ignore
         state_dict = remove_prefix_from_state_dict(state_dict, "layer4.")  # type: ignore
+
+        if self.remove_fc:
+            state_dict.pop("fc.weight", None)
+            state_dict.pop("fc.bias", None)
+            if arch != "resnet50_projector":
+                self.model.fc = nn.Identity()
+
         self.model.load_state_dict(state_dict, strict=True)
 
         if self.remove_fc:

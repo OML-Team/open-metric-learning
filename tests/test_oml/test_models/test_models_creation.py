@@ -26,6 +26,7 @@ vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits
         (ViTExtractor, vit_args),
         (ViTCLIPExtractor, {"normalise_features": False, "arch": "vitb32_224"}),
         (ViTUnicomExtractor, {"normalise_features": False, "arch": "vitb32_unicom"}),
+        (ResnetExtractor, {"normalise_features": True, "gem_p": 7.0, "remove_fc": True, "arch": "resnet50"}),
         (ResnetExtractor, {"normalise_features": True, "gem_p": 7.0, "remove_fc": False, "arch": "resnet50"}),
         (ExtractorWithMLP, {"extractor": ViTExtractor(None, **vit_args), "mlp_features": [128]}),  # type: ignore
     ],
