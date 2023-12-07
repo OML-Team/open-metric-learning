@@ -149,6 +149,7 @@ def check_category_balance_batch_sampler_epoch(
     assert len(sampler) == epoch_size
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "sampler_class,sampler_kwargs",
     (
@@ -177,6 +178,7 @@ def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwar
     assert True
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "fixture_name,resample_labels",
     (
@@ -212,6 +214,7 @@ def test_category_balance_batch_sampler(
     assert True
 
 
+@pytest.mark.long
 def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_sampler: TLabelsWithMapping) -> None:
     """
     Check that sampling with categories behaves the same in case
@@ -240,6 +243,7 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
     assert True
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "fixture_name,epoch_size",
     (
@@ -273,6 +277,7 @@ def test_distinct_category_balance_batch_sampler(
     assert True
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "sampler_constructor",
     [CategoryBalanceSampler, partial(DistinctCategoryBalanceSampler, epoch_size=50)],

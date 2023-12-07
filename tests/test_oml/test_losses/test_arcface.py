@@ -106,6 +106,7 @@ def test_arcface_trainable_ls_dataset(dataset2: Tuple[Tuple[torch.Tensor, torch.
     check_arcface_trainable(X, y)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("label_smoothing", [0.1, 0.2, 0.5])
 def test_label_smoothing_working(
     label_smoothing: float, dataset2: Tuple[Tuple[torch.Tensor, torch.Tensor], Dict[int, int]]
@@ -131,6 +132,7 @@ def test_label_smoothing_working(
     assert l0 > l1
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("label_smoothing", [0.1, 0.5])
 def test_label_smoothing_fuzzy(
     label_smoothing: float, dataset3: Tuple[Tuple[torch.Tensor, torch.Tensor], Dict[int, int]]
@@ -148,12 +150,14 @@ def test_label_smoothing_fuzzy(
     assert loss(X, y).item() > loss_ls(X, y).item()
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("label_smoothing", [-1, 1])
 def test_label_smoothing_raises_bad_ls(label_smoothing: float) -> None:
     with pytest.raises(AssertionError):
         ArcFaceLoss(1, 1, smoothing_epsilon=label_smoothing, label2category={1: 1})
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("seed", [0, 1])
 @pytest.mark.parametrize("m,s", [(0.4, 64), (0.5, 64), (0.5, 48)])
 def test_arface(m: float, s: float, seed: int) -> None:
