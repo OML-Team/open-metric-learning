@@ -21,6 +21,7 @@ def get_labels(n_cls: int, sz: int) -> Tensor:
     return tensor(labels)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("n_cls,cls_sz,n_labels,n_instances", [[50, 10, 10, 4]])
 @pytest.mark.parametrize("bank_sz,bank_k", [[5, 3], [20, 5], [5, 1]])
 def test_mining_with_memory(

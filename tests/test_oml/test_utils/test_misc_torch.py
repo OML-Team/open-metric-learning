@@ -96,6 +96,7 @@ def test_drop_duplicates_by_ids(drop_duplicates_by_ids_test_data) -> None:  # ty
     assert torch.allclose(data_expected, data_calculated)
 
 
+@pytest.mark.long
 def test_pca() -> None:
     embeddings = 1.0 / (2 + torch.arange(10 * 6, dtype=torch.float).view(10, 6))
     sklearn_singular_values = torch.tensor(
@@ -143,6 +144,7 @@ def test_pca() -> None:
     assert torch.all(torch.isclose(sklearn_embeddings_transformed, embeddings_, atol=1.0e-4))
 
 
+@pytest.mark.long
 def test_pca_inverse_transform() -> None:
     embeddings = torch.eye(7, 6, dtype=torch.float)
     embeddings = torch.cat((embeddings, embeddings), dim=1)
@@ -152,6 +154,7 @@ def test_pca_inverse_transform() -> None:
     assert torch.all(torch.isclose(embeddings, embeddings_it, atol=1.0e-6))
 
 
+@pytest.mark.long
 def test_pca_components_orthogonality() -> None:
     embeddings = torch.eye(300, 2, dtype=torch.float)
     embeddings = torch.cat((embeddings, embeddings), dim=1)

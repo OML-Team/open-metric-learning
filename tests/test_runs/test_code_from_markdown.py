@@ -20,6 +20,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     return code_block
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "fname,start_indicator,end_indicator",
     [

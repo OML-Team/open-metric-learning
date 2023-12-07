@@ -9,6 +9,7 @@ from oml.miners.inbatch_hard_cluster import HardClusterMiner
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     ["labels", "expected"],
     [
@@ -51,6 +52,7 @@ def test_cluster_get_labels_mask(labels: List[int], expected: torch.Tensor) -> N
     assert (labels_mask == expected).all()
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     ["features", "expected"],
     [
@@ -90,6 +92,7 @@ def test_cluster_count_intra_label_distances(features: torch.Tensor, expected: t
 
 
 @pytest.mark.skip(reason="it started failing after updating to 2.0. An additional investigation is needed.")  # todo
+@pytest.mark.long
 @pytest.mark.parametrize(
     ["mean_vectors", "expected"],
     [
@@ -126,6 +129,7 @@ def test_cluster_count_inter_label_distances(mean_vectors, expected) -> None:  #
     assert (distances == expected).all()
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     ["embed_dim", "labels", "expected_shape"],
     [
@@ -155,6 +159,7 @@ def test_cluster_sample_shapes(embed_dim: int, labels: TLabels, expected_shape: 
     assert negative.shape == neg_shape
 
 
+@pytest.mark.long
 def test_triplet_cluster_edge_case() -> None:
     """
     Check an edge case of trivial samples for labels:

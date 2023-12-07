@@ -15,6 +15,7 @@ from tests.test_oml.test_miners.shared_checkers import check_triplets_consistenc
 TFeaturesAndLabels = Tuple[torch.Tensor, List[int]]
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("n_positive", [1, 3, (2, 4)])
 @pytest.mark.parametrize("n_negative", [1, 5, (3, 6)])
 def test_nhard_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union[Tuple[int, int], int]) -> None:
@@ -36,6 +37,7 @@ def test_nhard_miner(n_positive: Union[Tuple[int, int], int], n_negative: Union[
         check_miner(miner, features_and_labels)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "miner,n_hard_miner",
     [
@@ -62,6 +64,7 @@ def test_all_and_hard_are_specific_cases(
         assert set(triplets_from_miner) == set(triplets_from_nhard_miner)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize("n_positive,n_negative", [((2, 4), (2, 5)), ((1, 2), (1, 2))])
 def test_expected_batch_size(n_positive: Tuple[int, int], n_negative: Tuple[int, int]) -> None:
     miner = NHardTripletsMiner(n_positive=n_positive, n_negative=n_negative)

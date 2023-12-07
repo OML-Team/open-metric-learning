@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Any, Dict
 
@@ -11,7 +12,7 @@ from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
 from oml.models.vit_unicom.extractor import ViTUnicomExtractor
-from oml.registry.models import EXTRACTORS_REGISTRY
+from oml.registry import EXTRACTORS_REGISTRY
 
 SKIP_LARGE_CKPT = True
 LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152"]
@@ -49,6 +50,7 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
 
 
 @pytest.mark.long
+@pytest.mark.skipif(os.getenv("DOWNLOAD_ZOO_IN_TESTS") != "yes", reason="It's a traffic consuming test.")
 @pytest.mark.parametrize("constructor", list(EXTRACTORS_REGISTRY.values()))
 def test_checkpoints_from_zoo(constructor: IExtractor) -> None:
     im = torch.randn(1, 3, 224, 224)

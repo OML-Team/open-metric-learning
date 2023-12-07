@@ -1,0 +1,58 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  short_tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Installation
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r ci/requirements_tests.txt
+        python3 -m pip install -e .
+    - name: Running short tests
+      run: |
+        make run_short_tests
+
+  all_tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Installation
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r ci/requirements_tests.txt
+        python3 -m pip install -e .
+    - name: Running all tests
+      run: |
+        if [ "${{ matrix.python-version }}" == "3.8" ]; then
+          make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }} DOWNLOAD_ZOO_IN_TESTS=yes
+        else
+          make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}
+        fi
