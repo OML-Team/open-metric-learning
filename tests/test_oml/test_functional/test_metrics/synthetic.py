@@ -76,7 +76,7 @@ def generate_retrieval_case(
             # we guarantee that for each query there is at least one gallery which is not equal to query
             if sum(is_query_for_label) == 1:
                 # set another available idx as gallery
-                guaranted_galleries = random.sample(set(range(num_samples_for_label)) - {guaranted_query}, k=1)
+                guaranted_galleries = random.sample(list(set(range(num_samples_for_label)) - {guaranted_query}), k=1)
             else:
                 # We have at least 2 queries in this section
                 # To calculate metric for each query it's necessary to have minimum 1 gallery with another idx.

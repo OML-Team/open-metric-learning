@@ -14,7 +14,7 @@ jobs:
     if: github.event_name == 'pull_request'
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -36,7 +36,7 @@ jobs:
     if: github.event_name == 'push'
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
     - name: Checkout
       uses: actions/checkout@v3

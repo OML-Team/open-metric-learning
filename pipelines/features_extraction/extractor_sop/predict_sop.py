@@ -1,11 +1,11 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.const import HYDRA_VERSION
+from oml.const import HYDRA_BEHAVIOUR
 from oml.lightning.pipelines.predict import extractor_prediction_pipeline
 
 
-@hydra.main(config_path=".", config_name="predict_sop.yaml", version_base=HYDRA_VERSION)
+@hydra.main(config_path=".", config_name="predict_sop.yaml", version_base=HYDRA_BEHAVIOUR)
 def main_hydra(cfg: DictConfig) -> None:
     extractor_prediction_pipeline(cfg)
 

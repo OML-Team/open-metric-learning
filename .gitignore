@@ -14,6 +14,8 @@ docs/build
 tmp.py
 tmp.ipynb
 *outputs*
+*.hydra*
+*predictions.json*
 
 # __________________________________
 
