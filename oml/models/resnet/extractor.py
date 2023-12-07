@@ -124,13 +124,15 @@ class ResnetExtractor(IExtractor):
         else:
             state_dict = torch.load(weights, map_location="cpu")
 
+        if self.remove_fc:
+            state_dict.pop("fc", None)
+            self.model.fc = nn.Identity()
+
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
         state_dict = remove_criterion_in_state_dict(state_dict)  # type: ignore
         state_dict = remove_prefix_from_state_dict(state_dict, "layer4.")  # type: ignore
-        self.model.load_state_dict(state_dict, strict=True)
 
-        if self.remove_fc:
-            self.model.fc = nn.Identity()
+        self.model.load_state_dict(state_dict, strict=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
