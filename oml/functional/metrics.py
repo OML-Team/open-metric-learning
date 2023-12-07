@@ -166,7 +166,7 @@ def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor
 
 
 def calc_mask_to_ignore(
-    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.array]] = None
+    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
 ) -> Tensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
@@ -184,7 +184,7 @@ def calc_mask_to_ignore(
     if sequence_ids is not None:
         # this mask ignores gallery samples taken from the same sequence as a given query
         mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
-        mask_to_ignore = np.logical_or(mask_to_ignore, mask_to_ignore_seq)
+        mask_to_ignore = np.logical_or(mask_to_ignore, mask_to_ignore_seq)  # numpy casts tensor to numpy array
         mask_to_ignore = torch.tensor(mask_to_ignore, dtype=torch.bool)
 
     return mask_to_ignore

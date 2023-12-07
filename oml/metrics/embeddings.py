@@ -172,7 +172,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         sequence_ids = self.acc.storage[self.sequence_key] if self.sequence_key is not None else None
 
         if isinstance(sequence_ids, list):
-            # cast sequence to numpy array (handling cases when sequence_ids is a list of objects)
+            # if sequence ids are strings we get list here
             sequence_ids = np.array(sequence_ids)
 
         mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery, sequence_ids=sequence_ids)
