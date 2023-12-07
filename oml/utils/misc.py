@@ -3,7 +3,6 @@ import os
 import random
 from typing import Any, Dict, Hashable, Iterable, List, Sequence, Tuple, Union
 
-import dotenv
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -70,6 +69,8 @@ def flatten_dict(
 
 
 def load_dotenv() -> None:
+    import dotenv  # this is the optional dependency
+
     dotenv.load_dotenv(DOTENV_PATH)
 
 

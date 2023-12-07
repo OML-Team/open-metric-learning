@@ -35,12 +35,7 @@ from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
-from oml.utils.misc import (
-    dictconfig_to_dict,
-    flatten_dict,
-    load_dotenv,
-    set_global_seed,
-)
+from oml.utils.misc import dictconfig_to_dict, flatten_dict, set_global_seed
 
 
 def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
@@ -119,8 +114,6 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     For more details look at ``pipelines/postprocessing/pairwise_postprocessing/README.md``
 
     """
-    load_dotenv()
-
     set_global_seed(cfg["seed"])
 
     cfg = dictconfig_to_dict(cfg)
