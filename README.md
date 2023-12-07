@@ -455,7 +455,7 @@ features_queries = inference_on_images(extractor, paths=queries, transform=trans
 features_galleries = inference_on_images(extractor, paths=galleries, transform=transform, **args)
 
 # Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
-use_knn = True
+use_knn = False
 top_k = 3
 
 if use_knn:

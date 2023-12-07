@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import torch
-import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
 from pytorch_lightning.loggers.logger import Logger
@@ -114,6 +113,9 @@ def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
 
 
 def upload_files_to_wandb_cloud(logger: WandbLogger, cfg: TCfg) -> None:
+    # this is the optional dependency
+    import wandb
+
     assert isinstance(logger, WandbLogger)
 
     # log transforms as files

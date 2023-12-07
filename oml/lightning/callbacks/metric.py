@@ -4,7 +4,6 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
-from neptune.new.types import File
 from pytorch_lightning import Callback
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
@@ -106,6 +105,8 @@ class MetricValCallback(Callback):
         for fig, metric_log_str in zip(*self.metric.visualize()):
             log_str = f"{LOG_IMAGE_FOLDER}/{metric_log_str}"
             if isinstance(pl_module.logger, NeptuneLogger):
+                from neptune.new.types import File  # this is the optional dependency
+
                 pl_module.logger.experiment[log_str].log(File.as_image(fig))
             elif isinstance(pl_module.logger, WandbLogger):
                 fig_img = figure_to_nparray(fig)

@@ -65,7 +65,7 @@ run_all_tests: download_mock_dataset wandb_login
 
 .PHONY: run_short_tests
 run_short_tests: download_mock_dataset
-	export PYTORCH_ENABLE_MPS_FALLBACK=1; pytest --disable-warnings -sv -m "not long" tests
+	export PYTORCH_ENABLE_MPS_FALLBACK=1; pytest --disable-warnings -sv -m "not long and not needs_optional_dependency" tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 
 .PHONY: test_converters
