@@ -1,11 +1,11 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.const import HYDRA_VERSION
+from oml.const import HYDRA_BEHAVIOUR
 from oml.lightning.pipelines.validate import extractor_validation_pipeline
 
 
-@hydra.main(config_path=".", config_name="postprocessor_validate.yaml", version_base=HYDRA_VERSION)
+@hydra.main(config_path=".", config_name="postprocessor_validate.yaml", version_base=HYDRA_BEHAVIOUR)
 def main_hydra(cfg: DictConfig) -> None:
     extractor_validation_pipeline(cfg)
 

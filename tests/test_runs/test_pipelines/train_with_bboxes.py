@@ -2,7 +2,7 @@ import hydra
 import torchvision.transforms as t
 from omegaconf import DictConfig
 
-from oml.const import HYDRA_VERSION, MOCK_DATASET_PATH
+from oml.const import HYDRA_BEHAVIOUR, MOCK_DATASET_PATH
 from oml.lightning.pipelines.train import extractor_training_pipeline
 from oml.registry.transforms import TRANSFORMS_REGISTRY
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -24,7 +24,7 @@ def get_custom_augs(im_size: int) -> t.Compose:
 TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs  # type: ignore
 
 
-@hydra.main(config_path="configs", config_name="train_with_bboxes.yaml", version_base=HYDRA_VERSION)
+@hydra.main(config_path="configs", config_name="train_with_bboxes.yaml", version_base=HYDRA_BEHAVIOUR)
 def main_hydra(cfg: DictConfig) -> None:
     cfg = dictconfig_to_dict(cfg)
     download_mock_dataset(MOCK_DATASET_PATH)
