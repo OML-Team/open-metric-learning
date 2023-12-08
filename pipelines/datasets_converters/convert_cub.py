@@ -65,7 +65,7 @@ def build_cub_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     df["x_2"] = (df["x"] + df["width"]).apply(int)  # right
     df["y_2"] = (df["y"] + df["height"]).apply(int)  # bot
     df["y_1"] = df["y"].apply(int)  # top
-    df["path"] = df["image_name"].apply(lambda x: dataset_root / "images" / x)
+    df["path"] = df["image_name"].apply(lambda x: Path("images") / x)
 
     df["split"] = "train"
     df["split"][df["is_training_image"] == 0] = "validation"

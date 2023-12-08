@@ -1,10 +1,14 @@
 ## Public datasets
 
-We've prepared converters into the required [format](https://open-metric-learning.readthedocs.io/en/latest/contents/datasets.html) for
-4 popular benchmarks used by researchers to evaluate metric learning models,
-see [metric learning leaderboard](https://paperswithcode.com/task/metric-learning).
+We've prepared 4 popular benchmarks used by researchers to evaluate metric learning models
+(see [metric learning leaderboard](https://paperswithcode.com/task/metric-learning))
+in OML's [format](https://open-metric-learning.readthedocs.io/en/latest/contents/datasets.html).
 
-First, you need to download a dataset and make sure that your files tree matches the expected one:
+Two steps are required:
+1. Download an original dataset.
+2. [Download](https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing) a prepared `df.csv` or `df_with_bboxes.csv`.
+
+After that, your dataset should look like this:
 
 <details>
 <summary>CARS 196</summary>
@@ -18,11 +22,7 @@ where each label has been split roughly in a 50-50 split.
 
 ```
 └── CARS196
-    ├── cars_test_annos_withlabels.mat
-    ├── devkit
-    │   ├── cars_meta.mat
-    │   ├── cars_train_annos.mat
-    │   └── ...
+    ├── df.csv or df_with_bboxes.csv
     ├── cars_train
     │   ├── 00001.jpg
     │   └── ...
@@ -45,10 +45,7 @@ The dataset contains 11,788 images of 200 labels belonging to birds,
 
 ```
 └── CUB_200_2011
-    ├── images.txt
-    ├── train_test_split.txt
-    ├── bounding_boxes.txt
-    ├── image_class_labels.txt
+    ├── df.csv or df_with_bboxes.csv
     └── images
         ├── 001.Black_footed_Albatross
         │   ├── Black_Footed_Albatross_0001_796111.jpg
@@ -74,8 +71,7 @@ The dataset contains 52,712 images for 7,982 of clothing items.
 
 ```
 └── DeepFashion_InShop
-    ├── list_eval_partition.txt
-    ├── list_bbox_inshop.txt
+    ├── df.csv or df_with_bboxes.csv
     └── img_highres
         ├── MEN
         │   └── ...
@@ -98,8 +94,7 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
 
 ```
 └── Stanford_Online_Products
-    ├── Ebay_train.txt
-    ├── Ebay_test.txt
+    ├── df.csv
     ├── bicycle_final
     │   ├── 111085122871_0.JPG
     │   └── ...
@@ -109,19 +104,6 @@ are split for training and the other 11,316 (60,502 images) labels are used for 
 ```
 </p>
 </details>
-
-After a dataset is ready, simply run the converter. It will create `df.csv` if you passed
-`--no-bboxes` parameter or `df_with_bboxes.csv` otherwise in your dataset folder.
-
-```shell
-python convert_<dataset>.py --dataset_root=/path/to/dataset
-# produces /path/to/dataset/df.csv
-```
-or
-```shell
-python convert_<dataset>.py --dataset_root=/path/to/dataset --no_bboxes
-# produces /path/to/dataset/df_with_bboxes.csv
-```
 
 Note, you can find our pretrained checkpoints for these datasets in the
 [Models zoo](https://github.com/OML-Team/open-metric-learning#zoo).
