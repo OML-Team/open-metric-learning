@@ -22,12 +22,11 @@ Optional columns:
 * ``category`` - category which groups sets of similar labels (like ``dresses``, or ``furniture``).
 * ``x_1``, ``x_2``, ``y_1``, ``y_2`` - integers, the format is ``left``, ``right``, ``top``, ``bot`` (``x_1`` and ``y_1`` must be less than ``x_2`` and ``y_2``).
   If only part of your images has bounding boxes, just fill the corresponding row with empty values.
-* ``sequence`` - comparable values to mark series of images in dataset, that will be excluded from recommendations on validation stage.
-  For example, if you have a video dataset, you can mark all frames from one video with the same value in this column.
-  Then, when you will validate your model, all frames from one video will be excluded from metric calculation.
+* ``sequence`` - ids of sequences of photos that may be useful to handle in Re-id tasks. Must be strings or integers. Take a look at the detailed `example <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-sequences-of-photos>`_.
+
 Check out the
 `examples <https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing>`_
-of valid dataset. You can also use helper to check if your dataset is in the right format:
+of dataframes. You can also use helper to check if your dataset is in the right format:
 
 .. code-block:: python
 
@@ -35,3 +34,4 @@ of valid dataset. You can also use helper to check if your dataset is in the rig
     from oml.utils.dataframe_format import check_retrieval_dataframe_format
 
     check_retrieval_dataframe_format(df=pd.read_csv("/path/to/table.csv"), dataset_root="/path/to/dataset/root/")
+

@@ -10,6 +10,8 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     with open(file) as f:
         text = f.readlines()
 
+    print(text)
+
     i = text.index(start_indicator) + 2
     j = text.index(end_indicator) - 1
 
@@ -26,6 +28,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     [
         ("extractor/train.md", "[comment]:vanilla-train-start\n", "[comment]:vanilla-train-end\n"),
         ("extractor/val.md", "[comment]:vanilla-validation-start\n", "[comment]:vanilla-validation-end\n"),
+        ("extractor/val_with_sequence.md", "[comment]:val-with-sequence-start\n", "[comment]:val-with-sequence-end\n"),
         ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
         ("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
         ("extractor/train_2loaders_val.md", "[comment]:lightning-2loaders-start\n", "[comment]:lightning-2loaders-end\n"), # noqa
