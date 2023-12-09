@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+    tags:
+      - all_tests
   push:
     branches:
       - main
@@ -11,7 +13,10 @@ on:
 jobs:
   short_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    # This job runs for pull requests that do not have the "all_tests" tag
+    if: >
+      github.event_name == 'pull_request' &&
+      github.ref != 'refs/tags/all_tests'
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
@@ -33,7 +38,10 @@ jobs:
 
   all_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    # This job runs for all push events and for pull requests with the "all_tests" tag
+    if: >
+      github.event_name == 'push' ||
+      github.ref == 'refs/tags/all_tests'
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
