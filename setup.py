@@ -29,7 +29,7 @@ setup(
     long_description_content_type="text/markdown",
     # general information
     name="open-metric-learning",
-    description="OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.",
+    description="OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings",
     keywords=[
         "data-science",
         "computer-vision",
