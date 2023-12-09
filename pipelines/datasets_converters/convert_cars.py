@@ -20,7 +20,7 @@ from oml.const import (
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
 
 
-def construct_df(annots: Dict[str, np.ndarray], meta: pd.DataFrame, path_to_imgs: str, root: Path) -> pd.DataFrame:
+def construct_df(annots: Dict[str, np.ndarray], meta: pd.DataFrame, path_to_imgs: str) -> pd.DataFrame:
     annots = pd.DataFrame(annots["annotations"][0])
     annots["bbox_x1"] = annots["bbox_x1"].astype(int)
     annots["bbox_y1"] = annots["bbox_y1"].astype(int)
@@ -31,7 +31,7 @@ def construct_df(annots: Dict[str, np.ndarray], meta: pd.DataFrame, path_to_imgs
     annots = annots.rename(columns={"bbox_x1": "x_1", "bbox_y1": "y_1", "bbox_x2": "x_2", "bbox_y2": "y_2"})
     annots = pd.merge(annots, meta, how="left", left_on="label", right_on="index").drop(["index"], axis=1)
 
-    annots["path"] = annots["fname"].apply(lambda x: root / path_to_imgs / x)
+    annots["path"] = annots["fname"].apply(lambda x: Path(path_to_imgs) / x)
     return annots
 
 
@@ -50,9 +50,9 @@ def build_cars196_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:
     meta["class_names"] = meta["class_names"].apply(lambda x: x[0])
 
     train_annots = io.loadmat(str(cars_train_annos))
-    train_annots = construct_df(train_annots, meta=meta, path_to_imgs="cars_train", root=dataset_root)
+    train_annots = construct_df(train_annots, meta=meta, path_to_imgs="cars_train")
     test_annots = io.loadmat(str(cars_test_annos_withlabels))
-    test_annots = construct_df(test_annots, meta=meta, path_to_imgs="cars_test", root=dataset_root)
+    test_annots = construct_df(test_annots, meta=meta, path_to_imgs="cars_test")
     train_annots["is_query"] = None
     train_annots["is_gallery"] = None
 

@@ -71,10 +71,13 @@ run_short_tests: download_mock_dataset
 .PHONY: test_converters
 test_converters:
 	clear
-	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_sop.py     --dataset_root  data/Stanford_Online_Products
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011 --no_bboxes
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cars.py    --dataset_root  data/CARS196
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cars.py    --dataset_root  data/CARS196 --no_bboxes
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop --no_bboxes
 
 .PHONY: run_precommit
 run_precommit:

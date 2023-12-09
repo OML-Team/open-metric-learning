@@ -45,8 +45,7 @@ def build_sop_df(dataset_root: Path) -> pd.DataFrame:
     test_data["is_gallery"] = True
 
     df = pd.concat((train_data, test_data))
-    df["path"] = df["path"].apply(lambda x: dataset_root / x)
-    df["category"] = df["path"].apply(lambda x: x.parent.name)
+    df["category"] = df["path"].apply(lambda x: Path(x).parent.name)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root)
 
