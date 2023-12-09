@@ -10,8 +10,6 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     with open(file) as f:
         text = f.readlines()
 
-    print(text)
-
     i = text.index(start_indicator) + 2
     j = text.index(end_indicator) - 1
 
