@@ -8,6 +8,7 @@ on:
       - completed
     branches:
       - main
+    workflow_dispatch:
 
 jobs:
   autotag:
@@ -21,7 +22,7 @@ jobs:
 
       - name: Autotag
         id: autotag
-        uses: butlerlogic/action-autotag@1.1.1
+        uses: butlerlogic/action-autotag@1.1.2
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
