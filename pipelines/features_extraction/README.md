@@ -1,7 +1,11 @@
 # Pipelines: features extraction
 
-If you are new to Pipelines idea, you can start with
-[general overview](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html).
+* [What are pipelines?](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html)
+* Introduction to metric learning:
+[English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
+[Russian](https://habr.com/ru/company/ods/blog/695380/) |
+[Chinese](https://blog.csdn.net/fermion0217/article/details/127932087)
+
 
 These particular pipelines allow you to train, validate and inference models that represent images as feature vectors.
 In this section we explain how the following pipelines work under the hood:

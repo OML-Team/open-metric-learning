@@ -191,3 +191,16 @@ Probably we already have a suitable pre-trained model for your domain
 in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
+
+<details>
+<summary>Can OML process texts, sounds and other modalities?</summary>
+<p>
+
+You can adapt OML to make it work not only with images.
+Just open one of the examples and replace `Dataset` remaining the rest of the pipeline the same or almost the same.
+There is several people who successfully used OML for texts in their real-world projects.
+
+Unfortunately, we don't have ready-to-use tutorials for this kind of usage at the moment.
+
+</p>
+</details>

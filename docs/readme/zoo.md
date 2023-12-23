@@ -1,5 +1,5 @@
-Below are the models trained with OML on 4 public datasets.
-All metrics below were obtained on the images with the sizes of **224 x 224**:
+Models, trained by us.
+The metrics below are for **224 x 224** images:
 
 |                      model                      | cmc1  |         dataset          |                                              weights                                              |                                                    experiment                                                     |
 |:-----------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------:|
@@ -8,8 +8,8 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 | `ViTExtractor.from_pretrained("vits16_cars")`   | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cars)  |
 |  `ViTExtractor.from_pretrained("vits16_cub")`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cub)   |
 
-We also provide an integration with the models pretrained by other researchers.
-All metrics below were obtained on the images with the sizes of **224 x 224**:
+Models, trained by other researchers.
+The metrics below are for **224 x 224** images:
 
 |                            model                             | Stanford Online Products | DeepFashion InShop | CUB 200 2011 | CARS 196 |
 |:------------------------------------------------------------:|:------------------------:|:------------------:|:------------:|:--------:|
@@ -31,5 +31,4 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")`  |          0.515           |       0.284        |    0.455     |  0.247   |
 
 **The metrics may be different from the ones reported by papers,
-because the version of train/val split and usage of bounding boxes may differ.
-Particularly, we used bounding boxes during the evaluation.*
+because the version of train/val split and usage of bounding boxes may differ.*
