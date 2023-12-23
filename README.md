@@ -34,7 +34,6 @@ universities who have used OML in their theses.
 [[2]](https://github.com/nastygorodi/PROJECT-Deep_Metric_Learning)
 [[3]](https://github.com/nik-fedorov/term_paper_metric_learning)
 
-### **[NEW!] OML 2.0 supports Torch 2.0 and Lightning 2.0 [NEW!]**
 
 <div align="left">
 
@@ -234,17 +233,28 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
+<details>
+<summary>Can OML process texts, sounds and other modalities?</summary>
+<p>
+
+You can adapt OML to make it work not only with images.
+Just open one of the examples and replace `Dataset` remaining the rest of the pipeline the same or almost the same.
+There is several people who successfully used OML for texts in their real-world projects.
+
+Unfortunately, we don't have ready-to-use tutorials for this kind of usage at the moment.
+
+</p>
+</details>
+
 ## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
-Documentation is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/index.html).
+* [**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
+* **TUTORIAL TO START WITH:**
+[English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
+[Russian](https://habr.com/ru/company/ods/blog/695380/) |
+[Chinese](https://blog.csdn.net/fermion0217/article/details/127932087)
 
-You can also read some extra materials related to OML:
-
-* Theory and practice of metric learning with the usage of OML.
-[Post in English on Medium](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
-[Post in Russian on Habr](https://habr.com/ru/company/ods/blog/695380/) |
-[Post in Chinese on CSDN](https://blog.csdn.net/fermion0217/article/details/127932087), translated by Chia-Chen Chang.
-
+---
 * The
 [DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
 for our paper
@@ -266,13 +276,6 @@ You can also pull the prepared image from DockerHub...
 ```shell
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
-```
-
-...or build one by your own
-
-```shell
-make docker_build RUNTIME=cpu
-make docker_build RUNTIME=gpu
 ```
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
@@ -476,13 +479,9 @@ print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 
-[**Schemas, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
+[MORE EXAMPLES](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html)
 
-See [extra code snippets](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html), including:
-* Training + Validation with Lightning
-* Training + Validation with Lightning in DDP mode
-* Training with losses from PML
-* Training with losses from PML advanced (passing distance, reducer, miner)
+[**Illustrations, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
 
 ## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 
@@ -491,12 +490,12 @@ All you need is to prepare your dataset in a required format.
 
 See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/) folder for more details:
 * Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
-* Retrieval postprocessor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (re-ranking)
+* Retrieval re-ranking [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing)
 
 ## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
 
-Below are the models trained with OML on 4 public datasets.
-All metrics below were obtained on the images with the sizes of **224 x 224**:
+Models, trained by us.
+The metrics below are for **224 x 224** images:
 
 |                      model                      | cmc1  |         dataset          |                                              weights                                              |                                                    experiment                                                     |
 |:-----------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------:|
@@ -505,8 +504,8 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 | `ViTExtractor.from_pretrained("vits16_cars")`   | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cars)  |
 |  `ViTExtractor.from_pretrained("vits16_cub")`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cub)   |
 
-We also provide an integration with the models pretrained by other researchers.
-All metrics below were obtained on the images with the sizes of **224 x 224**:
+Models, trained by other researchers.
+The metrics below are for **224 x 224** images:
 
 |                            model                             | Stanford Online Products | DeepFashion InShop | CUB 200 2011 | CARS 196 |
 |:------------------------------------------------------------:|:------------------------:|:------------------:|:------------:|:--------:|
@@ -528,8 +527,7 @@ All metrics below were obtained on the images with the sizes of **224 x 224**:
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")`  |          0.515           |       0.284        |    0.455     |  0.247   |
 
 **The metrics may be different from the ones reported by papers,
-because the version of train/val split and usage of bounding boxes may differ.
-Particularly, we used bounding boxes during the evaluation.*
+because the version of train/val split and usage of bounding boxes may differ.*
 
 ### How to use models from Zoo?
 
@@ -576,6 +574,7 @@ and others.
 I would like to thank people who continue working on this pipeline when it became a separe project:
 [Julia Shenshina](https://github.com/julia-shenshina),
 [Misha Kindulov](https://github.com/b0nce),
+[Aron Dik](https://github.com/dapladoc),
 [Aleksei Tarasov](https://github.com/DaloroAT) and
 [Verkhovtsev Leonid](https://github.com/leoromanovich).
 

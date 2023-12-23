@@ -34,6 +34,5 @@ universities who have used OML in their theses.
 [[2]](https://github.com/nastygorodi/PROJECT-Deep_Metric_Learning)
 [[3]](https://github.com/nik-fedorov/term_paper_metric_learning)
 
-### **[NEW!] OML 2.0 supports Torch 2.0 and Lightning 2.0 [NEW!]**
 
 <div align="left">

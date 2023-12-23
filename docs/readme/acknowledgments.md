@@ -10,6 +10,7 @@ and others.
 I would like to thank people who continue working on this pipeline when it became a separe project:
 [Julia Shenshina](https://github.com/julia-shenshina),
 [Misha Kindulov](https://github.com/b0nce),
+[Aron Dik](https://github.com/dapladoc),
 [Aleksei Tarasov](https://github.com/DaloroAT) and
 [Verkhovtsev Leonid](https://github.com/leoromanovich).
 
