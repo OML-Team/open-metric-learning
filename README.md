@@ -260,6 +260,9 @@ Unfortunately, we don't have ready-to-use tutorials for this kind of usage at th
 for our paper
 [STIR: Siamese Transformers for Image Retrieval Postprocessing](https://arxiv.org/abs/2304.13393)
 
+* Meet OpenMetricLearning (OML) on
+[Marktechpost](https://www.marktechpost.com/2023/12/26/meet-openmetriclearning-oml-a-pytorch-based-python-framework-to-train-and-validate-the-deep-learning-models-producing-high-quality-embeddings/)
+
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
 
