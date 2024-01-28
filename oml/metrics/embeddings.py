@@ -76,7 +76,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         fmr_vals: Tuple[float, ...] = tuple(),
-        pfc_variance: Tuple[float, ...] = (0.5,),
+        pcf_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
         sequence_key: Optional[str] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
@@ -102,9 +102,9 @@ class EmbeddingMetrics(IMetricVisualisable):
                       and ``fnmr@fmr=0.4``.
                       Note, computing this metric requires additional memory overhead,
                       that is why it's turned off by default.
-            pfc_variance: Values in range [0, 1]. Find the number of components such that the amount
+            pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                           of variance that needs to be explained is greater than the percentage specified
-                          by ``pfc_variance``.
+                          by ``pcf_variance``.
             categories_key: Key to take the samples' categories from the batches (if you have ones)
             sequence_key: Key to take sequence ids from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
@@ -124,7 +124,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
-        self.pfc_variance = pfc_variance
+        self.pcf_variance = pcf_variance
 
         self.categories_key = categories_key
         self.sequence_key = sequence_key
@@ -205,7 +205,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             "map_top_k": self.map_top_k,
             "fmr_vals": self.fmr_vals,
         }
-        args_topological_metrics = {"pfc_variance": self.pfc_variance}
+        args_topological_metrics = {"pcf_variance": self.pcf_variance}
 
         metrics: TMetricsDict_ByLabels = dict()
 
