@@ -58,7 +58,7 @@ metric_args:
   map_top_k: [5, 10]
   fmr_vals: []
   precision_top_k: []
-  pfc_variance: []
+  pcf_variance: []
   return_only_overall_category: True
   visualize_only_overall_category: True
 

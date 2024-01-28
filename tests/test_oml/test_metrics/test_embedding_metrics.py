@@ -163,7 +163,7 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         precision_top_k=tuple(),
         map_top_k=tuple(),
         fmr_vals=tuple(),
-        pfc_variance=tuple(),
+        pcf_variance=tuple(),
         postprocessor=get_trivial_postprocessor(top_n=2),
     )
 
@@ -199,7 +199,7 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         precision_top_k=tuple(),
         map_top_k=tuple(),
         fmr_vals=tuple(),
-        pfc_variance=tuple(),
+        pcf_variance=tuple(),
         postprocessor=get_trivial_postprocessor(top_n=3),
     )
 
