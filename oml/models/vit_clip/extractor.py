@@ -1,6 +1,7 @@
-import torch
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
+
+import torch
 
 from oml.interfaces.models import IExtractor
 from oml.models.utils import (
@@ -8,8 +9,8 @@ from oml.models.utils import (
     filter_state_dict,
     patch_device_and_float,
     remove_criterion_in_state_dict,
+    remove_prefix_from_state_dict,
 )
-from oml.models.utils import remove_prefix_from_state_dict
 from oml.models.vit_clip.external.model import VisionTransformer
 from oml.utils.io import download_checkpoint
 
@@ -167,8 +168,9 @@ class ViTCLIPExtractor(IExtractor):
         self.visual.load_state_dict(state_dict=state_dict, strict=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert (x.shape[-2] == self.input_size) and (x.shape[-1] == self.input_size), \
-            f"The model expects input images to be resized to {self.input_size}x{self.input_size}"
+        assert (x.shape[-2] == self.input_size) and (
+            x.shape[-1] == self.input_size
+        ), f"The model expects input images to be resized to {self.input_size}x{self.input_size}"
 
         res = self.visual.forward(x)
         if self.normalize:
