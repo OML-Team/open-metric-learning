@@ -67,7 +67,6 @@ TRANSFORMS_FOR_PRETRAINED = {
     "openai_vitb32_224": get_normalisation_resize_albu_clip(im_size=224),
     "openai_vitb16_224": get_normalisation_resize_albu_clip(im_size=224),
     "openai_vitl14_224": get_normalisation_resize_albu_clip(im_size=224),
-    "openai_vitl14_336": get_normalisation_resize_albu_clip(im_size=224),
     "vits16_inshop": get_normalisation_resize_hypvit(im_size=224, crop_size=224),
     "vits16_sop": get_normalisation_resize_hypvit(im_size=224, crop_size=224),
     "vits16_cars": get_normalisation_resize_albu(im_size=224),
