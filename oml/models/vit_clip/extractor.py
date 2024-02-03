@@ -157,8 +157,6 @@ class ViTCLIPExtractor(IExtractor):
             state_dict = state_dict.get("state_dict", state_dict)
             state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
 
-        print(state_dict.keys(), "xxx")
-
         state_dict = remove_criterion_in_state_dict(state_dict)
         state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight")
 
