@@ -20,6 +20,7 @@ LARGE_CKPT_NAMES = ["vitl", "resnet101", "resnet152"]
 vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits16"}
 
 
+# todo: add another test where Lightning saves the model
 @pytest.mark.parametrize(
     "constructor,args",
     [

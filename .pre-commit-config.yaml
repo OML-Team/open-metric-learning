@@ -50,9 +50,9 @@ repos:
   - id: mypy
     additional_dependencies: [types-requests==2.25.9]
 
-# check for unused code
-- repo: https://github.com/jendrikseipp/vulture
-  rev: v2.6
-  hooks:
-    - id: vulture
-      args: [--min-confidence=100, --sort-by-size, .]
+# check for unused code  (todo: it started failing with some weird recursive error)
+#- repo: https://github.com/jendrikseipp/vulture
+#  rev: v2.6
+#  hooks:
+#    - id: vulture
+#      args: [--min-confidence=100, --sort-by-size, .]

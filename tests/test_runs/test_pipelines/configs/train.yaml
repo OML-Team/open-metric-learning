@@ -14,12 +14,12 @@ cache_size: 10
 transforms_train:
   name: augs_torch
   args:
-    im_size: 64
+    im_size: 224
 
 transforms_val:
   name: norm_resize_torch
   args:
-    im_size: 64
+    im_size: 224
 
 criterion:
   name: arcface
@@ -27,7 +27,7 @@ criterion:
     smoothing_epsilon: 0
     m: 0.4
     s: 64
-    in_features: 384
+    in_features: 512
     num_classes: 4
 
 defaults:
@@ -35,17 +35,11 @@ defaults:
   - sampler: balance
 
 extractor:
-  name: extractor_with_mlp
+  name: vit_clip
   args:
-    mlp_features: [384]
+    arch: vitb16_224
     weights: null
-    extractor:
-      name: vit
-      args:
-        normalise_features: False
-        use_multi_scale: False
-        weights: null
-        arch: vits16
+    normalise_features: False
 
 scheduling:
   scheduler_interval: epoch

@@ -9,6 +9,7 @@ from oml.models.utils import (
     filter_state_dict,
     patch_device_and_float,
     remove_criterion_in_state_dict,
+    remove_prefix_from_state_dict,
 )
 from oml.models.vit_clip.external.model import VisionTransformer
 from oml.utils.io import download_checkpoint
@@ -142,6 +143,8 @@ class ViTCLIPExtractor(IExtractor):
         self.normalize = normalise_features
         self.visual = self.constructors[arch]()
 
+        self.input_size = int(arch.split("_")[-1])
+
         if weights is None:
             return
         if weights in self.pretrained_models:
@@ -159,11 +162,16 @@ class ViTCLIPExtractor(IExtractor):
             state_dict = torch.load(Path(weights), map_location="cpu")
             state_dict = state_dict.get("state_dict", state_dict)
             state_dict = remove_criterion_in_state_dict(state_dict)
+            state_dict = remove_prefix_from_state_dict(state_dict, trial_key="class_embedding")
             state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert (x.shape[-2] == self.input_size) and (
+            x.shape[-1] == self.input_size
+        ), f"The model expects input images to be resized to {self.input_size}x{self.input_size}"
+
         res = self.visual.forward(x)
         if self.normalize:
             res = res / torch.linalg.norm(res, 2, dim=1, keepdim=True).detach()

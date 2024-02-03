@@ -7,7 +7,7 @@ dataframe_name: df.csv
 transforms_val:
   name: norm_resize_torch
   args:
-    im_size: 48
+    im_size: 224
 
 logs_root: logs
 
@@ -47,18 +47,11 @@ metric_args:
   visualize_only_overall_category: True
 
 extractor:
-  name: extractor_with_mlp
+  name: vit_clip
   args:
-    mlp_features: [384]
+    arch: vitb16_224
     weights: checkpoints/best.ckpt
-    extractor:
-      name: vit
-      args:
-        normalise_features: False
-        use_multi_scale: False
-        weights: null
-        arch: vits16
-
+    normalise_features: False
 
 hydra:
   run:
