@@ -93,13 +93,6 @@ class ViTCLIPExtractor(IExtractor):
             "fname": "openai_vitl14_224.ckpt",
             "init_args": {"arch": "vitl14_224", "normalise_features": False},
         },
-        "openai_vitl14_336": {
-            "url": f"{_OPENAI_URL}/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt",
-            "hash": "b311058cae50cb10fbfa2a44231c9473",
-            "is_jitted": True,
-            "fname": "openai_vitl14_336.ckpt",
-            "init_args": {"arch": "vitl14_336", "normalise_features": False},
-        },
         # checkpoints pretrained by SberbankAI
         "sber_vitb16_224": {
             "url": f"{_SBER_URL}/ruclip-vit-base-patch16-224/resolve/main/pytorch_model.bin",
@@ -162,9 +155,9 @@ class ViTCLIPExtractor(IExtractor):
             state_dict = torch.load(Path(weights), map_location="cpu")
             state_dict = state_dict.get("state_dict", state_dict)
 
-        state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
-        state_dict = remove_prefix_from_state_dict(state_dict, trial_key="class_embedding")
         state_dict = remove_criterion_in_state_dict(state_dict)
+        state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight")
+        state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=True)
 
