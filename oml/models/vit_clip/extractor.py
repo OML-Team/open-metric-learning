@@ -151,13 +151,16 @@ class ViTCLIPExtractor(IExtractor):
             visual = torch.jit.load(Path(weights), map_location="cpu").visual
             patch_device_and_float(visual, device="cpu")
             state_dict = visual.state_dict()
+
         else:
             state_dict = torch.load(Path(weights), map_location="cpu")
             state_dict = state_dict.get("state_dict", state_dict)
+            state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
+
+        print(state_dict.keys(), "xxx")
 
         state_dict = remove_criterion_in_state_dict(state_dict)
         state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight")
-        state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
 
         self.visual.load_state_dict(state_dict=state_dict, strict=True)
 
