@@ -155,10 +155,9 @@ class ViTCLIPExtractor(IExtractor):
         else:
             state_dict = torch.load(Path(weights), map_location="cpu")
             state_dict = state_dict.get("state_dict", state_dict)
+            state_dict = remove_criterion_in_state_dict(state_dict)
             state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())
-
-        state_dict = remove_criterion_in_state_dict(state_dict)
-        state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight")
+            state_dict = remove_prefix_from_state_dict(state_dict, trial_key="conv1.weight")
 
         self.visual.load_state_dict(state_dict=state_dict, strict=True)
 
@@ -179,8 +178,9 @@ class ViTCLIPExtractor(IExtractor):
 
 def take_visual_part_of_vit_clip(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:
     for k in list(state_dict):
-        if k.startswith("visual."):
-            state_dict[k.lstrip("visual")[1:]] = state_dict.pop(k)
+        if "visual" in k:
+            new_key = k[k.find("visual") + len("visual") + 1 :]
+            state_dict[new_key] = state_dict.pop(k)
     state_dict = filter_state_dict(state_dict, needed_keys=needed_keys)
     return state_dict
 
