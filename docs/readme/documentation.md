@@ -2,7 +2,7 @@
 * **TUTORIAL TO START WITH:**
 [English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
 [Russian](https://habr.com/ru/company/ods/blog/695380/) |
-[Chinese](https://blog.csdn.net/fermion0217/article/details/127932087)
+[Chinese](https://zhuanlan.zhihu.com/p/683102241)
 
 ---
 * The
