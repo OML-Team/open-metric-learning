@@ -11,9 +11,9 @@ from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackD
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
-    initialize_logging,
     parse_ckpt_callback_from_config,
     parse_engine_params_from_config,
+    parse_logger_from_config,
     parse_sampler_from_config,
     parse_scheduler_from_config,
 )
@@ -70,7 +70,9 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
 
     cfg = dictconfig_to_dict(cfg)
     pprint(cfg)
-    logger = initialize_logging(cfg)
+
+    logger = parse_logger_from_config(cfg)
+    logger.log_pipeline_info(cfg)
 
     trainer_engine_params = parse_engine_params_from_config(cfg)
     is_ddp = check_is_config_for_ddp(trainer_engine_params)

@@ -1,21 +1,19 @@
-import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
-from pytorch_lightning.loggers.logger import Logger
 from pytorch_lightning.strategies import DDPStrategy
 
-from oml.const import OML_PATH, TCfg
+from oml.const import TCfg
 from oml.datasets.base import DatasetWithLabels
+from oml.interfaces.loggers import IPipelineLogger
 from oml.interfaces.samplers import IBatchSampler
+from oml.lightning.pipelines.logging import TensorBoardPipelineLogger
 from oml.registry.loggers import get_logger_by_cfg
 from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
-from oml.registry.transforms import save_transforms_as_files
-from oml.utils.misc import dictconfig_to_dict, flatten_dict
+from oml.utils.misc import dictconfig_to_dict
 
 
 def parse_engine_params_from_config(cfg: TCfg) -> Dict[str, Any]:
@@ -59,82 +57,9 @@ def check_is_config_for_ddp(cfg: TCfg) -> bool:
     return bool(cfg["strategy"])
 
 
-def parse_logger_from_config(cfg: TCfg) -> Logger:
-    logger = TensorBoardLogger(".") if cfg.get("logger", None) is None else get_logger_by_cfg(cfg["logger"])
-    return logger
-
-
-def initialize_logging(cfg: TCfg) -> Logger:
-    logger = parse_logger_from_config(cfg)
-    cwd = Path.cwd().name
-
-    dict_to_log = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep="|")
-
-    tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
-
-    if isinstance(logger, NeptuneLogger):
-        warnings.warn(
-            "Unfortunately, in the case of using Neptune, you may experience that long experiments are"
-            "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it."
-        )
-        logger.log_hyperparams(dict_to_log)
-        upload_files_to_neptune_cloud(logger, cfg)
-        logger.run["sys/tags"].add(tags)
-
-    elif isinstance(logger, WandbLogger):
-        logger.log_hyperparams(dict_to_log)
-        upload_files_to_wandb_cloud(logger, cfg)
-        logger.experiment.tags = list(filter(lambda x: len(x) > 0, tags))  # it fails in the case of empty tag
-
-    elif isinstance(logger, TensorBoardLogger):
-        pass
-
-    else:
-        raise ValueError(f"Unexpected logger {type(logger)}")
-
-    return logger
-
-
-def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
-    assert isinstance(logger, NeptuneLogger)
-
-    # log transforms as files
-    for key, transforms_file in save_transforms_as_files(cfg):
-        logger.run[key].upload(transforms_file)
-
-    # log source code
-    source_files = list(map(lambda x: str(x), OML_PATH.glob("**/*.py"))) + list(
-        map(lambda x: str(x), OML_PATH.glob("**/*.yaml"))
-    )
-    logger.run["code"].upload_files(source_files)
-
-    # log dataset
-    logger.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
-
-
-def upload_files_to_wandb_cloud(logger: WandbLogger, cfg: TCfg) -> None:
-    # this is the optional dependency
-    import wandb
-
-    assert isinstance(logger, WandbLogger)
-
-    # log transforms as files
-    keys_files = save_transforms_as_files(cfg)
-    if keys_files:
-        transforms = wandb.Artifact("transforms", type="transforms")
-        for _, transforms_file in keys_files:
-            transforms.add_file(transforms_file)
-        logger.experiment.log_artifact(transforms)
-
-    # log source code
-    code = wandb.Artifact("source_code", type="code")
-    code.add_dir(OML_PATH, name="oml")
-    logger.experiment.log_artifact(code)
-
-    # log dataset
-    dataset = wandb.Artifact("dataset", type="dataset")
-    dataset.add_file(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
-    logger.experiment.log_artifact(dataset)
+def parse_logger_from_config(cfg: TCfg) -> IPipelineLogger:
+    logger = TensorBoardPipelineLogger(".") if cfg.get("logger", None) is None else get_logger_by_cfg(cfg["logger"])
+    return logger  # type: ignore
 
 
 def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> Dict[str, Any]:
@@ -182,9 +107,6 @@ def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
 __all__ = [
     "parse_engine_params_from_config",
     "check_is_config_for_ddp",
-    "initialize_logging",
-    "upload_files_to_neptune_cloud",
-    "upload_files_to_wandb_cloud",
     "parse_scheduler_from_config",
     "parse_sampler_from_config",
     "parse_ckpt_callback_from_config",

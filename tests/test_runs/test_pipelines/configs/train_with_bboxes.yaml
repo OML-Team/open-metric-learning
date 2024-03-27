@@ -17,7 +17,7 @@ transforms_train:
     im_size: 32
 
 transforms_val:
-  name: norm_resize_torch
+  name: norm_resize_albu
   args:
     im_size: 48
 
@@ -67,6 +67,11 @@ metric_args:
   visualize_only_overall_category: True
 
 log_images: True
+
+logger:
+  name: wandb
+  args:
+    project: "test_project"
 
 metric_for_checkpointing: OVERALL/cmc/5
 

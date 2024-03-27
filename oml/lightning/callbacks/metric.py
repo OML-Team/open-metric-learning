@@ -1,19 +1,18 @@
+import warnings
 from math import ceil
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pytorch_lightning as pl
 from pytorch_lightning import Callback
-from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch.utils.data import DataLoader
 
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
+from oml.interfaces.loggers import IFigureLogger
 from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
 from oml.lightning.modules.ddp import ModuleDDP
-from oml.utils.images.images import figure_to_nparray
 from oml.utils.misc import flatten_dict
 
 
@@ -102,23 +101,16 @@ class MetricValCallback(Callback):
         if not isinstance(self.metric, IMetricVisualisable):
             return
 
+        if not isinstance(pl_module.logger, IFigureLogger):
+            warnings.warn(
+                f"Unexpected logger {pl_module.logger}. Figures have not been saved. "
+                f"Please, use a child of {IFigureLogger}."
+            )
+            return
+
         for fig, metric_log_str in zip(*self.metric.visualize()):
             log_str = f"{LOG_IMAGE_FOLDER}/{metric_log_str}"
-            if isinstance(pl_module.logger, NeptuneLogger):
-                from neptune.new.types import File  # this is the optional dependency
-
-                pl_module.logger.experiment[log_str].log(File.as_image(fig))
-            elif isinstance(pl_module.logger, WandbLogger):
-                fig_img = figure_to_nparray(fig)
-                pl_module.logger.log_image(images=[fig_img], key=metric_log_str)
-            elif isinstance(pl_module.logger, TensorBoardLogger):
-                fig_img = figure_to_nparray(fig)
-                pl_module.logger.experiment.add_image(
-                    log_str, np.transpose(fig_img, (2, 0, 1)), pl_module.current_epoch
-                )
-            else:
-                raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
-
+            pl_module.logger.log_figure(fig=fig, title=log_str, idx=pl_module.current_epoch)
             plt.close(fig=fig)
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
