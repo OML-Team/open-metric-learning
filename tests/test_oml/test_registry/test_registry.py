@@ -2,13 +2,14 @@
 from pathlib import Path
 from typing import Any, Dict
 
+import dotenv
 import pytest
 import yaml
 from omegaconf import OmegaConf
 from torch import nn
 from torch.optim import Optimizer
 
-from oml.const import CONFIGS_PATH, TCfg
+from oml.const import CONFIGS_PATH, DOTENV_PATH, TCfg
 from oml.registry.loggers import LOGGERS_REGISTRY, get_logger
 from oml.registry.losses import LOSSES_REGISTRY, get_criterion
 from oml.registry.miners import MINERS_REGISTRY, get_miner
@@ -33,7 +34,7 @@ from oml.registry.transforms import (
     get_transforms_for_pretrained,
     save_transforms_as_files,
 )
-from oml.utils.misc import dictconfig_to_dict, load_dotenv
+from oml.utils.misc import dictconfig_to_dict
 
 
 def get_sampler_kwargs_runtime() -> Any:
@@ -64,7 +65,7 @@ def get_opt() -> Optimizer:
     ],
 )
 def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
-    load_dotenv()  # we need to load tokens for cloud loggers (Neptune, W & B)
+    dotenv.load_dotenv(DOTENV_PATH)  # we need to load tokens for cloud loggers (Neptune, W & B)
 
     for obj_name in registry.keys():
         cfg = dictconfig_to_dict(OmegaConf.load(CONFIGS_PATH / folder_name / f"{obj_name}.yaml"))

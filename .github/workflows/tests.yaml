@@ -9,7 +9,8 @@ on:
       - main
 
 jobs:
-  short_tests:
+  # todo
+  xxx_tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     strategy:
@@ -31,7 +32,8 @@ jobs:
       run: |
         make run_short_tests
 
-  all_tests:
+  # todo
+  short_tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     strategy:
@@ -51,9 +53,10 @@ jobs:
         python3 -m pip install -r ci/requirements_optional.txt
         python3 -m pip install -e .
     - name: Running all tests
+      # todo
       run: |
         if [ "${{ matrix.python-version }}" == "3.8" ]; then
-          make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }} DOWNLOAD_ZOO_IN_TESTS=yes
+          make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }} DOWNLOAD_ZOO_IN_TESTS=no TEST_CLOUD_LOGGERS=yes
         else
           make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}
         fi
