@@ -1,3 +1,4 @@
+import warnings
 from math import ceil
 from typing import Any, Optional
 
@@ -9,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
-from oml.interfaces.loggers import IPipelineLogger
+from oml.interfaces.loggers import IFigureLogger
 from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
@@ -100,12 +101,16 @@ class MetricValCallback(Callback):
         if not isinstance(self.metric, IMetricVisualisable):
             return
 
+        if not isinstance(pl_module.logger, IFigureLogger):
+            warnings.warn(
+                f"Unexpected logger {pl_module.logger}. Figures have not been saved. "
+                f"Please, use a child of {IFigureLogger}."
+            )
+            return
+
         for fig, metric_log_str in zip(*self.metric.visualize()):
             log_str = f"{LOG_IMAGE_FOLDER}/{metric_log_str}"
-
-            assert isinstance(pl_module.logger, IPipelineLogger)
             pl_module.logger.log_figure(fig=fig, title=log_str, idx=pl_module.current_epoch)
-
             plt.close(fig=fig)
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:

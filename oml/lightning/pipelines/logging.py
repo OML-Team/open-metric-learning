@@ -27,7 +27,7 @@ def prepare_tags(cfg: TCfg) -> List[str]:
 
 
 class NeptunePipelineLogger(NeptuneLogger, IPipelineLogger):
-    def log_experiment_info(self, cfg: TCfg) -> None:
+    def log_pipeline_info(self, cfg: TCfg) -> None:
         warnings.warn(
             "Unfortunately, in the case of using Neptune, you may experience that long experiments are "
             "stacked and not responding. It's not an issue on OML's side, so, we cannot fix it."
@@ -57,7 +57,7 @@ class NeptunePipelineLogger(NeptuneLogger, IPipelineLogger):
 
 
 class WandBPipelineLogger(WandbLogger, IPipelineLogger):
-    def log_experiment_info(self, cfg: TCfg) -> None:
+    def log_pipeline_info(self, cfg: TCfg) -> None:
         # this is the optional dependency
         import wandb
 
@@ -90,9 +90,12 @@ class WandBPipelineLogger(WandbLogger, IPipelineLogger):
 
 
 class TensorBoardPipelineLogger(TensorBoardLogger, IPipelineLogger):
-    def log_experiment_info(self, cfg: TCfg) -> None:
+    def log_pipeline_info(self, cfg: TCfg) -> None:
         pass
 
     def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
         fig_img = figure_to_nparray(fig)
         self.experiment.add_image(title, np.transpose(fig_img, (2, 0, 1)), idx)
+
+
+__all__ = ["IPipelineLogger", "TensorBoardPipelineLogger", "WandBPipelineLogger", "NeptunePipelineLogger"]

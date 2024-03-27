@@ -72,7 +72,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     pprint(cfg)
 
     logger = parse_logger_from_config(cfg)
-    logger.log_experiment_info(cfg)
+    logger.log_pipeline_info(cfg)
 
     trainer_engine_params = parse_engine_params_from_config(cfg)
     is_ddp = check_is_config_for_ddp(trainer_engine_params)
