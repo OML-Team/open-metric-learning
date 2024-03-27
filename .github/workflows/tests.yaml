@@ -9,8 +9,7 @@ on:
       - main
 
 jobs:
-  # todo
-  xxx_tests:
+  short_tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     strategy:
@@ -32,10 +31,10 @@ jobs:
       run: |
         make run_short_tests
 
-  # todo
-  short_tests:
+  all_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    # todo put back 'push'
+    if: github.event_name == 'pull_request'
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
