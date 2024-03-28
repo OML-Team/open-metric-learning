@@ -128,7 +128,7 @@ Let's consider an example of using custom augmentations & extractor to train you
 Your `train.py` and `config.yaml` may look like this:
 ```python
 import hydra
-import torchvision.transforms as t
+import torchvision.transforms.v2 as t
 from omegaconf import DictConfig
 from torchvision.models import resnet18
 
