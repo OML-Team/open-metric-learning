@@ -4,11 +4,10 @@ Logging & Visualization
 Logging in `Pipelines <https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html>`_
 ===========================================================================================================
 
-There are three options to log your experiments when working with Pipelines:
+There are several loggers integrated with Pipelines. You can also `use your custom logger <file:///Users/alex/Projects/open-metric-learning/docs/build/html/feature_extraction/pipelines.html#customization>`_.
 
-* `Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_ — is active by default if there is no ``logger`` in config.
-  It will log charts (losses, metrics, statistics) and visualisation of model's mistakes for further analysis.
-  If you want to change the logging directory, you may configure the logger explicitly:
+
+* `Tensorboard <https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.loggers.tensorboard.html#module-lightning.pytorch.loggers.tensorboard>`_ — is active by default if there is no ``logger`` in config.
 
   .. code-block:: yaml
 
@@ -19,10 +18,7 @@ There are three options to log your experiments when working with Pipelines:
         save_dir: "."
     ...
 
-* `Neptune <https://neptune.ai/>`_  — an option for advanced logging & collaboration with a team.
-  It will log everything logged by Tensorboard, but also the original source code, all the configs for easier reproducibility
-  and telemetry such as GPU, CPU and Memory utilization.
-  Your config and run command may look like this:
+* `Neptune <https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.loggers.neptune.html#module-lightning.pytorch.loggers.neptune>`_
 
   .. code-block:: yaml
 
@@ -37,9 +33,7 @@ There are three options to log your experiments when working with Pipelines:
 
       export NEPTUNE_API_TOKEN=your_token; python train.py
 
-* `Weights and Biases <https://wandb.ai/site>`_ — an option for advanced logging & collaboration with a team.
-  The functionality & usage is similar to the Neptune's ones.
-  Your config and run command may look like this:
+* `Weights and Biases <https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.loggers.wandb.html#module-lightning.pytorch.loggers.wandb>`_
 
   .. code-block:: yaml
 
@@ -54,7 +48,20 @@ There are three options to log your experiments when working with Pipelines:
 
       export WANDB_API_KEY=your_token; python train.py
 
-Let's consider an example of what you get using `Neptune` for the
+* `MLFlow <https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.loggers.mlflow.html>`_
+
+  .. code-block:: yaml
+
+      ...
+      logger:
+          name: mlflow
+          args:
+              experiment_name: "test_project"
+              tracking_uri: "file:./ml-runs"  # for local logging
+      ...
+
+
+Example of logging via Neptune in the
 `feature extractor <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction>`_
 pipeline.
 
@@ -65,7 +72,7 @@ pipeline.
     :alt: Graphs
 
 
-In the example above you can observe the graphs of:
+So, you get:
 
 * `Metrics <https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html>`_
   such as ``CMC@1``, ``Precision@5``, ``MAP@5``, which were provided in a config file as ``metric_args``.
@@ -95,7 +102,12 @@ In particular, each row contains:
 * Five closest items from a gallery to the given query & the corresponding distances (they are all red because they are irrelevant to the query)
 * At most two ground truths (grey), to get an idea of what model should return
 
-There is also the slide bar that helps to estimate your model's progress from epoch to epoch
+You also get some artifacts for reproducibility, such as:
+
+* Source code
+* Config
+* Dataframe
+* Tags
 
 
 Logging in Python
@@ -105,16 +117,12 @@ Logging in Python
 Using Lightning
 """""""""""""""
 
-The easiest is to use
-`Lightning <https://github.com/Lightning-AI/lightning>`_'s
-integrations with
-`Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_,
-`Neptune <https://neptune.ai/>`_ or
-`Weights and Biases <https://wandb.ai/site>`_.
-
 Take a look at the following example:
 `Training + Validation [Lightning and logging] <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
-
+It shows how to use each of: `Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_,
+`MLFlow <mlflow.org>`_,
+`Neptune <https://neptune.ai/>`_ or
+`WandB <https://wandb.ai/site>`_.
 
 Using plain Python
 """"""""""""""""""
