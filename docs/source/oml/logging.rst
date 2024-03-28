@@ -61,7 +61,7 @@ There are several loggers integrated with Pipelines. You can also `use your cust
       ...
 
 
-Example of logging via Neptune in the
+An example of logging via Neptune in the
 `feature extractor <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction>`_
 pipeline.
 

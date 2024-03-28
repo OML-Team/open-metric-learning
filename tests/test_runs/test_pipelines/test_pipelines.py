@@ -76,7 +76,7 @@ def test_train_with_sequence(accelerator: str, devices: int) -> None:
 @pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_with_categories(accelerator: str, devices: int) -> None:
-    run("train_with_categories.py", accelerator, devices, need_rm_logs=False)  # todo
+    run("train_with_categories.py", accelerator, devices, need_rm_logs=True)
 
 
 @pytest.mark.long
