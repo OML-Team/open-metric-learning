@@ -4,7 +4,12 @@ from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
+from pytorch_lightning.loggers import (
+    MLFlowLogger,
+    NeptuneLogger,
+    TensorBoardLogger,
+    WandbLogger,
+)
 
 from oml.const import OML_PATH, TCfg
 from oml.interfaces.loggers import IPipelineLogger
@@ -98,4 +103,19 @@ class TensorBoardPipelineLogger(TensorBoardLogger, IPipelineLogger):
         self.experiment.add_image(title, np.transpose(fig_img, (2, 0, 1)), idx)
 
 
-__all__ = ["IPipelineLogger", "TensorBoardPipelineLogger", "WandBPipelineLogger", "NeptunePipelineLogger"]
+class MLFlowPipelineLogger(MLFlowLogger, IPipelineLogger):
+    def log_pipeline_info(self, cfg: TCfg) -> None:
+        pass
+
+    def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
+        pass
+        # self.experiment.log_figure(figure=fig, artifact_file=title, run_id="todo")
+
+
+__all__ = [
+    "IPipelineLogger",
+    "TensorBoardPipelineLogger",
+    "WandBPipelineLogger",
+    "NeptunePipelineLogger",
+    "MLFlowPipelineLogger",
+]
