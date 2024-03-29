@@ -57,7 +57,7 @@ There are several loggers integrated with Pipelines. You can also `use your cust
           name: mlflow
           args:
               experiment_name: "test_project"
-              tracking_uri: "file:./ml-runs"  # for local logging
+              tracking_uri: "file:./ml-runs"  # another way: export MLFLOW_TRACKING_URI=file:./ml-runs
       ...
 
 
