@@ -11,6 +11,7 @@ from oml.models.meta.siamese import ConcatSiamese
 from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models.vit_dinov2.extractor import ViTExtractor_v2
 from oml.models.vit_unicom.extractor import ViTUnicomExtractor
 from oml.registry import EXTRACTORS_REGISTRY
 
@@ -25,6 +26,7 @@ vit_args = {"normalise_features": False, "use_multi_scale": False, "arch": "vits
     "constructor,args",
     [
         (ViTExtractor, vit_args),
+        (ViTExtractor_v2, {"normalise_features": False, "arch": "vits14"}),
         (ViTCLIPExtractor, {"normalise_features": False, "arch": "vitb32_224"}),
         (ViTUnicomExtractor, {"normalise_features": False, "arch": "vitb32_unicom"}),
         (ResnetExtractor, {"normalise_features": True, "gem_p": 7.0, "remove_fc": True, "arch": "resnet50"}),

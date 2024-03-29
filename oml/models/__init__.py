@@ -7,4 +7,5 @@ from oml.models.meta.siamese import (
 from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models.vit_dinov2.extractor import ViTExtractor_v2
 from oml.models.vit_unicom.extractor import ViTUnicomExtractor

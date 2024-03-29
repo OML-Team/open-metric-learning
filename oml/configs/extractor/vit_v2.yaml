@@ -1,0 +1,5 @@
+name: vit_v2
+args:
+  arch: vits14
+  normalise_features: False
+  weights: null
