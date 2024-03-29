@@ -4,7 +4,12 @@ from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
+from pytorch_lightning.loggers import (
+    MLFlowLogger,
+    NeptuneLogger,
+    TensorBoardLogger,
+    WandbLogger,
+)
 
 from oml.const import OML_PATH, TCfg
 from oml.interfaces.loggers import IPipelineLogger
@@ -13,9 +18,9 @@ from oml.utils.images.images import figure_to_nparray
 from oml.utils.misc import dictconfig_to_dict, flatten_dict
 
 
-def prepare_config_to_logging(cfg: TCfg) -> Dict[str, Any]:
+def prepare_config_to_logging(cfg: TCfg, sep: str = "|") -> Dict[str, Any]:
     cwd = Path.cwd().name
-    flattened_dict = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep="|")
+    flattened_dict = flatten_dict({**dictconfig_to_dict(cfg), **{"dir": cwd}}, sep=sep)
     return flattened_dict
 
 
@@ -98,4 +103,39 @@ class TensorBoardPipelineLogger(TensorBoardLogger, IPipelineLogger):
         self.experiment.add_image(title, np.transpose(fig_img, (2, 0, 1)), idx)
 
 
-__all__ = ["IPipelineLogger", "TensorBoardPipelineLogger", "WandBPipelineLogger", "NeptunePipelineLogger"]
+class MLFlowPipelineLogger(MLFlowLogger, IPipelineLogger):
+    def log_pipeline_info(self, cfg: TCfg) -> None:
+        # log config
+        self.log_hyperparams(prepare_config_to_logging(cfg, sep="/"))
+
+        # log tags
+        for tag in prepare_tags(cfg):
+            self.experiment.set_tag(run_id=self.run_id, key=tag, value="tag")
+
+        # log transforms as files
+        names_files = save_transforms_as_files(cfg)
+        if names_files:
+            for name, transforms_file in names_files:
+                self.experiment.log_artifact(run_id=self.run_id, local_path=transforms_file, artifact_path=name)
+
+        # log code
+        self.experiment.log_artifacts(run_id=self.run_id, local_dir=OML_PATH, artifact_path="code")
+
+        # log dataframe
+        self.experiment.log_artifact(
+            run_id=self.run_id,
+            local_path=str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]),
+            artifact_path="dataset",
+        )
+
+    def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
+        self.experiment.log_figure(figure=fig, artifact_file=f"{title}.png", run_id=self.run_id)
+
+
+__all__ = [
+    "IPipelineLogger",
+    "TensorBoardPipelineLogger",
+    "WandBPipelineLogger",
+    "NeptunePipelineLogger",
+    "MLFlowPipelineLogger",
+]
