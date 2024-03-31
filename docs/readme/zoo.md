@@ -29,6 +29,12 @@ The metrics below are for **224 x 224** images:
 |         `ViTExtractor.from_pretrained("vitb8_dino")`         |          0.689           |       0.599        |    0.506     |  0.313   |
 |    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`     |          0.493           |       0.267        |    0.264     |  0.149   |
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")`  |          0.515           |       0.284        |    0.455     |  0.247   |
+|      `ViTExtractor_v2.from_pretrained("vits14_dinov2")`      |          0.566           |       0.334        |    0.797     |  0.503   |
+|   `ViTExtractor_v2.from_pretrained("vits14_reg_dinov2")`     |          0.566           |       0.332        |    0.795     |  0.740   |
+|      `ViTExtractor_v2.from_pretrained("vitb14_dinov2")`      |          0.565           |       0.342        |    0.842     |  0.644   |
+|   `ViTExtractor_v2.from_pretrained("vitb14_reg_dinov2")`     |          0.557           |       0.324        |    0.833     |  0.828   |
+|      `ViTExtractor_v2.from_pretrained("vitl14_dinov2")`      |          0.576           |       0.352        |    0.844     |  0.692   |
+|   `ViTExtractor_v2.from_pretrained("vitl14_reg_dinov2")`     |          0.571           |       0.340        |    0.840     |  0.871   |
 
 **The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
