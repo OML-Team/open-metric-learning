@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
-from torch import BoolTensor, LongTensor, Tensor
+from torch import Tensor
 
 from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
@@ -27,10 +27,10 @@ def calc_retrieval_metrics(
     Function to count different retrieval metrics.
 
     Args:
-        distances: Matrix of sorted distances with the shape of ``[query_size, gallery_size]``
-        mask_gt: ``(i,j)`` element indicates if ``j``-th retrieved result is the correct prediction for ``i``-th query
-        mask_to_ignore: ``(i, j)`` element indicates if ``j``-th retrieved result should be ignored for ``i``-th query
-                        and should not affect the metrics
+        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
+        mask_gt: ``(i,j)`` element indicates if for ``i``-th query ``j``-th gallery is the correct prediction
+        mask_to_ignore: Binary matrix to indicate that some elements in the gallery cannot be used
+                     as answers and must be ignored
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
@@ -46,7 +46,7 @@ def calc_retrieval_metrics(
     top_k_args = [cmc_top_k, precision_top_k, map_top_k]
 
     if not any(top_k_args + [fmr_vals]):
-        raise ValueError("There are no metrics to calculate.")
+        raise ValueError("You must specify arguments for at leas 1 metric to calculate it")
 
     if distances.shape != mask_gt.shape:
         raise ValueError(
@@ -60,39 +60,42 @@ def calc_retrieval_metrics(
             f"but mask_to_ignore has the shape of {mask_to_ignore.shape}."
         )
 
-    _, n_retrieved = distances.shape
+    query_sz, gallery_sz = distances.shape
 
     for top_k_arg in top_k_args:
         for k in top_k_arg:
-            if k > n_retrieved:
+            if k > gallery_sz:
                 warnings.warn(
-                    f"Your desired k = {k} exceeds the number of retrieved objects considered = {n_retrieved}. "
-                    f"We'll calculate metrics with k limited by {n_retrieved}."
+                    f"Your desired k={k} more than gallery_size={gallery_sz}. "
+                    f"We'll calculate metrics with k limited by the gallery size."
                 )
 
     if mask_to_ignore is not None:
-        distances, mask_gt = apply_mask_to_ignore(
-            distances_neigh=distances, mask_gt_neigh=mask_gt, mask_to_ignore_neigh=mask_to_ignore
-        )
+        distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
-    cmc_top_k_clipped = clip_max(cmc_top_k, n_retrieved)
-    precision_top_k_clipped = clip_max(precision_top_k, n_retrieved)
-    map_top_k_clipped = clip_max(map_top_k, n_retrieved)
+    cmc_top_k_clipped = clip_max(cmc_top_k, gallery_sz)
+    precision_top_k_clipped = clip_max(precision_top_k, gallery_sz)
+    map_top_k_clipped = clip_max(map_top_k, gallery_sz)
 
+    max_k = max([*cmc_top_k, *precision_top_k, *map_top_k])
+    max_k = min(max_k, gallery_sz)
+
+    _, ii_top_k = torch.topk(distances, k=max_k, largest=False)
+    gt_tops = take_2d(mask_gt, ii_top_k)
     n_gt = mask_gt.sum(dim=1)
 
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
-        cmc = calc_cmc(mask_gt, cmc_top_k_clipped)
+        cmc = calc_cmc(gt_tops, cmc_top_k_clipped)
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
-        precision = calc_precision(mask_gt, n_gt, precision_top_k_clipped)
+        precision = calc_precision(gt_tops, n_gt, precision_top_k_clipped)
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map = calc_map(mask_gt, n_gt, map_top_k_clipped)
+        map = calc_map(gt_tops, n_gt, map_top_k_clipped)
         metrics["map"] = dict(zip(map_top_k, map))
 
     if fmr_vals:
@@ -143,46 +146,28 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     return output
 
 
-def apply_mask_to_ignore(
-    distances_neigh: Tensor, mask_gt_neigh: Tensor, mask_to_ignore_neigh: Tensor
-) -> Tuple[Tensor, Tensor]:
-    """
-    Args:
-        distances_neigh: Matrix with the shape of [n_queries, n_neighbors]
-        mask_gt_neigh: Matrix of the same shape indicating correctly retrieved neighbors
-        mask_to_ignore_neigh: Matrix of the same shape indicating neighbors to ignore in further metrics calculations
-
-    """
-    distances_neigh[mask_to_ignore_neigh] = float("inf")
-    mask_gt_neigh[mask_to_ignore_neigh] = False
-
-    # this operation doesn't require heavy computing because we only sort among top neighbors
-    ii_sort = distances_neigh.argsort(axis=1)
-
-    distances_neigh = take_2d(distances_neigh, ii_sort)
-    mask_gt_neigh = take_2d(mask_gt_neigh, ii_sort)
-
-    return distances_neigh, mask_gt_neigh
+def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
+    distances[mask_to_ignore] = float("inf")
+    mask_gt[mask_to_ignore] = False
+    return distances, mask_gt
 
 
-def calc_gt_mask(labels: LongTensor, is_query: BoolTensor, is_gallery: BoolTensor, ii_neigh: LongTensor) -> BoolTensor:
+def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
 
-    query_labels = labels[is_query][..., None]
-    gallery_labels = labels[is_gallery][ii_neigh]
-
-    gt_mask = query_labels == gallery_labels
+    query_mask = is_query == 1
+    gallery_mask = is_gallery == 1
+    query_labels = labels[query_mask]
+    gallery_labels = labels[gallery_mask]
+    gt_mask = query_labels[..., None] == gallery_labels[None, ...]
 
     return gt_mask
 
 
 def calc_mask_to_ignore(
-    is_query: BoolTensor,
-    is_gallery: BoolTensor,
-    ii_neigh: LongTensor,
-    sequence_ids: Optional[Union[Tensor, np.ndarray]] = None,
-) -> BoolTensor:
+    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
+) -> Tensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
@@ -194,21 +179,18 @@ def calc_mask_to_ignore(
     ids_gallery = torch.nonzero(is_gallery).squeeze()
 
     # this mask excludes duplicates of queries from the gallery if any
-    mask_to_ignore_neigh = ids_query[..., None] == ids_gallery[ii_neigh]
+    mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
 
     if sequence_ids is not None:
         # this mask ignores gallery samples taken from the same sequence as a given query
-        mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][ii_neigh]
-        mask_to_ignore_neigh = np.logical_or(
-            mask_to_ignore_neigh, mask_to_ignore_seq
-        )  # numpy casts tensor to numpy array
-        mask_to_ignore_neigh = torch.tensor(mask_to_ignore_neigh).bool()
+        mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
+        mask_to_ignore = np.logical_or(mask_to_ignore, mask_to_ignore_seq)  # numpy casts tensor to numpy array
+        mask_to_ignore = torch.tensor(mask_to_ignore, dtype=torch.bool)
 
-    return mask_to_ignore_neigh
+    return mask_to_ignore
 
 
 def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
-    # we don't use need this function anymore after we moved to batched_top_k
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)
 
