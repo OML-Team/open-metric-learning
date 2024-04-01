@@ -7,7 +7,7 @@ from typing import Union
 
 import torch
 
-import oml.models.vit_dinov2.external.vision_transformer as vits
+import oml.models.vit_dino.external_v2.vision_transformer as vits
 from oml.const import CKPT_SAVE_ROOT
 
 # ============== CODE FROM DINOV2 ==============

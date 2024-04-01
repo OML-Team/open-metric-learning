@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.init import trunc_normal_
 
-from oml.models.vit_dinov2.external.config import use_fused_attn
+from oml.models.vit_dino.external_v2.config import use_fused_attn
 
 
 def named_apply(fn: Callable, module: nn.Module, name="", depth_first=True, include_root=False) -> nn.Module:
