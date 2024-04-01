@@ -7,8 +7,10 @@ import torch
 from oml.utils.misc_torch import (
     PCA,
     assign_2d,
+    batched_knn,
     drop_duplicates_by_ids,
     elementwise_dist,
+    pairwise_dist,
     take_2d,
 )
 
@@ -21,6 +23,22 @@ def test_elementwise_dist() -> None:
     val_custom = np.sqrt(((np.array(x1) - np.array(x2)) ** 2).sum(axis=1))
 
     assert torch.isclose(val_torch, torch.tensor(val_custom)).all()
+
+
+def test_batched_knn(n_generations: int = 5) -> None:
+    for _ in range(n_generations):
+        nq, ng, dim = 30, 50, 16
+        k, bs = 13, 9
+
+        query = torch.randn(nq, dim).float()
+        gallery = torch.randn(ng, dim).float()
+        distances_neigh, ids_neih = batched_knn(query, gallery, k_neigh=k, batch_size=bs)
+
+        distances = pairwise_dist(query, gallery)
+        distances_top_k_expected, ids_top_k_expected = torch.topk(distances, k=k, largest=False, sorted=True)
+
+        assert torch.isclose(distances_neigh, distances_top_k_expected).all()
+        assert (ids_neih == ids_top_k_expected).all()
 
 
 # fmt: off

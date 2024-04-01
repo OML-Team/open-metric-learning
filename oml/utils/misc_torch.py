@@ -98,6 +98,22 @@ def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     return cdist(x1=x1, x2=x2, p=p)
 
 
+def batched_knn(
+    query: torch.Tensor, gallery: torch.Tensor, k_neigh: int, batch_size: int
+) -> Tuple[torch.FloatTensor, torch.LongTensor]:
+    ids_neigh = torch.LongTensor(query.shape[0], k_neigh)
+    distances_neigh = torch.FloatTensor(query.shape[0], k_neigh)
+
+    for i in range(0, query.shape[0], batch_size):
+        distances_batch = pairwise_dist(x1=query[i : i + batch_size], x2=gallery)
+        distances_batch_neigh, ids_batch_neigh = torch.topk(distances_batch, k=k_neigh, largest=False, sorted=True)
+
+        ids_neigh[i : i + batch_size] = ids_batch_neigh
+        distances_neigh[i : i + batch_size] = distances_batch_neigh
+
+    return distances_neigh, ids_neigh
+
+
 def normalise(x: Tensor, p: int = 2) -> Tensor:
     """
     Args:
@@ -456,6 +472,7 @@ class PCA:
 __all__ = [
     "elementwise_dist",
     "pairwise_dist",
+    "batched_knn",
     "OnlineCalc",
     "AvgOnline",
     "SumOnline",
