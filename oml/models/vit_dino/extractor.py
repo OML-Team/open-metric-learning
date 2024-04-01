@@ -19,6 +19,14 @@ from oml.models.vit_dino.external.hubconf import (  # type: ignore
     dino_vits8,
     dino_vits16,
 )
+from oml.models.vit_dino.external_v2.hubconf import (  # type: ignore
+    dinov2_vitb14,
+    dinov2_vitb14_reg,
+    dinov2_vitl14,
+    dinov2_vitl14_reg,
+    dinov2_vits14,
+    dinov2_vits14_reg,
+)
 from oml.transforms.images.albumentations import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
 from oml.utils.misc_torch import normalise, temporary_setting_model_mode
@@ -32,7 +40,18 @@ class ViTExtractor(IExtractor):
 
     """
 
-    constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
+    constructors = {
+        "vits8": dino_vits8,
+        "vits16": dino_vits16,
+        "vitb8": dino_vitb8,
+        "vitb16": dino_vitb16,
+        "vits14": dinov2_vits14,
+        "vitb14": dinov2_vitb14,
+        "vitl14": dinov2_vitl14,
+        "vits14_reg": dinov2_vits14_reg,
+        "vitb14_reg": dinov2_vitb14_reg,
+        "vitl14_reg": dinov2_vitl14_reg,
+    }
 
     pretrained_models = {
         # checkpoints pretrained in DINO framework on ImageNet by MetaAI
@@ -60,27 +79,75 @@ class ViTExtractor(IExtractor):
             "fname": "vitb8_dino.ckpt",
             "init_args": {"arch": "vitb8", "normalise_features": False},
         },
+        "vits14_dinov2": {
+            "url": f"{_FB_URL}/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
+            "hash": "2e405c",
+            "fname": "dinov2_vits14.ckpt",
+            "init_args": {"arch": "vits14", "normalise_features": False},
+        },
+        "vits14_reg_dinov2": {
+            "url": f"{_FB_URL}/dinov2/dinov2_vits14/dinov2_vits14_reg4_pretrain.pth",
+            "hash": "2a50c5",
+            "fname": "dinov2_vits14_reg4.ckpt",
+            "init_args": {"arch": "vits14_reg", "normalise_features": False},
+        },
+        "vitb14_dinov2": {
+            "url": f"{_FB_URL}/dinov2/dinov2_vitb14/dinov2_vitb14_pretrain.pth",
+            "hash": "8635e7",
+            "fname": "dinov2_vitb14.ckpt",
+            "init_args": {"arch": "vitb14", "normalise_features": False},
+        },
+        "vitb14_reg_dinov2": {
+            "url": f"{_FB_URL}/dinov2/dinov2_vitb14/dinov2_vitb14_reg4_pretrain.pth",
+            "hash": "13d13c",
+            "fname": "dinov2_vitb14_reg4.ckpt",
+            "init_args": {"arch": "vitb14_reg", "normalise_features": False},
+        },
+        "vitl14_dinov2": {
+            "url": f"{_FB_URL}/dinov2/dinov2_vitl14/dinov2_vitl14_pretrain.pth",
+            "hash": "19a02c",
+            "fname": "dinov2_vitl14.ckpt",
+            "init_args": {"arch": "vitl14", "normalise_features": False},
+        },
+        "vitl14_reg_dinov2": {
+            "url": f"{_FB_URL}/dinov2/dinov2_vitl14/dinov2_vitl14_reg4_pretrain.pth",
+            "hash": "8b6364",
+            "fname": "dinov2_vitl14_reg4.ckpt",
+            "init_args": {"arch": "vitl14_reg", "normalise_features": False},
+        },
         # our pretrained checkpoints
         "vits16_inshop": {
-            "url": [f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
+            "url": [
+                f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt",
+                "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW",
+            ],
             "hash": "a76b85",
             "fname": "vits16_inshop.ckpt",
             "init_args": {"arch": "vits16", "normalise_features": False},
         },
         "vits16_sop": {
-            "url": [f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
+            "url": [
+                f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt",
+                "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A",
+            ],
             "hash": "21e743",
             "fname": "vits16_sop.ckpt",
             "init_args": {"arch": "vits16", "normalise_features": True},
         },
         "vits16_cub": {
-            "url": [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
+            "url": [
+                f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt",
+                "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G",
+            ],
             "hash": "e82633",
             "fname": "vits16_cub.ckpt",
             "init_args": {"arch": "vits16", "normalise_features": False},
         },
         "vits16_cars": {
-            "url": [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
+            "url": [
+                f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt",
+                "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg",
+            ],
             "hash": "9f1e59",
             "fname": "vits16_cars.ckpt",
             "init_args": {"arch": "vits16", "normalise_features": False},
@@ -179,7 +246,10 @@ class ViTExtractor(IExtractor):
 
 
 def vis_vit(
-    vit: ViTExtractor, image: Union[TPILImage, np.ndarray], mean: TNormParam = MEAN, std: TNormParam = STD
+    vit: ViTExtractor,
+    image: Union[TPILImage, np.ndarray],
+    mean: TNormParam = MEAN,
+    std: TNormParam = STD,
 ) -> np.ndarray:
     # this is the optional dependency
     from pytorch_grad_cam.utils.image import show_cam_on_image
