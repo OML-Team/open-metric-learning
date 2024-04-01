@@ -37,9 +37,7 @@ universities who have used OML in their theses.
 
 
 <div align="left">
-
-## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
-
+\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n
 <details>
 <summary>Why do I need OML?</summary>
 <p>
@@ -246,9 +244,7 @@ Unfortunately, we don't have ready-to-use tutorials for this kind of usage at th
 
 </p>
 </details>
-
-## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
-
+\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n
 * [**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 * **TUTORIAL TO START WITH:**
 [English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
@@ -266,9 +262,7 @@ for our paper
 
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
-
-## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
-
+\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n
 OML is available in PyPI:
 
 ```shell
@@ -281,9 +275,7 @@ You can also pull the prepared image from DockerHub...
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
-
-## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
-
+\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n
 <details>
 <summary>Training</summary>
 <p>
@@ -489,18 +481,14 @@ print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 [MORE EXAMPLES](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html)
 
 [**Illustrations, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
-
-## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
-
+\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n
 Pipelines provide a way to run metric learning experiments via changing only the config file.
 All you need is to prepare your dataset in a required format.
 
 See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/) folder for more details:
 * Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 * Retrieval re-ranking [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing)
-
-## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
-
+\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)\n
 Models, trained by us.
 The metrics below are for **224 x 224** images:
 
@@ -512,7 +500,8 @@ The metrics below are for **224 x 224** images:
 |  `ViTExtractor.from_pretrained("vits16_cub")`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cub)   |
 
 Models, trained by other researchers.
-The metrics below are for **224 x 224** images:
+Note, that some metrics on particular benchmarks are so high because they were part of the training dataset (for example `unicom`).
+The metrics below are for 224 x 224 images:
 
 |                            model                             | Stanford Online Products | DeepFashion InShop | CUB 200 2011 | CARS 196 |
 |:------------------------------------------------------------:|:------------------------:|:------------------:|:------------:|:--------:|
@@ -530,14 +519,18 @@ The metrics below are for **224 x 224** images:
 |         `ViTExtractor.from_pretrained("vits8_dino")`         |          0.651           |       0.524        |    0.661     |  0.315   |
 |        `ViTExtractor.from_pretrained("vitb16_dino")`         |          0.658           |       0.514        |    0.541     |  0.288   |
 |         `ViTExtractor.from_pretrained("vitb8_dino")`         |          0.689           |       0.599        |    0.506     |  0.313   |
+|       `ViTExtractor.from_pretrained("vits14_dinov2")`        |          0.566           |       0.334        |    0.797     |  0.503   |
+|     `ViTExtractor.from_pretrained("vits14_reg_dinov2")`      |          0.566           |       0.332        |    0.795     |  0.740   |
+|       `ViTExtractor.from_pretrained("vitb14_dinov2")`        |          0.565           |       0.342        |    0.842     |  0.644   |
+|     `ViTExtractor.from_pretrained("vitb14_reg_dinov2")`      |          0.557           |       0.324        |    0.833     |  0.828   |
+|       `ViTExtractor.from_pretrained("vitl14_dinov2")`        |          0.576           |       0.352        |    0.844     |  0.692   |
+|     `ViTExtractor.from_pretrained("vitl14_reg_dinov2")`      |          0.571           |       0.340        |    0.840     |  0.871   |
 |    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`     |          0.493           |       0.267        |    0.264     |  0.149   |
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")`  |          0.515           |       0.284        |    0.455     |  0.247   |
 
 **The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
-
-### How to use models from Zoo?
-
+\n### How to use models from Zoo?\n
 [comment]:zoo-start
 ```python
 from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
@@ -560,15 +553,11 @@ print(list(ViTExtractor.pretrained_models.keys()))
 model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
 ```
 [comment]:zoo-end
-
-## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
-
+\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n
 We welcome new contributors! Please, see our:
 * [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
 * [Kanban board](https://github.com/OML-Team/open-metric-learning/projects/1)
-
-## Acknowledgments
-
+\n## Acknowledgments\n
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
 
 The project was started in 2020 as a module for [Catalyst](https://github.com/catalyst-team/catalyst) library.
