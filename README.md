@@ -37,7 +37,9 @@ universities who have used OML in their theses.
 
 
 <div align="left">
-\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n
+
+## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
+
 <details>
 <summary>Why do I need OML?</summary>
 <p>
@@ -244,7 +246,9 @@ Unfortunately, we don't have ready-to-use tutorials for this kind of usage at th
 
 </p>
 </details>
-\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n
+
+## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
+
 * [**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 * **TUTORIAL TO START WITH:**
 [English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
@@ -262,7 +266,9 @@ for our paper
 
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
-\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n
+
+## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
+
 OML is available in PyPI:
 
 ```shell
@@ -275,7 +281,9 @@ You can also pull the prepared image from DockerHub...
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
-\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n
+
+## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
+
 <details>
 <summary>Training</summary>
 <p>
@@ -481,14 +489,18 @@ print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 [MORE EXAMPLES](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html)
 
 [**Illustrations, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
-\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n
+
+## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
+
 Pipelines provide a way to run metric learning experiments via changing only the config file.
 All you need is to prepare your dataset in a required format.
 
 See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/) folder for more details:
 * Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 * Retrieval re-ranking [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing)
-\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)\n
+
+## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
+
 Models, trained by us.
 The metrics below are for **224 x 224** images:
 
@@ -530,7 +542,9 @@ The metrics below are for 224 x 224 images:
 
 **The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
-\n### How to use models from Zoo?\n
+
+### How to use models from Zoo?
+
 [comment]:zoo-start
 ```python
 from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
@@ -553,11 +567,15 @@ print(list(ViTExtractor.pretrained_models.keys()))
 model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
 ```
 [comment]:zoo-end
-\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n
+
+## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
+
 We welcome new contributors! Please, see our:
 * [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
 * [Kanban board](https://github.com/OML-Team/open-metric-learning/projects/1)
-\n## Acknowledgments\n
+
+## Acknowledgments
+
 <a href="https://github.com/catalyst-team/catalyst" target="_blank"><img src="https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/catalyst_logo.png" width="100"/></a>
 
 The project was started in 2020 as a module for [Catalyst](https://github.com/catalyst-team/catalyst) library.
