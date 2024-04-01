@@ -1,4 +1,6 @@
 grad-cam==1.4.6
 jupyter>=1.0.0
-neptune-client>=0.14.2, <1.0.0
+neptune>=1.0.0, <1.10.1
 wandb>=0.15.4
+mlflow>=2.0.0
+

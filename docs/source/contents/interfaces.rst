@@ -104,3 +104,12 @@ ITripletsMinerInBatch
 
     .. automethod:: _sample
     .. automethod:: sample
+
+IPipelineLogger
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.loggers.IPipelineLogger
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: log_figure
+    .. automethod:: log_pipeline_info

@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from oml.const import DOTENV_PATH, TCfg
+from oml.const import TCfg
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -66,12 +66,6 @@ def flatten_dict(
         else:
             items.append((new_key, v))
     return dict(items)
-
-
-def load_dotenv() -> None:
-    import dotenv  # this is the optional dependency
-
-    dotenv.load_dotenv(DOTENV_PATH)
 
 
 def dictconfig_to_dict(cfg: TCfg) -> Dict[str, Any]:
@@ -181,7 +175,6 @@ __all__ = [
     "set_global_seed",
     "one_hot",
     "flatten_dict",
-    "load_dotenv",
     "dictconfig_to_dict",
     "smart_sample",
     "clip_max",

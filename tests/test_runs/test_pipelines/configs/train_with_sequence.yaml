@@ -12,7 +12,7 @@ num_workers: 0
 cache_size: 10
 
 transforms_train:
-  name: augs_torch
+  name: augs_albu
   args:
     im_size: 64
 
@@ -76,9 +76,9 @@ max_epochs: 2
 valid_period: 1
 
 logger:
-  name: tensorboard
+  name: neptune
   args:
-    save_dir: "."
+    project: "oml-team/test"
 
 
 lightning_trainer_extra_args:

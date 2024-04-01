@@ -392,7 +392,7 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
-from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger, WandbLogger
+from oml.lightning.pipelines.logging import NeptunePipelineLogger, TensorBoardPipelineLogger, WandBPipelineLogger, MLFlowPipelineLogger
 
 dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
@@ -413,15 +413,18 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
 
 # 1) Logging with Tensorboard
-logger = TensorBoardLogger(".")
+logger = TensorBoardPipelineLogger(".")
 
 # 2) Logging with Neptune
-# logger = NeptuneLogger(api_key="", project="", log_model_checkpoints=False)
+# logger = NeptunePipelineLogger(api_key="", project="", log_model_checkpoints=False)
 
 # 3) Logging with Weights and Biases
 # import os
 # os.environ["WANDB_API_KEY"] = ""
-# logger = WandbLogger(project="test_project", log_model=False)
+# logger = WandBPipelineLogger(project="test_project", log_model=False)
+
+# 4) Logging with MLFlow locally
+# logger = MLFlowPipelineLogger(experiment_name="exp", tracking_uri="file:./ml-runs")
 
 # run
 pl_model = ExtractorModule(extractor, criterion, optimizer)
