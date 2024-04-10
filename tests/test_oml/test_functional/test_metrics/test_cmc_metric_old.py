@@ -13,7 +13,7 @@ from oml.utils.misc_torch import pairwise_dist
 def cmc_score_count(distances: Tensor, mask_gt: Tensor, topk: int, mask_to_ignore: Optional[Tensor] = None) -> float:
     metrics = calc_retrieval_metrics(
         distances=distances,
-        mask_gt=mask_gt,
+        gt_ids=mask_gt,
         mask_to_ignore=mask_to_ignore,
         cmc_top_k=(topk,),
         map_top_k=tuple(),
