@@ -29,7 +29,7 @@ TPositions = List[List[int]]
 def adapt_metric_inputs(
     distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
 ) -> Tuple[LongTensor, List[List[int]]]:
-    # todo 525: rework this function (and where it's called) after we implement RetrievalPrediction class
+    # todo 522: rework this function (and where it's called) after we implement RetrievalPrediction class
 
     # Note, we've changed the input format of the metrics function.
     # To change tests minimally we simply adapt formats
@@ -316,4 +316,4 @@ def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
 
 
-# todo 525: add a test for a new metric signature with clipped matrix of predictions
+# todo 522: add a test for a new metric signature with clipped matrix of predictions

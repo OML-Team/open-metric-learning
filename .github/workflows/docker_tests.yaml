@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - main
-      - main_rework_validation  # todo 525
+      - main_rework_validation  # todo 522
   push:
     branches:
-      - main_rework_validation  # todo 525
+      - main_rework_validation  # todo 522
 
 jobs:
   all_tests:

@@ -209,7 +209,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         metrics: TMetricsDict_ByLabels = dict()
 
-        # todo 525: temp solution
+        # todo 522: temp solution
         max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
         k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
         _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
@@ -241,7 +241,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
-                # todo 525: reuse calculated values
+                # todo 522: reuse calculated values
                 metrics[category] = calc_retrieval_metrics(
                     retrieved_ids=retrieved_ids[mask],  # type: ignore
                     gt_ids=[gt_ids[i] for i in mask.nonzero()[0].tolist()],  # type: ignore
