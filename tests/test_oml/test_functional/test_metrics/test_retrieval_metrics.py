@@ -314,3 +314,6 @@ def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
         pos_dist = torch.zeros(10)
         neg_dist = torch.ones(10)
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+
+
+# todo 525: add a test for a new metric signature with clipped matrix of predictions

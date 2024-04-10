@@ -108,6 +108,7 @@ def save_transforms_as_files(cfg: TCfg) -> List[Tuple[str, str]]:
                     keys_files.append((key, transforms_file))
             except Exception:
                 print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
+    print(keys_files, "zzzz")
     return keys_files
 
 
