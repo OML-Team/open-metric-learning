@@ -1,4 +1,4 @@
-from abc import ABC
+from copy import deepcopy
 from copy import deepcopy
 from pprint import pprint
 from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
@@ -23,21 +23,13 @@ from oml.const import (
     LOG_TOPK_ROWS_PER_METRIC,
     N_GT_SHOW_EMBEDDING_METRICS,
     OVERALL_CATEGORIES_KEY,
-    PATHS_KEY,
     RED,
-    X1_KEY,
-    X2_KEY,
-    Y1_KEY,
-    Y2_KEY,
 )
-from oml.datasets.base import DatasetQueryGallery, IVisualizableItems
+from oml.datasets.base import DatasetQueryGallery
 from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
-    apply_mask_to_ignore,
-    calc_distance_matrix,
     calc_gt_mask,
-    calc_mask_to_ignore,
     calc_retrieval_metrics,
     calc_topological_metrics,
     reduce_metrics,
@@ -45,7 +37,6 @@ from oml.functional.metrics import (
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
-from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 from oml.utils.misc_torch import pairwise_dist, take_2d
 
@@ -92,6 +83,22 @@ def batched_knn(
     return distances_neigh, ids_neigh, mask_to_ignore_neigh
 
 
+def test_batched_knn(n_generations: int = 5) -> None:
+    for _ in range(n_generations):
+        nq, ng, dim = 30, 50, 16
+        k, bs = 13, 9
+
+        query = torch.randn(nq, dim).float()
+        gallery = torch.randn(ng, dim).float()
+        distances_neigh, ids_neih = batched_knn(query, gallery, k_neigh=k, batch_size=bs)
+
+        distances = pairwise_dist(query, gallery)
+        distances_top_k_expected, ids_top_k_expected = torch.topk(distances, k=k, largest=False, sorted=True)
+
+        assert torch.isclose(distances_neigh, distances_top_k_expected).all()
+        assert (ids_neih == ids_top_k_expected).all()
+
+
 class Prediction:
     def __init__(
         self,
@@ -102,10 +109,10 @@ class Prediction:
     ):
         assert distances.shape == gallery_ids.shape == mask_gt.shape
 
-        self.distances = distances
-        self.gallery_ids = gallery_ids
-        self.mask_gt = mask_gt
-        self.n_gts = n_gts
+        self.distances = distances  # QxK
+        self.retrieved_ids = gallery_ids  # QxK
+        self.mask_gt = mask_gt  # QxK
+        self.n_gts = n_gts  # Qx1 todo
 
         # todo: self.is_partial_prediction?
 
@@ -136,6 +143,11 @@ class Prediction:
             mask_gt = calc_gt_mask(labels=labels_gt, is_query=is_query, is_gallery=is_gallery)
             mask_gt[mask_to_ignore_top] = False
             # todo: deu to need of n_gt, should replace mask_gt -> gt_ids???
+
+            # 2 arguments
+            # 1 arg: keep ful mask_gt (incosistency)
+            # 1 arg: gt_ids [[2, 3], [1], [3, 5]] - index error (+)
+
             mask_gt_top = take_2d(mask_gt, gallery_ids)
             n_gts = mask_gt.sum(dim=1)
         else:
@@ -149,6 +161,7 @@ class Prediction:
             n_gts=n_gts,
         )
 
+    # todo: rename visualise
     def plot_queries(
         self, query_ids: List[int], n_instances: int, dataset: DatasetQueryGallery, verbose: bool = True
     ) -> plt.Figure:
@@ -174,7 +187,7 @@ class Prediction:
             plt.title("Query")
             plt.axis("off")
 
-            ids = self.gallery_ids[query_idx][:n_instances]
+            ids = self.retrieved_ids[query_idx][:n_instances]
 
             for i, idx in enumerate(ids):
                 if self.mask_gt is not None:
@@ -192,7 +205,7 @@ class Prediction:
                 plt.imshow(img)
                 plt.axis("off")
 
-            # todo: it's not correct! the gt mask is not full
+            # todo: it's not correct! the gt_mask is not full
             if self.mask_gt is not None:
                 ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:n_gt]  # type: ignore
 
@@ -345,7 +358,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         if self.postprocessor:
             # todo: refactor logic (or just keep full distances matrix for now, but need to check
             # todo: topk performance in the case of big k)
+            # topk
             self.prediction = self.postprocessor.process_by_dict(self.prediction.distances, data=self.acc.storage)
+            # reverse
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
@@ -358,6 +373,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         self._compute_prediction()
 
         metrics_dict: TMetricsDict_ByLabels = dict()
+
+        # dist_topk = ...
 
         # note, here we do micro averaging
         metrics_unreduced = calc_retrieval_metrics(
