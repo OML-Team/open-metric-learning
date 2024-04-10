@@ -31,6 +31,7 @@ from oml.functional.metrics import (
     TMetricsDict,
     apply_mask_to_ignore,
     calc_distance_matrix,
+    calc_fnmr_at_fmr_from_matrices,
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
@@ -223,9 +224,14 @@ class EmbeddingMetrics(IMetricVisualisable):
         )
 
         embeddings = self.acc.storage[self.embeddings_key]
-        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
 
-        # todo 525: compute fmr separately
+        metrics[self.overall_categories_key].update(
+            calc_topological_metrics(embeddings.float(), **args_topological_metrics)  # type: ignore
+        )
+
+        metrics[self.overall_categories_key].update(
+            calc_fnmr_at_fmr_from_matrices(self.distance_matrix, self.mask_gt, self.fmr_vals)
+        )
 
         if self.categories_key is not None:
             categories = np.array(self.acc.storage[self.categories_key])
@@ -235,12 +241,18 @@ class EmbeddingMetrics(IMetricVisualisable):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
-                # todo 525: reuse
+                # todo 525: reuse calculated values
                 metrics[category] = calc_retrieval_metrics(
                     retrieved_ids=retrieved_ids[mask],  # type: ignore
-                    gt_ids=[gt_ids[i] for i in mask.nonzero().tolist()],  # type: ignore
+                    gt_ids=[gt_ids[i] for i in mask.nonzero()[0].tolist()],  # type: ignore
                     reduce=False,
                     **args_retrieval_metrics,  # type: ignore
+                )
+
+                metrics[category].update(
+                    calc_fnmr_at_fmr_from_matrices(
+                        self.distance_matrix[mask], self.mask_gt[mask], self.fmr_vals  # type: ignore
+                    )
                 )
 
                 mask = categories == category

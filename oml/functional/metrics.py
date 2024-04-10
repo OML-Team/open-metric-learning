@@ -82,6 +82,7 @@ def calc_topological_metrics(embeddings: FloatTensor, pcf_variance: Tuple[float,
     metrics: TMetricsDict = dict()
 
     if pcf_variance:
+        _check_if_in_range(pcf_variance, 0, 1, "pfc_variance")
         main_components = calc_pcf(embeddings, pcf_variance)
         metrics["pcf"] = dict(zip(pcf_variance, main_components))
 
@@ -368,7 +369,9 @@ def calc_map(gt_tops: BoolTensor, n_gt: LongTensor, top_k: Tuple[int, ...]) -> L
     return map
 
 
-def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> FloatTensor:
+def calc_fnmr_at_fmr(
+    pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...] = (0.1,)
+) -> List[FloatTensor]:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
@@ -442,6 +445,19 @@ def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tup
     return fnmr_at_fmr
 
 
+def calc_fnmr_at_fmr_from_matrices(
+    distance_matrix: FloatTensor, mask_gt: BoolTensor, fmr_vals: Tuple[float, ...]
+) -> TMetricsDict:
+    metrics = dict()
+
+    if fmr_vals:
+        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, mask_gt)
+        fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+        metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
+
+    return metrics
+
+
 def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[FloatTensor]:
     """
     Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
@@ -506,7 +522,7 @@ def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[F
 
 
 def extract_pos_neg_dists(
-    distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor]
+    distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
 ) -> Tuple[FloatTensor, FloatTensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.
