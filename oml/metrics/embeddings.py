@@ -212,7 +212,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         # note, here we do micro averaging
         metrics[self.overall_categories_key] = calc_retrieval_metrics(
             distances=self.distance_matrix,
-            gt_ids=self.mask_gt,
+            mask_gt=self.mask_gt,
             reduce=False,
             mask_to_ignore=None,  # we already applied it
             **args_retrieval_metrics,  # type: ignore
@@ -231,7 +231,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
                 metrics[category] = calc_retrieval_metrics(
                     distances=self.distance_matrix[mask],  # type: ignore
-                    gt_ids=self.mask_gt[mask],  # type: ignore
+                    mask_gt=self.mask_gt[mask],  # type: ignore
                     reduce=False,
                     mask_to_ignore=None,  # we already applied it
                     **args_retrieval_metrics,  # type: ignore
