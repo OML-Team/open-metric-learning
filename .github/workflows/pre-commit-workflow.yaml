@@ -4,11 +4,13 @@ on:
   pull_request:
     branches:
       - main
+      - main_rework_validation  # todo 525
     paths-ignore:
       - 'README.md'
   push:
     branches:
       - main
+      - main_rework_validation  # todo 525
     paths-ignore:
       - 'README.md'
 

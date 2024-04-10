@@ -29,7 +29,7 @@ TPositions = List[List[int]]
 def adapt_metric_inputs(
     distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
 ) -> Tuple[LongTensor, List[List[int]]]:
-    # todo 525: rework this function after we implement RetrievalPrediction class
+    # todo 525: rework this function (and where it's called) after we implement RetrievalPrediction class
 
     # Note, we've changed the input format of the metrics function.
     # To change tests minimally we simply adapt formats

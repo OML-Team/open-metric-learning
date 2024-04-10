@@ -25,9 +25,10 @@ def calc_retrieval_metrics(
     Function to count different retrieval metrics.
 
     Args:
-        retrieved_ids: Top N gallery ids retrieved for every query with the shape of ``[n_query, top_n]``
+        retrieved_ids: Top N gallery ids retrieved for every query with the shape of ``[n_query, top_n]``.
+            Every element is within the range ``(0, n_gallery - 1)``.
         gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
-            have an arbitrary length
+            have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
@@ -39,38 +40,23 @@ def calc_retrieval_metrics(
     """
     assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
     n_queries = len(retrieved_ids)
-    top_n = retrieved_ids.shape[1]
 
     # let's mark every correctly retrieved item as True and vice versa
     gt_tops = stack([isin(retrieved_ids[i], tensor(gt_ids[i])) for i in range(n_queries)]).bool()
-
     n_gts = tensor([len(ids) for ids in gt_ids]).long()
-
-    top_k_args = [*cmc_top_k, *precision_top_k, *map_top_k]
-
-    for k in top_k_args:
-        if k > top_n:
-            warnings.warn(
-                f"Your desired k={k} is more than the number of considering retrieved results={top_n}. "
-                f"We'll calculate metrics with the k limited by {top_n}."
-            )
-
-    cmc_top_k_clipped = clip_max(cmc_top_k, top_n)
-    precision_top_k_clipped = clip_max(precision_top_k, top_n)
-    map_top_k_clipped = clip_max(map_top_k, top_n)
 
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
-        cmc = calc_cmc(gt_tops, cmc_top_k_clipped)
+        cmc = calc_cmc(gt_tops, cmc_top_k)
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
-        precision = calc_precision(gt_tops, n_gts, precision_top_k_clipped)
+        precision = calc_precision(gt_tops, n_gts, precision_top_k)
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map = calc_map(gt_tops, n_gts, map_top_k_clipped)
+        map = calc_map(gt_tops, n_gts, map_top_k)
         metrics["map"] = dict(zip(map_top_k, map))
 
     if reduce:
@@ -226,7 +212,7 @@ def calc_cmc(gt_tops: BoolTensor, top_k: Tuple[int, ...]) -> List[FloatTensor]:
         [tensor([1., 0., 0.]), tensor([1., 1., 0.])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+    top_k = _clip_topk_argument_with_warning(top_k, gt_tops.shape[1], "cmc")
     cmc = []
     for k in top_k:
         cmc.append(torch.any(gt_tops[:, :k], dim=1).float())
@@ -304,7 +290,7 @@ def calc_precision(gt_tops: BoolTensor, n_gt: LongTensor, top_k: Tuple[int, ...]
         [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+    top_k = _clip_topk_argument_with_warning(top_k, gt_tops.shape[1], "precision")
     precision = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
@@ -371,7 +357,7 @@ def calc_map(gt_tops: BoolTensor, n_gt: LongTensor, top_k: Tuple[int, ...]) -> L
         [tensor([1., 0., 0.]), tensor([1.0000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+    top_k = _clip_topk_argument_with_warning(top_k, gt_tops.shape[1], "map")
     map = []
     correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
@@ -544,25 +530,15 @@ def extract_pos_neg_dists(
     return pos_dist, neg_dist
 
 
-def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
-    """
-    Clip ``arr`` by upper bound ``max_el`` and raise warning if required.
+def _clip_topk_argument_with_warning(top_k_values: Tuple[int, ...], max_val: int, metric_name: str) -> Tuple[int, ...]:
+    for k in top_k_values:
+        if k > max_val:
+            warnings.warn(
+                f"Your want to compute {metric_name}@{k}, but desired k={k} is more than the number of considering "
+                f"retrieved results={max_val}. So, we will calculate {metric_name}@{max_val} instead."
+            )
 
-    Args:
-        arr: Array to check and clip.
-        max_el: The upper limit.
-
-    Returns:
-        Clipped value of ``arr``.
-
-    # todo: duplicated logic?
-    """
-    if any(a > max_el for a in arr):
-        warnings.warn(
-            f"The desired value of top_k can't be larger than {max_el}, but got {arr}. "
-            f"The values of top_k will be clipped to {max_el}."
-        )
-    return clip_max(arr, max_el)
+    return clip_max(top_k_values, max_val)
 
 
 def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: str) -> None:

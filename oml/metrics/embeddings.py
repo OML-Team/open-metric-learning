@@ -208,7 +208,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         metrics: TMetricsDict_ByLabels = dict()
 
-        # todo: temp solution
+        # todo 525: temp solution
         max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
         k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
         _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
@@ -225,6 +225,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         embeddings = self.acc.storage[self.embeddings_key]
         metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
 
+        # todo 525: compute fmr separately
+
         if self.categories_key is not None:
             categories = np.array(self.acc.storage[self.categories_key])
             is_query = self.acc.storage[self.is_query_key]
@@ -233,10 +235,10 @@ class EmbeddingMetrics(IMetricVisualisable):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
-                # todo: reuse
+                # todo 525: reuse
                 metrics[category] = calc_retrieval_metrics(
                     retrieved_ids=retrieved_ids[mask],  # type: ignore
-                    gt_ids=np.array(gt_ids)[mask],  # type: ignore
+                    gt_ids=[gt_ids[i] for i in mask.nonzero().tolist()],  # type: ignore
                     reduce=False,
                     **args_retrieval_metrics,  # type: ignore
                 )
