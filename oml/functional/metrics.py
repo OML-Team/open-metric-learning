@@ -20,9 +20,10 @@ def calc_retrieval_metrics(
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
-    fmr_vals: Tuple[int, ...] = (1,),
+    fmr_vals: Tuple[float, ...] = (1,),
     reduce: bool = True,
 ) -> TMetricsDict:
+    # todo: rework
     """
     Function to count different retrieval metrics.
 
@@ -99,6 +100,7 @@ def calc_retrieval_metrics(
         metrics["map"] = dict(zip(map_top_k, map))
 
     if fmr_vals:
+        # todo: raise a warning if distances set is not full?
         pos_dist, neg_dist = extract_pos_neg_dists(distances, mask_gt, mask_to_ignore)
         fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
         metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))

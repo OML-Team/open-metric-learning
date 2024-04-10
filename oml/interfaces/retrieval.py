@@ -1,9 +1,10 @@
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 from torch import Tensor
 
 
-class IDistancesPostprocessor:
+class IDistancesPostprocessor(ABC):
     """
     This is a parent class for the classes which apply some postprocessing
     after query-to-gallery distance matrix has been calculated.
@@ -11,6 +12,7 @@ class IDistancesPostprocessor:
 
     """
 
+    @abstractmethod
     def process(self, distances: Tensor, queries: Any, galleries: Any) -> Tensor:
         """
         This method takes all the needed variables and returns
@@ -28,6 +30,7 @@ class IDistancesPostprocessor:
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def process_by_dict(self, distances: Tensor, data: Dict[str, Any]) -> Tensor:
         """
         This method is the analogue of ``process``, but data is passed as a dictionary,

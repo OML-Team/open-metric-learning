@@ -50,6 +50,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 GRAY = (120, 120, 120)
+BLACK = (0, 0, 0)
 PAD_COLOR = (255, 255, 255)
 
 TCfg = Union[Dict[str, Any], DictConfig]

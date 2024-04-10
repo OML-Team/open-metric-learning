@@ -1,14 +1,18 @@
+from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 import albumentations as albu
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torchvision
+from matplotlib.axes import Axes
 from torch.utils.data import Dataset
 
 from oml.const import (
+    BLUE,
     CATEGORIES_COLUMN,
     CATEGORIES_KEY,
     INDEX_KEY,
@@ -32,15 +36,28 @@ from oml.const import (
     Y1_KEY,
     Y2_COLUMN,
     Y2_KEY,
+    TColor,
 )
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader
+from oml.utils.images.images import TImReader, get_img_with_bbox, square_pad
 
 
-class BaseDataset(Dataset):
+class IVisualizableItems(ABC):
+    # todo: do we need it?
+
+    @abstractmethod
+    def visualize(self, idx: int, color: TColor) -> np.ndarray:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def __len__(self) -> int:
+        raise NotImplementedError()
+
+
+class BaseDataset(Dataset, IVisualizableItems):
     """
     Base class for the retrieval datasets.
 
@@ -202,6 +219,17 @@ class BaseDataset(Dataset):
             return self.x1_key, self.y1_key, self.x2_key, self.y2_key
         else:
             return tuple()
+
+    def visualize(self, idx: int, color: TColor = BLUE, padding: bool = True) -> np.ndarray:
+        item = self[idx]
+        bbox = item[self.x1_key], item[self.y1_key], item[self.x2_key], item[self.y2_key]
+        path = item[self.paths_key]
+        image = get_img_with_bbox(im_path=path, bbox=bbox, color=color)  # type: ignore
+
+        if padding:
+            image = square_pad(image)
+
+        return image
 
 
 class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
