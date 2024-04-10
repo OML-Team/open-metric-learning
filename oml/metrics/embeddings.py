@@ -165,10 +165,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.acc.update_data(data_dict=data_dict)
 
     def _calc_matrices(self) -> None:
-        embeddings = self.acc.storage[self.embeddings_key]
-        labels = self.acc.storage[self.labels_key]
-        is_query = self.acc.storage[self.is_query_key]
-        is_gallery = self.acc.storage[self.is_gallery_key]
+        embeddings = self.acc.storage[self.embeddings_key].float()  # type: ignore
+        labels = self.acc.storage[self.labels_key].long()  # type: ignore
+        is_query = self.acc.storage[self.is_query_key].bool()  # type: ignore
+        is_gallery = self.acc.storage[self.is_gallery_key].bool()  # type: ignore
         sequence_ids = self.acc.storage[self.sequence_key] if self.sequence_key is not None else None
 
         if isinstance(sequence_ids, list):
@@ -203,18 +203,22 @@ class EmbeddingMetrics(IMetricVisualisable):
             "cmc_top_k": self.cmc_top_k,
             "precision_top_k": self.precision_top_k,
             "map_top_k": self.map_top_k,
-            "fmr_vals": self.fmr_vals,
         }
         args_topological_metrics = {"pcf_variance": self.pcf_variance}
 
         metrics: TMetricsDict_ByLabels = dict()
 
+        # todo: temp solution
+        max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+        k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
+        _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
+        gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in self.mask_gt]  # type: ignore
+
         # note, here we do micro averaging
         metrics[self.overall_categories_key] = calc_retrieval_metrics(
-            distances=self.distance_matrix,
-            mask_gt=self.mask_gt,
+            retrieved_ids=retrieved_ids,
+            gt_ids=gt_ids,
             reduce=False,
-            mask_to_ignore=None,  # we already applied it
             **args_retrieval_metrics,  # type: ignore
         )
 
@@ -229,11 +233,11 @@ class EmbeddingMetrics(IMetricVisualisable):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
+                # todo: reuse
                 metrics[category] = calc_retrieval_metrics(
-                    distances=self.distance_matrix[mask],  # type: ignore
-                    mask_gt=self.mask_gt[mask],  # type: ignore
+                    retrieved_ids=retrieved_ids[mask],  # type: ignore
+                    gt_ids=np.array(gt_ids)[mask],  # type: ignore
                     reduce=False,
-                    mask_to_ignore=None,  # we already applied it
                     **args_retrieval_metrics,  # type: ignore
                 )
 

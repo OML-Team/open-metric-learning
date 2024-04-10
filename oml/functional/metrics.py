@@ -4,22 +4,22 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
-from torch import Tensor, LongTensor, isin, tensor, stack
+from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin, stack, tensor
 
 from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist
 
-TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
+TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, FloatTensor]]]
 
 
 def calc_retrieval_metrics(
-        retrieved_ids: LongTensor,
-        gt_ids: List[List[int]],
-        cmc_top_k: Tuple[int, ...] = (5,),
-        precision_top_k: Tuple[int, ...] = (5,),
-        map_top_k: Tuple[int, ...] = (5,),
-        reduce: bool = True,
+    retrieved_ids: LongTensor,
+    gt_ids: List[List[int]],
+    cmc_top_k: Tuple[int, ...] = (5,),
+    precision_top_k: Tuple[int, ...] = (5,),
+    map_top_k: Tuple[int, ...] = (5,),
+    reduce: bool = True,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -41,14 +41,12 @@ def calc_retrieval_metrics(
     n_queries = len(retrieved_ids)
     top_n = retrieved_ids.shape[1]
 
-    top_k_args = [*cmc_top_k, *precision_top_k, *map_top_k]
-
     # let's mark every correctly retrieved item as True and vice versa
     gt_tops = stack([isin(retrieved_ids[i], tensor(gt_ids[i])) for i in range(n_queries)]).bool()
-    # max_k = min(top_n, max(top_k_args))
-    # gt_tops = gt_tops[:, :max_k]  # todo: don't need to clip, check later
 
     n_gts = tensor([len(ids) for ids in gt_ids]).long()
+
+    top_k_args = [*cmc_top_k, *precision_top_k, *map_top_k]
 
     for k in top_k_args:
         if k > top_n:
@@ -81,7 +79,7 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_topological_metrics(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> TMetricsDict:
+def calc_topological_metrics(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
@@ -118,13 +116,15 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     return output
 
 
-def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
+def apply_mask_to_ignore(
+    distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: BoolTensor
+) -> Tuple[FloatTensor, BoolTensor]:
     distances[mask_to_ignore] = float("inf")
     mask_gt[mask_to_ignore] = False
     return distances, mask_gt
 
 
-def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
+def calc_gt_mask(labels: LongTensor, is_query: BoolTensor, is_gallery: BoolTensor) -> BoolTensor:
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
 
@@ -138,8 +138,8 @@ def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor
 
 
 def calc_mask_to_ignore(
-        is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
-) -> Tensor:
+    is_query: BoolTensor, is_gallery: BoolTensor, sequence_ids: Optional[Union[LongTensor, np.ndarray]] = None
+) -> BoolTensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
@@ -162,7 +162,7 @@ def calc_mask_to_ignore(
     return mask_to_ignore
 
 
-def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
+def calc_distance_matrix(embeddings: FloatTensor, is_query: BoolTensor, is_gallery: BoolTensor) -> FloatTensor:
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)
 
@@ -176,7 +176,7 @@ def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tenso
     return distance_matrix
 
 
-def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True) -> Tensor:
+def calculate_accuracy_on_triplets(embeddings: FloatTensor, reduce_mean: bool = True) -> FloatTensor:
     assert embeddings.ndim == 2
     assert embeddings.shape[0] % 3 == 0
 
@@ -193,7 +193,7 @@ def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True)
         return acc
 
 
-def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_cmc(gt_tops: BoolTensor, top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
@@ -233,7 +233,7 @@ def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     return cmc
 
 
-def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_precision(gt_tops: BoolTensor, n_gt: LongTensor, top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -313,7 +313,7 @@ def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> Lis
     return precision
 
 
-def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_map(gt_tops: BoolTensor, n_gt: LongTensor, top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -382,7 +382,7 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     return map
 
 
-def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> Tensor:
+def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> FloatTensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
@@ -456,7 +456,7 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     return fnmr_at_fmr
 
 
-def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor]:
+def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[FloatTensor]:
     """
     Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
     The metric is defined as a fraction of components needed to explain the required variance in data.
@@ -520,8 +520,8 @@ def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor
 
 
 def extract_pos_neg_dists(
-        distances: Tensor, mask_gt: Tensor, mask_to_ignore: Optional[Tensor]
-) -> Tuple[Tensor, Tensor]:
+    distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor]
+) -> Tuple[FloatTensor, FloatTensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.
 

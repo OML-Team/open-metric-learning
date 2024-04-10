@@ -1,9 +1,9 @@
 from collections import defaultdict
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import pytest
 import torch
-from torch import LongTensor, BoolTensor, FloatTensor
+from torch import BoolTensor, FloatTensor, LongTensor
 
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
@@ -26,11 +26,16 @@ from .synthetic import generate_distance_matrix, generate_retrieval_case
 TPositions = List[List[int]]
 
 
-def adapt_metric_inputs(distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: BoolTensor) -> [LongTensor, List[List[int]]]:
+def adapt_metric_inputs(
+    distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
+) -> Tuple[LongTensor, List[List[int]]]:
+    # todo 525: rework this function after we implement RetrievalPrediction class
+
     # Note, we've changed the input format of the metrics function.
     # To change tests minimally we simply adapt formats
 
-    distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
+    if mask_to_ignore is not None:
+        distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     retrieved_is = torch.argsort(distances, dim=1).long()
     gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in mask_gt]
@@ -51,7 +56,7 @@ def naive_map(positions: TPositions, k: int) -> torch.Tensor:
     for query_idx, pos in enumerate(positions):
         n_correct_before_j = {j: sum(el < j for el in pos[:j]) for j in range(1, k + 1)}
         values[query_idx] = sum(n_correct_before_j[i] / i * (i - 1 in pos) for i in range(1, k + 1)) / (
-                n_correct_before_j[k] or float("inf")
+            n_correct_before_j[k] or float("inf")
         )
     metric = torch.mean(values.float())
     return metric
@@ -67,13 +72,13 @@ def naive_precision(positions: TPositions, k: int) -> torch.Tensor:
 
 
 def compare_with_approx_precision(
-        positions: TPositions,
-        labels: torch.Tensor,
-        is_query: torch.Tensor,
-        is_gallery: torch.Tensor,
-        expected_metrics: TMetricsDict,
-        top_k: Tuple[int, ...],
-        reduction: str,
+    positions: TPositions,
+    labels: torch.Tensor,
+    is_query: torch.Tensor,
+    is_gallery: torch.Tensor,
+    expected_metrics: TMetricsDict,
+    top_k: Tuple[int, ...],
+    reduction: str,
 ) -> None:
     expected_precision = expected_metrics["precision"]
     distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery)
@@ -161,7 +166,7 @@ def test_on_exact_case(exact_test_case: TExactTestCase) -> None:
 @pytest.mark.parametrize("is_gallery_all", [True, False])
 @pytest.mark.parametrize("num_attempts", [20])
 def test_on_synthetic_cases(
-        max_num_labels: int, max_num_samples_per_label: int, num_attempts: int, is_query_all: bool, is_gallery_all: bool
+    max_num_labels: int, max_num_samples_per_label: int, num_attempts: int, is_query_all: bool, is_gallery_all: bool
 ) -> None:
     top_k = (1, 2, 3, 4, 5)
 
@@ -206,13 +211,13 @@ def test_validate_dataset_bad_case() -> None:
 
 
 def compare_metrics(
-        positions: TPositions,
-        labels: torch.Tensor,
-        is_query: torch.Tensor,
-        is_gallery: torch.Tensor,
-        metrics_expected: TMetricsDict,
-        top_k: Tuple[int, ...],
-        reduce: bool,
+    positions: TPositions,
+    labels: torch.Tensor,
+    is_query: torch.Tensor,
+    is_gallery: torch.Tensor,
+    metrics_expected: TMetricsDict,
+    top_k: Tuple[int, ...],
+    reduce: bool,
 ) -> None:
     distances = generate_distance_matrix(positions, labels=labels, is_query=is_query, is_gallery=is_gallery).float()
     mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery).bool()
@@ -240,9 +245,9 @@ def compare_metrics(
     "metric_function, metric_name", [(calc_cmc, "cmc"), (calc_precision, "precision"), (calc_map, "map")]
 )
 def test_metrics(
-        metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
-        metric_name: str,
-        exact_test_case: TExactTestCase,
+    metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
+    metric_name: str,
+    exact_test_case: TExactTestCase,
 ) -> None:
     _, _, _, _, metrics_expected, top_k, mask_gt, gt_tops = exact_test_case
     kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": top_k}
@@ -259,10 +264,10 @@ def test_metrics(
     "metric_function, metric_name", [(calc_cmc, "cmc"), (calc_precision, "precision"), (calc_map, "map")]
 )
 def test_metrics_individual(
-        metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
-        metric_name: str,
-        exact_test_case: TExactTestCase,
-        top_k: int,
+    metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor],
+    metric_name: str,
+    exact_test_case: TExactTestCase,
+    top_k: int,
 ) -> None:
     _, _, _, _, metrics_expected, _, mask_gt, gt_tops = exact_test_case
     kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": (top_k,)}
@@ -276,7 +281,7 @@ def test_metrics_individual(
 @pytest.mark.parametrize("top_k", (tuple(), (0, -1), (0,), (1.5, 2), (1.0, 2.0)))
 @pytest.mark.parametrize("metric_function", [calc_cmc, calc_precision, calc_map])
 def test_metrics_check_params(
-        metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor], top_k: Tuple[int, ...]
+    metric_function: Callable[[torch.Tensor, torch.Tensor, Tuple[int, ...]], torch.Tensor], top_k: Tuple[int, ...]
 ) -> None:
     with pytest.raises(ValueError):
         gt_tops = torch.ones((10, 5), dtype=torch.bool)

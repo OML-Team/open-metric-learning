@@ -5,7 +5,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-from torch import Tensor, cdist
+from torch import FloatTensor, LongTensor, Tensor, cdist
 
 from oml.utils.misc import find_first_occurrences
 
@@ -14,7 +14,7 @@ TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
 
-def take_2d(x: Tensor, indices: Tensor) -> Tensor:
+def take_2d(x: Tensor, indices: LongTensor) -> Tensor:
     """
     Args:
         x: Tensor with the shape of ``[N, M]``
@@ -35,7 +35,7 @@ def take_2d(x: Tensor, indices: Tensor) -> Tensor:
     return x[ii, indices]
 
 
-def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
+def assign_2d(x: Tensor, indices: LongTensor, new_values: Tensor) -> Tensor:
     """
     Args:
         x: Tensor with the shape of ``[N, M]``
@@ -59,7 +59,7 @@ def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     return x
 
 
-def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
+def elementwise_dist(x1: FloatTensor, x2: FloatTensor, p: int = 2) -> FloatTensor:
     """
     Args:
         x1: tensor with the shape of [N, D]
@@ -82,7 +82,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     return dist
 
 
-def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
+def pairwise_dist(x1: FloatTensor, x2: FloatTensor, p: int = 2) -> FloatTensor:
     """
     Args:
         x1: tensor with the shape of [N, D]
@@ -98,7 +98,7 @@ def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     return cdist(x1=x1, x2=x2, p=p)
 
 
-def normalise(x: Tensor, p: int = 2) -> Tensor:
+def normalise(x: FloatTensor, p: int = 2) -> FloatTensor:
     """
     Args:
         x: A 2D tensor
