@@ -8,6 +8,7 @@ import numpy as np
 from lightning_fabric.utilities.logger import _flatten_dict
 from lightning_fabric.utilities.rank_zero import rank_zero_only
 from pytorch_lightning.loggers import (
+    Logger,
     MLFlowLogger,
     NeptuneLogger,
     TensorBoardLogger,
@@ -34,7 +35,7 @@ def prepare_tags(cfg: TCfg) -> List[str]:
     return tags
 
 
-class ClearMLLogger(IPipelineLogger):
+class ClearMLLogger(Logger):
     def __init__(self, **kwargs: Any):
         try:
             from clearml import Task
@@ -195,7 +196,7 @@ class MLFlowPipelineLogger(MLFlowLogger, IPipelineLogger):
         self.experiment.log_figure(figure=fig, artifact_file=f"{title}.png", run_id=self.run_id)
 
 
-class ClearMLPipelineLogger(ClearMLLogger):
+class ClearMLPipelineLogger(ClearMLLogger, IPipelineLogger):
     def log_pipeline_info(self, cfg: TCfg) -> None:
         # log config
         self.log_hyperparams(prepare_config_to_logging(cfg))
