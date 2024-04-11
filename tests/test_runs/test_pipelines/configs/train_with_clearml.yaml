@@ -1,0 +1,79 @@
+seed: 42
+precision: 32
+accelerator: cpu
+devices: 1
+find_unused_parameters: False
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_category.csv
+logs_root: logs
+
+num_workers: 0
+cache_size: 0
+
+transforms_train:
+  name: augs_albu
+  args:
+    im_size: 64
+
+transforms_val:
+  name: norm_resize_torch
+  args:
+    im_size: 64
+
+criterion:
+  name: triplet_with_miner
+  args:
+    margin: null
+    reduction: mean
+    need_logs: True
+    miner:
+      name: hard_triplets
+      args: {}
+
+defaults:
+  - optimizer: adam
+  - sampler: category_balance
+
+extractor:
+  name: vit
+  args:
+    arch: vits8
+    normalise_features: False
+    use_multi_scale: False
+    weights: null
+
+scheduling: null
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+  return_only_overall_category: True
+  visualize_only_overall_category: True
+
+log_images: True
+
+logger:
+  name: clearml
+  args:
+    project_name: "test_project"
+    task_name: "test"
+    offline_mode: True
+
+
+metric_for_checkpointing: OVERALL/cmc/1
+
+max_epochs: 2
+valid_period: 1
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs
+  job:
+    chdir: True

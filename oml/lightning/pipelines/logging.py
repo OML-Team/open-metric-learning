@@ -1,9 +1,12 @@
 import warnings
+from argparse import Namespace
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from lightning_fabric.utilities.logger import _flatten_dict
+from lightning_fabric.utilities.rank_zero import rank_zero_only
 from pytorch_lightning.loggers import (
     MLFlowLogger,
     NeptuneLogger,
@@ -29,6 +32,66 @@ def prepare_tags(cfg: TCfg) -> List[str]:
     tags = list(cfg.get("tags", [])) + [cfg.get("postfix", "")] + [cwd]
     tags = list(filter(lambda x: len(x) > 0, tags))
     return tags
+
+
+class ClearMLLogger(IPipelineLogger):
+    def __init__(self, **kwargs: Any):
+        try:
+            from clearml import Task
+        except ImportError as e:
+            raise ModuleNotFoundError(
+                "This contrib module requires clearml to be installed. "
+                "You may install clearml using: \n pip install clearml>=1.5.0 \n"
+            ) from e
+
+        experiment_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ("project_name", "task_name", "task_type", "offline_mode")
+        }
+
+        if kwargs.get("offline_mode", False):
+            Task.set_offline(offline_mode=True)
+            warnings.warn("ClearMLSaver: running in offline mode")
+
+        # Try to retrieve current the ClearML Task before trying to create a new one
+        self.task = Task.current_task()
+        if self.task is None:
+            self.task = Task.init(
+                project_name=kwargs.get("project_name"),
+                task_name=kwargs.get("task_name"),
+                task_type=kwargs.get("task_type", Task.TaskTypes.training),
+                **experiment_kwargs,
+            )
+
+        self.logger = self.task.get_logger()
+
+    @property
+    def name(self) -> str:
+        return "ClearMLLogger"
+
+    @property
+    def version(self) -> Union[int, str]:
+        return self.task.id
+
+    @rank_zero_only
+    def finalize(self, status: str) -> None:
+        self.logger.flush()
+
+    @rank_zero_only
+    def log_hyperparams(self, params: Optional[Union[Dict[str, Any], Namespace]]) -> None:
+        if isinstance(params, Namespace):
+            params = vars(params)
+
+        if params is None:
+            params = {}
+        params = _flatten_dict(params)
+
+        self.task.connect(params)
+
+    @rank_zero_only
+    def log_metrics(self, metrics: Mapping[str, float], step: Optional[int] = None) -> None:
+        assert rank_zero_only.rank == 0, "experiment tried to log from global_rank != 0"  # type: ignore
+        for k, v in metrics.items():
+            self.logger.report_scalar(title=k, series=k, iteration=step, value=v)
 
 
 class NeptunePipelineLogger(NeptuneLogger, IPipelineLogger):
@@ -132,10 +195,44 @@ class MLFlowPipelineLogger(MLFlowLogger, IPipelineLogger):
         self.experiment.log_figure(figure=fig, artifact_file=f"{title}.png", run_id=self.run_id)
 
 
+class ClearMLPipelineLogger(ClearMLLogger):
+    def log_pipeline_info(self, cfg: TCfg) -> None:
+        # log config
+        self.log_hyperparams(prepare_config_to_logging(cfg))
+
+        # log tags
+        self.task.add_tags(prepare_tags(cfg))
+
+        # log transforms as files
+        names_files = save_transforms_as_files(cfg)
+        if names_files:
+            for name, transforms_file in names_files:
+                self.task.upload_artifact(name=name, artifact_object=transforms_file)
+
+        # log code
+        self.task.upload_artifact(name="code", artifact_object=OML_PATH)
+
+        # log dataframe
+        self.task.upload_artifact(
+            name="dataset",
+            artifact_object=str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]),
+        )
+
+    def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
+        self.logger.report_matplotlib_figure(
+            title=title,
+            series="",
+            figure=fig,
+            iteration=idx,
+            report_image=True,
+        )
+
+
 __all__ = [
     "IPipelineLogger",
     "TensorBoardPipelineLogger",
     "WandBPipelineLogger",
     "NeptunePipelineLogger",
     "MLFlowPipelineLogger",
+    "ClearMLPipelineLogger",
 ]

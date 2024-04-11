@@ -85,6 +85,12 @@ def test_train_arcface_with_categories(accelerator: str, devices: int) -> None:
     run("train_arcface_with_categories.py", accelerator, devices)
 
 
+@pytest.mark.long
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_train_arcface_with_clearml(accelerator: str, devices: int) -> None:
+    run("train_with_clearml.py", accelerator, devices)
+
+
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_postprocessor(accelerator: str, devices: int) -> None:
     run("train_postprocessor.py", accelerator, devices)
