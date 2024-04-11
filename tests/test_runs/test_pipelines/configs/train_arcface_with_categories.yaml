@@ -51,7 +51,7 @@ metric_args:
   return_only_overall_category: True
   visualize_only_overall_category: True
 
-log_images: False
+log_images: True
 
 metric_for_checkpointing: OVERALL/cmc/1
 
@@ -59,9 +59,11 @@ max_epochs: 2
 valid_period: 1
 
 logger:
-  name: tensorboard
+  name: clearml
   args:
-    save_dir: "."
+    project_name: "test_project"
+    task_name: "test"
+    offline_mode: True
 
 tags:
   - mock
