@@ -263,7 +263,8 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         cmc_top_k=(),
         precision_top_k=(),
         map_top_k=(2,),
-        fmr_vals=tuple(),
+        fmr_vals=(0.2,),
+        pcf_variance=(0.2,),
         postprocessor=get_trivial_postprocessor(top_n=1_000),
     )
 

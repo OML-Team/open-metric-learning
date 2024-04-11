@@ -38,6 +38,7 @@ def calc_retrieval_metrics(
         Metrics dictionary.
 
     """
+    assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
     assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
     n_queries = len(retrieved_ids)
 
@@ -99,6 +100,21 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
             output[k] = v
         else:
             output[k] = reduce_metrics(v)  # type: ignore
+
+    return output
+
+
+def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> TMetricsDict:
+    output: TMetricsDict = {}
+
+    for k, v in metrics.items():
+        print("uuu", v)
+        if isinstance(v, (Tensor, np.ndarray)):
+            output[k] = v[mask]
+        elif isinstance(v, (float, int)):
+            output[k] = v
+        else:
+            output[k] = take_unreduced_metrics_by_mask(v, mask)  # type: ignore
 
     return output
 
@@ -369,9 +385,7 @@ def calc_map(gt_tops: BoolTensor, n_gt: LongTensor, top_k: Tuple[int, ...]) -> L
     return map
 
 
-def calc_fnmr_at_fmr(
-    pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...] = (0.1,)
-) -> List[FloatTensor]:
+def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> List[float]:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
@@ -436,13 +450,13 @@ def calc_fnmr_at_fmr(
         >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
         >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
         >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(0.1, 0.5))
-        tensor([0.4000, 0.2000])
+        [0.4000, 0.2000]
 
     """
     _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
     thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
-    return fnmr_at_fmr
+    return fnmr_at_fmr.tolist()
 
 
 def calc_fnmr_at_fmr_from_matrices(
@@ -458,7 +472,7 @@ def calc_fnmr_at_fmr_from_matrices(
     return metrics
 
 
-def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[FloatTensor]:
+def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[float]:
     """
     Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
     The metric is defined as a fraction of components needed to explain the required variance in data.
@@ -502,7 +516,7 @@ def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[F
 
         >>> embeddings = torch.eye(4, 10, dtype=torch.float)
         >>> calc_pcf(embeddings, pcf_variance=(0.5, 1))
-        tensor([0.2000, 0.5000])
+        [0.2000, 0.5000]
 
     """
     # The code below mirrors code from scikit-learn repository:
@@ -511,12 +525,12 @@ def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[F
     try:
         pca = PCA(embeddings)
         n_components = pca.calc_principal_axes_number(pcf_variance).to(embeddings)
-        metric = n_components / embeddings.shape[1]
+        metric = (n_components / embeddings.shape[1]).tolist()
     except Exception:
         # Mostly we handle the following error here:
         # >>> The algorithm failed to converge because the input matrix is ill-conditioned
         # >>> or has too many repeated singular values
-        metric = [torch.tensor(float("nan"))] * len(pcf_variance)
+        metric = [float("nan")] * len(pcf_variance)
 
     return metric
 

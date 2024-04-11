@@ -37,6 +37,7 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
     calc_topological_metrics,
     reduce_metrics,
+    take_unreduced_metrics_by_mask,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
@@ -200,33 +201,27 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self._calc_matrices()
 
-        args_retrieval_metrics = {
-            "cmc_top_k": self.cmc_top_k,
-            "precision_top_k": self.precision_top_k,
-            "map_top_k": self.map_top_k,
-        }
-        args_topological_metrics = {"pcf_variance": self.pcf_variance}
-
-        metrics: TMetricsDict_ByLabels = dict()
-
         # todo 522: temp solution
         max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
         k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
         _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
         gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in self.mask_gt]  # type: ignore
 
-        # note, here we do micro averaging
+        metrics: TMetricsDict_ByLabels = dict()
+
         metrics[self.overall_categories_key] = calc_retrieval_metrics(
             retrieved_ids=retrieved_ids,
             gt_ids=gt_ids,
             reduce=False,
-            **args_retrieval_metrics,  # type: ignore
+            cmc_top_k=self.cmc_top_k,
+            precision_top_k=self.precision_top_k,
+            map_top_k=self.map_top_k,
         )
 
         embeddings = self.acc.storage[self.embeddings_key]
 
         metrics[self.overall_categories_key].update(
-            calc_topological_metrics(embeddings.float(), **args_topological_metrics)  # type: ignore
+            calc_topological_metrics(embeddings.float(), pcf_variance=self.pcf_variance)  # type: ignore
         )
 
         metrics[self.overall_categories_key].update(
@@ -241,13 +236,8 @@ class EmbeddingMetrics(IMetricVisualisable):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
-                # todo 522: reuse calculated values
-                metrics[category] = calc_retrieval_metrics(
-                    retrieved_ids=retrieved_ids[mask],  # type: ignore
-                    gt_ids=[gt_ids[i] for i in mask.nonzero()[0].tolist()],  # type: ignore
-                    reduce=False,
-                    **args_retrieval_metrics,  # type: ignore
-                )
+                print(metrics[self.overall_categories_key], mask, "zzz")
+                metrics[category] = take_unreduced_metrics_by_mask(metrics[self.overall_categories_key], mask)
 
                 metrics[category].update(
                     calc_fnmr_at_fmr_from_matrices(
@@ -256,9 +246,10 @@ class EmbeddingMetrics(IMetricVisualisable):
                 )
 
                 mask = categories == category
-                metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
+                metrics[category].update(calc_topological_metrics(embeddings[mask], pcf_variance=self.pcf_variance))
 
         self.metrics_unreduced = metrics  # type: ignore
+        # note, here we do micro averaging
         self.metrics = reduce_metrics(metrics)  # type: ignore
 
         if self.return_only_overall_category:

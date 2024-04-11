@@ -1,9 +1,10 @@
+import math
 from collections import defaultdict
 from typing import Callable, List, Optional, Tuple
 
 import pytest
 import torch
-from torch import BoolTensor, FloatTensor, LongTensor
+from torch import BoolTensor, FloatTensor, LongTensor, tensor
 
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
@@ -18,7 +19,7 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
 )
 from oml.metrics.embeddings import validate_dataset
-from oml.utils.misc import remove_unused_kwargs
+from oml.utils.misc import compare_dicts_recursively, remove_unused_kwargs
 from oml.utils.misc_torch import take_2d
 
 from .synthetic import generate_distance_matrix, generate_retrieval_case
@@ -43,7 +44,7 @@ def adapt_metric_inputs(
     return retrieved_is, gt_ids
 
 
-def naive_cmc(positions: TPositions, k: int) -> torch.Tensor:
+def naive_cmc(positions: TPositions, k: int) -> FloatTensor:
     values = torch.empty(len(positions), dtype=torch.bool)
     for query_idx, pos in enumerate(positions):
         values[query_idx] = any(idx < k for idx in pos)
@@ -51,31 +52,31 @@ def naive_cmc(positions: TPositions, k: int) -> torch.Tensor:
     return metric
 
 
-def naive_map(positions: TPositions, k: int) -> torch.Tensor:
+def naive_map(positions: TPositions, k: int) -> FloatTensor:
     values = torch.empty(len(positions), dtype=torch.float)
     for query_idx, pos in enumerate(positions):
         n_correct_before_j = {j: sum(el < j for el in pos[:j]) for j in range(1, k + 1)}
         values[query_idx] = sum(n_correct_before_j[i] / i * (i - 1 in pos) for i in range(1, k + 1)) / (
             n_correct_before_j[k] or float("inf")
         )
-    metric = torch.mean(values.float())
+    metric = torch.mean(values.float()).float()
     return metric
 
 
-def naive_precision(positions: TPositions, k: int) -> torch.Tensor:
+def naive_precision(positions: TPositions, k: int) -> FloatTensor:
     values = torch.empty(len(positions), dtype=torch.float)
     for query_idx, pos in enumerate(positions):
         num_gt = min(len(pos), k)
         values[query_idx] = sum(1 for idx in pos if idx < k) / num_gt
-    metric = torch.mean(values.float())
+    metric = torch.mean(values.float()).float()
     return metric
 
 
 def compare_with_approx_precision(
     positions: TPositions,
-    labels: torch.Tensor,
-    is_query: torch.Tensor,
-    is_gallery: torch.Tensor,
+    labels: LongTensor,
+    is_query: BoolTensor,
+    is_gallery: BoolTensor,
     expected_metrics: TMetricsDict,
     top_k: Tuple[int, ...],
     reduction: str,
@@ -95,7 +96,7 @@ def compare_with_approx_precision(
 
 
 TExactTestCase = Tuple[
-    List[List[int]], torch.Tensor, torch.Tensor, torch.Tensor, TMetricsDict, Tuple[int, ...], torch.Tensor, torch.Tensor
+    List[List[int]], LongTensor, BoolTensor, BoolTensor, TMetricsDict, Tuple[int, ...], BoolTensor, BoolTensor
 ]
 
 
@@ -111,9 +112,9 @@ def exact_test_case() -> TExactTestCase:
     VXXXX
     XXXVX
     """
-    labels = torch.tensor([0, 0, 0, 0, 1, 1])
-    is_query = torch.tensor([True] * len(labels))
-    is_gallery = torch.tensor([True] * len(labels))
+    labels = torch.tensor([0, 0, 0, 0, 1, 1]).long()
+    is_query = torch.tensor([True] * len(labels)).bool()
+    is_gallery = torch.tensor([True] * len(labels)).bool()
     positions = [[0, 1, 3], [0, 3, 4], [1, 2, 4], [2, 3, 4], [0], [3]]
     top_k = (1, 2, 3, 4, 5, 10)
     max_k = min(len(labels), max(top_k))
@@ -212,9 +213,9 @@ def test_validate_dataset_bad_case() -> None:
 
 def compare_metrics(
     positions: TPositions,
-    labels: torch.Tensor,
-    is_query: torch.Tensor,
-    is_gallery: torch.Tensor,
+    labels: LongTensor,
+    is_query: BoolTensor,
+    is_gallery: BoolTensor,
     metrics_expected: TMetricsDict,
     top_k: Tuple[int, ...],
     reduce: bool,
@@ -293,27 +294,46 @@ def test_metrics_check_params(
 
 def test_calc_fnmr_at_fmr() -> None:
     fmr_vals = (0.1, 0.5)
-    pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
-    neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
+    pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9]).float()
+    neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8]).float()
     fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
-    fnmr_at_fmr_expected = torch.tensor([0.4, 0.2])
+    fnmr_at_fmr_expected = [0.4, 0.2]
     # 10 percentile of negative distances is 3 and
     # the number of positive distances that are greater than
     # or equal to 3 is 4 so FNMR@FMR(10%) is 40%
     # 50 percentile of negative distances is 6 and
     # the number of positive distances that are greater than
     # or equal to 6 is 2 so FNMR@FMR(50%) is 20%
-    assert torch.all(
-        torch.isclose(fnmr_at_fmr, fnmr_at_fmr_expected)
+    assert all(
+        [math.isclose(x, y, rel_tol=1e-6) for x, y in zip(fnmr_at_fmr, fnmr_at_fmr_expected)]
     ), f"fnmr@fmr({fmr_vals}),  expected: {fnmr_at_fmr_expected}; evaluated: {fnmr_at_fmr}."
 
 
 @pytest.mark.parametrize("fmr_vals", (tuple(), (0, -1), (101,)))
 def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
     with pytest.raises(ValueError):
-        pos_dist = torch.zeros(10)
-        neg_dist = torch.ones(10)
+        pos_dist = torch.zeros(10).float()
+        neg_dist = torch.ones(10).float()
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
 
 
-# todo 522: add a test for a new metric signature with clipped matrix of predictions
+@pytest.mark.parametrize(
+    "retrieved_ids,gt_ids,metrics_expected",
+    [
+        (tensor([[0, 3, 5]]), tensor([[0, 7]]), {"cmc": {1: 1, 3: 1, 5: 1}, "precision": {1: 1, 3: 1 / 2, 5: 1 / 2}}),
+        (tensor([[5, 2, 10]]), tensor([[0, 1]]), {"cmc": {1: 0, 3: 0, 5: 0}, "precision": {1: 0, 3: 0, 5: 0}}),
+    ],
+)
+def test_retrieval_metrics_new_inputs(
+    retrieved_ids: LongTensor, gt_ids: LongTensor, metrics_expected: TMetricsDict
+) -> None:
+    metrics = calc_retrieval_metrics(
+        retrieved_ids=retrieved_ids.long(),
+        gt_ids=gt_ids.long(),
+        cmc_top_k=(1, 3, 5),
+        precision_top_k=(1, 3, 5),
+        map_top_k=(),
+        reduce=True,
+    )
+
+    assert compare_dicts_recursively(metrics, metrics_expected)
