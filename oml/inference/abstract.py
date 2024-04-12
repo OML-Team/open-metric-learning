@@ -25,7 +25,8 @@ def _inference(
     use_fp16: bool,
     accumulate_on_cpu: bool = True,
 ) -> Tensor:
-    assert hasattr(dataset, "index_key"), "We expect that your dataset returns samples ids in __getitem__ method"
+    # todo: deal with it without making an assumption (we can patch dataset or something)
+    assert hasattr(dataset, "index_key"), "We expect that your dataset returns ids in __getitem__ method"
 
     loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
 

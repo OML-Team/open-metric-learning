@@ -38,7 +38,7 @@ from oml.functional.metrics import (
     reduce_metrics,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
-from oml.interfaces.retrieval import IDistancesPostprocessor
+from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
@@ -79,7 +79,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         pcf_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
         sequence_key: Optional[str] = None,
-        postprocessor: Optional[IDistancesPostprocessor] = None,
+        postprocessor: Optional[IRetrievalPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         return_only_overall_category: bool = False,
         visualize_only_overall_category: bool = True,
@@ -148,8 +148,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             keys_to_accumulate.append(self.sequence_key)
         if self.extra_keys:
             keys_to_accumulate.extend(list(extra_keys))
-        if self.postprocessor:
-            keys_to_accumulate.extend(self.postprocessor.needed_keys)
 
         self.keys_to_accumulate = tuple(set(keys_to_accumulate))
         self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
@@ -187,7 +185,12 @@ class EmbeddingMetrics(IMetricVisualisable):
         validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
 
         if self.postprocessor:
-            self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
+            max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+            k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
+            _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
+            gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in self.mask_gt]
+
+            dist_mat, retrieved_ids = self.postprocessor.process(dist_mat=dist_mat, retrieved_ids=retrievied_ids)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():

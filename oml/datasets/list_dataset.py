@@ -25,6 +25,7 @@ TBBoxes = Sequence[Optional[TBBox]]
 
 
 class ListDataset(Dataset):
+    # todo 522: can we get rid of this dataset?
     """This is a dataset to iterate over a list of images."""
 
     def __init__(
