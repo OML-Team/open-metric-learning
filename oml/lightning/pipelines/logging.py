@@ -42,7 +42,7 @@ class ClearMLLogger(Logger):
         except ImportError as e:
             raise ModuleNotFoundError(
                 "This contrib module requires clearml to be installed. "
-                "You may install clearml using: \n pip install clearml>=1.5.0 \n"
+                "You may install clearml using: \n pip install clearml \n"
             ) from e
 
         experiment_kwargs = {
