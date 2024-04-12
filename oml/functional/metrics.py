@@ -449,7 +449,7 @@ def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tup
         >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
         >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
         >>> metrics = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(0.1, 0.5))
-        >>> [round(m, 4) for metric in metrics]
+        >>> [round(m, 4) for m in metrics]
         [0.4000, 0.2000]
 
     """
