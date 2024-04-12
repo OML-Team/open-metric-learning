@@ -449,8 +449,8 @@ def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tup
         >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
         >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
         >>> metrics = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(0.1, 0.5))
-        >>> [round(m, 4) for m in metrics]
-        [0.4000, 0.2000]
+        >>> [round(m, 3) for m in metrics]
+        [0.4, 0.2]
 
     """
     _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
@@ -516,8 +516,8 @@ def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[f
 
         >>> embeddings = torch.eye(4, 10, dtype=torch.float)
         >>> metrics = calc_pcf(embeddings, pcf_variance=(0.5, 1))
-        >>> [round(m, 4) for m in metrics]
-        [0.2000, 0.5000]
+        >>> [round(m, 3) for m in metrics]
+        [0.2, 0.5]
 
     """
     # The code below mirrors code from scikit-learn repository:
