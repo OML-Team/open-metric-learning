@@ -45,14 +45,14 @@ def validation_results() -> Tuple[Tensor, DatasetQueryGallery, IExtractor]:
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("top_n,k_retrieved", [(2, 2), (3, 4), (4, 3), (100, 3)])
-def test_trivial_processing_does_not_change_distances_order(top_n: int, k_retrieved, validation_results) -> None:
+@pytest.mark.parametrize("top_n,k", [(2, 2), (3, 4), (4, 3), (100, 3)])
+def test_trivial_processing_does_not_change_distances_order(top_n: int, k, validation_results) -> None:
     distances, dataset, extractor = validation_results
 
     pairwise_model = TrivialDistanceSiamese(extractor)
 
     # todo 522: use RetrievalPrediction here
-    distances, retrieved_ids = torch.topk(distances, k=k_retrieved, largest=False)
+    distances, retrieved_ids = torch.topk(distances, k=k, largest=False)
 
     postprocessor = PairwiseReranker(
         top_n=top_n,
@@ -66,8 +66,5 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, k_retrie
         distances=distances, dataset=dataset, retrieved_ids=retrieved_ids
     )
 
-    order = distances.argsort()
-    order_processed = distances_processed.argsort()
-
-    assert (retrieved_ids == retrieved_ids_upd).all(), (order, order_processed)
+    assert (retrieved_ids == retrieved_ids_upd).all()
     assert torch.isclose(distances, distances_processed).all()

@@ -3,7 +3,7 @@ from typing import Tuple
 import torch
 from torch import FloatTensor, LongTensor
 
-from oml.datasets.base import DatasetQueryGallery
+from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.inference.pairs import pairwise_inference
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
@@ -48,7 +48,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self,
         distances,
         retrieved_ids,
-        dataset: DatasetQueryGallery,
+        dataset: IDatasetQueryGallery,
     ) -> Tuple[FloatTensor, LongTensor]:
         assert len(retrieved_ids) == len(distances)
 
@@ -86,7 +86,16 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
         # Updating distances:
         unprocessed_distances = distances[:, top_n:]
-        # todo: offset
+
+        # The idea of offset is that we want to keep distances consist after re-ranking. Here is an example:
+        # distances     = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3
+        # imagine, the postprocessor didn't change the order of distances, but assigned values withing a different scale
+        # distances_upd = [0.6, 0.8, 0.9, 0.5, 0.6], top_n = 3
+        # to keep distances aligned we introduce offset = max(0.6, 0.8, 0.9) - min(0.5, 0.6) = 0.5
+        # so, adjusted distances are
+        # distances_upd = [0.6, 0.8, 0.9, 0.5 + 0.5, 0.6 + 0.5]  = [0.6, 0.8, 0.9, 1.0, 1.1]
+
+        # todo
         # if unprocessed_distances.numel() > 0:
         #     offset = distances_top_ranked.max(dim=1) - unprocessed_distances.min(dim=1) + 1e-5
         #     unprocessed_distances += offset

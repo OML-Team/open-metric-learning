@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 import numpy as np
+from torch import LongTensor, BoolTensor
 from torch.utils.data import Dataset
 
 from oml.const import (  # noqa
@@ -43,7 +44,7 @@ class IDatasetWithLabels(Dataset, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_labels(self) -> np.ndarray:
+    def get_labels(self) -> LongTensor:
         raise NotImplementedError()
 
 
@@ -76,6 +77,12 @@ class IDatasetQueryGallery(Dataset, ABC):
             ``self.index_key``
 
         """
+        raise NotImplementedError()
+
+    def get_query_mask(self) -> BoolTensor:
+        raise NotImplementedError()
+
+    def get_gallery_mask(self) -> BoolTensor:
         raise NotImplementedError()
 
 
