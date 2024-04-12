@@ -236,7 +236,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             for category in np.unique(query_categories):
                 mask = query_categories == category
 
-                print(metrics[self.overall_categories_key], mask, "zzz")
                 metrics[category] = take_unreduced_metrics_by_mask(metrics[self.overall_categories_key], mask)
 
                 metrics[category].update(
