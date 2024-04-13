@@ -21,7 +21,6 @@ class PairwiseReranker(IRetrievalPostprocessor):
         use_fp16: bool = False,
     ):
         """
-        todo
 
         Args:
             top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
@@ -50,6 +49,20 @@ class PairwiseReranker(IRetrievalPostprocessor):
         retrieved_ids: LongTensor,
         dataset: DatasetQueryGallery,
     ) -> Tuple[FloatTensor, LongTensor]:
+        """
+
+        Note, the distances to the items starting from ``top_n + 1`` position and further will be also updated by offset
+        We need the offset to keep the distances sorted even after re-ranking. Here is an example:
+        ``distances = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3``
+        Imagine, the postprocessor didn't change the order of the first 3 items (it's just a convenient example,
+        the logic remains the same), however the new values has bigger scale:
+        ``distances_upd = [10, 20, 30, 0.5, 0.6]``.
+        To keep the distances sorted we introduce the ``offset = max(10, 20, 30) - min(0.5, 0.6) = 29.5``.
+        So, the adjusted distances are:
+        ``distances_upd = [10, 20, 30, 30, 30.1]``
+        Thus, the order remains the same.
+
+        """
         assert len(retrieved_ids) == len(distances)
 
         top_n = min(self.top_n, retrieved_ids.shape[1])
@@ -86,19 +99,10 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
         # Updating distances:
         unprocessed_distances = distances[:, top_n:]
-
-        # The idea of offset is that we want to keep distances consist after re-ranking. Here is an example:
-        # distances     = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3
-        # imagine, the postprocessor didn't change the order of distances, but assigned values withing a different scale
-        # distances_upd = [0.6, 0.8, 0.9, 0.5, 0.6], top_n = 3
-        # to keep distances aligned we introduce offset = max(0.6, 0.8, 0.9) - min(0.5, 0.6) = 0.5
-        # so, adjusted distances are
-        # distances_upd = [0.6, 0.8, 0.9, 0.5 + 0.5, 0.6 + 0.5]  = [0.6, 0.8, 0.9, 1.0, 1.1]
-
-        # todo 522: finish this logic
-        # if unprocessed_distances.numel() > 0:
-        #     offset = distances_top_ranked.max(dim=1) - unprocessed_distances.min(dim=1) + 1e-5
-        #     unprocessed_distances += offset
+        if unprocessed_distances.shape[1] > 0:
+            # todo 522: write a test
+            offset = distances_top_ranked.max(dim=1) - unprocessed_distances.min(dim=1) + 1e-5
+            unprocessed_distances += offset
 
         distances_upd = torch.concat(
             [distances_top_ranked, unprocessed_distances],  # re-ranked top  # unprocessed distances shifted by offset

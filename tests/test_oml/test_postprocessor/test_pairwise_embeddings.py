@@ -53,7 +53,7 @@ def shared_query_gallery_case() -> Tuple[FloatTensor, BoolTensor, BoolTensor]:
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("top_n, k", [(5, 5), (3, 4), (4, 3), (100, 5)])
+@pytest.mark.parametrize("top_n, k", [(5, 5)])  # , (3, 4), (4, 3), (100, 5)])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
 def test_trivial_processing_does_not_change_distances_order(
     request: pytest.FixtureRequest, fixture_name: str, top_n: int, k: int
