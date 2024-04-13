@@ -28,7 +28,7 @@ def inference_on_images(
     use_fp16: bool = False,
     accumulate_on_cpu: bool = True,
 ) -> Tensor:
-    # todo: replace with base dataset? use BaseDataset instead
+    # todo 522: replace with base dataset? use BaseDataset instead
     dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
 

@@ -6,7 +6,11 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from oml.const import TCfg
-from oml.datasets.base import get_retrieval_datasets
+from oml.datasets.base import (
+    DatasetQueryGallery,
+    DatasetWithLabels,
+    get_retrieval_datasets,
+)
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
@@ -25,7 +29,7 @@ from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 
-def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
+def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader, DatasetWithLabels, DatasetQueryGallery]:
     train_dataset, valid_dataset = get_retrieval_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         transforms_train=get_transforms_by_cfg(cfg["transforms_train"]),
@@ -54,7 +58,7 @@ def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
 
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
-    return loader_train, loader_val
+    return loader_train, loader_val, train_dataset, valid_dataset
 
 
 def extractor_training_pipeline(cfg: TCfg) -> None:
@@ -77,7 +81,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     trainer_engine_params = parse_engine_params_from_config(cfg)
     is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
-    loader_train, loaders_val = get_retrieval_loaders(cfg)
+    loader_train, loaders_val, dataset_train, dataset_val = get_retrieval_loaders(cfg)
     extractor = get_extractor_by_cfg(cfg["extractor"])
     criterion = get_criterion_by_cfg(cfg["criterion"], **{"label2category": loader_train.dataset.get_label2category()})
     optimizable_parameters = [
@@ -98,22 +102,22 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
         extractor=extractor,
         criterion=criterion,
         optimizer=optimizer,
-        input_tensors_key=loader_train.dataset.input_tensors_key,
-        labels_key=loader_train.dataset.labels_key,
+        input_tensors_key=dataset_train.input_tensors_key,
+        labels_key=dataset_train.labels_key,
         freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs,
     )
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
-        dataset=loaders_val.dataset,
+        dataset=dataset_val,
         embeddings_key=pl_module.embeddings_key,
-        categories_key=loaders_val.dataset.categories_key,
-        labels_key=loaders_val.dataset.labels_key,
-        is_query_key=loaders_val.dataset.is_query_key,
-        is_gallery_key=loaders_val.dataset.is_gallery_key,
-        extra_keys=(loaders_val.dataset.paths_key, *loaders_val.dataset.bboxes_keys),
-        sequence_key=loaders_val.dataset.sequence_key,
+        categories_key=dataset_val.categories_key,
+        labels_key=dataset_val.labels_key,
+        is_query_key=dataset_val.is_query_key,
+        is_gallery_key=dataset_val.is_gallery_key,
+        extra_keys=(dataset_val.paths_key, *dataset_val.bboxes_keys),
+        sequence_key=dataset_val.sequence_key,
         **cfg.get("metric_args", {}),
     )
 

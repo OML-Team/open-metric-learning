@@ -190,11 +190,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
 
         if self.postprocessor:
-            # todo 522: we simple sort full matrix
+            # todo 522: remove this hack later, ofc we don't want to sort the full matrix
             self.distance_matrix, ii_sort = self.distance_matrix.sort()  # type: ignore
             self.mask_gt = take_2d(self.mask_gt, ii_sort)
 
-            assert self.dataset is not None, "Dataset is needed for postprocessing"  # todo 522: not all pp need dataset
             self.distance_matrix, ii_sort_upd = self.postprocessor.process(
                 distances=self.distance_matrix, retrieved_ids=ii_sort, dataset=self.dataset
             )

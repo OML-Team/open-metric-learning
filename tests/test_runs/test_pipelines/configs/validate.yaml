@@ -30,7 +30,6 @@ postprocessor:
             remove_fc: True
             normalise_features: False
             weights: resnet50_moco_v2
-        im_size: 64
     num_workers: 0
     batch_size: 4
     verbose: True

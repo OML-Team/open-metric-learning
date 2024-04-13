@@ -1,6 +1,6 @@
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Dict, Tuple
+from typing import List, Mapping, Tuple
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -20,7 +20,7 @@ from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
 
-def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
+def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, List[Mapping[str, float]]]:
     """
     This pipeline allows you to validate a feature extractor which
     represents images as feature vectors.
@@ -69,7 +69,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
-        dataset=loader_val.dataset,
+        dataset=valid_dataset,
         embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
         labels_key=valid_dataset.labels_key,

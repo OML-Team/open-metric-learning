@@ -58,7 +58,7 @@ def test_train_and_validate(accelerator: str, devices: int) -> None:
 
 @pytest.mark.long
 @pytest.mark.needs_optional_dependency
-@pytest.mark.skipif(os.getenv("TEST_CLOUD_LOGGERS") != "yes", reason="To have more control.")
+@pytest.mark.skipif(os.getenv("TEST_CLOUD_LOGGERS") != "yes", reason="TEST_CLOUD_LOGGERS != yes.")
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_with_bboxes(accelerator: str, devices: int) -> None:
     run("train_with_bboxes.py", accelerator, devices)
@@ -66,7 +66,7 @@ def test_train_with_bboxes(accelerator: str, devices: int) -> None:
 
 @pytest.mark.long
 @pytest.mark.needs_optional_dependency
-@pytest.mark.skipif(os.getenv("TEST_CLOUD_LOGGERS") != "yes", reason="To have more control.")
+@pytest.mark.skipif(os.getenv("TEST_CLOUD_LOGGERS") != "yes", reason="TEST_CLOUD_LOGGERS != yes.")
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_with_sequence(accelerator: str, devices: int) -> None:
     run("train_with_sequence.py", accelerator, devices)

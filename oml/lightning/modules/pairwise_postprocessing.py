@@ -47,6 +47,7 @@ class PairwiseModule(pl.LightningModule):
                 starting with 0.
 
         """
+        # todo: can we only have ExtractorModule instead of having these two Modules?
         pl.LightningModule.__init__(self)
 
         self.model = pairwise_model
