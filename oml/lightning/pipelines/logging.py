@@ -49,7 +49,7 @@ class ClearMLLogger(Logger):
             k: v for k, v in kwargs.items() if k not in ("project_name", "task_name", "task_type", "offline_mode")
         }
 
-        if kwargs.get("offline_mode", False):
+        if kwargs.get("offline_mode", True):
             Task.set_offline(offline_mode=True)
             warnings.warn("ClearMLSaver: running in offline mode")
 
