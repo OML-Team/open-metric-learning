@@ -7,7 +7,7 @@ from pandas import DataFrame
 from torch import Tensor, nn
 
 from oml.const import PATHS_COLUMN, SPLIT_COLUMN
-from oml.datasets.list_dataset import ListDataset
+from oml.datasets.base import BaseDataset
 from oml.inference.abstract import _inference
 from oml.interfaces.models import IExtractor
 from oml.transforms.images.utils import TTransforms
@@ -19,7 +19,7 @@ from oml.utils.misc_torch import get_device
 @torch.no_grad()
 def inference_on_images(
     model: nn.Module,
-    paths: List[Path],
+    paths: List[str],
     transform: TTransforms,
     num_workers: int,
     batch_size: int,
@@ -28,8 +28,8 @@ def inference_on_images(
     use_fp16: bool = False,
     accumulate_on_cpu: bool = True,
 ) -> Tensor:
-    # todo 522: replace with base dataset? use BaseDataset instead
-    dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
+    # todo 522: ideally we should get rid of functions like this because the assume modality
+    dataset = BaseDataset.create_from_paths(paths=paths, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
 
     def _apply(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:
@@ -59,27 +59,33 @@ def inference_on_dataframe(
     batch_size: int = 128,
     use_fp16: bool = False,
 ) -> Tuple[Tensor, Tensor, DataFrame, DataFrame]:
+    # todo 522: ideally we should get rid of functions like this because the assume modality
     df = pd.read_csv(Path(dataset_root) / dataframe_name)
-
-    # it has now affect if paths are global already
     df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)
 
     check_retrieval_dataframe_format(df)
+    dataset = BaseDataset(df=df, transform=transforms)
 
     if (output_cache_path is not None) and Path(output_cache_path).is_file():
         embeddings = torch.load(output_cache_path, map_location="cpu")
         print("Embeddings have been loaded from the disk.")
     else:
-        embeddings = inference_on_images(
+        device = get_device(extractor)
+
+        def _apply(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:
+            return model_(batch_[dataset.input_tensors_key].to(device))
+
+        embeddings = _inference(
             model=extractor,
-            paths=df[PATHS_COLUMN],
-            transform=transforms,
+            apply_model=_apply,
+            dataset=dataset,
             num_workers=num_workers,
             batch_size=batch_size,
-            verbose=True,
             use_fp16=use_fp16,
+            verbose=True,
             accumulate_on_cpu=True,
         )
+
         if output_cache_path is not None:
             torch.save(embeddings, output_cache_path)
             print("Embeddings have been saved to the disk.")

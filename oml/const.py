@@ -2,7 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 from sys import platform
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 from omegaconf import DictConfig
 
@@ -79,6 +79,9 @@ SEQUENCE_COLUMN = "sequence"
 
 OBLIGATORY_COLUMNS = [LABELS_COLUMN, PATHS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
 BBOXES_COLUMNS = [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]
+
+TBBox = Tuple[int, int, int, int]  # x1, x2, y1, y2
+TBBoxes = Sequence[Optional[TBBox]]
 
 # Keys for interactions among our classes (datasets, metrics and so on)
 OVERALL_CATEGORIES_KEY = "OVERALL"

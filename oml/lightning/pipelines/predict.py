@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from oml.const import IMAGE_EXTENSIONS, TCfg
-from oml.datasets.list_dataset import ListDataset
+from oml.datasets.base import BaseDataset
 from oml.ddp.utils import get_world_size_safe, is_main_process, sync_dicts_ddp
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
@@ -31,7 +31,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     pprint(cfg)
 
     transforms = get_transforms_by_cfg(cfg["transforms_predict"])
-    filenames = [list(Path(cfg["data_dir"]).glob(f"**/*.{ext}")) for ext in IMAGE_EXTENSIONS]
+    filenames = [list(str(Path(cfg["data_dir"]).glob(f"**/*.{ext}"))) for ext in IMAGE_EXTENSIONS]
     filenames = list(itertools.chain(*filenames))
 
     f_imread = get_im_reader_for_transforms(transforms)
@@ -41,7 +41,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     if broken_images:
         raise ValueError(f"There are images that cannot be open:\n {broken_images}.")
 
-    dataset = ListDataset(filenames_list=filenames, transform=transforms, f_imread=f_imread)
+    dataset = BaseDataset.create_from_paths(paths=filenames, transform=transforms, f_imread=f_imread)
 
     loader = DataLoader(
         dataset=dataset, batch_size=cfg["bs"], num_workers=cfg["num_workers"], shuffle=False, drop_last=False

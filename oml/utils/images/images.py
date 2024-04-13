@@ -111,7 +111,7 @@ def try_to_open_image(im_path: Path, f_imread: TImReader) -> Optional[str]:
         return str(im_path)
 
 
-def find_broken_images(images_list: List[Path], f_imread: TImReader, num_processes: int = 10) -> List[str]:
+def find_broken_images(images_list: List[str], f_imread: TImReader, num_processes: int = 10) -> List[str]:
     try_to_open_image_ = partial(try_to_open_image, f_imread=f_imread)
 
     with mp.Pool(processes=num_processes) as p:

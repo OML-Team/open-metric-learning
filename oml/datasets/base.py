@@ -33,6 +33,7 @@ from oml.const import (
     Y1_KEY,
     Y2_COLUMN,
     Y2_KEY,
+    TBBoxes,
 )
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.registry.transforms import get_transforms
@@ -112,6 +113,7 @@ class BaseDataset(Dataset):
         self.index_key = index_key
 
         self.bboxes_exist = all(coord in df.columns for coord in (X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN))
+
         if self.bboxes_exist:
             self.x1_key, self.x2_key, self.y1_key, self.y2_key = x1_key, x2_key, y1_key, y2_key
         else:
@@ -122,6 +124,8 @@ class BaseDataset(Dataset):
             df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: str(dataset_root / x))
         else:
             df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
+
+        print(df, "mmmm")
 
         self.df = df
         self.extra_data = extra_data
@@ -204,6 +208,37 @@ class BaseDataset(Dataset):
             return self.x1_key, self.y1_key, self.x2_key, self.y2_key
         else:
             return tuple()
+
+    @classmethod
+    def create_from_paths(
+        cls,
+        paths: List[str],
+        bboxes: Optional[TBBoxes] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
+        transform: Optional[TTransforms] = None,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
+    ) -> "BaseDataset":
+
+        data = {PATHS_COLUMN: paths, LABELS_COLUMN: [-1] * len(paths)}
+
+        if bboxes is not None:
+            data[X1_COLUMN] = [bbox[0] for bbox in bboxes]
+            data[Y2_COLUMN] = [bbox[1] for bbox in bboxes]
+            data[Y2_COLUMN] = [bbox[2] for bbox in bboxes]
+            data[Y2_COLUMN] = [bbox[3] for bbox in bboxes]
+
+        df = pd.DataFrame(data=data)
+
+        return BaseDataset(
+            df,
+            transform=transform,
+            f_imread=f_imread,
+            dataset_root=dataset_root,
+            categories_key=None,
+            sequence_key=None,
+            cache_size=cache_size,
+        )
 
 
 class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
