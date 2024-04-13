@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-from torch import BoolTensor, LongTensor
+import numpy as np
+from torch import BoolTensor
 from torch.utils.data import Dataset
 
 from oml.const import (  # noqa
@@ -43,7 +44,7 @@ class IDatasetWithLabels(Dataset, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_labels(self) -> LongTensor:
+    def get_labels(self) -> np.ndarray:
         raise NotImplementedError()
 
 

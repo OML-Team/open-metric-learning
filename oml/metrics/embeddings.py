@@ -91,7 +91,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
 
         Args:
-            dataset: todo 522
+            dataset: Dataset is needed for visualisation and dataset-based postprocessing.
             embeddings_key: Key to take the embeddings from the batches
             labels_key: Key to take the labels from the batches
             is_query_key: Key to take the information whether every batch sample belongs to the query

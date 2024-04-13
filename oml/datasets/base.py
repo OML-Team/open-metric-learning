@@ -125,8 +125,6 @@ class BaseDataset(Dataset):
         else:
             df[PATHS_COLUMN] = df[PATHS_COLUMN].astype(str)
 
-        print(df, "mmmm")
-
         self.df = df
         self.extra_data = extra_data
         self.transform = transform if transform else get_transforms("norm_albu")
@@ -254,7 +252,7 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
     """
 
     def get_labels(self) -> np.ndarray:
-        # todo 522: unify type
+        # todo 522: make it tensor and update other code
         return np.array(self.df[LABELS_COLUMN])
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
@@ -388,6 +386,8 @@ def get_retrieval_datasets(
 
 
 class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
+    # todo 522: to docs
+
     def __init__(
         self,
         embeddings: FloatTensor,
@@ -400,6 +400,7 @@ class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
         categories_key: str = CATEGORIES_KEY,
+        index_key: str = INDEX_KEY,
     ):
         assert len(embeddings) == len(labels) == len(is_query) == len(is_gallery)
 
@@ -414,6 +415,7 @@ class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
         self.is_query_key = is_query_key
         self.is_gallery_key = is_gallery_key
         self.categories_key = categories_key
+        self.index_key = index_key
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         batch = {
@@ -421,6 +423,7 @@ class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
             self.labels_key: self.labels[idx],
             self.is_query_key: self.is_query[idx],
             self.is_gallery_key: self.is_gallery[idx],
+            self.index_key: idx,
         }
 
         if self.categories is not None:

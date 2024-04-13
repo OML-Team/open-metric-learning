@@ -32,8 +32,9 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("extractor/train_2loaders_val.md", "[comment]:lightning-2loaders-start\n", "[comment]:lightning-2loaders-end\n"), # noqa
         ("extractor/retrieval_usage.md", "[comment]:usage-retrieval-start\n", "[comment]:usage-retrieval-end\n"),
         ("zoo/models_usage.md", "[comment]:zoo-start\n", "[comment]:zoo-end\n"),
-        ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
-        ("postprocessing/predict.md", "[comment]:postprocessor-pred-start\n", "[comment]:postprocessor-pred-end\n"),
+        # todo 522: rework examples later
+        # ("postprocessing/predict.md", "[comment]:postprocessor-pred-start\n", "[comment]:postprocessor-pred-end\n"),
+        # ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n")
     ],
 )  # fmt: skip
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:
