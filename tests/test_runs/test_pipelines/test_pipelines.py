@@ -80,6 +80,7 @@ def test_train_with_categories(accelerator: str, devices: int) -> None:
 
 
 @pytest.mark.long
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_train_arcface_with_categories(accelerator: str, devices: int) -> None:
     run("train_arcface_with_categories.py", accelerator, devices)
