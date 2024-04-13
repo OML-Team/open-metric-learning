@@ -3,8 +3,8 @@ from typing import Tuple
 import torch
 from torch import FloatTensor, LongTensor
 
+from oml.datasets.base import DatasetQueryGallery
 from oml.inference.pairs import pairwise_inference
-from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.utils.misc_torch import take_2d
@@ -48,7 +48,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self,
         distances: FloatTensor,
         retrieved_ids: LongTensor,
-        dataset: IDatasetQueryGallery,
+        dataset: DatasetQueryGallery,
     ) -> Tuple[FloatTensor, LongTensor]:
         assert len(retrieved_ids) == len(distances)
 
@@ -95,7 +95,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         # so, adjusted distances are
         # distances_upd = [0.6, 0.8, 0.9, 0.5 + 0.5, 0.6 + 0.5]  = [0.6, 0.8, 0.9, 1.0, 1.1]
 
-        # todo
+        # todo 522: finish this logic
         # if unprocessed_distances.numel() > 0:
         #     offset = distances_top_ranked.max(dim=1) - unprocessed_distances.min(dim=1) + 1e-5
         #     unprocessed_distances += offset

@@ -201,7 +201,6 @@ class BaseDataset(Dataset):
 
     @property
     def bboxes_keys(self) -> Tuple[str, ...]:
-        # todo 522: get rid of this after we finish
         if self.bboxes_exist:
             return self.x1_key, self.y1_key, self.x2_key, self.y2_key
         else:
@@ -334,11 +333,11 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         return item
 
     def get_query_mask(self) -> BoolTensor:
-        # todo 522: make sure we EVERYWHERE use this function instead directly calling self.df
+        # todo 522: make sure we EVERYWHERE use this function instead directly calling dataset.df
         return BoolTensor(self.df[IS_QUERY_COLUMN])
 
     def get_gallery_mask(self) -> BoolTensor:
-        # todo 522: make sure we EVERYWHERE use this function instead directly calling self.df
+        # todo 522: make sure we EVERYWHERE use this function instead directly calling dataset.df
         return BoolTensor(self.df[IS_GALLERY_COLUMN])
 
 
@@ -386,8 +385,6 @@ def get_retrieval_datasets(
 
 
 class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
-    # todo 522: to docs
-
     def __init__(
         self,
         embeddings: FloatTensor,

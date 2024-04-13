@@ -29,7 +29,6 @@ class PairsDataset(IPairsDataset):
         self.index_key: str = index_key
 
     def __getitem__(self, idx: int) -> Dict[str, Tensor]:
-        # todo: handle transforms?
         i1, i2 = self.pair_ids[idx]
         key = self.base_dataset.input_tensors_key
         return {

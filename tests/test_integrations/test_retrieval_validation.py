@@ -88,7 +88,7 @@ def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, 
         dataset=dataset, batch_size=batch_size, shuffle=shuffle, drop_last=False, num_workers=num_workers
     )
 
-    calc = EmbeddingMetrics(cmc_top_k=(1,), dataset=None)
+    calc = EmbeddingMetrics(cmc_top_k=(1,))
     calc.setup(num_samples=len(dataset))
 
     model = IdealClusterEncoder()

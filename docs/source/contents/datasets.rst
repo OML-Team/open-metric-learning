@@ -34,3 +34,12 @@ DatasetQueryGallery
 
     .. automethod:: __init__
     .. automethod:: __getitem__
+
+EmbeddingsQueryGalleryDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.base.EmbeddingsQueryGalleryDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__

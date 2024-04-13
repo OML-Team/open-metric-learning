@@ -84,15 +84,10 @@ transforms_train:
 batch_size_inference: 128
 
 postprocessor:
-  name: pairwise_images
+  name: pairwise_reranker
   args:
     top_n: 5
     pairwise_model: ${pairwise_model}
-    transforms:
-      name: norm_resize_hypvit_torch
-      args:
-        im_size: 224
-        crop_size: 224
     num_workers: ${num_workers}
     batch_size: ${batch_size_inference}
     verbose: True
