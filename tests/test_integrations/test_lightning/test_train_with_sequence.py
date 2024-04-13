@@ -18,7 +18,9 @@ def validation(df: pd.DataFrame) -> TMetricsDict_ByLabels:
     val_dataset = DatasetQueryGallery(df, dataset_root=MOCK_DATASET_PATH)
 
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4, num_workers=0)
-    calculator = EmbeddingMetrics(extra_keys=("paths",), sequence_key=val_dataset.sequence_key, cmc_top_k=(1,))
+    calculator = EmbeddingMetrics(
+        extra_keys=("paths",), sequence_key=val_dataset.sequence_key, cmc_top_k=(1,), dataset=None
+    )
     calculator.setup(num_samples=len(val_dataset))
 
     with torch.no_grad():

@@ -33,7 +33,7 @@ from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.misc import dictconfig_to_dict, flatten_dict, set_global_seed
 
@@ -128,8 +128,8 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
-    assert isinstance(postprocessor, PairwiseImagesPostprocessor), "We support only images processing in this pipeline."
-    assert isinstance(postprocessor.model, IPairwiseModel), f"You model must be a child of {IPairwiseModel.__name__}"
+    assert isinstance(postprocessor, PairwiseReranker)
+    assert isinstance(postprocessor.model, IPairwiseModel), f"Your model must be a child of {IPairwiseModel.__name__}"
 
     criterion = torch.nn.BCEWithLogitsLoss()
     pairs_miner = PairsMiner(hard_mining=cfg["hard_pairs_mining"])
@@ -157,6 +157,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
+        dataset=loader_val.dataset,
         embeddings_key=pl_module.embeddings_key,
         categories_key=loader_val.dataset.categories_key,
         labels_key=loader_val.dataset.labels_key,

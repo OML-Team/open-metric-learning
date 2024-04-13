@@ -69,6 +69,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
+        dataset=loader_val.dataset,
         embeddings_key=pl_model.embeddings_key,
         categories_key=valid_dataset.categories_key,
         labels_key=valid_dataset.labels_key,

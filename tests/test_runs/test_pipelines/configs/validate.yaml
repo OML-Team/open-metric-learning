@@ -16,7 +16,7 @@ num_workers: 0
 bs_val: 2
 
 postprocessor:
-  name: pairwise_images
+  name: pairwise_reranker
   args:
     top_n: 3
     pairwise_model:
@@ -30,9 +30,6 @@ postprocessor:
             remove_fc: True
             normalise_features: False
             weights: resnet50_moco_v2
-    transforms:
-      name: norm_resize_torch
-      args:
         im_size: 64
     num_workers: 0
     batch_size: 4

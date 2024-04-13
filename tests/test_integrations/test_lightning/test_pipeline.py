@@ -17,6 +17,7 @@ from oml.const import (
     LABELS_KEY,
 )
 from oml.datasets.triplet import TItem, tri_collate
+from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossPlain, TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -37,7 +38,7 @@ class DummyTripletDataset(Dataset):
         return self.num_triplets
 
 
-class DummyRetrievalDataset(Dataset):
+class DummyRetrievalDataset(IDatasetQueryGallery):
     def __init__(self, labels: List[int], im_size: int):
         self.labels = labels
         self.im_size = im_size
@@ -123,6 +124,7 @@ def create_triplet_callback(loader_idx: int, samples_in_getitem: int) -> MetricV
 
 def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> MetricValCallback:
     metric = EmbeddingMetrics(
+        dataset=None,
         embeddings_key=EMBEDDINGS_KEY,
         labels_key=LABELS_KEY,
         is_query_key=IS_QUERY_KEY,

@@ -35,7 +35,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sa
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP())  # DDP specific
+metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP(dataset=val_dataset))  # DDP specific
 
 # run
 pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimizer=optimizer,

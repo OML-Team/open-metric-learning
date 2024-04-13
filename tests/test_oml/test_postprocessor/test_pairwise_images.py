@@ -46,7 +46,7 @@ def validation_results() -> Tuple[Tensor, DatasetQueryGallery, IExtractor]:
 
 @pytest.mark.long
 @pytest.mark.parametrize("top_n,k", [(2, 2), (3, 4), (4, 3), (100, 3)])
-def test_trivial_processing_does_not_change_distances_order(top_n: int, k, validation_results) -> None:
+def test_trivial_processing_does_not_change_distances_order(top_n: int, k, validation_results) -> None:  # type: ignore
     distances, dataset, extractor = validation_results
 
     pairwise_model = TrivialDistanceSiamese(extractor)

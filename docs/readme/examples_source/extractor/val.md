@@ -20,7 +20,7 @@ extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics(extra_keys=("paths",))
+calculator = EmbeddingMetrics(extra_keys=("paths",), dataset=val_dataset)
 calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():

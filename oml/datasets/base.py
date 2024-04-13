@@ -1,12 +1,12 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import albumentations as albu
 import numpy as np
 import pandas as pd
 import torchvision
-from torch import BoolTensor, LongTensor, FloatTensor
+from torch import BoolTensor, FloatTensor, LongTensor
 from torch.utils.data import Dataset
 
 from oml.const import (
@@ -48,23 +48,23 @@ class BaseDataset(Dataset):
     """
 
     def __init__(
-            self,
-            df: pd.DataFrame,
-            extra_data: Optional[Dict[str, Any]] = None,
-            transform: Optional[TTransforms] = None,
-            dataset_root: Optional[Union[str, Path]] = None,
-            f_imread: Optional[TImReader] = None,
-            cache_size: Optional[int] = 0,
-            input_tensors_key: str = INPUT_TENSORS_KEY,
-            labels_key: str = LABELS_KEY,
-            paths_key: str = PATHS_KEY,
-            categories_key: Optional[str] = CATEGORIES_KEY,
-            sequence_key: Optional[str] = SEQUENCE_KEY,
-            x1_key: str = X1_KEY,
-            x2_key: str = X2_KEY,
-            y1_key: str = Y1_KEY,
-            y2_key: str = Y2_KEY,
-            index_key: str = INDEX_KEY,
+        self,
+        df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
+        transform: Optional[TTransforms] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        paths_key: str = PATHS_KEY,
+        categories_key: Optional[str] = CATEGORIES_KEY,
+        sequence_key: Optional[str] = SEQUENCE_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
+        index_key: str = INDEX_KEY,
     ):
         """
 
@@ -148,7 +148,7 @@ class BaseDataset(Dataset):
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
 
         if (not self.bboxes_exist) or any(
-                pd.isna(coord) for coord in [row[X1_COLUMN], row[X2_COLUMN], row[Y1_COLUMN], row[Y2_COLUMN]]
+            pd.isna(coord) for coord in [row[X1_COLUMN], row[X2_COLUMN], row[Y1_COLUMN], row[Y2_COLUMN]]
         ):
             x1, y1, x2, y2 = 0, 0, im_w, im_h
         else:
@@ -218,8 +218,9 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
 
     """
 
-    def get_labels(self) -> LongTensor:
-        return LongTensor(self.df[LABELS_COLUMN])
+    def get_labels(self) -> np.ndarray:
+        # todo 522: unify type
+        return np.array(self.df[LABELS_COLUMN])
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
         """
@@ -254,23 +255,23 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
     """
 
     def __init__(
-            self,
-            df: pd.DataFrame,
-            extra_data: Optional[Dict[str, Any]] = None,
-            dataset_root: Optional[Union[str, Path]] = None,
-            transform: Optional[albu.Compose] = None,
-            f_imread: Optional[TImReader] = None,
-            cache_size: Optional[int] = 0,
-            input_tensors_key: str = INPUT_TENSORS_KEY,
-            labels_key: str = LABELS_KEY,
-            paths_key: str = PATHS_KEY,
-            categories_key: str = CATEGORIES_KEY,
-            x1_key: str = X1_KEY,
-            x2_key: str = X2_KEY,
-            y1_key: str = Y1_KEY,
-            y2_key: str = Y2_KEY,
-            is_query_key: str = IS_QUERY_KEY,
-            is_gallery_key: str = IS_GALLERY_KEY,
+        self,
+        df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
+        transform: Optional[albu.Compose] = None,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        paths_key: str = PATHS_KEY,
+        categories_key: str = CATEGORIES_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
     ):
         super(DatasetQueryGallery, self).__init__(
             df=df,
@@ -309,14 +310,14 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
 
 
 def get_retrieval_datasets(
-        dataset_root: Path,
-        transforms_train: Any,
-        transforms_val: Any,
-        f_imread_train: Optional[TImReader] = None,
-        f_imread_val: Optional[TImReader] = None,
-        dataframe_name: str = "df.csv",
-        cache_size: Optional[int] = 0,
-        verbose: bool = True,
+    dataset_root: Path,
+    transforms_train: Any,
+    transforms_val: Any,
+    f_imread_train: Optional[TImReader] = None,
+    f_imread_val: Optional[TImReader] = None,
+    dataframe_name: str = "df.csv",
+    cache_size: Optional[int] = 0,
+    verbose: bool = True,
 ) -> Tuple[DatasetWithLabels, DatasetQueryGallery]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
 
@@ -352,39 +353,47 @@ def get_retrieval_datasets(
 
 
 class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
-
-    def __init__(self,
-                 embeddings: FloatTensor,
-                 labels: LongTensor,
-                 is_query: BoolTensor,
-                 is_gallery: BoolTensor,
-                 input_tensor_key: str = INPUT_TENSORS_KEY,
-                 labels_key: str = LABELS_KEY,
-                 is_query_key: str = IS_QUERY_KEY,
-                 is_gallery_key: str = IS_GALLERY_KEY,
-
-                 ):
+    def __init__(
+        self,
+        embeddings: FloatTensor,
+        labels: LongTensor,
+        is_query: BoolTensor,
+        is_gallery: BoolTensor,
+        categories: Optional[List[str]] = None,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
+        categories_key: str = CATEGORIES_KEY,
+    ):
         assert len(embeddings) == len(labels) == len(is_query) == len(is_gallery)
 
         self.embeddings = embeddings
         self.labels = labels
         self.is_query = is_query
         self.is_gallery = is_gallery
+        self.categories = categories
 
-        self.input_tensors_key = input_tensor_key
+        self.input_tensors_key = input_tensors_key
         self.labels_key = labels_key
         self.is_query_key = is_query_key
         self.is_gallery_key = is_gallery_key
+        self.categories_key = categories_key
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {
+        batch = {
             self.input_tensors_key: self.embeddings[idx],
             self.labels_key: self.labels[idx],
-            self.is_query: self.is_query[idx],
-            self.is_gallery: self.is_gallery[idx]
+            self.is_query_key: self.is_query[idx],
+            self.is_gallery_key: self.is_gallery[idx],
         }
 
-    def __len__(self):
+        if self.categories is not None:
+            batch[self.categories_key] = self.categories[idx]
+
+        return batch
+
+    def __len__(self) -> int:
         return len(self.embeddings)
 
     def get_query_mask(self) -> BoolTensor:
@@ -394,5 +403,10 @@ class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
         return self.is_gallery
 
 
-__all__ = ["BaseDataset", "DatasetWithLabels", "DatasetQueryGallery", "get_retrieval_datasets",
-           "EmbeddingsQueryGalleryDataset"]
+__all__ = [
+    "BaseDataset",
+    "DatasetWithLabels",
+    "DatasetQueryGallery",
+    "get_retrieval_datasets",
+    "EmbeddingsQueryGalleryDataset",
+]

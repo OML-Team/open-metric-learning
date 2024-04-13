@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-import numpy as np
-from torch import LongTensor, BoolTensor
+from torch import BoolTensor, LongTensor
 from torch.utils.data import Dataset
 
 from oml.const import (  # noqa

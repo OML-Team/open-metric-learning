@@ -106,6 +106,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
+        dataset=loaders_val.dataset,
         embeddings_key=pl_module.embeddings_key,
         categories_key=loaders_val.dataset.categories_key,
         labels_key=loaders_val.dataset.labels_key,

@@ -37,11 +37,13 @@ from oml.functional.metrics import (
     calc_topological_metrics,
     reduce_metrics,
 )
+from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
+from oml.utils.misc_torch import take_2d
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -67,6 +69,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def __init__(
         self,
+        dataset: Optional[IDatasetQueryGallery] = None,
         embeddings_key: str = EMBEDDINGS_KEY,
         labels_key: str = LABELS_KEY,
         is_query_key: str = IS_QUERY_KEY,
@@ -88,6 +91,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
 
         Args:
+            dataset: todo 522
             embeddings_key: Key to take the embeddings from the batches
             labels_key: Key to take the labels from the batches
             is_query_key: Key to take the information whether every batch sample belongs to the query
@@ -115,6 +119,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             verbose: Set ``True`` if you want to print metrics
 
         """
+        self.dataset = dataset
         self.embeddings_key = embeddings_key
         self.labels_key = labels_key
         self.is_query_key = is_query_key
@@ -185,12 +190,15 @@ class EmbeddingMetrics(IMetricVisualisable):
         validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
 
         if self.postprocessor:
-            max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
-            k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
-            _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
-            gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in self.mask_gt]
+            # todo 522: we simple sort full matrix
+            self.distance_matrix, ii_sort = self.distance_matrix.sort()  # type: ignore
+            self.mask_gt = take_2d(self.mask_gt, ii_sort)
 
-            dist_mat, retrieved_ids = self.postprocessor.process(dist_mat=dist_mat, retrieved_ids=retrievied_ids)
+            assert self.dataset is not None, "Dataset is needed for postprocessing"  # todo 522: not all pp need dataset
+            self.distance_matrix, ii_sort_upd = self.postprocessor.process(
+                distances=self.distance_matrix, retrieved_ids=ii_sort, dataset=self.dataset
+            )
+            self.mask_gt = take_2d(self.mask_gt, ii_sort_upd)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():

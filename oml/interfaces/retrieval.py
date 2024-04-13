@@ -1,6 +1,4 @@
-from typing import Any, Dict, List
-
-from torch import Tensor
+from typing import Any
 
 
 class IRetrievalPostprocessor:
@@ -10,7 +8,7 @@ class IRetrievalPostprocessor:
     This is a parent class for the classes which somehow postprocess retrieval results.
     """
 
-    def process(self, *args, **kwargs) -> Any:  # type: ignore
+    def process(self, distances, retrieved_ids, dataset) -> Any:  # type: ignore
         raise NotImplementedError()
 
 

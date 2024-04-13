@@ -7,37 +7,20 @@ Retrieval Post-Processing
 .. contents::
    :local:
 
-IDistancesPostprocessor
+
+IRetrievalPostprocessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.retrieval.IDistancesPostprocessor
+.. autoclass:: oml.interfaces.retrieval.IRetrievalPostprocessor
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: process
 
-PairwisePostprocessor
+
+PairwiseReranker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwisePostprocessor
+.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwiseReranker
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: process
-    .. automethod:: inference
-
-PairwiseEmbeddingsPostprocessor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwiseEmbeddingsPostprocessor
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: inference
-
-PairwiseImagesPostprocessor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.retrieval.postprocessors.pairwise.PairwiseImagesPostprocessor
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: inference
