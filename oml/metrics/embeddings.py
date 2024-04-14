@@ -205,7 +205,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         max_k_arg = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
         k = min(self.distance_matrix.shape[1], max_k_arg)  # type: ignore
         _, retrieved_ids = torch.topk(self.distance_matrix, largest=False, k=k)
-        gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in self.mask_gt]  # type: ignore
+        gt_ids = [torch.nonzero(row, as_tuple=True)[0].long() for row in self.mask_gt]  # type: ignore
 
         metrics: TMetricsDict_ByLabels = dict()
 

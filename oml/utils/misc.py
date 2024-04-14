@@ -150,9 +150,9 @@ def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
             ), f"The dictionaries differs at key {k}.\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
         else:
             if isinstance(d2[k], torch.Tensor) and isinstance(v, torch.Tensor):
-                is_equal = torch.all(torch.isclose(d2[k], v))
+                is_equal = torch.all(torch.isclose(d2[k], v, rtol=1e-6, atol=1e-8))
             elif isinstance(d2[k], float) and isinstance(v, float):
-                is_equal = math.isclose(d2[k], v, rel_tol=1e-6)
+                is_equal = math.isclose(d2[k], v, rel_tol=1e-6, abs_tol=1e-8)
             else:
                 is_equal = d2[k] == v
             assert is_equal, f"Key name: {k}\nDict_1 value: {v}\nDict_2 value: {d2[k]}"

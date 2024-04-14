@@ -15,7 +15,7 @@ TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, FloatTensor]]]
 
 def calc_retrieval_metrics(
     retrieved_ids: LongTensor,
-    gt_ids: List[List[int]],
+    gt_ids: List[LongTensor],
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -43,7 +43,7 @@ def calc_retrieval_metrics(
     n_queries = len(retrieved_ids)
 
     # let's mark every correctly retrieved item as True and vice versa
-    gt_tops = stack([isin(retrieved_ids[i], tensor(gt_ids[i])) for i in range(n_queries)]).bool()
+    gt_tops = stack([isin(retrieved_ids[i], gt_ids[i]) for i in range(n_queries)]).bool()
     n_gts = tensor([len(ids) for ids in gt_ids]).long()
 
     metrics: TMetricsDict = defaultdict(dict)
@@ -94,7 +94,7 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     output: TMetricsDict = {}
 
     for k, v in metrics_to_reduce.items():
-        if isinstance(v, (Tensor, np.ndarray)):
+        if isinstance(v, Tensor):
             output[k] = v.mean()
         elif isinstance(v, (float, int)):
             output[k] = v
@@ -108,7 +108,7 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
     output: TMetricsDict = {}
 
     for k, v in metrics.items():
-        if isinstance(v, (Tensor, np.ndarray)):
+        if isinstance(v, Tensor):
             output[k] = v[mask]
         elif isinstance(v, (float, int)):
             output[k] = v

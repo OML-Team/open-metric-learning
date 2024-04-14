@@ -5,7 +5,7 @@ from typing import Any, Tuple
 
 import pytest
 import torch
-from torch import Tensor
+from torch import LongTensor, Tensor
 
 from oml.const import (
     CATEGORIES_KEY,
@@ -143,7 +143,7 @@ def case_for_distance_check() -> Any:
         IS_GALLERY_KEY: torch.tensor([True, True, True]),
         CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
-    ids_ranked_by_distance = [0, 2, 1]
+    ids_ranked_by_distance = LongTensor([0, 2, 1])
     return (batch1, batch2), ids_ranked_by_distance
 
 

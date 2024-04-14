@@ -29,7 +29,7 @@ TPositions = List[List[int]]
 
 def adapt_metric_inputs(
     distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
-) -> Tuple[LongTensor, List[List[int]]]:
+) -> Tuple[LongTensor, List[LongTensor]]:
     # todo 522: rework this function (and where it's called) after we implement RetrievalPrediction class
 
     # Note, we've changed the input format of the metrics function.
@@ -39,7 +39,7 @@ def adapt_metric_inputs(
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     retrieved_is = torch.argsort(distances, dim=1).long()
-    gt_ids = [torch.nonzero(row, as_tuple=True)[0].tolist() for row in mask_gt]
+    gt_ids = [torch.nonzero(row, as_tuple=True)[0].long() for row in mask_gt]
 
     return retrieved_is, gt_ids
 
