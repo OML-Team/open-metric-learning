@@ -5,7 +5,7 @@ from typing import Any, Tuple
 
 import pytest
 import torch
-from torch import Tensor
+from torch import LongTensor, Tensor
 
 from oml.const import (
     CATEGORIES_KEY,
@@ -143,7 +143,7 @@ def case_for_distance_check() -> Any:
         IS_GALLERY_KEY: torch.tensor([True, True, True]),
         CATEGORIES_KEY: torch.tensor([10, 20, 20]),
     }
-    ids_ranked_by_distance = [0, 2, 1]
+    ids_ranked_by_distance = LongTensor([0, 2, 1])
     return (batch1, batch2), ids_ranked_by_distance
 
 
@@ -263,7 +263,8 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         cmc_top_k=(),
         precision_top_k=(),
         map_top_k=(2,),
-        fmr_vals=tuple(),
+        fmr_vals=(0.2,),
+        pcf_variance=(0.2,),
         postprocessor=get_trivial_postprocessor(top_n=1_000),
     )
 
@@ -273,7 +274,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
 
     calc.compute_metrics()
 
-    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
+    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids.tolist()
 
 
 @pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])
