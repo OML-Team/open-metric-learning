@@ -274,7 +274,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
 
     calc.compute_metrics()
 
-    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
+    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids.tolist()
 
 
 @pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])
