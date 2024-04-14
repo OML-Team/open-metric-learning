@@ -226,7 +226,8 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
         cmc_top_k=(),
         precision_top_k=(),
         map_top_k=(2,),
-        fmr_vals=tuple(),
+        fmr_vals=(0.2,),
+        pcf_variance=(0.2,),
         postprocessor=get_trivial_postprocessor(top_n=1_000),
     )
 
@@ -237,7 +238,7 @@ def test_worst_k(case_for_distance_check) -> None:  # type: ignore
 
     calc.compute_metrics()
 
-    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
+    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids.tolist()
 
 
 @pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])

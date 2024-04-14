@@ -4,29 +4,34 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pytest
 import torch
-from torch import Tensor
+from torch import BoolTensor, FloatTensor, Tensor
 
 from oml.functional.metrics import calc_retrieval_metrics
 from oml.utils.misc_torch import pairwise_dist
+from tests.test_oml.test_functional.test_metrics.test_retrieval_metrics import (
+    adapt_metric_inputs,
+)
 
 
-def cmc_score_count(distances: Tensor, mask_gt: Tensor, topk: int, mask_to_ignore: Optional[Tensor] = None) -> float:
+def cmc_score_count(
+    distances: FloatTensor, mask_gt: BoolTensor, topk: int, mask_to_ignore: Optional[BoolTensor] = None
+) -> float:
+    retrieved_is, gt_ids = adapt_metric_inputs(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
+
     metrics = calc_retrieval_metrics(
-        distances=distances,
-        mask_gt=mask_gt,
-        mask_to_ignore=mask_to_ignore,
+        retrieved_ids=retrieved_is,
+        gt_ids=gt_ids,
         cmc_top_k=(topk,),
         map_top_k=tuple(),
         precision_top_k=tuple(),
-        fmr_vals=tuple(),
     )
     return metrics["cmc"][topk]
 
 
 def cmc_score(
-    query_embeddings: Tensor,
-    gallery_embeddings: Tensor,
-    mask_gt: Tensor,
+    query_embeddings: FloatTensor,
+    gallery_embeddings: FloatTensor,
+    mask_gt: BoolTensor,
     topk: int,
     mask_to_ignore: Optional[Tensor] = None,
 ) -> float:
@@ -77,7 +82,7 @@ TEST_DATA_LESS_BIG = (
 
 
 @pytest.mark.parametrize("distance_matrix,mask_gt,topk,expected", TEST_DATA_SIMPLE)
-def test_metric_count(distance_matrix: Tensor, mask_gt: Tensor, topk: int, expected: float) -> None:
+def test_metric_count(distance_matrix: FloatTensor, mask_gt: BoolTensor, topk: int, expected: float) -> None:
     """Simple test"""
     out = cmc_score_count(distances=distance_matrix, mask_gt=mask_gt, topk=topk)
     assert np.isclose(out, expected), (out, expected)
@@ -87,14 +92,14 @@ def test_metric_count(distance_matrix: Tensor, mask_gt: Tensor, topk: int, expec
     "distance_matrix,mask_gt,topk,expected",
     chain(TEST_DATA_LESS_SMALL, TEST_DATA_LESS_BIG),
 )
-def test_metric_less(distance_matrix: Tensor, mask_gt: Tensor, topk: int, expected: float) -> None:
+def test_metric_less(distance_matrix: FloatTensor, mask_gt: BoolTensor, topk: int, expected: float) -> None:
     """Simple test"""
     out = cmc_score_count(distances=distance_matrix, mask_gt=mask_gt, topk=topk)
     assert out - EPS <= expected
 
 
 @pytest.mark.parametrize("distance_matrix,mask_gt,topk,expected", chain(TEST_DATA_GREATER_SMALL))
-def test_metric_greater(distance_matrix: Tensor, mask_gt: Tensor, topk: int, expected: float) -> None:
+def test_metric_greater(distance_matrix: FloatTensor, mask_gt: BoolTensor, topk: int, expected: float) -> None:
     """Simple test"""
     out = cmc_score_count(distances=distance_matrix, mask_gt=mask_gt, topk=topk)
     assert out + EPS >= expected
@@ -234,10 +239,10 @@ def test_cmc_score_with_samples(generate_samples_for_cmc_score) -> None:  # type
     ),
 )
 def test_masked_cmc_score(
-    query_embeddings: Tensor,
-    gallery_embeddings: Tensor,
-    mask_gt: Tensor,
-    available_samples: Tensor,
+    query_embeddings: FloatTensor,
+    gallery_embeddings: FloatTensor,
+    mask_gt: BoolTensor,
+    available_samples: BoolTensor,
     topk: int,
     expected: float,
 ) -> None:
@@ -271,7 +276,11 @@ def test_masked_cmc_score(
     ),
 )
 def test_no_mask_cmc_score(
-    query_embeddings: Tensor, gallery_embeddings: Tensor, mask_gt: Tensor, available_samples: Tensor, topk: int
+    query_embeddings: FloatTensor,
+    gallery_embeddings: FloatTensor,
+    mask_gt: BoolTensor,
+    available_samples: BoolTensor,
+    topk: int,
 ) -> None:
     """
     In this test we just check that masked_cmc_score is equal to cmc_score
