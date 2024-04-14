@@ -63,10 +63,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
         If concatenation of two distances is already sorted, we keep it untouched.
 
         """
-        assert len(retrieved_ids) == len(distances)
-
+        assert retrieved_ids.shape == distances.shape
         top_n = min(self.top_n, retrieved_ids.shape[1])
-        n_queries = len(retrieved_ids)
 
         retrieved_ids = retrieved_ids.clone()
         distances = distances.clone()
@@ -87,23 +85,15 @@ class PairwiseReranker(IRetrievalPostprocessor):
             verbose=self.verbose,
             use_fp16=self.use_fp16,
         )
-        distances_top = distances_top.view(n_queries, top_n)
+        distances_top = distances_top.view(distances.shape[0], top_n)
 
-        distances_top_ranked, ii_rerank = distances_top.sort()
+        distances_upd, ii_rerank = distances_top.sort()
+        retrieved_ids_upd = take_2d(retrieved_ids, ii_rerank)
 
-        # Updating indices:
-        unprocessed_ids = retrieved_ids[:, top_n:]
-        retrieved_ids_upd = torch.concat(
-            [take_2d(retrieved_ids, ii_rerank), unprocessed_ids],  # re-ranked top + old values
-            dim=1,
-        ).long()
-
-        # Updating distances:
-        unprocessed_distances = distances[:, top_n:]
-        if unprocessed_distances.shape[1] > 0:
-            distances_upd = cat_two_sorted_tensors_and_keep_it_sorted(distances_top_ranked, unprocessed_distances)
-        else:
-            distances_upd = distances_top_ranked
+        # Stack with the unprocessed values outside the first top_n items
+        if top_n < distances.shape[1]:
+            distances_upd = cat_two_sorted_tensors_and_keep_it_sorted(distances_upd, distances[:, top_n:])
+            retrieved_ids_upd = torch.concat([retrieved_ids_upd, retrieved_ids[:, top_n:]], dim=1).long()
 
         assert distances_upd.shape == distances.shape
         assert retrieved_ids_upd.shape == retrieved_ids.shape
