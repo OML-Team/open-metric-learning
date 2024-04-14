@@ -7,7 +7,7 @@ from oml.datasets.base import DatasetQueryGallery
 from oml.inference.pairs import pairwise_inference
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
-from oml.utils.misc_torch import take_2d
+from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
 
 
 class PairwiseReranker(IRetrievalPostprocessor):
@@ -51,16 +51,16 @@ class PairwiseReranker(IRetrievalPostprocessor):
     ) -> Tuple[FloatTensor, LongTensor]:
         """
 
-        Note, the distances to the items starting from ``top_n + 1`` position and further will be also updated by offset
-        We need the offset to keep the distances sorted even after re-ranking. Here is an example:
-        ``distances = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3``
+        Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted
+        to remain distances sorted. Here is an example:
+        ``original_distances = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3``
         Imagine, the postprocessor didn't change the order of the first 3 items (it's just a convenient example,
-        the logic remains the same), however the new values has bigger scale:
-        ``distances_upd = [10, 20, 30, 0.5, 0.6]``.
-        To keep the distances sorted we introduce the ``offset = max(10, 20, 30) - min(0.5, 0.6) = 29.5``.
-        So, the adjusted distances are:
-        ``distances_upd = [10, 20, 30, 30, 30.1]``
-        Thus, the order remains the same.
+        the logic remains the same), however the new values have a bigger scale:
+        ``distances_upd = [1, 2, 5, 0.5, 0.6]``.
+        Thus, we need to rescale the first three distances, so they don't go above ``0.5``.
+        The scaling factor is ``s = min(0.5, 0.6) / max(1, 2, 5) = 0.1``. Finally:
+        ``distances_upd_scaled = [0.1, 0.2, 0.5, 0.5, 0.6]``.
+        If concatenation of two distances is already sorted, we keep it untouched.
 
         """
         assert len(retrieved_ids) == len(distances)
@@ -92,22 +92,18 @@ class PairwiseReranker(IRetrievalPostprocessor):
         distances_top_ranked, ii_rerank = distances_top.sort()
 
         # Updating indices:
+        unprocessed_ids = retrieved_ids[:, top_n:]
         retrieved_ids_upd = torch.concat(
-            [take_2d(retrieved_ids, ii_rerank), retrieved_ids[:, top_n:]],  # re-ranked top  # old untouched values
+            [take_2d(retrieved_ids, ii_rerank), unprocessed_ids],  # re-ranked top + old values
             dim=1,
         ).long()
 
         # Updating distances:
         unprocessed_distances = distances[:, top_n:]
         if unprocessed_distances.shape[1] > 0:
-            # todo 522: write a test
-            offset = distances_top_ranked.max(dim=1) - unprocessed_distances.min(dim=1) + 1e-5
-            unprocessed_distances += offset
-
-        distances_upd = torch.concat(
-            [distances_top_ranked, unprocessed_distances],  # re-ranked top  # unprocessed distances shifted by offset
-            dim=1,
-        ).float()
+            distances_upd = cat_two_sorted_tensors_and_keep_it_sorted(distances_top_ranked, unprocessed_distances)
+        else:
+            distances_upd = distances_top_ranked
 
         assert distances_upd.shape == distances.shape
         assert retrieved_ids_upd.shape == retrieved_ids.shape

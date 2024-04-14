@@ -31,8 +31,9 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     pprint(cfg)
 
     transforms = get_transforms_by_cfg(cfg["transforms_predict"])
-    filenames = [list(str(Path(cfg["data_dir"]).glob(f"**/*.{ext}"))) for ext in IMAGE_EXTENSIONS]
+    filenames = [list(Path(cfg["data_dir"]).glob(f"**/*.{ext}")) for ext in IMAGE_EXTENSIONS]
     filenames = list(itertools.chain(*filenames))
+    filenames = list(map(str, filenames))
 
     f_imread = get_im_reader_for_transforms(transforms)
 

@@ -5,7 +5,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-from torch import Tensor, cdist
+from torch import FloatTensor, Tensor, cdist
 
 from oml.utils.misc import find_first_occurrences
 
@@ -55,6 +55,30 @@ def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     ii = torch.arange(n).unsqueeze(-1).expand(n, indices.shape[1])
 
     x[ii, indices] = new_values
+
+    return x
+
+
+def cat_two_sorted_tensors_and_keep_it_sorted(x1: FloatTensor, x2: FloatTensor, eps: float = 1e-7) -> FloatTensor:
+    """
+    Args:
+        x1: Sorted tensor with the shape of ``[N, M]``
+        x2: Sorted tensor with the shape of ``[N, P]``
+        eps: Eps to have a gap between the last x1 and the first x2
+
+    Returns:
+        Concatenation of two sorted tensors.
+        The first tensor may be rescaled if needed to keep the order sorted.
+
+    """
+    assert eps >= 0
+    assert x1.shape[0] == x2.shape[0]
+
+    scale = (x2[:, 0] / x1[:, -1]).view(-1, 1)
+    need_scaling = x1[:, -1] > x2[:, 0]
+    x1[need_scaling] = x1[need_scaling] * scale[need_scaling] - eps
+
+    x = torch.concatenate([x1, x2], dim=1).float()
 
     return x
 
