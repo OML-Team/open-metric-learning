@@ -16,6 +16,7 @@ class ExtractorModule(pl.LightningModule):
     This is a base module to train your model with Lightning.
 
     """
+    embeddings_key: str
 
     def __init__(
         self,
@@ -42,7 +43,7 @@ class ExtractorModule(pl.LightningModule):
             scheduler_frequency: Frequency of calling scheduler
             input_tensors_key: Key to get tensors from the batches
             labels_key: Key to get labels from the batches
-            embeddings_key: Key to get embeddings from the batches
+            embeddings_key: Key to put extracted embeddings to the batches
             scheduler_monitor_metric: Metric to monitor for the schedulers that depend on the metric value
             freeze_n_epochs: number of epochs to freeze model (for n > 0 model has to be a successor of ``IFreezable``
                 interface). When ``current_epoch >= freeze_n_epochs`` model is unfreezed. Note that epochs are

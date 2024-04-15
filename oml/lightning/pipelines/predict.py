@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from oml.const import IMAGE_EXTENSIONS, TCfg
-from oml.datasets.base import BaseImagesDataset
+from oml.datasets import ImagesBaseDataset
 from oml.ddp.utils import get_world_size_safe, is_main_process, sync_dicts_ddp
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
@@ -42,7 +42,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     if broken_images:
         raise ValueError(f"There are images that cannot be open:\n {broken_images}.")
 
-    dataset = BaseImagesDataset.create_from_paths(paths=filenames, transform=transforms, f_imread=f_imread)
+    dataset = ImagesBaseDataset(paths=filenames, transform=transforms, f_imread=f_imread)
 
     loader = DataLoader(
         dataset=dataset, batch_size=cfg["bs"], num_workers=cfg["num_workers"], shuffle=False, drop_last=False
@@ -56,15 +56,16 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     trainer = pl.Trainer(precision=cfg.get("precision", 32), **trainer_engine_params)
     predictions = trainer.predict(model=pl_model, dataloaders=loader, return_predictions=True)
 
-    paths, embeddings = [], []
+    ids, embeddings = [], []
     for prediction in predictions:
-        paths.extend(prediction[dataset.paths_key])
+        ids.extend([int(x) for x in prediction[dataset.index_key]])
         embeddings.extend(prediction[pl_model.embeddings_key].tolist())
 
-    paths = sync_dicts_ddp({"key": list(map(str, paths))}, get_world_size_safe())["key"]
+    ids = sync_dicts_ddp({"key": ids}, get_world_size_safe())["key"]
     embeddings = sync_dicts_ddp({"key": embeddings}, get_world_size_safe())["key"]
 
     if is_main_process():
+        paths = [filenames[i] for i in ids]
         data_to_save = dict(zip(paths, embeddings))
         save_path = Path(cfg["save_dir"]) / "predictions.json"
 

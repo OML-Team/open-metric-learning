@@ -7,7 +7,7 @@ from pandas import DataFrame
 from torch import Tensor, nn
 
 from oml.const import PATHS_COLUMN, SPLIT_COLUMN
-from oml.datasets.base import BaseImagesDataset
+from oml.datasets import ImagesBaseDataset
 from oml.inference.abstract import _inference
 from oml.interfaces.models import IExtractor
 from oml.transforms.images.utils import TTransforms
@@ -29,7 +29,7 @@ def inference_on_images(
     accumulate_on_cpu: bool = True,
 ) -> Tensor:
     # todo 522: ideally we should get rid of functions like this because the assume modality
-    dataset = BaseImagesDataset.create_from_paths(paths=paths, transform=transform, f_imread=f_imread, cache_size=0)
+    dataset = ImagesBaseDataset(paths=paths, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
 
     def _apply(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:

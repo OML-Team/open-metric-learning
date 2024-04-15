@@ -6,13 +6,9 @@ from oml.samplers.category_balance import CategoryBalanceSampler
 from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
 from oml.utils.misc import TCfg, dictconfig_to_dict, remove_unused_kwargs
 
-SAMPLERS_CATEGORIES_BASED = {
+SAMPLERS_REGISTRY = {
     "category_balance": CategoryBalanceSampler,
     "distinct_category_balance": DistinctCategoryBalanceSampler,
-}
-
-SAMPLERS_REGISTRY = {
-    **SAMPLERS_CATEGORIES_BASED,  # type: ignore
     "balance": BalanceSampler,
 }
 
@@ -29,4 +25,4 @@ def get_sampler_by_cfg(cfg: TCfg, **kwargs_runtime: Dict[str, Any]) -> IBatchSam
     return get_sampler(name=cfg["name"], **cfg["args"])
 
 
-__all__ = ["SAMPLERS_REGISTRY", "SAMPLERS_CATEGORIES_BASED", "get_sampler", "get_sampler_by_cfg"]
+__all__ = ["SAMPLERS_REGISTRY", "get_sampler", "get_sampler_by_cfg"]

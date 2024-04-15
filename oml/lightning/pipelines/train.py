@@ -16,7 +16,7 @@ from oml.lightning.pipelines.parser import (
     parse_engine_params_from_config,
     parse_logger_from_config,
     parse_sampler_from_config,
-    parse_scheduler_from_config,
+    parse_scheduler_from_config, parse_criterion_from_cfg,
 )
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
 from oml.registry.losses import get_criterion_by_cfg
@@ -80,7 +80,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
 
     loader_train, loaders_val, dataset_train, dataset_val = get_retrieval_loaders(cfg)
     extractor = get_extractor_by_cfg(cfg["extractor"])
-    criterion = get_criterion_by_cfg(cfg["criterion"], **{"label2category": get_label2category()})  # todo
+    criterion = parse_criterion_from_cfg(cfg, dataset=dataset_train)
     optimizable_parameters = [
         {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
         {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
@@ -106,16 +106,10 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     )
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
-    metrics_calc = metrics_constructor(
-        dataset=dataset_val,
-        **cfg.get("metric_args", {}),
-    )
+    metrics_calc = metrics_constructor(dataset=dataset_val, **cfg.get("metric_args", {}))
 
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
-    metrics_clb = metrics_clb_constructor(
-        metric=metrics_calc,
-        log_images=cfg.get("log_images", False),
-    )
+    metrics_clb = metrics_clb_constructor(metric=metrics_calc, log_images=cfg.get("log_images", False))
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],

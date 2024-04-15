@@ -4,14 +4,16 @@ from typing import Any, Dict, Optional
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
+from torch import nn
 
-from oml.const import TCfg
+from oml.const import TCfg, CATEGORIES_COLUMN
 from oml.interfaces.datasets import IDatasetWithLabels
 from oml.interfaces.loggers import IPipelineLogger
 from oml.interfaces.samplers import IBatchSampler
 from oml.lightning.pipelines.logging import TensorBoardPipelineLogger
 from oml.registry.loggers import get_logger_by_cfg
-from oml.registry.samplers import SAMPLERS_CATEGORIES_BASED, get_sampler_by_cfg
+from oml.registry.losses import get_criterion_by_cfg
+from oml.registry.samplers import get_sampler_by_cfg
 from oml.registry.schedulers import get_scheduler_by_cfg
 from oml.utils.misc import dictconfig_to_dict
 
@@ -77,20 +79,23 @@ def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> 
 
 
 def parse_sampler_from_config(cfg: TCfg, dataset: IDatasetWithLabels) -> Optional[IBatchSampler]:
-    if (
-        (not dataset.categories_key)
-        and (cfg["sampler"] is not None)
-        and cfg["sampler"]["name"] in SAMPLERS_CATEGORIES_BASED.keys()
-    ):
-        raise ValueError(
-            "NOTE! You are trying to use Sampler which works with the information related"
-            "to categories, but there is no <categories_key> in your Dataset."
-        )
+    if cfg["sampler"] is None:
+        return None
 
-    sampler_runtime_args = {"labels": dataset.get_labels(), "label2category": get_label2category()}  # todo
-    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
+    runtime_args = {"labels": dataset.get_labels()}
+    if CATEGORIES_COLUMN in dataset.extra_data:
+        runtime_args["label2category"] = dict(zip(dataset.get_labels(), dataset.extra_data[CATEGORIES_COLUMN]))
 
-    return sampler
+    return get_sampler_by_cfg(cfg["sampler"], **runtime_args)
+
+
+def parse_criterion_from_cfg(cfg: TCfg, dataset: IDatasetWithLabels) -> nn.Module:
+    runtime_args = {}
+    if CATEGORIES_COLUMN in dataset.extra_data:
+        label2category = dict(zip(dataset.get_labels(), dataset.extra_data[CATEGORIES_COLUMN]))
+        runtime_args["label2category"] = label2category
+
+    return get_criterion_by_cfg(cfg["criterion"], **runtime_args)
 
 
 def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
