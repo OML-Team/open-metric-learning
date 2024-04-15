@@ -104,6 +104,8 @@ PAIR_2ND_KEY = "input_tensors_2"
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]
 
+BS_KNN = 1000
+
 # hydra provides ability to set its behaviour for convinient backwards compatibility
 # no matter what the current version is
 HYDRA_BEHAVIOUR = "1.1"

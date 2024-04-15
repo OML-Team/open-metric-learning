@@ -18,7 +18,7 @@ from oml.functional.metrics import (
     calc_precision,
     calc_retrieval_metrics,
 )
-from oml.metrics.embeddings import validate_dataset
+from oml.retrieval.prediction import validate_dataset
 from oml.utils.misc import compare_dicts_recursively, remove_unused_kwargs
 from oml.utils.misc_torch import take_2d
 
@@ -30,7 +30,7 @@ TPositions = List[List[int]]
 def adapt_metric_inputs(
     distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
 ) -> Tuple[LongTensor, List[LongTensor]]:
-    # todo 522: rework this function (and where it's called) after we implement RetrievalPrediction class
+    # todo 522: rework this function (and where it's called)
 
     # Note, we've changed the input format of the metrics function.
     # To change tests minimally we simply adapt formats
@@ -86,7 +86,7 @@ def compare_with_approx_precision(
     mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
 
     mask_to_ignore = calc_mask_to_ignore(is_query, is_gallery)
-    # we use this custom code instead of `apply_mask_to_ignore` to avoid having inf values
+    # we use 1_000_000 to avoid having inf values
     distances[mask_to_ignore] = 1_000_000
     mask_gt[mask_to_ignore] = False
 

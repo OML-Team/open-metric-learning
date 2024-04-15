@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import BoolTensor, tensor
 
-from oml.functional.metrics import reduce_metrics, take_unreduced_metrics_by_mask
+from oml.functional.metrics import reduce_metrics, take_unreduced_metrics_by_ids
 from oml.utils.misc import compare_dicts_recursively
 
 
@@ -75,5 +75,5 @@ def test_reduce_metrics(metrics_dict: Dict[str, Any], result_dict: Dict[str, Any
 def test_take_unreduced_metrics_by_mask(
     metrics_dict: Dict[str, Any], mask: BoolTensor, result_dict: Dict[str, Any]
 ) -> None:
-    output = take_unreduced_metrics_by_mask(metrics_dict, mask)
+    output = take_unreduced_metrics_by_ids(metrics_dict, mask)
     assert compare_dicts_recursively(output, result_dict)

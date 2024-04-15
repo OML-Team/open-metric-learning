@@ -1,24 +1,20 @@
-# type: ignore
 # todo 522: remove ignore after we've done
-import math
 from functools import partial
-from random import randint, random
+from random import randint, sample
 from typing import Tuple
 
 import pytest
 import torch
-from torch import BoolTensor, FloatTensor, LongTensor
+from torch import BoolTensor, FloatTensor
 
 from oml.datasets.base import EmbeddingsQueryGalleryDataset
-from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
+from oml.functional.metrics import calc_retrieval_metrics
 from oml.interfaces.models import IPairwiseModel
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
+from oml.retrieval.prediction import RetrievalPrediction
 from oml.utils.misc import flatten_dict, one_hot
-from oml.utils.misc_torch import normalise, pairwise_dist
-from tests.test_oml.test_functional.test_metrics.test_retrieval_metrics import (
-    adapt_metric_inputs,
-)
+from oml.utils.misc_torch import normalise
 
 FEAT_SIZE = 8
 oh = partial(one_hot, dim=FEAT_SIZE)
@@ -46,7 +42,7 @@ def shared_query_gallery_case() -> Tuple[FloatTensor, BoolTensor, BoolTensor]:
     sz = 7
     feat_dim = 4
 
-    embeddings = torch.randn((sz, feat_dim))
+    embeddings = torch.randn((sz, feat_dim)).float()
     embeddings = normalise(embeddings).float()
 
     is_query = torch.ones(sz).bool()
@@ -67,33 +63,32 @@ def test_trivial_processing_does_not_change_distances_order(
         embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, labels=torch.ones_like(is_gallery).long()
     )
 
-    distances = calc_distance_matrix(embeddings, is_query, is_gallery)
-
-    # todo 522: refactor
-    distances, retrieved_ids = torch.topk(distances, k=min(k, distances.shape[1]), largest=False)
+    prediction = RetrievalPrediction.compute_from_embeddings(
+        embeddings=embeddings, dataset=dataset, n_ids_to_retrieve=k
+    )
 
     model = LinearTrivialDistanceSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
     processor = PairwiseReranker(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
 
     distances_processed, retrieved_ids_upd = processor.process(
-        distances=distances, retrieved_ids=retrieved_ids, dataset=dataset
+        distances=prediction.distances, retrieved_ids=prediction.retrieved_ids, dataset=dataset
     )
 
-    assert (retrieved_ids == retrieved_ids_upd).all()
-    assert torch.isclose(distances, distances_processed, rtol=1e-6).all()
+    assert (prediction.retrieved_ids == retrieved_ids_upd).all()
+    assert torch.isclose(prediction.distances, distances_processed, rtol=1e-6).all()
 
 
-def perfect_case() -> Tuple[FloatTensor, FloatTensor, LongTensor, LongTensor]:
-    query_labels = torch.tensor([1, 2, 3]).long()
-    query_embeddings = torch.stack([oh(1), oh(2), oh(3)]).float()
+def perfect_case() -> EmbeddingsQueryGalleryDataset:
+    dataset = EmbeddingsQueryGalleryDataset(
+        embeddings=torch.stack([oh(1), oh(2), oh(3), oh(1), oh(2), oh(1), oh(2), oh(3)]).float(),
+        labels=torch.tensor([1, 2, 3, 1, 2, 1, 2, 3]).long(),
+        is_query=torch.tensor([1, 1, 1, 1, 0, 0, 0, 0]).bool(),
+        is_gallery=torch.tensor([0, 0, 0, 0, 1, 1, 1, 1]).bool(),
+    )
 
-    gallery_labels = torch.tensor([1, 2, 1, 2, 3]).long()
-    gallery_embeddings = torch.stack([oh(1), oh(2), oh(1), oh(2), oh(3)]).float()
-
-    return query_embeddings, gallery_embeddings, query_labels, gallery_labels
+    return dataset
 
 
-@pytest.mark.skip(reason="todo 522: rework later")
 @pytest.mark.long
 def test_trivial_processing_fixes_broken_perfect_case() -> None:
     """
@@ -108,34 +103,26 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
     n_repetitions = 20
     for _ in range(n_repetitions):
 
-        query_embeddings, gallery_embeddings, query_labels, gallery_labels = perfect_case()
-        distances = pairwise_dist(query_embeddings, gallery_embeddings)
-        mask_gt = query_labels.unsqueeze(-1) == gallery_labels
+        dataset = perfect_case()
 
-        nq, ng = distances.shape
-
-        # Let's randomly change some distances to break the case
+        # Let's randomly swap some embeddings to break the case
+        embeddings_broken = dataset.embeddings.clone()
         for _ in range(5):
-            i = randint(0, nq - 1)
-            j = randint(0, ng - 1)
-            distances[i, j] = random()
+            i, j = sample(list(range(len(dataset))), 2)
+            embeddings_broken[i], embeddings_broken[j] = embeddings_broken[j], embeddings_broken[i]
 
-        # As mentioned before, for this test the exact values of parameters don't matter
-        top_k = (randint(1, ng - 1),)
-        top_n = randint(2, 10)
+        pred = RetrievalPrediction.compute_from_embeddings(embeddings=embeddings_broken, dataset=dataset)
 
-        retrieved_ids, gt_ids = adapt_metric_inputs(distances=distances, mask_gt=mask_gt)  # type: ignore
-
-        args = {"gt_ids": gt_ids, "precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
+        top_k = (randint(1, pred.distances.shape[1] - 1),)
+        args = {"gt_ids": pred.gt_ids, "precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
 
         # Metrics before
-        metrics = flatten_dict(calc_retrieval_metrics(retrieved_ids=retrieved_ids, **args))
+        metrics = flatten_dict(calc_retrieval_metrics(retrieved_ids=pred.retrieved_ids, **args))
 
-        # Metrics after broken distances have been fixed
-        model = LinearTrivialDistanceSiamese(feat_dim=gallery_embeddings.shape[-1], identity_init=True)
-        processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=16, num_workers=0)
-        distances_upd = processor.process(distances, query_embeddings, gallery_embeddings)
-        retrieved_ids_upd, _ = adapt_metric_inputs(distances=distances_upd, mask_gt=mask_gt)  # type: ignore
+        # Metrics after broken embeddings have been fixed
+        model = LinearTrivialDistanceSiamese(feat_dim=embeddings_broken.shape[-1], identity_init=True)
+        processor = PairwiseReranker(pairwise_model=model, top_n=100, batch_size=16, num_workers=0)
+        distances_upd, retrieved_ids_upd = processor.process(pred.distances, pred.retrieved_ids, dataset=dataset)
 
         metrics_upd = flatten_dict(calc_retrieval_metrics(retrieved_ids=retrieved_ids_upd, **args))
 
@@ -143,52 +130,6 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
             metric = metrics[key]
             metric_upd = metrics_upd[key]
             assert metric_upd >= metric, (key, metric, metric_upd)
-
-
-class DummyPairwise(IPairwiseModel):
-    def __init__(self, distances_to_return: FloatTensor):
-        super(DummyPairwise, self).__init__()
-        self.distances_to_return = distances_to_return
-        self.parameter = torch.nn.Linear(1, 1)
-
-    def forward(self, x1: FloatTensor, x2: FloatTensor) -> FloatTensor:
-        return self.distances_to_return
-
-    def predict(self, x1: FloatTensor, x2: FloatTensor) -> FloatTensor:
-        return self.distances_to_return
-
-
-@pytest.mark.skip(reason="todo 522: rework later")
-@pytest.mark.long
-def test_trivial_processing_fixes_broken_perfect_case_2() -> None:
-    """
-    The idea of the test is similar to "test_trivial_processing_fixes_broken_perfect_case",
-    but this time we check the exact metrics values.
-
-    """
-    distances = torch.tensor([[0.8, 0.3, 0.2, 0.4, 0.5]]).float()
-    mask_gt = torch.tensor([[1, 1, 0, 1, 0]]).bool()
-
-    retrieved_ids, gt_ids = adapt_metric_inputs(distances=distances, mask_gt=mask_gt)
-
-    args = {"gt_ids": gt_ids, "precision_top_k": (1, 3)}
-
-    precisions = calc_retrieval_metrics(retrieved_ids=retrieved_ids, **args)["precision"]
-    assert math.isclose(precisions[1], 0)
-    assert math.isclose(precisions[3], 2 / 3, abs_tol=1e-5)
-
-    # Now let's fix the error with dummy pairwise model
-    model = DummyPairwise(distances_to_return=torch.tensor([3.5, 2.5]).float())
-    processor = PairwiseReranker(pairwise_model=model, top_n=2, batch_size=128, num_workers=0)
-
-    distances_upd = processor.process(
-        distances=distances, queries=torch.randn((1, FEAT_SIZE)), galleries=torch.randn((5, FEAT_SIZE))
-    ).float()
-    retrieved_ids_upd, _ = adapt_metric_inputs(distances=distances_upd, mask_gt=mask_gt)
-
-    precisions_upd = calc_retrieval_metrics(retrieved_ids=retrieved_ids_upd, **args)["precision"]
-    assert math.isclose(precisions_upd[1], 1)
-    assert math.isclose(precisions_upd[3], 2 / 3, abs_tol=1e-5)
 
 
 class RandomPairwise(IPairwiseModel):
@@ -203,33 +144,30 @@ class RandomPairwise(IPairwiseModel):
         return self.forward(x1, x2)
 
 
-@pytest.mark.skip(reason="todo 522: rework test ")
 @pytest.mark.long
 @pytest.mark.parametrize("top_n", [2, 4, 5])
 def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     # The idea of the test is that postprocessing of first n elements
     # cannot change cmc@n and precision@n
 
-    # Let's construct some random input
-    query_embeddings_perfect, gallery_embeddings_perfect, query_labels, gallery_labels = perfect_case()
-    query_embeddings = torch.rand_like(query_embeddings_perfect).float()
-    gallery_embeddings = torch.rand_like(gallery_embeddings_perfect).float()
-    mask_gt: BoolTensor = query_labels.unsqueeze(-1) == gallery_labels  # type: ignore
+    n_repetitions = 5
+    for _ in range(n_repetitions):
+        # Let's construct some random input
+        dataset = perfect_case()
+        embeddings_rand = torch.randn_like(dataset.embeddings).float()
 
-    distances = pairwise_dist(query_embeddings, gallery_embeddings)
+        pred = RetrievalPrediction.compute_from_embeddings(embeddings=embeddings_rand, dataset=dataset)
 
-    retrieved_ids, gt_ids = adapt_metric_inputs(distances=distances, mask_gt=mask_gt)
+        args = {"cmc_top_k": (top_n,), "precision_top_k": (top_n,), "map_top_k": tuple(), "gt_ids": pred.gt_ids}
 
-    args = {"cmc_top_k": (top_n,), "precision_top_k": (top_n,), "map_top_k": tuple(), "gt_ids": gt_ids}
+        metrics_before = calc_retrieval_metrics(retrieved_ids=pred.retrieved_ids, **args)
 
-    metrics_before = calc_retrieval_metrics(retrieved_ids=retrieved_ids, **args)
+        model = RandomPairwise()
+        processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=4, num_workers=0)
+        _, retrieved_ids_upd = processor.process(
+            distances=pred.distances, retrieved_ids=pred.retrieved_ids, dataset=dataset
+        )
 
-    model = RandomPairwise()
-    processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=4, num_workers=0)
-    distances_upd = processor.process(distances=distances, queries=query_embeddings, galleries=gallery_embeddings)
+        metrics_after = calc_retrieval_metrics(retrieved_ids=retrieved_ids_upd, **args)
 
-    retrieved_ids_upd, _ = adapt_metric_inputs(distances=distances_upd.float(), mask_gt=mask_gt)
-
-    metrics_after = calc_retrieval_metrics(retrieved_ids=retrieved_ids_upd, **args)
-
-    assert metrics_before == metrics_after
+        assert metrics_before == metrics_after

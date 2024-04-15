@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from oml.const import LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.loggers import IFigureLogger
-from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
+from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualizable
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
@@ -44,7 +44,7 @@ class MetricValCallback(Callback):
         self.metric = metric
         self.log_images = log_images
         assert not log_images or (
-            isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()  # type: ignore
+            isinstance(metric, IMetricVisualizable) and metric.ready_to_visualize()  # type: ignore
         )
 
         self.loader_idx = loader_idx
@@ -98,7 +98,7 @@ class MetricValCallback(Callback):
                 self.calc_and_log_metrics(pl_module)
 
     def _log_images(self, pl_module: pl.LightningModule) -> None:
-        if not isinstance(self.metric, IMetricVisualisable):
+        if not isinstance(self.metric, IMetricVisualizable):
             return
 
         if not isinstance(pl_module.logger, IFigureLogger):

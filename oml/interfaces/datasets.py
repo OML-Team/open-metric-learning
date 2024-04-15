@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 import numpy as np
-from torch import BoolTensor
+from torch import BoolTensor, LongTensor
 from torch.utils.data import Dataset
 
 from oml.const import (  # noqa
@@ -79,10 +79,14 @@ class IDatasetQueryGallery(Dataset, ABC):
         """
         raise NotImplementedError()
 
-    def get_query_mask(self) -> BoolTensor:
+    def get_query_ids(self) -> LongTensor:
         raise NotImplementedError()
 
-    def get_gallery_mask(self) -> BoolTensor:
+    def get_gallery_ids(self) -> LongTensor:
+        raise NotImplementedError()
+
+    def get_labels(self) -> LongTensor:
+        # todo 522: rework it later. not all Q/G dataset have GT labels
         raise NotImplementedError()
 
 

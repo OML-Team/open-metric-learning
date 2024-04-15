@@ -11,6 +11,10 @@ from omegaconf import DictConfig, OmegaConf
 from oml.const import TCfg
 
 
+def take_from_list(elements: List[Any], ids: List[int]) -> List[Any]:
+    return [elements[i] for i in ids]
+
+
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     """
     Args:

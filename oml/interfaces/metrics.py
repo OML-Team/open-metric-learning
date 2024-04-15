@@ -65,7 +65,7 @@ class IMetricDDP(IBasicMetric):
         raise NotImplementedError()
 
 
-class IMetricVisualisable(IBasicMetric):
+class IMetricVisualizable(ABC):
     """
     This is an interface for all metrics which can visualize themselves.
     For example, mAP@5 can plot worst queries.
@@ -86,4 +86,4 @@ class IMetricVisualisable(IBasicMetric):
         raise NotImplementedError()
 
 
-__all__ = ["IBasicMetric", "IMetricDDP", "IMetricVisualisable"]
+__all__ = ["IBasicMetric", "IMetricDDP", "IMetricVisualizable"]

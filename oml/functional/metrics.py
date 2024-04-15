@@ -104,16 +104,16 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
     return output
 
 
-def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> TMetricsDict:
+def take_unreduced_metrics_by_ids(metrics: TMetricsDict, ids: LongTensor) -> TMetricsDict:
     output: TMetricsDict = {}
 
     for k, v in metrics.items():
         if isinstance(v, Tensor):
-            output[k] = v[mask]
+            output[k] = v[ids]
         elif isinstance(v, (float, int)):
             output[k] = v
         else:
-            output[k] = take_unreduced_metrics_by_mask(v, mask)  # type: ignore
+            output[k] = take_unreduced_metrics_by_ids(v, ids)  # type: ignore
 
     return output
 
@@ -121,12 +121,14 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
 def apply_mask_to_ignore(
     distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: BoolTensor
 ) -> Tuple[FloatTensor, BoolTensor]:
+    # todo 522: move it to tests
     distances[mask_to_ignore] = float("inf")
     mask_gt[mask_to_ignore] = False
     return distances, mask_gt
 
 
 def calc_gt_mask(labels: LongTensor, is_query: BoolTensor, is_gallery: BoolTensor) -> BoolTensor:
+    # todo 522: move it to tests
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
 
@@ -142,6 +144,7 @@ def calc_gt_mask(labels: LongTensor, is_query: BoolTensor, is_gallery: BoolTenso
 def calc_mask_to_ignore(
     is_query: BoolTensor, is_gallery: BoolTensor, sequence_ids: Optional[Union[LongTensor, np.ndarray]] = None
 ) -> BoolTensor:
+    # todo 522: move it to tests
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
@@ -165,6 +168,7 @@ def calc_mask_to_ignore(
 
 
 def calc_distance_matrix(embeddings: FloatTensor, is_query: BoolTensor, is_gallery: BoolTensor) -> FloatTensor:
+    # todo 522: do we need it?
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
     assert embeddings.shape[0] == len(is_query) == len(is_gallery)
 
@@ -459,13 +463,13 @@ def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tup
     return fnmr_at_fmr.tolist()
 
 
-def calc_fnmr_at_fmr_from_matrices(
-    distance_matrix: FloatTensor, mask_gt: BoolTensor, fmr_vals: Tuple[float, ...]
+def calc_fnmr_at_fmr_from_list_of_gt(
+    distance_matrix: FloatTensor, gt_ids: List[LongTensor], fmr_vals: Tuple[float, ...]
 ) -> TMetricsDict:
     metrics = dict()
 
     if fmr_vals:
-        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, mask_gt)
+        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, gt_ids)
         fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
         metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
 
@@ -536,28 +540,31 @@ def calc_pcf(embeddings: FloatTensor, pcf_variance: Tuple[float, ...]) -> List[f
     return metric
 
 
-def extract_pos_neg_dists(
-    distances: FloatTensor, mask_gt: BoolTensor, mask_to_ignore: Optional[BoolTensor] = None
-) -> Tuple[FloatTensor, FloatTensor]:
+def extract_pos_neg_dists(distances: FloatTensor, gt_ids: List[LongTensor]) -> Tuple[FloatTensor, FloatTensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.
 
     Args:
-        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
-        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
-        mask_to_ignore: Binary matrix to indicate that some elements in gallery cannot be used
-                     as answers and must be ignored
+        distances: Distance matrix with the shape of ``[query_size, top_n_predicted]``
+        gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
+            have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
+
     Returns:
         pos_dist: Tensor of distances between relevant samples
         neg_dist: Tensor of distances between non-relevant samples
     """
-    if mask_to_ignore is not None:
-        mask_to_not_ignore = ~mask_to_ignore
-        pos_dist = distances[mask_gt & mask_to_not_ignore]
-        neg_dist = distances[~mask_gt & mask_to_not_ignore]
-    else:
-        pos_dist = distances[mask_gt]
-        neg_dist = distances[~mask_gt]
+    assert len(distances) == len(gt_ids), (distances.shape, len(gt_ids))
+
+    n_q, n_retrieved = distances.shape
+    mask_gt = BoolTensor(size=(n_q, n_retrieved))
+
+    # it's not a heavy cycle because number of gts for every query is small
+    for i_query, ids in enumerate(gt_ids):
+        mask_gt[i_query, clip_max(ids, n_retrieved)] = True
+
+    pos_dist = distances[mask_gt]
+    neg_dist = distances[~mask_gt]
+
     return pos_dist, neg_dist
 
 
@@ -597,5 +604,7 @@ __all__ = [
     "calc_mask_to_ignore",
     "calc_distance_matrix",
     "calculate_accuracy_on_triplets",
+    "calc_fnmr_at_fmr_from_list_of_gt",
+    "take_unreduced_metrics_by_ids",
     "reduce_metrics",
 ]

@@ -1,22 +1,14 @@
 import math
 from collections import defaultdict
 from functools import partial
-from typing import Any, Tuple
+from typing import Any
 
 import pytest
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 
-from oml.const import (
-    CATEGORIES_KEY,
-    EMBEDDINGS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
-    LABELS_KEY,
-    OVERALL_CATEGORIES_KEY,
-    PATHS_KEY,
-)
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.datasets.base import EmbeddingsQueryGalleryDataset
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
@@ -104,17 +96,17 @@ def worst_case() -> Any:
 
 
 @pytest.fixture()
-def case_for_distance_check() -> Any:
+def case_for_finding_worst_queries() -> Any:
     dataset = EmbeddingsQueryGalleryDataset(
-        embeddings=torch.stack([oh(1) * 2, oh(1) * 3, oh(0), oh(0), oh(1), oh(1)]).float(),
-        labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
+        embeddings=torch.stack([oh(0), oh(1), oh(2), oh(0), oh(5), oh(5)]).float(),  # last 2 are errors
+        labels=torch.tensor([0, 1, 2, 0, 1, 2]).long(),
         is_query=torch.tensor([True, True, True, False, False, False]).bool(),
         is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
         categories=torch.tensor([10, 20, 20, 10, 20, 20]).long(),
     )
 
-    ids_ranked_by_distance = [0, 2, 1]
-    return dataset, ids_ranked_by_distance
+    worst_two_queries = {1, 2}
+    return dataset, worst_two_queries
 
 
 def run_retrieval_metrics(case) -> None:  # type: ignore
@@ -125,11 +117,6 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     num_samples = len(dataset)
     calc = EmbeddingMetrics(
         dataset=dataset,
-        embeddings_key=dataset.input_tensors_key,
-        labels_key=LABELS_KEY,
-        is_query_key=IS_QUERY_KEY,
-        is_gallery_key=IS_GALLERY_KEY,
-        categories_key=CATEGORIES_KEY,
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
@@ -141,17 +128,17 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     calc.setup(num_samples=num_samples)
 
     for batch in DataLoader(dataset, batch_size=2, num_workers=0, shuffle=False, drop_last=False):
-        calc.update_data(batch)
+        embeddings = batch[dataset.input_tensors_key]
+        calc.update_data(embeddings=embeddings)
 
     metrics = calc.compute_metrics()
 
     assert compare_dicts_recursively(gt_metrics, metrics)
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
-    assert compare_tensors_as_sets(calc.distance_matrix, torch.tensor([0, math.sqrt(2)]))
+    assert compare_tensors_as_sets(calc.prediction.distances, torch.tensor([0, math.sqrt(2)]))
 
-    assert (calc.mask_gt.unique() == torch.tensor([0, 1])).all()  # type: ignore
-    assert calc.acc.collected_samples == num_samples  # type: ignore
+    assert calc.acc.collected_samples == num_samples
 
 
 def run_across_epochs(case) -> None:  # type: ignore
@@ -162,11 +149,6 @@ def run_across_epochs(case) -> None:  # type: ignore
     num_samples = len(dataset)
     calc = EmbeddingMetrics(
         dataset=dataset,
-        embeddings_key=dataset.input_tensors_key,
-        labels_key=LABELS_KEY,
-        is_query_key=IS_QUERY_KEY,
-        is_gallery_key=IS_GALLERY_KEY,
-        categories_key=CATEGORIES_KEY,
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
@@ -181,17 +163,17 @@ def run_across_epochs(case) -> None:  # type: ignore
         calc.setup(num_samples=num_samples)
 
         for batch in DataLoader(dataset, batch_size=2, num_workers=0, shuffle=False, drop_last=False):
-            calc.update_data(batch)
+            embeddings = batch[dataset.input_tensors_key]
+            calc.update_data(embeddings=embeddings)
 
         metrics_all_epochs.append(calc.compute_metrics())
 
     assert compare_dicts_recursively(metrics_all_epochs[0], metrics_all_epochs[-1])
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
-    assert compare_tensors_as_sets(calc.distance_matrix, torch.tensor([0, math.sqrt(2)]))
+    assert compare_tensors_as_sets(calc.prediction.distances, torch.tensor([0, math.sqrt(2)]))
 
-    assert (calc.mask_gt.unique() == torch.tensor([0, 1])).all()  # type: ignore
-    assert calc.acc.collected_samples == num_samples  # type: ignore
+    assert calc.acc.collected_samples == num_samples
 
 
 def test_perfect_case(perfect_case) -> None:  # type: ignore
@@ -212,50 +194,28 @@ def test_several_epochs(perfect_case, imperfect_case, worst_case):  # type: igno
     run_across_epochs(worst_case)
 
 
-def test_worst_k(case_for_distance_check) -> None:  # type: ignore
-    dataset, gt_ids = case_for_distance_check
+def test_worst_k(case_for_finding_worst_queries) -> None:  # type: ignore
+    dataset, worst_queries = case_for_finding_worst_queries
 
     num_samples = len(dataset)
     calc = EmbeddingMetrics(
         dataset=dataset,
-        embeddings_key=dataset.input_tensors_key,
-        labels_key=LABELS_KEY,
-        is_query_key=IS_QUERY_KEY,
-        is_gallery_key=IS_GALLERY_KEY,
-        categories_key=CATEGORIES_KEY,
-        cmc_top_k=(),
+        cmc_top_k=(1,),
         precision_top_k=(),
         map_top_k=(2,),
         fmr_vals=(0.2,),
         pcf_variance=(0.2,),
         postprocessor=get_trivial_postprocessor(top_n=1_000),
+        verbose=False,
     )
 
     calc.setup(num_samples=num_samples)
 
     for batch in DataLoader(dataset, batch_size=2, num_workers=0, shuffle=False, drop_last=False):
-        calc.update_data(batch)
+        embeddings = batch[dataset.input_tensors_key]
+        calc.update_data(embeddings=embeddings)
 
     calc.compute_metrics()
 
-    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids.tolist()
-
-
-@pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])
-def test_ready_to_vis(extra_keys: Tuple[str, ...]) -> None:  # type: ignore
-    # todo 522: rework this later
-    calc = EmbeddingMetrics(
-        embeddings_key=EMBEDDINGS_KEY,
-        labels_key=LABELS_KEY,
-        is_query_key=IS_QUERY_KEY,
-        is_gallery_key=IS_GALLERY_KEY,
-        categories_key=CATEGORIES_KEY,
-        extra_keys=extra_keys,
-        cmc_top_k=(1,),
-        precision_top_k=(),
-        map_top_k=(),
-        fmr_vals=tuple(),
-        postprocessor=get_trivial_postprocessor(top_n=5),
-    )
-
-    assert calc.ready_to_visualize() or PATHS_KEY not in extra_keys
+    metric_name = f"{OVERALL_CATEGORIES_KEY}/cmc/1"
+    assert set(calc.get_worst_queries_ids(metric_name, n_queries=len(worst_queries))) == worst_queries

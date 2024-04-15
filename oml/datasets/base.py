@@ -199,13 +199,6 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.df)
 
-    @property
-    def bboxes_keys(self) -> Tuple[str, ...]:
-        if self.bboxes_exist:
-            return self.x1_key, self.y1_key, self.x2_key, self.y2_key
-        else:
-            return tuple()
-
     @classmethod
     def create_from_paths(
         cls,
@@ -332,13 +325,21 @@ class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):
         item[self.is_gallery_key] = bool(self.df.iloc[idx][IS_GALLERY_COLUMN])
         return item
 
-    def get_query_mask(self) -> BoolTensor:
+    def get_query_ids(self) -> LongTensor:
         # todo 522: make sure we EVERYWHERE use this function instead directly calling dataset.df
-        return BoolTensor(self.df[IS_QUERY_COLUMN])
+        return BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
 
-    def get_gallery_mask(self) -> BoolTensor:
+    def get_gallery_ids(self) -> LongTensor:
         # todo 522: make sure we EVERYWHERE use this function instead directly calling dataset.df
-        return BoolTensor(self.df[IS_GALLERY_COLUMN])
+        return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+
+    def get_labels(self) -> LongTensor:
+        # todo 522: handle it properly using OOP
+        return LongTensor(self.df[LABELS_COLUMN])
+
+    def get_categories(self) -> np.ndarray:
+        # todo 522: refactor
+        return np.array(self.df[CATEGORIES_COLUMN])
 
 
 def get_retrieval_datasets(
@@ -431,11 +432,17 @@ class EmbeddingsQueryGalleryDataset(IDatasetQueryGallery):
     def __len__(self) -> int:
         return len(self.embeddings)
 
-    def get_query_mask(self) -> BoolTensor:
-        return self.is_query
+    def get_query_ids(self) -> LongTensor:
+        return self.is_query.nonzero().squeeze()
 
-    def get_gallery_mask(self) -> BoolTensor:
-        return self.is_gallery
+    def get_gallery_ids(self) -> LongTensor:
+        return self.is_gallery.nonzero().squeeze()
+
+    def get_labels(self) -> LongTensor:
+        return self.labels
+
+    def get_categories(self) -> np.ndarray:
+        return np.array(self.categories)
 
 
 __all__ = [

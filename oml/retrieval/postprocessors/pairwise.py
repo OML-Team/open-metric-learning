@@ -3,8 +3,8 @@ from typing import Tuple
 import torch
 from torch import FloatTensor, LongTensor
 
-from oml.datasets.base import DatasetQueryGallery
 from oml.inference.pairs import pairwise_inference
+from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
@@ -25,7 +25,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         Args:
             top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
                 and ``top_n`` most relevant galleries.
-            pairwise_model: Model which is able to take two embeddings as inputs
+            pairwise_model: Model which is able to take two items as inputs
                 and estimate the *distance* (not in a strictly mathematical sense) between them.
             num_workers: Number of workers in DataLoader
             batch_size: Batch size that will be used in DataLoader
@@ -33,7 +33,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
             use_fp16: Set ``True`` if you want to use half precision
 
         """
-        assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
+        assert top_n > 1, "The number of the retrieved results for each query to process has to be greater than 1."
 
         self.top_n = top_n
         self.model = pairwise_model
@@ -47,7 +47,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self,
         distances: FloatTensor,
         retrieved_ids: LongTensor,
-        dataset: DatasetQueryGallery,
+        dataset: IDatasetQueryGallery,
     ) -> Tuple[FloatTensor, LongTensor]:
         """
 
@@ -70,8 +70,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
         distances = distances.clone()
 
         # let's list pairs of (query_i, gallery_j) we need to process
-        ids_q = dataset.get_query_mask().nonzero().repeat_interleave(top_n)
-        ii_g = dataset.get_gallery_mask().nonzero()
+        ids_q = dataset.get_query_ids().unsqueeze(-1).repeat_interleave(top_n)
+        ii_g = dataset.get_gallery_ids().unsqueeze(-1)
         ids_g = ii_g[retrieved_ids[:, :top_n]].flatten()
         assert len(ids_q) == len(ids_g)
         pairs = list(zip(ids_q.tolist(), ids_g.tolist()))
