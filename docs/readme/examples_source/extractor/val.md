@@ -7,7 +7,7 @@
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
+from oml.datasets import ImagesDatasetQueryGallery
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -17,10 +17,10 @@ _, df_val = download_mock_dataset(dataset_root)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+val_dataset = ImagesDatasetQueryGallery(df_val, dataset_root=dataset_root)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics(extra_keys=("paths",), dataset=val_dataset)
+calculator = EmbeddingMetrics(dataset=val_dataset)
 calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():

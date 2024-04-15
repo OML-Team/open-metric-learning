@@ -94,4 +94,4 @@ def is_main_process() -> bool:
         return True
 
 
-__all__ = ["is_ddp", "sync_dicts_ddp", "merge_list_of_dicts", "is_main_process"]
+__all__ = ["is_ddp", "sync_dicts_ddp", "merge_list_of_dicts", "is_main_process", "get_world_size_safe"]

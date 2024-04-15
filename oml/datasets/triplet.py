@@ -21,6 +21,8 @@ TItem = Dict[str, Any]
 
 
 class TriDataset(Dataset):
+    # todo: rework this dataset
+
     def __init__(
         self,
         triplets: List[TTriplet],

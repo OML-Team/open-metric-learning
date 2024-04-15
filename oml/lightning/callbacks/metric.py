@@ -43,9 +43,6 @@ class MetricValCallback(Callback):
 
         self.metric = metric
         self.log_images = log_images
-        assert not log_images or (
-            isinstance(metric, IMetricVisualizable) and metric.ready_to_visualize()  # type: ignore
-        )
 
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem

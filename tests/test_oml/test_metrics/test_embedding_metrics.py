@@ -3,13 +3,14 @@ from collections import defaultdict
 from functools import partial
 from typing import Any
 
+import numpy as np
 import pytest
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 
 from oml.const import OVERALL_CATEGORIES_KEY
-from oml.datasets.base import EmbeddingsQueryGalleryDataset
+from oml.datasets import EmbeddingsQueryGalleryDataset
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
@@ -45,7 +46,7 @@ def perfect_case() -> Any:
         labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
         is_query=torch.tensor([True, True, True, False, False, False]).bool(),
         is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
-        categories=["cat", "dog", "dog", "cat", "dog", "dog"],
+        categories=np.array(["cat", "dog", "dog", "cat", "dog", "dog"]),
     )
 
     k = 1
@@ -64,7 +65,7 @@ def imperfect_case() -> Any:
         labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
         is_query=torch.tensor([True, True, True, False, False, False]).bool(),
         is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
-        categories=torch.tensor([10, 20, 20, 10, 20, 20]).long(),
+        categories=np.array([10, 20, 20, 10, 20, 20]),
     )
 
     k = 1
@@ -83,7 +84,7 @@ def worst_case() -> Any:
         labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
         is_query=torch.tensor([True, True, True, False, False, False]).bool(),
         is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
-        categories=torch.tensor([10, 20, 20, 10, 20, 20]).long(),
+        categories=np.array([10, 20, 20, 10, 20, 20]),
     )
 
     k = 1
@@ -102,7 +103,7 @@ def case_for_finding_worst_queries() -> Any:
         labels=torch.tensor([0, 1, 2, 0, 1, 2]).long(),
         is_query=torch.tensor([True, True, True, False, False, False]).bool(),
         is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
-        categories=torch.tensor([10, 20, 20, 10, 20, 20]).long(),
+        categories=np.array([10, 20, 20, 10, 20, 20]),
     )
 
     worst_two_queries = {1, 2}

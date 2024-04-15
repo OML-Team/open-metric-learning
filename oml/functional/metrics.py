@@ -464,8 +464,15 @@ def calc_fnmr_at_fmr(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tup
 
 
 def calc_fnmr_at_fmr_from_list_of_gt(
-    distance_matrix: FloatTensor, gt_ids: List[LongTensor], fmr_vals: Tuple[float, ...]
+    distance_matrix: FloatTensor, gt_ids: List[LongTensor], fmr_vals: Tuple[float, ...], gallery_size: int
 ) -> TMetricsDict:
+    n_retrieved = distance_matrix.shape[1]
+    if n_retrieved != gallery_size:
+        warnings.warn(
+            f"We only have distances of the first {n_retrieved} items from {gallery_size}"
+            f"gallery items. Thus, FNMR@FMR is not calculated on all the possible distances!"
+        )
+
     metrics = dict()
 
     if fmr_vals:

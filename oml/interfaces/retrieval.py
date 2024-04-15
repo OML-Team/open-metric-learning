@@ -1,11 +1,13 @@
-class IRetrievalPostprocessor:
-    # todo 522: update signatures and think one more time about classes hierarchy
+from oml.interfaces.datasets import IDatasetQueryGallery
+from oml.retrieval.prediction import RetrievalPrediction
 
+
+class IRetrievalPostprocessor:
     """
     This is a base interface for the classes which somehow postprocess retrieval results.
     """
 
-    def process(self, distances, retrieved_ids, dataset):  # type: ignore
+    def process(self, prediction: RetrievalPrediction, dataset: IDatasetQueryGallery) -> RetrievalPrediction:
         raise NotImplementedError()
 
 

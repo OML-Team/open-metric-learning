@@ -7,24 +7,25 @@ Datasets
 .. contents::
    :local:
 
-BaseDataset
+ImagesBaseDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.base.BaseDataset
+.. autoclass:: oml.datasets.ImagesBaseDataset
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
+    .. automethod:: __getitem__
+    .. automethod:: visualize
 
-DatasetWithLabels
+ImagesDatasetWithLabels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.base.DatasetWithLabels
+.. autoclass:: oml.datasets.ImagesDatasetWithLabels
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
     .. automethod:: __getitem__
     .. automethod:: get_labels
-    .. automethod:: get_label2category
 
 DatasetQueryGallery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,12 +35,6 @@ DatasetQueryGallery
 
     .. automethod:: __init__
     .. automethod:: __getitem__
+    .. automethod:: get_query_ids
+    .. automethod:: get_gallery_ids
 
-EmbeddingsQueryGalleryDataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.base.EmbeddingsQueryGalleryDataset
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: __getitem__

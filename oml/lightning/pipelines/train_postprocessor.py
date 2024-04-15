@@ -11,8 +11,9 @@ from torch import device as tdevice
 from torch.utils.data import DataLoader
 
 from oml.const import BBOXES_COLUMNS, EMBEDDINGS_KEY, TCfg
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
+from oml.datasets import ImagesDatasetQueryGallery, ImagesDatasetWithLabels
 from oml.inference.flat import inference_on_dataframe
+from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.modules.pairwise_postprocessing import (
     PairwiseModule,
@@ -53,7 +54,7 @@ def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
     return md5sum
 
 
-def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader, DatasetWithLabels, DatasetQueryGallery]:
+def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader, IDatasetWithLabels, IDatasetQueryGallery]:
     # todo: support bounding bboxes
     df = pd.read_csv(Path(cfg["dataset_root"]) / cfg["dataframe_name"])
     assert not set(BBOXES_COLUMNS).intersection(
@@ -79,13 +80,13 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader, Data
         use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 
-    train_dataset = DatasetWithLabels(
+    train_dataset = ImagesDatasetWithLabels(
         df=df_train,
         transform=get_transforms_by_cfg(cfg["transforms_train"]),
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
-    valid_dataset = DatasetQueryGallery(
+    valid_dataset = ImagesDatasetQueryGallery(
         df=df_val,
         transform=get_transforms_by_cfg(cfg["transforms_extraction"]),
         extra_data={EMBEDDINGS_KEY: emb_val},
@@ -154,12 +155,6 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
         dataset=dataset_val,
-        embeddings_key=pl_module.embeddings_key,
-        categories_key=dataset_val.categories_key,
-        labels_key=dataset_val.labels_key,
-        is_query_key=dataset_val.is_query_key,
-        is_gallery_key=dataset_val.is_gallery_key,
-        extra_keys=(dataset_val.paths_key, *dataset_val.bboxes_keys),
         postprocessor=postprocessor,
         **cfg.get("metric_args", {}),
     )

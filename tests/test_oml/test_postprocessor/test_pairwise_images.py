@@ -5,8 +5,9 @@ import torch
 from torch import FloatTensor, Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
-from oml.datasets.base import DatasetQueryGallery
+from oml.datasets import ImagesDatasetQueryGallery
 from oml.inference.abstract import _inference
+from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.interfaces.models import IExtractor
 from oml.models.meta.siamese import TrivialDistanceSiamese
 from oml.models.resnet.extractor import ResnetExtractor
@@ -17,12 +18,12 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 
 
 @pytest.fixture
-def validation_results() -> Tuple[FloatTensor, DatasetQueryGallery, IExtractor]:
+def validation_results() -> Tuple[FloatTensor, IDatasetQueryGallery, IExtractor]:
     model = ResnetExtractor(weights=None, arch="resnet18", normalise_features=True, gem_p=None, remove_fc=True)
 
     _, df_val = download_mock_dataset(MOCK_DATASET_PATH)
 
-    dataset = DatasetQueryGallery(
+    dataset = ImagesDatasetQueryGallery(
         df=df_val, dataset_root=MOCK_DATASET_PATH, transform=get_normalisation_resize_torch(im_size=32)
     )
 
@@ -61,9 +62,7 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, k, valid
         verbose=False,
         use_fp16=True,
     )
-    distances_processed_upd, retrieved_ids_upd = postprocessor.process(
-        distances=prediction.distances, dataset=dataset, retrieved_ids=prediction.retrieved_ids
-    )
+    prediction_upd = postprocessor.process(prediction=prediction, dataset=dataset)
 
-    assert (prediction.retrieved_ids == retrieved_ids_upd).all()
-    assert torch.isclose(prediction.distances, distances_processed_upd).all()
+    assert (prediction.retrieved_ids == prediction_upd.retrieved_ids).all()
+    assert torch.isclose(prediction.distances, prediction_upd.distances).all()

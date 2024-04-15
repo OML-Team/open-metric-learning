@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any, Collection, Tuple
+from typing import Any, Collection, Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 
 from oml.const import OVERALL_CATEGORIES_KEY
+from oml.functional.metrics import TMetricsDict
 
 
 class IBasicMetric(ABC):
@@ -13,7 +14,8 @@ class IBasicMetric(ABC):
     """
 
     metric_name = "BASE"
-    overall_categories_key = OVERALL_CATEGORIES_KEY
+    metrics: Optional[TMetricsDict]
+    overall_categories_key: str = OVERALL_CATEGORIES_KEY
 
     @abstractmethod
     def setup(self, *args: Any, **kwargs: Any) -> Any:
@@ -75,13 +77,6 @@ class IMetricVisualizable(ABC):
     def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
         """
         Method which returns results of visualization and titles for logging.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def ready_to_visualize(self) -> bool:
-        """
-        Method which checks if visualization can be done.
         """
         raise NotImplementedError()
 

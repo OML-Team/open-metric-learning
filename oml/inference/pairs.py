@@ -2,16 +2,16 @@ from typing import Any, Dict, List, Tuple
 
 from torch import FloatTensor, Tensor
 
-from oml.datasets.base import BaseDataset
-from oml.datasets.pairs import PairsDataset
+from oml.datasets import PairsDataset
 from oml.inference.abstract import _inference
+from oml.interfaces.datasets import IBaseDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.utils.misc_torch import get_device
 
 
 def pairwise_inference(
     model: IPairwiseModel,
-    base_dataset: BaseDataset,
+    base_dataset: IBaseDataset,
     pair_ids: List[Tuple[int, int]],
     num_workers: int,
     batch_size: int,

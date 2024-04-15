@@ -349,7 +349,7 @@ class PCA:
     Example:
         >>> embeddings = torch.rand(100, 5)
         >>> pca = PCA(embeddings)
-        >>> embeddings_transformed = pca.transform(embeddings)
+        >>> embeddings_transformed = pca._transform(embeddings)
         >>> embeddings_recovered = pca.inverse_transform(embeddings_transformed)
         >>> torch.all(torch.isclose(embeddings, embeddings_recovered, atol=1.e-6))
         tensor(True)
@@ -491,4 +491,6 @@ __all__ = [
     "PCA",
     "drop_duplicates_by_ids",
     "normalise",
+    "get_device",
+    "temporary_setting_model_mode",
 ]

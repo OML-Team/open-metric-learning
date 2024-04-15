@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from oml.const import IMAGE_EXTENSIONS, TCfg
-from oml.datasets.base import BaseDataset
+from oml.datasets.base import BaseImagesDataset
 from oml.ddp.utils import get_world_size_safe, is_main_process, sync_dicts_ddp
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
@@ -42,7 +42,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     if broken_images:
         raise ValueError(f"There are images that cannot be open:\n {broken_images}.")
 
-    dataset = BaseDataset.create_from_paths(paths=filenames, transform=transforms, f_imread=f_imread)
+    dataset = BaseImagesDataset.create_from_paths(paths=filenames, transform=transforms, f_imread=f_imread)
 
     loader = DataLoader(
         dataset=dataset, batch_size=cfg["bs"], num_workers=cfg["num_workers"], shuffle=False, drop_last=False

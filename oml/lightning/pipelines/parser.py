@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 
 from oml.const import TCfg
-from oml.datasets.base import DatasetWithLabels
+from oml.interfaces.datasets import IDatasetWithLabels
 from oml.interfaces.loggers import IPipelineLogger
 from oml.interfaces.samplers import IBatchSampler
 from oml.lightning.pipelines.logging import TensorBoardPipelineLogger
@@ -76,7 +76,7 @@ def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> 
     return scheduler_kwargs
 
 
-def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> Optional[IBatchSampler]:
+def parse_sampler_from_config(cfg: TCfg, dataset: IDatasetWithLabels) -> Optional[IBatchSampler]:
     if (
         (not dataset.categories_key)
         and (cfg["sampler"] is not None)
@@ -87,7 +87,7 @@ def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> Optional
             "to categories, but there is no <categories_key> in your Dataset."
         )
 
-    sampler_runtime_args = {"labels": dataset.get_labels(), "label2category": dataset.get_label2category()}
+    sampler_runtime_args = {"labels": dataset.get_labels(), "label2category": get_label2category()}  # todo
     sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
 
     return sampler

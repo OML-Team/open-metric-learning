@@ -60,23 +60,19 @@ def imread_pillow(im_src: Union[Path, str, bytes]) -> TPILImage:
     return image.convert("RGB")
 
 
-def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
+def draw_bbox(im: np.ndarray, bbox: Optional[torch.Tensor], color: TColor) -> np.ndarray:
     """
-    Draws a single bounding box on the image.
-    If the elements of the bbox are NaNs, we will draw bbox around the whole image.
-
     Args:
         im: Image
-        bbox: Single bounding in the format of [x1, y1, x2, y2]
-        color: Tuple of 3 ints
+        bbox: Single bounding in the format of [x1, y1, x2, y2]. Set ``None`` to draw a bbox around the whole image.
+        color: Color to draw the bounding bbox
+
     """
     im_ret = im.copy()
-    if not any(torch.isnan(bbox)):
+    if bbox is not None:
         x1, y1, x2, y2 = list(map(int, bbox))
-    elif all(torch.isnan(bbox)):
-        x1, y1, x2, y2 = 0, 0, im_ret.shape[1], im_ret.shape[0]
     else:
-        raise ValueError("BBox can only consist of all NaNs or all numbers.")
+        x1, y1, x2, y2 = 0, 0, im_ret.shape[1], im_ret.shape[0]
 
     im_avg_sz = (im_ret.shape[0] + im_ret.shape[1]) / 2
     thickness = max(3, int(0.05 * im_avg_sz))
@@ -85,14 +81,15 @@ def draw_bbox(im: np.ndarray, bbox: torch.Tensor, color: TColor) -> np.ndarray:
     return im_ret
 
 
-def get_img_with_bbox(im_path: str, bbox: torch.Tensor, color: TColor) -> np.ndarray:
+def get_img_with_bbox(im_path: str, bbox: Optional[torch.Tensor], color: TColor) -> np.ndarray:
     """
-    Reads the image by its name and draws bbox on it.
+    Reads the image by its path and draws bbox on it.
 
     Args:
         im_path: Image path
-        bbox: Single bounding box in the format of [x1, y1, x2, y2]. It may also be a list of 4 torch("nan").
-        color: Tuple of 3 ints from 0 to 255
+        bbox: Single bounding box in the format of [x1, y1, x2, y2]. Set ``None`` to draw a bbox around the whole image.
+        color: Color to draw the bounding bbox
+
     """
     img = imread_cv2(im_path)
     img = draw_bbox(img, bbox, color)

@@ -6,11 +6,8 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from oml.const import TCfg
-from oml.datasets.base import (
-    DatasetQueryGallery,
-    DatasetWithLabels,
-    get_retrieval_datasets,
-)
+from oml.datasets import get_retrieval_images_datasets
+from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
@@ -29,8 +26,8 @@ from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 
-def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader, DatasetWithLabels, DatasetQueryGallery]:
-    train_dataset, valid_dataset = get_retrieval_datasets(
+def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader, IDatasetWithLabels, IDatasetQueryGallery]:
+    train_dataset, valid_dataset = get_retrieval_images_datasets(
         dataset_root=Path(cfg["dataset_root"]),
         transforms_train=get_transforms_by_cfg(cfg["transforms_train"]),
         transforms_val=get_transforms_by_cfg(cfg["transforms_val"]),
@@ -83,7 +80,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
 
     loader_train, loaders_val, dataset_train, dataset_val = get_retrieval_loaders(cfg)
     extractor = get_extractor_by_cfg(cfg["extractor"])
-    criterion = get_criterion_by_cfg(cfg["criterion"], **{"label2category": loader_train.dataset.get_label2category()})
+    criterion = get_criterion_by_cfg(cfg["criterion"], **{"label2category": get_label2category()})  # todo
     optimizable_parameters = [
         {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
         {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
@@ -111,13 +108,6 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
         dataset=dataset_val,
-        embeddings_key=pl_module.embeddings_key,
-        categories_key=dataset_val.categories_key,
-        labels_key=dataset_val.labels_key,
-        is_query_key=dataset_val.is_query_key,
-        is_gallery_key=dataset_val.is_gallery_key,
-        extra_keys=(dataset_val.paths_key, *dataset_val.bboxes_keys),
-        sequence_key=dataset_val.sequence_key,
         **cfg.get("metric_args", {}),
     )
 

@@ -70,14 +70,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, List[Mapping[s
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
         dataset=valid_dataset,
-        embeddings_key=pl_model.embeddings_key,
-        categories_key=valid_dataset.categories_key,
-        labels_key=valid_dataset.labels_key,
-        is_query_key=valid_dataset.is_query_key,
-        is_gallery_key=valid_dataset.is_gallery_key,
-        extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         postprocessor=postprocessor,
-        sequence_key=valid_dataset.sequence_key,
         **cfg.get("metric_args", {}),
     )
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback

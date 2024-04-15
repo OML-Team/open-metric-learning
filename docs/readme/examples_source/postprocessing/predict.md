@@ -12,7 +12,7 @@ from oml.datasets.base import DatasetQueryGallery
 from oml.inference.flat import inference_on_dataframe
 from oml.models import ConcatSiamese, ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc_torch import pairwise_dist
 
@@ -32,7 +32,7 @@ print("\nOriginal predictions:\n", torch.topk(distances, dim=1, k=3, largest=Fal
 
 # 2. Let's initialise a random pairwise postprocessor to perform re-ranking
 siamese = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])  # Note! Replace it with your trained postprocessor
-postprocessor = PairwiseImagesPostprocessor(top_n=3, pairwise_model=siamese, transforms=transforms)
+postprocessor = PairwiseReranker(top_n=3, pairwise_model=siamese, transforms=transforms)
 
 dataset = DatasetQueryGallery(df_val, extra_data={"embeddings": emb_val}, transform=transforms)
 loader = DataLoader(dataset, batch_size=4)

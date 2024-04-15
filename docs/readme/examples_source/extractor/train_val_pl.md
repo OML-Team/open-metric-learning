@@ -34,7 +34,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sa
 # val
 val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,], dataset=val_dataset), log_images=True)
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
 
 # 1) Logging with Tensorboard
 logger = TensorBoardPipelineLogger(".")

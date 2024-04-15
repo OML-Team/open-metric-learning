@@ -1,12 +1,10 @@
-from typing import Tuple
-
 import torch
-from torch import FloatTensor, LongTensor
 
 from oml.inference.pairs import pairwise_inference
 from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
+from oml.retrieval.prediction import RetrievalPrediction
 from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
 
 
@@ -43,12 +41,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-    def process(
-        self,
-        distances: FloatTensor,
-        retrieved_ids: LongTensor,
-        dataset: IDatasetQueryGallery,
-    ) -> Tuple[FloatTensor, LongTensor]:
+    def process(self, prediction: RetrievalPrediction, dataset: IDatasetQueryGallery) -> RetrievalPrediction:
         """
 
         Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted
@@ -63,11 +56,10 @@ class PairwiseReranker(IRetrievalPostprocessor):
         If concatenation of two distances is already sorted, we keep it untouched.
 
         """
-        assert retrieved_ids.shape == distances.shape
-        top_n = min(self.top_n, retrieved_ids.shape[1])
+        top_n = min(self.top_n, prediction.top_n)
 
-        retrieved_ids = retrieved_ids.clone()
-        distances = distances.clone()
+        retrieved_ids = prediction.retrieved_ids.clone()
+        distances = prediction.distances.clone()
 
         # let's list pairs of (query_i, gallery_j) we need to process
         ids_q = dataset.get_query_ids().unsqueeze(-1).repeat_interleave(top_n)
@@ -98,7 +90,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
         assert distances_upd.shape == distances.shape
         assert retrieved_ids_upd.shape == retrieved_ids.shape
 
-        return distances_upd, retrieved_ids_upd
+        prediction_upd = RetrievalPrediction(distances_upd, retrieved_ids=retrieved_ids_upd, gt_ids=prediction.gt_ids)
+        return prediction_upd
 
 
 __all__ = ["PairwiseReranker"]

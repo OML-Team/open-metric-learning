@@ -1,4 +1,3 @@
-# todo 522: remove ignore after we've done
 from functools import partial
 from random import randint, sample
 from typing import Tuple
@@ -7,7 +6,7 @@ import pytest
 import torch
 from torch import BoolTensor, FloatTensor
 
-from oml.datasets.base import EmbeddingsQueryGalleryDataset
+from oml.datasets import EmbeddingsQueryGalleryDataset
 from oml.functional.metrics import calc_retrieval_metrics
 from oml.interfaces.models import IPairwiseModel
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
@@ -70,12 +69,10 @@ def test_trivial_processing_does_not_change_distances_order(
     model = LinearTrivialDistanceSiamese(feat_dim=embeddings.shape[-1], identity_init=True)
     processor = PairwiseReranker(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
 
-    distances_processed, retrieved_ids_upd = processor.process(
-        distances=prediction.distances, retrieved_ids=prediction.retrieved_ids, dataset=dataset
-    )
+    prediction_upd = processor.process(prediction, dataset=dataset)
 
-    assert (prediction.retrieved_ids == retrieved_ids_upd).all()
-    assert torch.isclose(prediction.distances, distances_processed, rtol=1e-6).all()
+    assert (prediction.retrieved_ids == prediction_upd.retrieved_ids).all()
+    assert torch.isclose(prediction.distances, prediction_upd.distances, rtol=1e-6).all()
 
 
 def perfect_case() -> EmbeddingsQueryGalleryDataset:
@@ -106,7 +103,7 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
         dataset = perfect_case()
 
         # Let's randomly swap some embeddings to break the case
-        embeddings_broken = dataset.embeddings.clone()
+        embeddings_broken = dataset._embeddings.clone()
         for _ in range(5):
             i, j = sample(list(range(len(dataset))), 2)
             embeddings_broken[i], embeddings_broken[j] = embeddings_broken[j], embeddings_broken[i]
@@ -122,9 +119,9 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
         # Metrics after broken embeddings have been fixed
         model = LinearTrivialDistanceSiamese(feat_dim=embeddings_broken.shape[-1], identity_init=True)
         processor = PairwiseReranker(pairwise_model=model, top_n=100, batch_size=16, num_workers=0)
-        distances_upd, retrieved_ids_upd = processor.process(pred.distances, pred.retrieved_ids, dataset=dataset)
+        prediction_upd = processor.process(pred, dataset=dataset)
 
-        metrics_upd = flatten_dict(calc_retrieval_metrics(retrieved_ids=retrieved_ids_upd, **args))
+        metrics_upd = flatten_dict(calc_retrieval_metrics(retrieved_ids=prediction_upd.retrieved_ids, **args))
 
         for key in metrics.keys():
             metric = metrics[key]
@@ -154,20 +151,18 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     for _ in range(n_repetitions):
         # Let's construct some random input
         dataset = perfect_case()
-        embeddings_rand = torch.randn_like(dataset.embeddings).float()
+        embeddings_rand = torch.randn_like(dataset._embeddings).float()
 
-        pred = RetrievalPrediction.compute_from_embeddings(embeddings=embeddings_rand, dataset=dataset)
+        prediction = RetrievalPrediction.compute_from_embeddings(embeddings=embeddings_rand, dataset=dataset)
 
-        args = {"cmc_top_k": (top_n,), "precision_top_k": (top_n,), "map_top_k": tuple(), "gt_ids": pred.gt_ids}
+        args = {"cmc_top_k": (top_n,), "precision_top_k": (top_n,), "map_top_k": tuple(), "gt_ids": prediction.gt_ids}
 
-        metrics_before = calc_retrieval_metrics(retrieved_ids=pred.retrieved_ids, **args)
+        metrics_before = calc_retrieval_metrics(retrieved_ids=prediction.retrieved_ids, **args)
 
         model = RandomPairwise()
         processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=4, num_workers=0)
-        _, retrieved_ids_upd = processor.process(
-            distances=pred.distances, retrieved_ids=pred.retrieved_ids, dataset=dataset
-        )
+        prediction_upd = processor.process(prediction, dataset=dataset)
 
-        metrics_after = calc_retrieval_metrics(retrieved_ids=retrieved_ids_upd, **args)
+        metrics_after = calc_retrieval_metrics(retrieved_ids=prediction_upd.retrieved_ids, **args)
 
         assert metrics_before == metrics_after

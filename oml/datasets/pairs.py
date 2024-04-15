@@ -3,8 +3,7 @@ from typing import Dict, List, Tuple
 from torch import Tensor
 
 from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY
-from oml.datasets.base import BaseDataset
-from oml.interfaces.datasets import IPairsDataset
+from oml.interfaces.datasets import IBaseDataset, IPairsDataset
 
 
 class PairsDataset(IPairsDataset):
@@ -15,7 +14,7 @@ class PairsDataset(IPairsDataset):
 
     def __init__(
         self,
-        base_dataset: BaseDataset,
+        base_dataset: IBaseDataset,
         pair_ids: List[Tuple[int, int]],
         pair_1st_key: str = PAIR_1ST_KEY,
         pair_2nd_key: str = PAIR_2ND_KEY,

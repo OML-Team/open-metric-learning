@@ -3,7 +3,7 @@ from math import sqrt
 
 import torch
 
-from oml.datasets.base import EmbeddingsQueryGalleryDataset
+from oml.datasets.embeddings import EmbeddingsQueryGalleryDataset
 from oml.retrieval.prediction import RetrievalPrediction
 from oml.utils.misc import one_hot
 
@@ -11,7 +11,7 @@ FEAT_DIM = 8
 oh = partial(one_hot, dim=FEAT_DIM)
 
 
-def test_prediction():
+def test_prediction() -> None:
     embeddings = torch.stack([oh(0), oh(1), oh(1), oh(0), oh(1), oh(2)]).squeeze().float()
 
     dataset = EmbeddingsQueryGalleryDataset(
@@ -32,3 +32,6 @@ def test_prediction():
     assert (retrieved_ids_expected == pred.retrieved_ids).all()
     assert all([(x1 == x2).all() for (x1, x2) in zip(gt_ids_expected, pred.gt_ids)])
     assert torch.isclose(distances_expected, pred.distances).all()
+
+
+# todo 522: add test that checks if there are no gt_ids we fail (because i rm the old test from retrieval metrics)

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 import numpy as np
-from torch import BoolTensor, LongTensor
+from torch import LongTensor
 from torch.utils.data import Dataset
 
 from oml.const import (  # noqa
@@ -13,19 +13,15 @@ from oml.const import (  # noqa
     LABELS_KEY,
     PAIR_1ST_KEY,
     PAIR_2ND_KEY,
+    TColor,
 )
 from oml.samplers.balance import BalanceSampler  # noqa
 
 
-class IDatasetWithLabels(Dataset, ABC):
-    """
-    This is an interface for the datasets which can provide their labels.
-
-    """
-
-    input_tensors_key: str = INPUT_TENSORS_KEY
-    labels_key: str = LABELS_KEY
-    index_key: str = INDEX_KEY
+class IBaseDataset(Dataset):
+    input_tensors_key: str
+    index_key: str
+    extra_data: Dict[str, Any]
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         """
@@ -34,11 +30,32 @@ class IDatasetWithLabels(Dataset, ABC):
             item: Idx of the sample
 
         Returns:
-             Dictionary with the following keys:
-
+            Dictionary including the following keys:
             ``self.input_tensors_key``
+            ``self.index_key: int = item``
+
+        """
+        raise NotImplementedError()
+
+
+class IDatasetWithLabels(IBaseDataset, ABC):
+    """
+    This is an interface for the datasets which provide labels of containing items.
+
+    """
+
+    labels_key: str = LABELS_KEY
+
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        """
+
+        Args:
+            item: Idx of the sample
+
+        Returns:
+             Dictionary including the following keys:
+
             ``self.labels_key``
-            ``self.index_key``
 
         """
         raise NotImplementedError()
@@ -48,36 +65,13 @@ class IDatasetWithLabels(Dataset, ABC):
         raise NotImplementedError()
 
 
-class IDatasetQueryGallery(Dataset, ABC):
+class IDatasetQueryGalleryPrediction(IBaseDataset, ABC):
     """
-    This is an interface for the datasets which can provide the information on how to split
-    the validation set into the two parts: query and gallery.
+    This is an interface for the datasets which hold the information on how to split
+    the data into the query and gallery. The query and gallery ids may overlap.
+    It doesn't need the ground truth labels, so it can be used for prediction on not annotated data.
 
     """
-
-    input_tensors_key: str = INPUT_TENSORS_KEY
-    labels_key: str = LABELS_KEY
-    is_query_key: str = IS_QUERY_KEY
-    is_gallery_key: str = IS_GALLERY_KEY
-    index_key: str = INDEX_KEY
-
-    @abstractmethod
-    def __getitem__(self, item: int) -> Dict[str, Any]:
-        """
-        Args:
-            item: Idx of the sample
-
-        Returns:
-             Dictionary with the following keys:
-
-            ``self.input_tensors_key``
-            ``self.labels_key``
-            ``self.is_query_key``
-            ``self.is_gallery_key``
-            ``self.index_key``
-
-        """
-        raise NotImplementedError()
 
     def get_query_ids(self) -> LongTensor:
         raise NotImplementedError()
@@ -85,9 +79,11 @@ class IDatasetQueryGallery(Dataset, ABC):
     def get_gallery_ids(self) -> LongTensor:
         raise NotImplementedError()
 
-    def get_labels(self) -> LongTensor:
-        # todo 522: rework it later. not all Q/G dataset have GT labels
-        raise NotImplementedError()
+
+class IDatasetQueryGallery(IDatasetQueryGalleryPrediction, IDatasetWithLabels, ABC):
+    """
+    This class is similar to "IDatasetQueryGalleryPrediction", but we also have ground truth labels.
+    """
 
 
 class IPairsDataset(Dataset, ABC):
@@ -117,4 +113,25 @@ class IPairsDataset(Dataset, ABC):
         raise NotImplementedError()
 
 
-__all__ = ["IDatasetWithLabels", "IDatasetQueryGallery", "IPairsDataset"]
+class IVisualizableDataset(Dataset, ABC):
+    """
+    Base class for the datasets which know how to visualise their items.
+    """
+
+    def visualize(self, idx: int, color: TColor) -> np.ndarray:
+        raise NotImplementedError()
+
+
+class IVisualizableQueryGalleryDataset(IVisualizableDataset, IDatasetQueryGallery, ABC):
+    pass
+
+
+__all__ = [
+    "IBaseDataset",
+    "IDatasetWithLabels",
+    "IDatasetQueryGallery",
+    "IDatasetQueryGalleryPrediction",
+    "IPairsDataset",
+    "IVisualizableDataset",
+    "IVisualizableQueryGalleryDataset",
+]
