@@ -39,6 +39,25 @@ from oml.utils.dataframe_format import check_retrieval_dataframe_format
 from oml.utils.images.images import TImReader, get_img_with_bbox, square_pad
 
 
+def parse_bboxes(df: pd.DataFrame) -> Optional[TBBoxes]:
+    n_existing_columns = sum([x in df for x in [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]])
+
+    if n_existing_columns == 4:
+        bboxes = []
+        for row in df.iterrows():
+            bbox = int(row[X1_COLUMN]), int(row[X2_COLUMN]), int(row[Y1_COLUMN]), int(row[Y2_COLUMN])
+            bbox = None if any(coord is None for coord in bbox) else bbox
+            bboxes.append(bbox)
+
+    elif n_existing_columns == 0:
+        bboxes = None
+
+    else:
+        raise ValueError(f"Found {n_existing_columns} bounding bboxes columns instead of 4. Check your dataframe.")
+
+    return bboxes
+
+
 class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
     """
     The base class that handles image specific logic.
@@ -96,7 +115,7 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
         self._f_imread = f_imread or get_im_reader_for_transforms(transform)
         self._read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
-        )
+        )  # type: ignore
 
         available_transforms = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(self._transform, available_transforms), f"Transforms must one of: {available_transforms}"
@@ -143,7 +162,8 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
         return len(self._paths)
 
     def visualize(self, idx: int, color: TColor = BLACK) -> np.ndarray:
-        image = get_img_with_bbox(im_path=self._paths[idx], bbox=self._bboxes[idx], color=color)
+        bbox = self._bboxes[idx] if (self._bboxes is not None) else None
+        image = get_img_with_bbox(im_path=self._paths[idx], bbox=bbox, color=color)
         image = square_pad(image)
 
         return image
@@ -170,11 +190,6 @@ class ImagesDatasetWithLabels(ImagesBaseDataset, IDatasetWithLabels):
         self.labels_key = labels_key
         self._df = df
 
-        if all([x in df for x in [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]]):
-            bboxes = None  # todo 522: implement
-        else:
-            bboxes = None
-
         extra_data = {} if extra_data is None else extra_data
 
         if CATEGORIES_COLUMN in df:
@@ -185,7 +200,7 @@ class ImagesDatasetWithLabels(ImagesBaseDataset, IDatasetWithLabels):
 
         super().__init__(
             paths=self._df[PATHS_COLUMN].tolist(),
-            bboxes=bboxes,
+            bboxes=parse_bboxes(self._df),
             extra_data=extra_data,
             dataset_root=dataset_root,
             transform=transform,
@@ -196,7 +211,7 @@ class ImagesDatasetWithLabels(ImagesBaseDataset, IDatasetWithLabels):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = super().__getitem__(idx)
-        item[self.labels_key] = bool(self._df.iloc[idx][LABELS_COLUMN])
+        item[self.labels_key] = self._df.iloc[idx][LABELS_COLUMN]
         return item
 
     def get_labels(self) -> np.ndarray:

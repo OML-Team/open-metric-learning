@@ -1,6 +1,6 @@
 from copy import deepcopy
 from pprint import pprint
-from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, overload
+from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,7 +21,7 @@ from oml.functional.metrics import (
     reduce_metrics,
     take_unreduced_metrics_by_ids,
 )
-from oml.interfaces.datasets import IDatasetQueryGallery
+from oml.interfaces.datasets import IDatasetQueryGallery, IVisualizableDataset
 from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualizable
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
@@ -98,7 +98,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         self.return_only_overall_category = return_only_overall_category
 
         self.metrics_to_exclude_from_visualization = [
-            GLOBAL_METRICS,  # because this metrics are global, not query-wise
+            *GLOBAL_METRICS,  # because this metrics are global, not query-wise
             *metrics_to_exclude_from_visualization,
         ]
         self.verbose = verbose
@@ -112,7 +112,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
 
         self.acc.refresh(num_samples=num_samples)
 
-    def update_data(self, embeddings: FloatTensor) -> None:
+    def update_data(self, embeddings: FloatTensor) -> None:  # type: ignore
         self.acc.update_data(data_dict={self._embeddings_acc_key: embeddings})
 
     def _obtain_prediction(self) -> None:
@@ -127,7 +127,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         gallery_size = len(self.dataset.get_gallery_ids())
 
         self.prediction = RetrievalPrediction.compute_from_embeddings(
-            embeddings=self.acc.storage[self._embeddings_acc_key].float(),
+            embeddings=self.acc.storage[self._embeddings_acc_key].float(),  # type: ignore
             dataset=self.dataset,
             n_ids_to_retrieve=min(max_metrics_k + 100, gallery_size),
         )
@@ -135,7 +135,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         if self.postprocessor:
             self.prediction = self.postprocessor.process(self.prediction, dataset=self.dataset)
 
-    def compute_metrics(self) -> Dict[str, Any]:
+    def compute_metrics(self) -> Dict[str, Any]:  # type: ignore
         self._obtain_prediction()
 
         metrics_unr = dict()
@@ -152,7 +152,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         embeddings = self.acc.storage[self._embeddings_acc_key]
 
         metrics_unr[self.overall_categories_key].update(
-            calc_topological_metrics(embeddings.float(), pcf_variance=self.pcf_variance)
+            calc_topological_metrics(embeddings.float(), pcf_variance=self.pcf_variance)  # type: ignore
         )
 
         metrics_unr[self.overall_categories_key].update(
@@ -185,8 +185,8 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
                 mask = categories == category
                 metrics_unr[category].update(calc_topological_metrics(embeddings[mask], pcf_variance=self.pcf_variance))
 
-        self.metrics_unreduced = metrics_unr
-        self.metrics = reduce_metrics(metrics_unr)
+        self.metrics_unreduced = metrics_unr  # type: ignore
+        self.metrics = reduce_metrics(metrics_unr)  # type: ignore
 
         if self.return_only_overall_category:
             metric_to_return = {self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])}
@@ -231,13 +231,13 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
 
     def get_plot_for_queries(self, query_ids: List[int], n_instances: int, verbose: bool = True) -> plt.Figure:
-        if not isinstance(self.dataset, IMetricVisualizable):
+        if not isinstance(self.dataset, IVisualizableDataset):
             raise ValueError(
-                f"The visualisation is only available for {IMetricVisualizable.__name__},"
+                f"The visualisation is only available for {IVisualizableDataset.__name__},"
                 f"provided dataset has the type of {type(self.dataset)}."
             )
 
-        return self.prediction.visualize(query_ids, n_instances, ataset=self.dataset, verbose=verbose)
+        return self.prediction.visualize(query_ids, n_instances, dataset=self.dataset, verbose=verbose)
 
 
 class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP):

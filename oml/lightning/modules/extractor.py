@@ -16,6 +16,7 @@ class ExtractorModule(pl.LightningModule):
     This is a base module to train your model with Lightning.
 
     """
+
     embeddings_key: str
 
     def __init__(

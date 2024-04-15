@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 from torch import nn
 
-from oml.const import TCfg, CATEGORIES_COLUMN
+from oml.const import CATEGORIES_COLUMN, TCfg
 from oml.interfaces.datasets import IDatasetWithLabels
 from oml.interfaces.loggers import IPipelineLogger
 from oml.interfaces.samplers import IBatchSampler
@@ -94,6 +94,8 @@ def parse_criterion_from_cfg(cfg: TCfg, dataset: IDatasetWithLabels) -> nn.Modul
     if CATEGORIES_COLUMN in dataset.extra_data:
         label2category = dict(zip(dataset.get_labels(), dataset.extra_data[CATEGORIES_COLUMN]))
         runtime_args["label2category"] = label2category
+
+        print(label2category, "zzzz")
 
     return get_criterion_by_cfg(cfg["criterion"], **runtime_args)
 

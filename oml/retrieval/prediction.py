@@ -15,10 +15,7 @@ from oml.const import (
     RED,
     SEQUENCE_COLUMN,
 )
-from oml.interfaces.datasets import (
-    IDatasetQueryGallery,
-    IVisualizableQueryGalleryDataset,
-)
+from oml.interfaces.datasets import IDatasetQueryGallery, IVisualizableDataset
 from oml.utils.misc_torch import pairwise_dist
 
 
@@ -114,8 +111,14 @@ class RetrievalPrediction:
         return RetrievalPrediction(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
 
     def visualize(
-        self, query_ids: List[int], n_instances: int, dataset: IVisualizableQueryGalleryDataset, verbose: bool = True
+        self, query_ids: List[int], n_instances: int, dataset: IDatasetQueryGallery, verbose: bool = True
     ) -> plt.Figure:
+        if not isinstance(dataset, IVisualizableDataset):
+            raise ValueError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")
+
+        if not isinstance(dataset, IDatasetQueryGallery):
+            raise ValueError(f"Dataset has to support {IDatasetQueryGallery.__name__}. Got {type(dataset)}.")
+
         if verbose:
             # todo: add something smarter later
             print(f"Visualizing {n_instances} for the following query ids: {query_ids}.")

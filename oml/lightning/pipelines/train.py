@@ -13,13 +13,13 @@ from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     parse_ckpt_callback_from_config,
+    parse_criterion_from_cfg,
     parse_engine_params_from_config,
     parse_logger_from_config,
     parse_sampler_from_config,
-    parse_scheduler_from_config, parse_criterion_from_cfg,
+    parse_scheduler_from_config,
 )
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
-from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg

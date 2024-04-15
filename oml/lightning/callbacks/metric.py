@@ -80,7 +80,7 @@ class MetricValCallback(Callback):
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
 
-            self.metric.update_data(outputs)
+            self.metric.update_data(outputs[pl_module.embeddings_key])  # todo 522:
 
             self._collected_samples += len(outputs[list(outputs.keys())[0]])
             if self._collected_samples > self._expected_samples:

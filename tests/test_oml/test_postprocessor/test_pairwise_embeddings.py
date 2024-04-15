@@ -1,3 +1,4 @@
+# type: ignore
 from functools import partial
 from random import randint, sample
 from typing import Tuple

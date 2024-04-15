@@ -122,10 +122,6 @@ class IVisualizableDataset(Dataset, ABC):
         raise NotImplementedError()
 
 
-class IVisualizableQueryGalleryDataset(IVisualizableDataset, IDatasetQueryGallery, ABC):
-    pass
-
-
 __all__ = [
     "IBaseDataset",
     "IDatasetWithLabels",
@@ -133,5 +129,4 @@ __all__ = [
     "IDatasetQueryGalleryPrediction",
     "IPairsDataset",
     "IVisualizableDataset",
-    "IVisualizableQueryGalleryDataset",
 ]

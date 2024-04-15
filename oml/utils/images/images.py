@@ -19,7 +19,7 @@ import torch
 from PIL import Image
 from PIL.Image import Image as TPILImage
 
-from oml.const import PAD_COLOR, TColor
+from oml.const import PAD_COLOR, TBBox, TColor
 
 TImage = Union[PIL.Image.Image, np.ndarray]
 TImReader = Callable[[Union[Path, str, bytes]], TImage]
@@ -60,7 +60,7 @@ def imread_pillow(im_src: Union[Path, str, bytes]) -> TPILImage:
     return image.convert("RGB")
 
 
-def draw_bbox(im: np.ndarray, bbox: Optional[torch.Tensor], color: TColor) -> np.ndarray:
+def draw_bbox(im: np.ndarray, bbox: Optional[TBBox], color: TColor) -> np.ndarray:
     """
     Args:
         im: Image
@@ -70,7 +70,7 @@ def draw_bbox(im: np.ndarray, bbox: Optional[torch.Tensor], color: TColor) -> np
     """
     im_ret = im.copy()
     if bbox is not None:
-        x1, y1, x2, y2 = list(map(int, bbox))
+        x1, y1, x2, y2 = bbox
     else:
         x1, y1, x2, y2 = 0, 0, im_ret.shape[1], im_ret.shape[0]
 
@@ -81,7 +81,7 @@ def draw_bbox(im: np.ndarray, bbox: Optional[torch.Tensor], color: TColor) -> np
     return im_ret
 
 
-def get_img_with_bbox(im_path: str, bbox: Optional[torch.Tensor], color: TColor) -> np.ndarray:
+def get_img_with_bbox(im_path: str, bbox: Optional[TBBox], color: TColor) -> np.ndarray:
     """
     Reads the image by its path and draws bbox on it.
 

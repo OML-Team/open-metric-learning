@@ -64,7 +64,7 @@ def inference_on_dataframe(
     df[PATHS_COLUMN] = df[PATHS_COLUMN].apply(lambda x: Path(dataset_root) / x)
 
     check_retrieval_dataframe_format(df)
-    dataset = BaseImagesDataset(df=df, transform=transforms)
+    dataset = ImagesBaseDataset(df=df, transform=transforms)
 
     if (output_cache_path is not None) and Path(output_cache_path).is_file():
         embeddings = torch.load(output_cache_path, map_location="cpu")

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Collection, Dict, Optional, Tuple
+from typing import Any, Collection, Optional, Tuple
 
 import matplotlib.pyplot as plt
 
