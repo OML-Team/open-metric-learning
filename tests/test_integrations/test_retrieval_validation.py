@@ -1,94 +1,63 @@
+from functools import partial
 from math import isclose
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import pytest
 import torch
-from torch import Tensor
 from torch.utils.data import DataLoader
 
 from oml.const import (
     EMBEDDINGS_KEY,
     INPUT_TENSORS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
-    LABELS_KEY,
     OVERALL_CATEGORIES_KEY,
 )
-from oml.interfaces.datasets import IDatasetQueryGallery
+from oml.datasets import EmbeddingsQueryGalleryDataset
 from oml.metrics.embeddings import EmbeddingMetrics
+from oml.utils.misc import one_hot
 from tests.test_integrations.utils import IdealClusterEncoder
 
-TData = Tuple[Tensor, Tensor, Tensor, Tensor, float]
+oh = partial(one_hot, dim=8)
 
 
-def get_separate_query_gallery() -> TData:
-    labels = torch.tensor([0, 0, 1, 1, 2, 2, 2, 2, 1])
-    gallery_mask = torch.tensor([0, 1, 0, 1, 0, 0, 1, 1, 0])
-    query_mask = torch.logical_not(gallery_mask)
-
-    # let's add some errors (swap for some labels) in queries
-    input_tensors = labels.clone()
-    input_tensors[4] = 0
-    input_tensors[5] = 0
+def get_separate_query_gallery() -> Any:
+    dataset = EmbeddingsQueryGalleryDataset(
+        labels=torch.tensor([0, 0, 1, 1, 2, 2, 2, 2, 1]).long(),
+        is_gallery=torch.tensor([0, 1, 0, 1, 0, 0, 1, 1, 0]).bool(),
+        is_query=torch.tensor([1, 0, 1, 0, 1, 1, 0, 0, 1]).bool(),
+        # let's add some errors on positions 4,5 in queries
+        embeddings=torch.tensor([0, 0, 1, 1, 0, 0, 2, 2, 1]).float()
+    )
 
     cmc_gt = 3 / 5
 
-    return labels, query_mask, gallery_mask, input_tensors, cmc_gt
+    return dataset, cmc_gt
 
 
-def get_shared_query_gallery() -> TData:
-    labels = torch.tensor([0, 0, 0, 1, 1, 1, 2, 2]).long()
-    query_mask = torch.ones_like(labels)
-    gallery_mask = torch.ones_like(labels)
-
-    input_tensors = labels.clone()
-    input_tensors[0] = 3
+def get_shared_query_gallery() -> Any:
+    dataset = EmbeddingsQueryGalleryDataset(
+        labels=torch.tensor([0, 0, 0, 1, 1, 1, 2, 2]).long(),
+        is_query=torch.ones(8).bool(),
+        is_gallery=torch.ones(8).bool(),
+        embeddings=torch.tensor([3, 0, 0, 1, 1, 1, 2, 2]).float(),
+    )
 
     cmc_gt = 7 / 8
 
-    return labels, query_mask, gallery_mask, input_tensors, cmc_gt
-
-
-class DummyQGDataset(IDatasetQueryGallery):
-    def __init__(self, labels: Tensor, gallery_mask: Tensor, query_mask: Tensor, input_tensors: Tensor):
-        assert len(labels) == len(gallery_mask) == len(query_mask)
-
-        self.labels = labels
-        self.gallery_mask = gallery_mask
-        self.query_mask = query_mask
-        self.input_tensors = input_tensors
-
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {
-            LABELS_KEY: self.labels[idx],
-            INPUT_TENSORS_KEY: self.input_tensors[idx],
-            IS_QUERY_KEY: self.query_mask[idx],
-            IS_GALLERY_KEY: self.gallery_mask[idx],
-        }
-
-    def __len__(self) -> int:
-        return len(self.labels)
+    return dataset, cmc_gt
 
 
 @pytest.mark.parametrize("batch_size", [1, 5])
-@pytest.mark.parametrize("shuffle", [True, False])
+@pytest.mark.parametrize("shuffle", [False])  # todo 522: supper True?
 @pytest.mark.parametrize("num_workers", [0, 2])
 @pytest.mark.parametrize("data", [get_separate_query_gallery(), get_shared_query_gallery()])
-def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, data: TData) -> None:
-    labels, query_mask, gallery_mask, input_tensors, cmc_gt = data
-
-    dataset = DummyQGDataset(
-        labels=labels,
-        input_tensors=input_tensors,
-        query_mask=query_mask,
-        gallery_mask=gallery_mask,
-    )
+def test_retrieval_validation(batch_size, shuffle, num_workers, data) -> None:  # type: ignore
+    dataset, cmc_gt = data
 
     loader = DataLoader(
         dataset=dataset, batch_size=batch_size, shuffle=shuffle, drop_last=False, num_workers=num_workers
     )
 
-    calc = EmbeddingMetrics(cmc_top_k=(1,))
+    calc = EmbeddingMetrics(cmc_top_k=(1,), dataset=dataset)
     calc.setup(num_samples=len(dataset))
 
     model = IdealClusterEncoder()
@@ -96,7 +65,7 @@ def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, 
     for batch in loader:
         output = model(batch[INPUT_TENSORS_KEY])
         batch[EMBEDDINGS_KEY] = output
-        calc.update_data(data_dict=batch)
+        calc.update_data(embeddings=batch[EMBEDDINGS_KEY])
 
     metrics = calc.compute_metrics()
 

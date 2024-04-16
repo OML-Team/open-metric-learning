@@ -4,42 +4,27 @@
 
 [comment]:usage-retrieval-start
 ```python
-import torch
-
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.flat import inference_on_images
+from oml.inference import inference
+from oml.datasets import ImagesDatasetQueryGallery
 from oml.models import ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.utils.misc_torch import pairwise_dist
+from oml.retrieval.prediction import RetrievalPrediction
 
-_, df_val = download_mock_dataset(MOCK_DATASET_PATH)
-df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)
-queries = df_val[df_val["is_query"]]["path"].tolist()
-galleries = df_val[df_val["is_gallery"]]["path"].tolist()
+_, df_test = download_mock_dataset(MOCK_DATASET_PATH)
+df_test["label"] = "fake_label"   # todo 522: we don't use labels in pred, but we need to handle it more elegant later
 
 extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
-args = {"num_workers": 0, "batch_size": 8}
-features_queries = inference_on_images(extractor, paths=queries, transform=transform, **args)
-features_galleries = inference_on_images(extractor, paths=galleries, transform=transform, **args)
+dataset_test = ImagesDatasetQueryGallery(df=df_test, dataset_root=MOCK_DATASET_PATH, transform=transform)
+features = inference(extractor, dataset_test, batch_size=8)
 
-# Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
-use_knn = False
-top_k = 3
+prediction_test = RetrievalPrediction.compute_from_embeddings(features, dataset_test)
+print(prediction_test)
+prediction_test.visualize(query_ids=[0, 1], dataset=dataset_test).show()
 
-if use_knn:
-    from sklearn.neighbors import NearestNeighbors
-    knn = NearestNeighbors(algorithm="auto", p=2)
-    knn.fit(features_galleries)
-    dists, ii_closest = knn.kneighbors(features_queries, n_neighbors=top_k, return_distance=True)
-
-else:
-    dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
-    dists, ii_closest = torch.topk(dist_mat, dim=1, k=top_k, largest=False)
-
-print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 ```
 [comment]:usage-retrieval-end
 </p>

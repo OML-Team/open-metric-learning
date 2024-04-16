@@ -19,14 +19,13 @@ extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 val_dataset = ImagesDatasetQueryGallery(df_val, dataset_root=dataset_root)
 
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
+val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4, shuffle=False)
 calculator = EmbeddingMetrics(dataset=val_dataset)
 calculator.setup(num_samples=len(val_dataset))
 
 with torch.no_grad():
     for batch in tqdm(val_loader):
-        batch["embeddings"] = extractor(batch["input_tensors"])
-        calculator.update_data(batch)
+        calculator.update_data(embeddings=extractor(batch["input_tensors"]))
 
 metrics = calculator.compute_metrics()
 

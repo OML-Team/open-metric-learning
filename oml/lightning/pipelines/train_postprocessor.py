@@ -3,16 +3,15 @@ from pathlib import Path
 from pprint import pprint
 from typing import Any, Dict, Tuple
 
-import pandas as pd
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig
+from oml.inference import inference_cached
 from torch import device as tdevice
 from torch.utils.data import DataLoader
 
-from oml.const import BBOXES_COLUMNS, EMBEDDINGS_KEY, TCfg
-from oml.datasets import ImagesDatasetQueryGallery, ImagesDatasetWithLabels
-from oml.inference.flat import inference_on_dataframe
+from oml.const import EMBEDDINGS_KEY, TCfg
+from oml.datasets import ImagesDatasetQueryGallery, ImagesDatasetWithLabels, get_retrieval_images_datasets
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.modules.pairwise_postprocessing import (
@@ -55,12 +54,6 @@ def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
 
 
 def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader, IDatasetWithLabels, IDatasetQueryGallery]:
-    # todo: support bounding bboxes
-    df = pd.read_csv(Path(cfg["dataset_root"]) / cfg["dataframe_name"])
-    assert not set(BBOXES_COLUMNS).intersection(
-        df.columns
-    ), "We've found bboxes in the dataframe, but they're not supported yet."
-
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
@@ -69,25 +62,27 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader, IDat
     else:
         cache_file = None
 
-    emb_train, emb_val, df_train, df_val = inference_on_dataframe(
-        extractor=extractor,
-        dataset_root=cfg["dataset_root"],
-        output_cache_path=cache_file,
-        dataframe_name=cfg["dataframe_name"],
-        transforms=get_transforms_by_cfg(cfg["transforms_extraction"]),
-        num_workers=cfg["num_workers"],
-        batch_size=cfg["batch_size_inference"],
-        use_fp16=int(cfg.get("precision", 32)) == 16,
-    )
+    train_dataset_extraction, val_dataset_extraction = get_retrieval_images_datasets(
+                                  dataset_root=cfg["dataset_root"],
+                                  dataframe_name=cfg["dataframe_name"],
+                                  transforms_train=get_transforms_by_cfg(cfg["transforms_extraction"]),
+                                  transforms_val=get_transforms_by_cfg(cfg["transforms_extraction"]),
+                                  )
+
+    inference_args = {"model": extractor, "cache_file": cache_file, "num_workers": cfg["num_workers"],
+                      "batch_size": cfg["batch_size"], "use_fp16": int(cfg.get("precision", 32)) == 16}
+
+    emb_train = inference_cached(dataset=train_dataset_extraction, **inference_args)
+    emb_val = inference_cached(dataset=val_dataset_extraction, **inference_args)
 
     train_dataset = ImagesDatasetWithLabels(
-        df=df_train,
+        df=train_dataset_extraction._df,
         transform=get_transforms_by_cfg(cfg["transforms_train"]),
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
     valid_dataset = ImagesDatasetQueryGallery(
-        df=df_val,
+        df=val_dataset_extraction._df,
         transform=get_transforms_by_cfg(cfg["transforms_extraction"]),
         extra_data={EMBEDDINGS_KEY: emb_val},
     )

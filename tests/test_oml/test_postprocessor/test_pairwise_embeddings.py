@@ -64,7 +64,7 @@ def test_trivial_processing_does_not_change_distances_order(
     )
 
     prediction = RetrievalPrediction.compute_from_embeddings(
-        embeddings=embeddings, dataset=dataset, n_ids_to_retrieve=k
+        embeddings=embeddings, dataset=dataset, n_items_to_retrieve=k
     )
 
     model = LinearTrivialDistanceSiamese(feat_dim=embeddings.shape[-1], identity_init=True)

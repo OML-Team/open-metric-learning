@@ -129,7 +129,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         self.prediction = RetrievalPrediction.compute_from_embeddings(
             embeddings=self.acc.storage[self._embeddings_acc_key].float(),  # type: ignore
             dataset=self.dataset,
-            n_ids_to_retrieve=min(max_metrics_k + 100, gallery_size),
+            n_items_to_retrieve=min(max_metrics_k + 100, gallery_size),
         )
 
         if self.postprocessor:
@@ -237,7 +237,9 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
                 f"provided dataset has the type of {type(self.dataset)}."
             )
 
-        return self.prediction.visualize(query_ids, n_instances, dataset=self.dataset, verbose=verbose)
+        return self.prediction.visualize(
+            query_ids, n_galleries_to_show=n_instances, dataset=self.dataset, verbose=verbose
+        )
 
 
 class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP):

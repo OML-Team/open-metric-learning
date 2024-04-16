@@ -3,6 +3,7 @@
 <p>
 
 [comment]:postprocessor-start
+
 ```python
 from pprint import pprint
 
@@ -11,11 +12,11 @@ from torch.nn import BCEWithLogitsLoss
 from torch.utils.data import DataLoader
 
 from oml.datasets.base import DatasetWithLabels, DatasetQueryGallery
-from oml.inference.flat import inference_on_dataframe
+from oml.inference import inference_cached
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.pairs import PairsMiner
 from oml.models import ConcatSiamese, ViTExtractor
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.samplers.balance import BalanceSampler
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -27,8 +28,8 @@ download_mock_dataset(dataset_root)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 transform = get_normalisation_resize_torch(im_size=64)
 
-embeddings_train, embeddings_val, df_train, df_val = \
-    inference_on_dataframe(dataset_root, "df.csv", extractor=extractor, transforms=transform)
+embeddings_train, embeddings_val, df_train, df_val =
+    inference_cached(dataset_root, "df.csv", extractor=extractor, transforms=transform)
 
 # We are building Siamese model on top of existing weights and train it to recognize positive/negative pairs
 siamese = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])
@@ -54,7 +55,7 @@ for batch in train_loader:
 val_dataset = DatasetQueryGallery(df=df_val, extra_data={"embeddings": embeddings_val}, transform=transform)
 valid_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
 
-postprocessor = PairwiseImagesPostprocessor(top_n=3, pairwise_model=siamese, transforms=transform)
+postprocessor = PairwiseReranker(top_n=3, pairwise_model=siamese, transforms=transform)
 calculator = EmbeddingMetrics(postprocessor=postprocessor)
 calculator.setup(num_samples=len(val_dataset))
 

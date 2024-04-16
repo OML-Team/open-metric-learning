@@ -5,7 +5,8 @@ import torch
 from torchvision.models import resnet18
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.flat import inference_on_images
+from oml.datasets import ImagesBaseDataset
+from oml.inference.abstract import inference
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
 from tests.test_oml.test_ddp.utils import init_ddp, run_in_ddp
@@ -32,15 +33,14 @@ def run_with_handling_duplicates(rank: int, world_size: int, device: str, paths:
 
     model = resnet18().eval().to(device)
 
-    args = {
-        "model": model,
-        "paths": paths,
-        "transform": transform,
-        "num_workers": 0,
-        "verbose": True,
-        "f_imread": None,
-        "batch_size": batch_size,
-    }
+    dataset = ImagesBaseDataset(paths=paths, f_imread=None)
 
-    output = inference_on_images(**args)
+    output = inference(
+        model=model,
+        dataset=dataset,
+        transform=transform,
+        num_workers=0,
+        verbose=True,
+        batch_size=batch_size
+    )
     assert len(paths) == len(output), (len(paths), len(output))

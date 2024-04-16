@@ -49,7 +49,7 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, k, valid
     embeddings, dataset, extractor = validation_results
 
     prediction = RetrievalPrediction.compute_from_embeddings(
-        embeddings=embeddings, dataset=dataset, n_ids_to_retrieve=k
+        embeddings=embeddings, dataset=dataset, n_items_to_retrieve=k
     )
 
     pairwise_model = TrivialDistanceSiamese(extractor)

@@ -1,6 +1,6 @@
 import torch
 
-from oml.inference.pairs import pairwise_inference
+from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor

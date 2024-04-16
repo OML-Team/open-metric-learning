@@ -21,7 +21,7 @@ def test_prediction() -> None:
         is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
     )
 
-    pred = RetrievalPrediction.compute_from_embeddings(embeddings=embeddings, dataset=dataset, n_ids_to_retrieve=5)
+    pred = RetrievalPrediction.compute_from_embeddings(embeddings=embeddings, dataset=dataset, n_items_to_retrieve=5)
 
     retrieved_ids_expected = torch.tensor([[0, 1, 2], [1, 0, 2], [1, 0, 2]]).long()
 
