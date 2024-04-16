@@ -8,7 +8,7 @@ from pytorch_lightning import Callback
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch.utils.data import DataLoader
 
-from oml.const import LOG_IMAGE_FOLDER
+from oml.const import LOG_IMAGE_FOLDER, INDEX_KEY
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.loggers import IFigureLogger
 from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualizable
@@ -80,7 +80,7 @@ class MetricValCallback(Callback):
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
 
-            self.metric.update_data(outputs[pl_module.embeddings_key])  # todo 522:
+            self.metric.update_data(outputs[pl_module.embeddings_key], ids=outputs[INDEX_KEY])  # todo 522:
 
             self._collected_samples += len(outputs[list(outputs.keys())[0]])
             if self._collected_samples > self._expected_samples:

@@ -20,13 +20,13 @@ from oml.utils.misc_torch import pairwise_dist
 
 
 def batched_knn(
-        embeddings: FloatTensor,
-        ids_query: LongTensor,
-        ids_gallery: LongTensor,
-        top_n: int,
-        ignoring_groups: Optional[np.ndarray] = None,
-        labels_gt: Optional[np.ndarray] = None,
-        bs: int = BS_KNN,
+    embeddings: FloatTensor,
+    ids_query: LongTensor,
+    ids_gallery: LongTensor,
+    top_n: int,
+    ignoring_groups: Optional[np.ndarray] = None,
+    labels_gt: Optional[np.ndarray] = None,
+    bs: int = BS_KNN,
 ) -> Tuple[FloatTensor, LongTensor, Optional[List[LongTensor]]]:
     """
 
@@ -63,8 +63,8 @@ def batched_knn(
     gt_ids = []
 
     for i in range(0, nq, bs):
-        distances_b = pairwise_dist(x1=emb_q[i: i + bs], x2=emb_g)
-        ids_query_b = ids_query[i: i + bs]
+        distances_b = pairwise_dist(x1=emb_q[i : i + bs], x2=emb_g)
+        ids_query_b = ids_query[i : i + bs]
 
         mask_to_ignore_b = ids_query_b[..., None] == ids_gallery[None, ...]
         if ignoring_groups is not None:
@@ -77,17 +77,17 @@ def batched_knn(
             gt_ids.extend([LongTensor(row.nonzero()[0]) for row in mask_gt_b])  # type: ignore
 
         distances_b[mask_to_ignore_b] = float("inf")
-        distances[i: i + bs], retrieved_ids[i: i + bs] = torch.topk(distances_b, k=top_n, largest=False, sorted=True)
+        distances[i : i + bs], retrieved_ids[i : i + bs] = torch.topk(distances_b, k=top_n, largest=False, sorted=True)
 
     return distances, retrieved_ids, gt_ids or None
 
 
 class RetrievalPrediction:
     def __init__(
-            self,
-            distances: FloatTensor,
-            retrieved_ids: LongTensor,
-            gt_ids: List[LongTensor] = None,
+        self,
+        distances: FloatTensor,
+        retrieved_ids: LongTensor,
+        gt_ids: List[LongTensor] = None,
     ):
         """
         Args:
@@ -99,7 +99,9 @@ class RetrievalPrediction:
         """
         assert distances.shape == retrieved_ids.shape
         assert distances.shape[0] == len(gt_ids)
-        assert all(len(x) > 0 for x in gt_ids), "Every query must have at least one relevant gallery id."
+
+        if not all(len(x) > 0 for x in gt_ids):
+            raise RuntimeError("Every query must have at least one relevant gallery id.")
 
         self.distances = distances
         self.retrieved_ids = retrieved_ids
@@ -111,10 +113,10 @@ class RetrievalPrediction:
 
     @classmethod
     def compute_from_embeddings(
-            cls,
-            embeddings: FloatTensor,
-            dataset: IDatasetQueryGallery,
-            n_items_to_retrieve: int = 500,
+        cls,
+        embeddings: FloatTensor,
+        dataset: IDatasetQueryGallery,
+        n_items_to_retrieve: int = 1_000,
     ) -> "RetrievalPrediction":
         ignoring_groups = dataset.extra_data.get(SEQUENCE_COLUMN, None)
 
@@ -130,9 +132,11 @@ class RetrievalPrediction:
         return RetrievalPrediction(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
 
     def __repr__(self) -> str:
-        txt = (f"You retrieved {self.top_n} items.\n"
-               f"Distances to the retrieved items:\n{self.distances}.\n"
-               f"Ids of the retrieved gallery items:\n{self.retrieved_ids}.\n")
+        txt = (
+            f"You retrieved {self.top_n} items.\n"
+            f"Distances to the retrieved items:\n{self.distances}.\n"
+            f"Ids of the retrieved gallery items:\n{self.retrieved_ids}.\n"
+        )
 
         if self.gt_ids is None:
             txt += "Ground truths are unknown.\n"
@@ -143,7 +147,11 @@ class RetrievalPrediction:
         return txt
 
     def visualize(
-            self, query_ids: List[int], dataset: IDatasetQueryGallery, n_galleries_to_show: int=5, verbose: bool = False,
+        self,
+        query_ids: List[int],
+        dataset: IDatasetQueryGallery,
+        n_galleries_to_show: int = 5,
+        verbose: bool = False,
     ) -> plt.Figure:
         if not isinstance(dataset, IVisualizableDataset):
             raise ValueError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")

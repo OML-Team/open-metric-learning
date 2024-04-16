@@ -4,7 +4,9 @@ import numpy as np
 import torch
 from torch.distributed import get_world_size
 
+from oml.const import INDEX_KEY
 from oml.ddp.utils import is_ddp, sync_dicts_ddp
+from oml.utils.misc_torch import drop_duplicates_by_ids
 
 TStorage = Dict[str, Union[torch.Tensor, np.ndarray, List[Any]]]
 
@@ -116,6 +118,8 @@ class Accumulator:
 
                 gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
                 gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
+
+                # todo 522 - add dropping duplicates here
 
                 assert set(gathered_params["keys_to_accumulate"]) == set(
                     self.keys_to_accumulate

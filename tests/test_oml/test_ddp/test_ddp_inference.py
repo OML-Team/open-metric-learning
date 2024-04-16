@@ -36,11 +36,6 @@ def run_with_handling_duplicates(rank: int, world_size: int, device: str, paths:
     dataset = ImagesBaseDataset(paths=paths, f_imread=None)
 
     output = inference(
-        model=model,
-        dataset=dataset,
-        transform=transform,
-        num_workers=0,
-        verbose=True,
-        batch_size=batch_size
+        model=model, dataset=dataset, transform=transform, num_workers=0, verbose=True, batch_size=batch_size
     )
     assert len(paths) == len(output), (len(paths), len(output))

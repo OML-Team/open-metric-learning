@@ -2,15 +2,17 @@ from argparse import ArgumentParser, Namespace
 from random import randint, random, sample
 from typing import Any, Dict, List, Tuple
 
+import numpy as np
 import torch
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
-from torch import nn
+from torch import nn, LongTensor, BoolTensor
 from torch.optim import Adam
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
-from oml.const import TMP_PATH
+from oml.const import TMP_PATH, INDEX_KEY
 from oml.ddp.utils import sync_dicts_ddp
+from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
@@ -21,7 +23,7 @@ from oml.utils.misc import set_global_seed
 
 
 def create_pred_and_gt_labels(
-    num_labels: int, min_max_instances: Tuple[int, int], err_prob: float
+        num_labels: int, min_max_instances: Tuple[int, int], err_prob: float
 ) -> Tuple[List[int], List[int]]:
     gt_labels = []
     pred_labels = []
@@ -38,14 +40,15 @@ def create_pred_and_gt_labels(
     return pred_labels, gt_labels
 
 
-class DummyDataset(Dataset):
+class DummyDataset(IDatasetQueryGallery):
     input_name = "input_tensors"
     labels_name = "labels"
-    item_name = "item"
+    item_name = INDEX_KEY
 
     def __init__(self, pred_labels: List[int], gt_labels: List[int]):
-        self.gt_labels = gt_labels
+        self.gt_labels = np.array(gt_labels)
         self.pred_labels = pred_labels
+        self.extra_data = {}
 
     def __len__(self) -> int:
         return len(self.gt_labels)
@@ -54,13 +57,22 @@ class DummyDataset(Dataset):
         return {
             self.input_name: self.pred_labels[item] * torch.ones((3, 10, 10)),
             self.labels_name: self.gt_labels[item],
-            "is_query": True,
-            "is_gallery": True,
             self.item_name: item,
         }
 
+    def get_labels(self) -> np.ndarray:
+        return np.array(self.gt_labels)
+
+    def get_query_ids(self) -> LongTensor:
+        return torch.arange(len(self)).long()
+
+    def get_gallery_ids(self) -> LongTensor:
+        return torch.arange(len(self)).long()
+
 
 class DummyModule(ModuleDDP):
+    embeddings_key = "embeddings"
+
     def __init__(self, loaders_val: EVAL_DATALOADERS, loaders_train: TRAIN_DATALOADERS):
         super().__init__(loaders_val=loaders_val, loaders_train=loaders_train)
         self.model = nn.Sequential(nn.AvgPool2d((10, 10)), nn.Flatten(), nn.Linear(3, 3, bias=False))
@@ -76,7 +88,7 @@ class DummyModule(ModuleDDP):
         embeddings = self.model(batch[DummyDataset.input_name])
 
         self.validation_step_outputs.append(batch)
-        return {**batch, **{"embeddings": embeddings}}
+        return {**batch, **{self.embeddings_key: embeddings}}
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         if batch_idx == 0:
@@ -155,7 +167,7 @@ def experiment(args: Namespace) -> None:
     batch_sampler = BalanceSampler(labels=gt_labels, n_labels=2, n_instances=2)
     train_dataloader = DataLoader(dataset=train_dataset, batch_sampler=batch_sampler)
 
-    emb_metrics = EmbeddingMetricsDDP(cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))
+    emb_metrics = EmbeddingMetricsDDP(val_dataset, cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))
     val_callback = MetricValCallbackWithSaving(
         metric=emb_metrics, devices=devices, num_labels=num_labels, batch_size=batch_size
     )

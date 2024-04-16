@@ -11,7 +11,7 @@ from oml.const import (
     CATEGORIES_COLUMN,
     LOG_TOPK_IMAGES_PER_ROW,
     LOG_TOPK_ROWS_PER_METRIC,
-    OVERALL_CATEGORIES_KEY,
+    OVERALL_CATEGORIES_KEY, INDEX_KEY,
 )
 from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
@@ -104,16 +104,17 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         self.verbose = verbose
 
         self._embeddings_acc_key = "embeddings"
-        self.acc = Accumulator(keys_to_accumulate=[self._embeddings_acc_key])
+        self.acc = Accumulator(keys_to_accumulate=[self._embeddings_acc_key, INDEX_KEY])
 
-    def setup(self, num_samples: int) -> None:  # type: ignore
+    def setup(self, num_samples=1) -> None:  # type: ignore
         self.prediction = None
         self.metrics = None
 
         self.acc.refresh(num_samples=num_samples)
 
-    def update_data(self, embeddings: FloatTensor) -> None:  # type: ignore
-        self.acc.update_data(data_dict={self._embeddings_acc_key: embeddings})
+    def update_data(self, embeddings: FloatTensor, ids) -> None:  # type: ignore
+        assert len(embeddings) == len(ids)
+        self.acc.update_data(data_dict={self._embeddings_acc_key: embeddings, INDEX_KEY: ids})
 
     def _obtain_prediction(self) -> None:
         if not self.acc.is_storage_full():
@@ -127,7 +128,7 @@ class EmbeddingMetrics(IBasicMetric, IMetricVisualizable):
         gallery_size = len(self.dataset.get_gallery_ids())
 
         self.prediction = RetrievalPrediction.compute_from_embeddings(
-            embeddings=self.acc.storage[self._embeddings_acc_key].float(),  # type: ignore
+            embeddings= self.acc.storage[self._embeddings_acc_key].float(),  # type: ignore
             dataset=self.dataset,
             n_items_to_retrieve=min(max_metrics_k + 100, gallery_size),
         )

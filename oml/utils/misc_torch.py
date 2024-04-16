@@ -164,7 +164,7 @@ def drop_duplicates_by_ids(ids: List[Hashable], data: Tensor, sort: bool = True)
         Unique data records with their ids
 
     """
-    assert isinstance(ids, list)
+    assert isinstance(ids, list), type(ids)
     ids_first = find_first_occurrences(ids)
     ids = [ids[i] for i in ids_first]
     data = data[ids_first]

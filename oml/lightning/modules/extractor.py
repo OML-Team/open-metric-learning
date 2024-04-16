@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
-from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
+from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler  # type: ignore
 
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.models import IExtractor, IFreezable

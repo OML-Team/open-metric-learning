@@ -113,20 +113,22 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
         self._bboxes = bboxes
         self._transform = transform if transform else get_transforms("norm_albu")
         self._f_imread = f_imread or get_im_reader_for_transforms(transform)
-        self._read_bytes_image = (
-            lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
-        )  # type: ignore
+
+        if cache_size:
+            self.read_bytes = lru_cache(maxsize=cache_size)(self._read_bytes)  # type: ignore
+        else:
+            self.read_bytes = self._read_bytes  # type: ignore
 
         available_transforms = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(self._transform, available_transforms), f"Transforms must one of: {available_transforms}"
 
     @staticmethod
-    def _read_bytes_image(path: Union[Path, str]) -> bytes:
+    def _read_bytes(path: Union[Path, str]) -> bytes:
         with open(str(path), "rb") as fin:
             return fin.read()
 
     def __getitem__(self, idx: int) -> Dict[str, Union[FloatTensor, int]]:
-        img_bytes = self._read_bytes_image(self._paths[idx])
+        img_bytes = self.read_bytes(self._paths[idx])
         img = self._f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]

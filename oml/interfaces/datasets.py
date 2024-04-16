@@ -8,8 +8,6 @@ from torch.utils.data import Dataset
 from oml.const import (  # noqa
     INDEX_KEY,
     INPUT_TENSORS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
     LABELS_KEY,
     PAIR_1ST_KEY,
     PAIR_2ND_KEY,

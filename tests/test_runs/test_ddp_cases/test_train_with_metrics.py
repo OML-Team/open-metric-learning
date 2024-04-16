@@ -74,4 +74,4 @@ def compare_metrics(metric_topk2values: Dict[str, List[torch.Tensor]], atol: flo
     for metric_topk, values in metric_topk2values.items():
         mean_value = torch.tensor(values).float().mean()
         is_close = tuple(torch.isclose(val, mean_value, atol=atol) for val in values)
-        assert all(is_close), f"Metrics are not similar: {[metric_topk, values, is_close, atol]}"
+        assert all(is_close), f"Metrics are not similar: {[metric_topk, values, mean_value, is_close, atol]}"

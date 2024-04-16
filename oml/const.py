@@ -63,7 +63,7 @@ STD: TNormParam = (0.229, 0.224, 0.225)
 MEAN_CLIP = (0.48145466, 0.4578275, 0.40821073)
 STD_CLIP = (0.26862954, 0.26130258, 0.27577711)
 
-CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
+CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]  # todo 522: remove it later
 
 # Required dataset format:
 LABELS_COLUMN = "label"
@@ -88,17 +88,8 @@ TBBoxes = Sequence[Optional[TBBox]]
 OVERALL_CATEGORIES_KEY = "OVERALL"
 INPUT_TENSORS_KEY = "input_tensors"
 LABELS_KEY = "labels"
-IS_QUERY_KEY = "is_query"
-IS_GALLERY_KEY = "is_gallery"
-EMBEDDINGS_KEY = "embeddings"
-CATEGORIES_KEY = "categories"
-PATHS_KEY = "paths"
-X1_KEY = "x1"
-X2_KEY = "x2"
-Y1_KEY = "y1"
-Y2_KEY = "y2"
+EMBEDDINGS_KEY = "embeddings"  # todo 522: remove it later
 INDEX_KEY = "idx"
-SEQUENCE_KEY = "sequence"
 
 PAIR_1ST_KEY = "input_tensors_1"
 PAIR_2ND_KEY = "input_tensors_2"
@@ -107,6 +98,6 @@ IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]
 
 BS_KNN = 1000
 
-# hydra provides ability to set its behaviour for convinient backwards compatibility
+# hydra provides ability to set its behaviour for convenient backwards compatibility
 # no matter what the current version is
 HYDRA_BEHAVIOUR = "1.1"

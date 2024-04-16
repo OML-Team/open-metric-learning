@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
 import torch
-from torch import Tensor, nn, FloatTensor
+from torch import FloatTensor, Tensor, nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
 
@@ -20,14 +20,14 @@ from oml.utils.misc_torch import (
 
 @torch.no_grad()
 def _inference(
-        model: nn.Module,
-        apply_model: Callable[[nn.Module, Dict[str, Any]], FloatTensor],
-        dataset: Dataset,  # type: ignore
-        num_workers: int,
-        batch_size: int,
-        verbose: bool,
-        use_fp16: bool,
-        accumulate_on_cpu: bool = True,
+    model: nn.Module,
+    apply_model: Callable[[nn.Module, Dict[str, Any]], FloatTensor],
+    dataset: Dataset,  # type: ignore
+    num_workers: int,
+    batch_size: int,
+    verbose: bool,
+    use_fp16: bool,
+    accumulate_on_cpu: bool = True,
 ) -> FloatTensor:
     # todo: rework hasattr later
     assert hasattr(dataset, "index_key"), "We expect that your dataset returns samples ids in __getitem__ method"
@@ -67,14 +67,15 @@ def _inference(
 
 
 @torch.no_grad()
-def inference(model: nn.Module,
-              dataset: IBaseDataset,
-              batch_size: int,
-              num_workers: int = 0,
-              verbose: bool = False,
-              use_fp16: bool = False,
-              accumulate_on_cpu: bool = True,
-              ) -> FloatTensor:
+def inference(
+    model: nn.Module,
+    dataset: IBaseDataset,
+    batch_size: int,
+    num_workers: int = 0,
+    verbose: bool = False,
+    use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
+) -> FloatTensor:
     device = get_device(model)
 
     # Inference on IBaseDataset
@@ -82,34 +83,35 @@ def inference(model: nn.Module,
     def apply(model_: nn.Module, batch_: Dict[str, Any]) -> FloatTensor:
         return model_(batch_[dataset.input_tensors_key].to(device))
 
-    return _inference(model=model,
-                      apply_model=apply,
-                      dataset=dataset,
-                      num_workers=num_workers,
-                      batch_size=batch_size,
-                      verbose=verbose,
-                      use_fp16=use_fp16,
-                      accumulate_on_cpu=accumulate_on_cpu,
-                      )
+    return _inference(
+        model=model,
+        apply_model=apply,
+        dataset=dataset,
+        num_workers=num_workers,
+        batch_size=batch_size,
+        verbose=verbose,
+        use_fp16=use_fp16,
+        accumulate_on_cpu=accumulate_on_cpu,
+    )
 
 
 def pairwise_inference(
-        model: IPairwiseModel,
-        base_dataset: IBaseDataset,
-        pair_ids: List[Tuple[int, int]],
-        num_workers: int,
-        batch_size: int,
-        verbose: bool = True,
-        use_fp16: bool = False,
-        accumulate_on_cpu: bool = True,
+    model: IPairwiseModel,
+    base_dataset: IBaseDataset,
+    pair_ids: List[Tuple[int, int]],
+    num_workers: int,
+    batch_size: int,
+    verbose: bool = True,
+    use_fp16: bool = False,
+    accumulate_on_cpu: bool = True,
 ) -> FloatTensor:
     device = get_device(model)
 
     dataset = PairsDataset(base_dataset=base_dataset, pair_ids=pair_ids)
 
     def _apply(
-            model_: IPairwiseModel,
-            batch_: Dict[str, Any],
+        model_: IPairwiseModel,
+        batch_: Dict[str, Any],
     ) -> Tensor:
         pair1 = batch_[dataset.pair_1st_key].to(device)
         pair2 = batch_[dataset.pair_2nd_key].to(device)
@@ -130,12 +132,12 @@ def pairwise_inference(
 
 
 def inference_cached(
-        dataset: IBaseDataset,
-        extractor: nn.Module,
-        output_cache_path: str = "inference_cache.pth",
-        num_workers: int = 0,
-        batch_size: int = 128,
-        use_fp16: bool = False,
+    dataset: IBaseDataset,
+    extractor: nn.Module,
+    output_cache_path: str = "inference_cache.pth",
+    num_workers: int = 0,
+    batch_size: int = 128,
+    use_fp16: bool = False,
 ) -> FloatTensor:
     if Path(output_cache_path).is_file():
         outputs = torch.load(output_cache_path, map_location="cpu")

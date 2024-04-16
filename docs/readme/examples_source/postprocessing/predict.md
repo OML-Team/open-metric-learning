@@ -3,9 +3,7 @@
 <p>
 
 [comment]:postprocessor-pred-start
-
 ```python
-
 from oml.const import MOCK_DATASET_PATH
 from oml.datasets import ImagesDatasetQueryGallery
 from oml.inference import inference

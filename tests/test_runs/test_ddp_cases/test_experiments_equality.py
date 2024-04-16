@@ -9,7 +9,7 @@ from torch import nn
 
 from oml.const import PROJECT_ROOT
 
-from .run_triplets_experiment_ddp import DummyModule
+from .run_retrieval_experiment_ddp import DummyModule
 
 """
 MOTIVATION
@@ -25,7 +25,8 @@ step which is equal for each experiment, `N` - number of devices,
 
 
 # TODO: check internal `/` on windows
-exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_triplets_experiment_ddp.py"
+# todo 522: since we removed triplets code we need to adapt this test
+exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_triplet_experiment_ddp.py"
 
 
 @pytest.mark.long

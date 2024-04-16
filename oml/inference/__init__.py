@@ -1,1 +1,1 @@
-from oml.inference.abstract import inference, pairwise_inference, inference_cached
+from oml.inference.abstract import inference, inference_cached, pairwise_inference

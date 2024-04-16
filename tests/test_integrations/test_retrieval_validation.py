@@ -6,11 +6,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from oml.const import (
-    EMBEDDINGS_KEY,
-    INPUT_TENSORS_KEY,
-    OVERALL_CATEGORIES_KEY,
-)
+from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, OVERALL_CATEGORIES_KEY
 from oml.datasets import EmbeddingsQueryGalleryDataset
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import one_hot
@@ -25,7 +21,7 @@ def get_separate_query_gallery() -> Any:
         is_gallery=torch.tensor([0, 1, 0, 1, 0, 0, 1, 1, 0]).bool(),
         is_query=torch.tensor([1, 0, 1, 0, 1, 1, 0, 0, 1]).bool(),
         # let's add some errors on positions 4,5 in queries
-        embeddings=torch.tensor([0, 0, 1, 1, 0, 0, 2, 2, 1]).float()
+        embeddings=torch.tensor([0, 0, 1, 1, 0, 0, 2, 2, 1]).float(),
     )
 
     cmc_gt = 3 / 5

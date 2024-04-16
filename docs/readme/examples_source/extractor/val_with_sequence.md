@@ -26,7 +26,7 @@ On the figure below we show how provided sequence labels affect metrics calculat
 | Precision@2 | yes (bottom figure) | 0.5   |
 
 To use this functionality you only need to provide `sequence` column in your dataframe
-(containing **strings** or **integers**) and pass `sequence_key` to `EmbeddingMetrics()`:
+(containing **strings** or **integers**):
 
 <details>
 <summary>Validation + handling sequences</summary>

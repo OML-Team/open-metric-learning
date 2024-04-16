@@ -6,12 +6,16 @@ from typing import Any, Dict, Tuple
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig
-from oml.inference import inference_cached
 from torch import device as tdevice
 from torch.utils.data import DataLoader
 
 from oml.const import EMBEDDINGS_KEY, TCfg
-from oml.datasets import ImagesDatasetQueryGallery, ImagesDatasetWithLabels, get_retrieval_images_datasets
+from oml.datasets import (
+    ImagesDatasetQueryGallery,
+    ImagesDatasetWithLabels,
+    get_retrieval_images_datasets,
+)
+from oml.inference import inference_cached
 from oml.interfaces.datasets import IDatasetQueryGallery, IDatasetWithLabels
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.modules.pairwise_postprocessing import (
@@ -63,14 +67,19 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader, IDat
         cache_file = None
 
     train_dataset_extraction, val_dataset_extraction = get_retrieval_images_datasets(
-                                  dataset_root=cfg["dataset_root"],
-                                  dataframe_name=cfg["dataframe_name"],
-                                  transforms_train=get_transforms_by_cfg(cfg["transforms_extraction"]),
-                                  transforms_val=get_transforms_by_cfg(cfg["transforms_extraction"]),
-                                  )
+        dataset_root=cfg["dataset_root"],
+        dataframe_name=cfg["dataframe_name"],
+        transforms_train=get_transforms_by_cfg(cfg["transforms_extraction"]),
+        transforms_val=get_transforms_by_cfg(cfg["transforms_extraction"]),
+    )
 
-    inference_args = {"model": extractor, "cache_file": cache_file, "num_workers": cfg["num_workers"],
-                      "batch_size": cfg["batch_size"], "use_fp16": int(cfg.get("precision", 32)) == 16}
+    inference_args = {
+        "model": extractor,
+        "cache_file": cache_file,
+        "num_workers": cfg["num_workers"],
+        "batch_size": cfg["batch_size"],
+        "use_fp16": int(cfg.get("precision", 32)) == 16,
+    }
 
     emb_train = inference_cached(dataset=train_dataset_extraction, **inference_args)
     emb_val = inference_cached(dataset=val_dataset_extraction, **inference_args)
