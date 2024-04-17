@@ -16,7 +16,13 @@ from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.lightning.pipelines.logging import NeptunePipelineLogger, TensorBoardPipelineLogger, WandBPipelineLogger, MLFlowPipelineLogger
+from oml.lightning.pipelines.logging import (
+    ClearMLPipelineLogger,
+    MLFlowPipelineLogger,
+    NeptunePipelineLogger,
+    TensorBoardPipelineLogger,
+    WandBPipelineLogger,
+)
 
 dataset_root = "mock_dataset/"
 df_train, df_val = download_mock_dataset(dataset_root)
@@ -49,6 +55,9 @@ logger = TensorBoardPipelineLogger(".")
 
 # 4) Logging with MLFlow locally
 # logger = MLFlowPipelineLogger(experiment_name="exp", tracking_uri="file:./ml-runs")
+
+# 5) Logging with ClearML
+# logger = ClearMLPipelineLogger(project_name="exp", task_name="test")
 
 # run
 pl_model = ExtractorModule(extractor, criterion, optimizer)

@@ -60,6 +60,19 @@ There are several loggers integrated with Pipelines. You can also `use your cust
               tracking_uri: "file:./ml-runs"  # another way: export MLFLOW_TRACKING_URI=file:./ml-runs
       ...
 
+* ClearML
+
+  .. code-block:: yaml
+
+      ...
+      logger:
+          name: clearml
+          args:
+              project_name: "test_project"
+              task_name: "test"
+              offline_mode: False # if True logging is directed to a local dir
+      ...
+
 
 An example of logging via Neptune in the
 `feature extractor <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction>`_
@@ -121,6 +134,7 @@ Take a look at the following example:
 `Training + Validation [Lightning and logging] <https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html>`_.
 It shows how to use each of: `Tensorboard <https://pytorch.org/docs/stable/tensorboard.html>`_,
 `MLFlow <mlflow.org>`_,
+`ClearML <https://clear.ml/>`_,
 `Neptune <https://neptune.ai/>`_ or
 `WandB <https://wandb.ai/site>`_.
 
