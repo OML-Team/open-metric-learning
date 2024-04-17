@@ -4,6 +4,7 @@ from typing import Any, Dict
 from oml.const import TCfg
 from oml.interfaces.loggers import IPipelineLogger
 from oml.lightning.pipelines.logging import (
+    ClearMLPipelineLogger,
     MLFlowPipelineLogger,
     NeptunePipelineLogger,
     TensorBoardPipelineLogger,
@@ -16,6 +17,7 @@ LOGGERS_REGISTRY = {
     "neptune": NeptunePipelineLogger,
     "tensorboard": TensorBoardPipelineLogger,
     "mlflow": MLFlowPipelineLogger,
+    "clearml": ClearMLPipelineLogger,
 }
 
 CLOUD_TOKEN_NAMES = {"wandb": "WANDB_API_KEY", "neptune": "NEPTUNE_API_TOKEN"}

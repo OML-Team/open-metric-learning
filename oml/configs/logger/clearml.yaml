@@ -1,0 +1,5 @@
+name: clearml
+args:
+  project_name: "test_project"
+  task_name: "test"
+  offline_mode: True
