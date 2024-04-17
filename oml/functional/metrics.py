@@ -6,9 +6,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist, take_2d
+from oml.utils.misc_torch import PCA, pairwise_dist, take_2d
 
 TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
@@ -202,23 +201,6 @@ def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tenso
     distance_matrix = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
 
     return distance_matrix
-
-
-def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True) -> Tensor:
-    assert embeddings.ndim == 2
-    assert embeddings.shape[0] % 3 == 0
-
-    anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n=len(embeddings))
-
-    pos_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[positive_ii])
-    neg_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[negative_ii])
-
-    acc = (pos_dists < neg_dists).float()
-
-    if reduce_mean:
-        return acc.mean()
-    else:
-        return acc
 
 
 def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
@@ -615,6 +597,5 @@ __all__ = [
     "calc_gt_mask",
     "calc_mask_to_ignore",
     "calc_distance_matrix",
-    "calculate_accuracy_on_triplets",
     "reduce_metrics",
 ]
