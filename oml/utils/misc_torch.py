@@ -126,7 +126,7 @@ def _check_is_sequence(val: Any) -> bool:
         return False
 
 
-def drop_duplicates_by_ids(ids: List[Hashable], data: Tensor, sort: bool = True) -> Tuple[List[Hashable], Tensor]:
+def drop_duplicates_by_ids(ids: List[int], data: Any, sort: bool = True) -> Tuple[List[int], Tensor]:
     """
     The function returns rows of data that have unique ids.
     Thus, if there are multiple occurrences of some id, it leaves the first one.
@@ -140,15 +140,25 @@ def drop_duplicates_by_ids(ids: List[Hashable], data: Tensor, sort: bool = True)
         Unique data records with their ids
 
     """
+    assert len(ids) == len(data)
     assert isinstance(ids, list)
+
     ids_first = find_first_occurrences(ids)
     ids = [ids[i] for i in ids_first]
-    data = data[ids_first]
+
+    if isinstance(data, (List, Tuple)):
+        data = [data[i] for i in ids_first]
+    else:
+        data = data[ids_first]
 
     if sort:
         ii_permute = torch.argsort(torch.tensor(ids))
         ids = [ids[i] for i in ii_permute]
-        data = data[ii_permute]
+
+        if isinstance(data, (List, Tuple)):
+            data = [data[i] for i in ii_permute]
+        else:
+            data = data[ii_permute]
 
     return ids, data
 
