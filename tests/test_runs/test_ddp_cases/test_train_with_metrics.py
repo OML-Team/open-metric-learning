@@ -36,8 +36,8 @@ exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_retrieval_experime
 
 @pytest.mark.long
 @pytest.mark.parametrize("batch_size", [12])
-@pytest.mark.parametrize("max_epochs", [2])
-@pytest.mark.parametrize("num_labels,atol", [(120, 1e-2), (1200, 2e-2)])
+@pytest.mark.parametrize("max_epochs", [4])
+@pytest.mark.parametrize("num_labels,atol", [(120, 1e-2), (360, 2e-2)])
 def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int, max_epochs: int) -> None:
     devices = (1, 2, 3)
     # We will compare metrics from same experiment but with different amount of devices. For this we aggregate
@@ -48,18 +48,19 @@ def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int
     metric_topk2values = defaultdict(list)
 
     for num_devices in devices:
-        batch_size //= num_devices
+        batch_size_eff = batch_size // num_devices
+
         params = (
             f"--devices {num_devices} "
             f"--max_epochs {max_epochs} "
             f"--num_labels {num_labels} "
-            f"--batch_size {batch_size}"
+            f"--batch_size {batch_size_eff}"
         )
         cmd = f"python {exp_file} " + params
         subprocess.run(cmd, check=True, shell=True)
 
         metrics_path = MetricValCallbackWithSaving.save_path_pattern.format(
-            devices=num_devices, batch_size=batch_size, num_labels=num_labels
+            devices=num_devices, batch_size=batch_size_eff, num_labels=num_labels
         )
         metrics = torch.load(metrics_path)[OVERALL_CATEGORIES_KEY]
         Path(metrics_path).unlink(missing_ok=True)

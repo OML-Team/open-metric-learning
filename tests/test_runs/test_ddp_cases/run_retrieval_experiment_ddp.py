@@ -153,7 +153,7 @@ class DummyModule(ModuleDDP):
         torch.save(ids_per_step_synced, pattern.format(experiment=self.exp_num, epoch=self.trainer.current_epoch))
 
     def configure_optimizers(self) -> Any:
-        return Adam(params=self.parameters(), lr=0.5)
+        return Adam(params=self.parameters(), lr=1e-3)
 
     def on_train_end(self) -> None:
         torch.save(self.model, self.save_path_ckpt_pattern.format(experiment=self.exp_num))
