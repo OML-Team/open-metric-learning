@@ -48,7 +48,7 @@ def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int
     metric_topk2values = defaultdict(list)
 
     for num_devices in devices:
-        batch_size //= num_devices  # todo
+        batch_size //= num_devices
         params = (
             f"--devices {num_devices} "
             f"--max_epochs {max_epochs} "
