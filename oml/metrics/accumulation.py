@@ -4,9 +4,7 @@ import numpy as np
 import torch
 from torch.distributed import get_world_size
 
-from oml.const import INDEX_KEY
 from oml.ddp.utils import is_ddp, sync_dicts_ddp
-from oml.utils.misc_torch import drop_duplicates_by_ids
 
 TStorage = Dict[str, Union[torch.Tensor, np.ndarray, List[Any]]]
 
@@ -77,7 +75,7 @@ class Accumulator:
         else:
             raise TypeError(f"Type '{type(batch_value)}' is not available for accumulating")
 
-    def update_data(self, data_dict: Dict[str, Any]) -> None:
+    def update_data(self, data_dict: Dict[str, Any], ids) -> None:
         """
         Args:
             data_dict: We will accumulate data getting values via ``self.keys_to_accumulate``.
@@ -119,19 +117,12 @@ class Accumulator:
                 gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
                 gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
 
-                # todo 522 - add dropping duplicates here
-                ids = gathered_storage[INDEX_KEY].tolist()
-                ids, data = drop_duplicates_by_ids(ids=ids, data=gathered_storage["embeddings"], sort=True)
-                gathered_storage["embeddings"] = data
-                gathered_storage["idx"] = ids
-
                 assert set(gathered_params["keys_to_accumulate"]) == set(
                     self.keys_to_accumulate
                 ), "Keys of accumulators should be the same on each device"
 
                 synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
-
-                synced_accum.refresh(len(gathered_storage["idx"]))
+                synced_accum.refresh(sum(gathered_params["num_samples"]))
                 synced_accum.update_data(gathered_storage)
 
                 return synced_accum

@@ -9,13 +9,7 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 
-from oml.const import (
-    EMBEDDINGS_KEY,
-    INPUT_TENSORS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
-    LABELS_KEY,
-)
+from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -82,12 +76,7 @@ def create_retrieval_dataloader(
 
 
 def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> MetricValCallback:
-    metric = EmbeddingMetrics(
-        embeddings_key=EMBEDDINGS_KEY,
-        labels_key=LABELS_KEY,
-        is_query_key=IS_QUERY_KEY,
-        is_gallery_key=IS_GALLERY_KEY,
-    )
+    metric = EmbeddingMetrics()
     metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
     return metric_callback
 

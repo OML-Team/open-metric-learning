@@ -9,9 +9,10 @@ from torch import FloatTensor
 
 from oml.const import (
     CATEGORIES_COLUMN,
+    INDEX_KEY,
     LOG_TOPK_IMAGES_PER_ROW,
     LOG_TOPK_ROWS_PER_METRIC,
-    OVERALL_CATEGORIES_KEY, INDEX_KEY,
+    OVERALL_CATEGORIES_KEY,
 )
 from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (

@@ -43,7 +43,7 @@ def get_shared_query_gallery() -> Any:
 
 
 @pytest.mark.parametrize("batch_size", [1, 5])
-@pytest.mark.parametrize("shuffle", [False])  # todo 522: supper True?
+@pytest.mark.parametrize("shuffle", [False])  # todo 522: support True?
 @pytest.mark.parametrize("num_workers", [0, 2])
 @pytest.mark.parametrize("data", [get_separate_query_gallery(), get_shared_query_gallery()])
 def test_retrieval_validation(batch_size, shuffle, num_workers, data) -> None:  # type: ignore
