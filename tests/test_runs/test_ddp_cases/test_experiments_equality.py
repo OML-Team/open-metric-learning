@@ -8,8 +8,7 @@ import torch
 from torch import nn
 
 from oml.const import PROJECT_ROOT
-
-from .run_triplets_experiment_ddp import DummyModule
+from .run_retrieval_experiment_ddp import DummyModule
 
 """
 MOTIVATION
@@ -24,8 +23,7 @@ step which is equal for each experiment, `N` - number of devices,
 """
 
 
-# TODO: check internal `/` on windows
-exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_triplets_experiment_ddp.py"
+exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_retrieval_experiment_ddp.py"
 
 
 @pytest.mark.long
@@ -35,12 +33,12 @@ def test_epochs_are_equal() -> None:
     train_ids = defaultdict(list)
     val_ids = defaultdict(list)
 
-    for experiment, (devices, len_dataset, batch_size) in enumerate(
-        [(1, 120, 30), (2, 120, 15), (3, 120, 10), (2, 120, 20)]
+    for experiment, (devices, num_labels, batch_size) in enumerate(
+        [(1, 12, 30), (2, 12, 15), (3, 12, 10), (2, 12, 20)]
     ):
         params = (
             f"--devices {devices}",
-            f"--len_dataset {len_dataset}",
+            f"--num_labels {num_labels}",
             f"--exp_num {experiment}",
             f"--batch_size {batch_size}",
             f"--max_epochs {max_epochs}",

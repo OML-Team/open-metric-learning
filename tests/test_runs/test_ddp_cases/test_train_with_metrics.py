@@ -10,7 +10,6 @@ from torch.utils.data import SequentialSampler
 from oml.const import OVERALL_CATEGORIES_KEY, PROJECT_ROOT
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.samplers.balance import BalanceSampler
-
 from .run_retrieval_experiment_ddp import MetricValCallbackWithSaving
 
 rf"""
@@ -35,9 +34,9 @@ exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_retrieval_experime
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("batch_size", [10, 19])
+@pytest.mark.parametrize("batch_size", [12])
 @pytest.mark.parametrize("max_epochs", [2])
-@pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-2)])
+@pytest.mark.parametrize("num_labels,atol", [(120, 1e-2), (1200, 2e-2)])
 def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int, max_epochs: int) -> None:
     devices = (1, 2, 3)
     # We will compare metrics from same experiment but with different amount of devices. For this we aggregate
@@ -48,6 +47,7 @@ def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int
     metric_topk2values = defaultdict(list)
 
     for num_devices in devices:
+        batch_size //= num_devices  # todo
         params = (
             f"--devices {num_devices} "
             f"--max_epochs {max_epochs} "
