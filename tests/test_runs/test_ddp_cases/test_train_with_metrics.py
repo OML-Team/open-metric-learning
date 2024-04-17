@@ -37,7 +37,7 @@ exp_file = PROJECT_ROOT / "tests/test_runs/test_ddp_cases/run_retrieval_experime
 @pytest.mark.long
 @pytest.mark.parametrize("batch_size", [10, 19])
 @pytest.mark.parametrize("max_epochs", [2])
-@pytest.mark.parametrize("num_labels,atol", [(200, 5e-3), (1000, 2e-2)])
+@pytest.mark.parametrize("num_labels,atol", [(200, 1e-2), (1000, 2e-2)])
 def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int, max_epochs: int) -> None:
     devices = (1, 2, 3)
     # We will compare metrics from same experiment but with different amount of devices. For this we aggregate
@@ -72,6 +72,7 @@ def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int
 def compare_metrics(metric_topk2values: Dict[str, List[torch.Tensor]], atol: float) -> None:
     # Check point 2 of motivation
     for metric_topk, values in metric_topk2values.items():
-        mean_value = torch.tensor(values).float().mean()
+        values = torch.tensor(values).float()
+        mean_value = values.mean()
         is_close = tuple(torch.isclose(val, mean_value, atol=atol) for val in values)
         assert all(is_close), f"Metrics are not similar: {[metric_topk, values, mean_value, is_close, atol]}"

@@ -120,13 +120,18 @@ class Accumulator:
                 gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
 
                 # todo 522 - add dropping duplicates here
+                ids = gathered_storage[INDEX_KEY].tolist()
+                ids, data = drop_duplicates_by_ids(ids=ids, data=gathered_storage["embeddings"], sort=True)
+                gathered_storage["embeddings"] = data
+                gathered_storage["idx"] = ids
 
                 assert set(gathered_params["keys_to_accumulate"]) == set(
                     self.keys_to_accumulate
                 ), "Keys of accumulators should be the same on each device"
 
                 synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
-                synced_accum.refresh(sum(gathered_params["num_samples"]))
+
+                synced_accum.refresh(len(gathered_storage["idx"]))
                 synced_accum.update_data(gathered_storage)
 
                 return synced_accum
