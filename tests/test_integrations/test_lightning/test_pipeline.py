@@ -2,49 +2,41 @@ import tempfile
 from functools import partial
 from typing import Any, Dict, List
 
-import numpy as np
 import pytest
 import pytorch_lightning as pl
 import torch
-from torch import BoolTensor, nn
+from torch import nn
 from torch.optim import Adam
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
-from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
-from oml.interfaces.datasets import IDatasetQueryGallery
+from oml.const import (
+    EMBEDDINGS_KEY,
+    INPUT_TENSORS_KEY,
+    IS_GALLERY_KEY,
+    IS_QUERY_KEY,
+    LABELS_KEY,
+)
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.samplers.balance import BalanceSampler
 
 
-class DummyQueryGalleryDataset(IDatasetQueryGallery):
+class DummyRetrievalDataset(Dataset):
     def __init__(self, labels: List[int], im_size: int):
         self.labels = labels
         self.im_size = im_size
-        self.extra_data = {}
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
         label = torch.tensor(self.labels[idx]).long()
-        return {INPUT_TENSORS_KEY: input_tensors, LABELS_KEY: label}
-
-    def get_query_ids(self) -> BoolTensor:
-        return torch.ones(len(self)).bool()
-
-    def get_gallery_ids(self) -> BoolTensor:
-        return torch.ones(len(self)).bool()
-
-    def get_labels(self) -> np.ndarray:
-        return np.array(self.labels)
+        return {INPUT_TENSORS_KEY: input_tensors, LABELS_KEY: label, IS_QUERY_KEY: True, IS_GALLERY_KEY: True}
 
     def __len__(self) -> int:
         return len(self.labels)
 
 
 class DummyCommonModule(pl.LightningModule):
-    embeddings_key = EMBEDDINGS_KEY
-
     def __init__(self, im_size: int):
         super().__init__()
         self.model = nn.Sequential(
@@ -56,7 +48,7 @@ class DummyCommonModule(pl.LightningModule):
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, *_: Any) -> Dict[str, Any]:
         embeddings = self.model(batch[INPUT_TENSORS_KEY])
-        return {**batch, **{self.embeddings_key: embeddings.detach().cpu()}}
+        return {**batch, **{EMBEDDINGS_KEY: embeddings.detach().cpu()}}
 
 
 class DummyExtractorModule(DummyCommonModule):
@@ -77,9 +69,8 @@ def create_retrieval_dataloader(
     assert num_samples % (n_labels * n_instances) == 0
 
     labels = [idx // n_instances for idx in range(num_samples)]
-    print(labels, "zzzz")
 
-    dataset = DummyQueryGalleryDataset(labels=labels, im_size=im_size)
+    dataset = DummyRetrievalDataset(labels=labels, im_size=im_size)
 
     sampler_retrieval = BalanceSampler(labels=labels, n_labels=n_labels, n_instances=n_instances)
     train_retrieval_loader = DataLoader(
@@ -90,11 +81,12 @@ def create_retrieval_dataloader(
     return train_retrieval_loader
 
 
-def create_retrieval_callback(
-    loader_idx: int, samples_in_getitem: int, dataset: IDatasetQueryGallery
-) -> MetricValCallback:
+def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> MetricValCallback:
     metric = EmbeddingMetrics(
-        dataset=dataset,
+        embeddings_key=EMBEDDINGS_KEY,
+        labels_key=LABELS_KEY,
+        is_query_key=IS_QUERY_KEY,
+        is_gallery_key=IS_GALLERY_KEY,
     )
     metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
     return metric_callback
@@ -118,6 +110,7 @@ def test_lightning(
 
     create_dataloader = partial(create_retrieval_dataloader, n_labels=n_labels, n_instances=n_instances)
     lightning_module = DummyExtractorModule(im_size=im_size)
+    create_callback = create_retrieval_callback
 
     train_dataloaders = [
         create_dataloader(num_samples=num_samples, im_size=im_size, num_workers=num_workers)
@@ -127,11 +120,7 @@ def test_lightning(
         create_dataloader(num_samples=num_samples, im_size=im_size, num_workers=num_workers)
         for _ in range(num_dataloaders)
     ]
-
-    callbacks = [
-        create_retrieval_callback(loader_idx=k, samples_in_getitem=samples_in_getitem, dataset=loader.dataset)
-        for k, loader in enumerate(val_dataloaders)
-    ]
+    callbacks = [create_callback(loader_idx=k, samples_in_getitem=samples_in_getitem) for k in range(num_dataloaders)]
 
     trainer = pl.Trainer(
         default_root_dir=tempfile.gettempdir(),

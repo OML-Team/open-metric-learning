@@ -1,29 +1,27 @@
 from argparse import ArgumentParser, Namespace
+from itertools import chain
 from random import randint, random, sample
 from typing import Any, Dict, List, Tuple
 
-import numpy as np
 import torch
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
-from torch import nn, LongTensor, BoolTensor
+from torch import nn
 from torch.optim import Adam
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
-from oml.const import TMP_PATH, INDEX_KEY
+from oml.const import INDEX_KEY, TMP_PATH
 from oml.ddp.utils import sync_dicts_ddp
-from oml.interfaces.datasets import IDatasetQueryGallery
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
-from oml.losses.triplet import TripletLossWithMiner
+from oml.losses.arcface import ArcFaceLoss
 from oml.metrics.embeddings import EmbeddingMetricsDDP
-from oml.samplers.balance import BalanceSampler
 from oml.utils.misc import set_global_seed
 
 
 def create_pred_and_gt_labels(
-        num_labels: int, min_max_instances: Tuple[int, int], err_prob: float
+    num_labels: int, min_max_instances: Tuple[int, int], err_prob: float
 ) -> Tuple[List[int], List[int]]:
     gt_labels = []
     pred_labels = []
@@ -40,15 +38,14 @@ def create_pred_and_gt_labels(
     return pred_labels, gt_labels
 
 
-class DummyDataset(IDatasetQueryGallery):
+class DummyDataset(Dataset):
     input_name = "input_tensors"
     labels_name = "labels"
     item_name = INDEX_KEY
 
     def __init__(self, pred_labels: List[int], gt_labels: List[int]):
-        self.gt_labels = np.array(gt_labels)
+        self.gt_labels = gt_labels
         self.pred_labels = pred_labels
-        self.extra_data = {}
 
     def __len__(self) -> int:
         return len(self.gt_labels)
@@ -57,29 +54,35 @@ class DummyDataset(IDatasetQueryGallery):
         return {
             self.input_name: self.pred_labels[item] * torch.ones((3, 10, 10)),
             self.labels_name: self.gt_labels[item],
+            "is_query": True,
+            "is_gallery": True,
             self.item_name: item,
         }
 
-    def get_labels(self) -> np.ndarray:
-        return np.array(self.gt_labels)
-
-    def get_query_ids(self) -> LongTensor:
-        return torch.arange(len(self)).long()
-
-    def get_gallery_ids(self) -> LongTensor:
-        return torch.arange(len(self)).long()
-
 
 class DummyModule(ModuleDDP):
-    embeddings_key = "embeddings"
+    save_path_ckpt_pattern = str(TMP_PATH / "ckpt_experiment_{experiment}.pth")
+    save_path_train_ids_pattern = str(TMP_PATH / "train_ids_{experiment}_{epoch}.pth")
+    save_path_val_ids_pattern = str(TMP_PATH / "val_ids_{experiment}_{epoch}.pth")
 
-    def __init__(self, loaders_val: EVAL_DATALOADERS, loaders_train: TRAIN_DATALOADERS):
+    def __init__(
+        self,
+        exp_num: int,
+        in_features: int,
+        num_classes: int,
+        loaders_val: EVAL_DATALOADERS,
+        loaders_train: TRAIN_DATALOADERS,
+    ):
         super().__init__(loaders_val=loaders_val, loaders_train=loaders_train)
+        self.exp_num = exp_num
         self.model = nn.Sequential(nn.AvgPool2d((10, 10)), nn.Flatten(), nn.Linear(3, 3, bias=False))
-        self.criterion = TripletLossWithMiner(margin=None)
+        self.criterion = ArcFaceLoss(in_features=in_features, num_classes=num_classes)
 
         self.training_step_outputs: List[Any] = []
         self.validation_step_outputs: List[Any] = []
+
+        self.len_train = len(loaders_train.dataset)
+        self.len_val = len(loaders_val.dataset)
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         if batch_idx == 0:
@@ -88,7 +91,7 @@ class DummyModule(ModuleDDP):
         embeddings = self.model(batch[DummyDataset.input_name])
 
         self.validation_step_outputs.append(batch)
-        return {**batch, **{self.embeddings_key: embeddings}}
+        return {**batch, **{"embeddings": embeddings}}
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         if batch_idx == 0:
@@ -103,9 +106,11 @@ class DummyModule(ModuleDDP):
 
     def on_train_epoch_end(self) -> None:
         self.check_outputs_of_epoch(self.training_step_outputs)
+        self.check_and_save_ids(self.training_step_outputs, "train")
 
     def on_validation_epoch_end(self) -> None:
         self.check_outputs_of_epoch(self.validation_step_outputs)
+        self.check_and_save_ids(self.validation_step_outputs, "val")
 
     def check_outputs_of_epoch(self, outputs: List[Any]) -> None:
         # Check point 1 of motivation
@@ -124,8 +129,34 @@ class DummyModule(ModuleDDP):
             max_num_not_unique_batches,
         )
 
+    def check_and_save_ids(self, outputs: List[Any], mode: str) -> None:
+        assert mode in ("train", "val")
+        world_size = self.trainer.world_size
+
+        len_dataset = self.len_train if mode == "train" else self.len_val
+
+        ids_batches = [batch_dict[INDEX_KEY].tolist() for batch_dict in outputs]
+        ids_flatten = list(chain(*ids_batches))
+
+        ids_flatten_synced = sync_dicts_ddp({"ids_flatten": ids_flatten}, world_size)["ids_flatten"]
+        ids_flatten_synced = list(set(ids_flatten_synced))  # we drop duplicates appeared because of DDP padding
+
+        n_ids = len(ids_flatten_synced)
+        n_ids_unique = len(set(ids_flatten_synced))
+        assert n_ids == n_ids_unique == len_dataset, (n_ids, n_ids_unique, len_dataset)
+
+        ids_per_step = {step: ids for step, ids in enumerate(ids_batches)}
+        ids_per_step_synced = sync_dicts_ddp(ids_per_step, world_size)  # type: ignore
+        ids_per_step_synced = {step: sorted(synced_ids) for step, synced_ids in ids_per_step_synced.items()}
+
+        pattern = self.save_path_train_ids_pattern if mode == "train" else self.save_path_val_ids_pattern
+        torch.save(ids_per_step_synced, pattern.format(experiment=self.exp_num, epoch=self.trainer.current_epoch))
+
     def configure_optimizers(self) -> Any:
         return Adam(params=self.parameters(), lr=0.5)
+
+    def on_train_end(self) -> None:
+        torch.save(self.model, self.save_path_ckpt_pattern.format(experiment=self.exp_num))
 
 
 class MetricValCallbackWithSaving(MetricValCallbackDDP):
@@ -157,6 +188,7 @@ def experiment(args: Namespace) -> None:
     max_epochs = args.max_epochs
     num_labels = args.num_labels
     batch_size = args.batch_size
+    exp_num = args.exp_num
 
     pred_labels, gt_labels = create_pred_and_gt_labels(num_labels=num_labels, min_max_instances=(3, 5), err_prob=0.3)
 
@@ -164,17 +196,22 @@ def experiment(args: Namespace) -> None:
     val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size)
 
     train_dataset = DummyDataset(gt_labels=gt_labels, pred_labels=gt_labels)
-    batch_sampler = BalanceSampler(labels=gt_labels, n_labels=2, n_instances=2)
-    train_dataloader = DataLoader(dataset=train_dataset, batch_sampler=batch_sampler)
+    train_dataloader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=batch_size)
 
-    emb_metrics = EmbeddingMetricsDDP(val_dataset, cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))
+    emb_metrics = EmbeddingMetricsDDP(cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))
     val_callback = MetricValCallbackWithSaving(
         metric=emb_metrics, devices=devices, num_labels=num_labels, batch_size=batch_size
     )
 
     trainer_engine_params = parse_engine_params_from_config({"accelerator": "cpu", "devices": devices})
 
-    pl_model = DummyModule(loaders_val=val_dataloader, loaders_train=train_dataloader)
+    pl_model = DummyModule(
+        in_features=3,
+        num_classes=num_labels,
+        exp_num=exp_num,
+        loaders_val=val_dataloader,
+        loaders_train=train_dataloader,
+    )
 
     trainer = Trainer(
         callbacks=[val_callback],
@@ -194,6 +231,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument("--max_epochs", type=int)
     parser.add_argument("--num_labels", type=int)
     parser.add_argument("--batch_size", type=int)
+    parser.add_argument("--exp_num", type=int, default=0)
     return parser
 
 
