@@ -10,7 +10,7 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 
-from oml.const import TMP_PATH, INDEX_KEY
+from oml.const import INDEX_KEY, TMP_PATH
 from oml.ddp.utils import sync_dicts_ddp
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.lightning.modules.ddp import ModuleDDP
@@ -21,7 +21,7 @@ from oml.utils.misc import set_global_seed
 
 
 def create_pred_and_gt_labels(
-        num_labels: int, min_max_instances: Tuple[int, int], err_prob: float
+    num_labels: int, min_max_instances: Tuple[int, int], err_prob: float
 ) -> Tuple[List[int], List[int]]:
     gt_labels = []
     pred_labels = []
@@ -65,8 +65,14 @@ class DummyModule(ModuleDDP):
     save_path_train_ids_pattern = str(TMP_PATH / "train_ids_{experiment}_{epoch}.pth")
     save_path_val_ids_pattern = str(TMP_PATH / "val_ids_{experiment}_{epoch}.pth")
 
-    def __init__(self, exp_num: int, in_features, num_classes, loaders_val: EVAL_DATALOADERS,
-                 loaders_train: TRAIN_DATALOADERS):
+    def __init__(
+        self,
+        exp_num: int,
+        in_features: int,
+        num_classes: int,
+        loaders_val: EVAL_DATALOADERS,
+        loaders_train: TRAIN_DATALOADERS,
+    ):
         super().__init__(loaders_val=loaders_val, loaders_train=loaders_train)
         self.exp_num = exp_num
         self.model = nn.Sequential(nn.AvgPool2d((10, 10)), nn.Flatten(), nn.Linear(3, 3, bias=False))
@@ -133,7 +139,7 @@ class DummyModule(ModuleDDP):
         ids_flatten = list(chain(*ids_batches))
 
         ids_flatten_synced = sync_dicts_ddp({"ids_flatten": ids_flatten}, world_size)["ids_flatten"]
-        ids_flatten_synced = (list(set(ids_flatten_synced)))  # we drop duplicates appeared because of DDP padding
+        ids_flatten_synced = list(set(ids_flatten_synced))  # we drop duplicates appeared because of DDP padding
 
         n_ids = len(ids_flatten_synced)
         n_ids_unique = len(set(ids_flatten_synced))
@@ -149,7 +155,7 @@ class DummyModule(ModuleDDP):
     def configure_optimizers(self) -> Any:
         return Adam(params=self.parameters(), lr=0.5)
 
-    def on_train_end(self):
+    def on_train_end(self) -> None:
         torch.save(self.model, self.save_path_ckpt_pattern.format(experiment=self.exp_num))
 
 
@@ -199,8 +205,13 @@ def experiment(args: Namespace) -> None:
 
     trainer_engine_params = parse_engine_params_from_config({"accelerator": "cpu", "devices": devices})
 
-    pl_model = DummyModule(in_features=3, num_classes=num_labels, exp_num=exp_num, loaders_val=val_dataloader,
-                           loaders_train=train_dataloader)
+    pl_model = DummyModule(
+        in_features=3,
+        num_classes=num_labels,
+        exp_num=exp_num,
+        loaders_val=val_dataloader,
+        loaders_train=train_dataloader,
+    )
 
     trainer = Trainer(
         callbacks=[val_callback],

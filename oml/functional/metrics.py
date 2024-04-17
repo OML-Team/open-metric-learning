@@ -13,14 +13,14 @@ TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
 
 def calc_retrieval_metrics(
-        distances: Tensor,
-        mask_gt: Tensor,
-        mask_to_ignore: Optional[Tensor] = None,
-        cmc_top_k: Tuple[int, ...] = (5,),
-        precision_top_k: Tuple[int, ...] = (5,),
-        map_top_k: Tuple[int, ...] = (5,),
-        fmr_vals: Tuple[int, ...] = (1,),
-        reduce: bool = True,
+    distances: Tensor,
+    mask_gt: Tensor,
+    mask_to_ignore: Optional[Tensor] = None,
+    cmc_top_k: Tuple[int, ...] = (5,),
+    precision_top_k: Tuple[int, ...] = (5,),
+    map_top_k: Tuple[int, ...] = (5,),
+    fmr_vals: Tuple[int, ...] = (1,),
+    reduce: bool = True,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -165,7 +165,7 @@ def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor
 
 
 def calc_mask_to_ignore(
-        is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
+    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
 ) -> Tensor:
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
@@ -530,7 +530,7 @@ def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor
 
 
 def extract_pos_neg_dists(
-        distances: Tensor, mask_gt: Tensor, mask_to_ignore: Optional[Tensor]
+    distances: Tensor, mask_gt: Tensor, mask_to_ignore: Optional[Tensor]
 ) -> Tuple[Tensor, Tensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.

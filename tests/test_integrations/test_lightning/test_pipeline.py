@@ -64,7 +64,7 @@ class DummyExtractorModule(DummyCommonModule):
 
 
 def create_retrieval_dataloader(
-        num_samples: int, im_size: int, n_labels: int, n_instances: int, num_workers: int
+    num_samples: int, im_size: int, n_labels: int, n_instances: int, num_workers: int
 ) -> DataLoader:
     assert num_samples % (n_labels * n_instances) == 0
 
@@ -101,7 +101,7 @@ def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> Metri
 )
 @pytest.mark.parametrize("num_dataloaders", [1, 2])
 def test_lightning(
-        samples_in_getitem: int, is_error_expected: bool, num_dataloaders: int, pipeline: str, num_workers: int
+    samples_in_getitem: int, is_error_expected: bool, num_dataloaders: int, pipeline: str, num_workers: int
 ) -> None:
     num_samples = 12
     im_size = 6
