@@ -129,12 +129,12 @@ TData = Tuple[List[Any], BoolTensor, FloatTensor, LongTensor, Tensor, np.ndarray
 
 def unique_by_ids(ids: List[int], data: TData) -> Tuple[List[int], TData]:
     """
-    The function sort data by the corresponding ids and drops duplicates.
+    The function sort data by the corresponding indices and drops duplicates.
     Thus, if there are multiple occurrences of the same id, it takes the first one.
 
     Args:
-        ids: Indices of data records with the length of ``N``
-        data: Data records with the lengths of ``N``
+        ids: Indices of data with the length of ``N``
+        data: Data with the length of ``N``
 
     Returns:
         Unique data records with their ids in the sorted order without duplicates

@@ -52,11 +52,7 @@ def _inference(
     ids, outputs = unique_by_ids(ids=ids, data=outputs)
 
     assert len(outputs) == len(dataset), "Data was not collected correctly after DDP sync."
-    assert list(range(len(dataset))) == ids, (
-        list(range(len(dataset))),
-        ids,
-        "zzz",
-    )  # , "Data was not collected correctly after DDP sync."
+    assert list(range(len(dataset))) == ids, "Data was not collected correctly after DDP sync."
 
     return outputs
 

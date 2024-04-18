@@ -86,7 +86,7 @@ class Accumulator:
             data_dict: We will accumulate data getting values via ``self.keys_to_accumulate``. All elements
                        of the dictionary have to have the same size.
             indices: Global indices of the elements in your batch of data. If provided, the accumulator
-                     will remove all the accumulated duplicates and return the elements in sorted order.
+                     will remove accumulated duplicates and return the elements in the sorted order after ``.sync()``.
                      Indices may be useful in DDP (because data is gathered shuffled, additionally you may also get
                      some duplicates due to padding). In the single device regime it's also useful if you accumulate
                      data in shuffled order.
@@ -125,7 +125,7 @@ class Accumulator:
 
     def sync(self) -> "Accumulator":
         """
-        The method drops duplicates if ids have been provided in ``self.update_data``.
+        The method drops duplicates and sort elements by indices if they have been provided in ``self.update_data()``.
         In DDP it also gathers data collected on several devices.
 
         """
@@ -157,7 +157,7 @@ class Accumulator:
             indices = None
 
         if not need_rebuilding:
-            # If we found no duplicates and there are no multiple devices, we may save time & memory on re-creating
+            # If indices were not provided & it's not DDP we may save time & memory avoiding re-building accumulator
             return self
 
         synced_accum = Accumulator(tuple(set(params["keys_to_accumulate"])))
