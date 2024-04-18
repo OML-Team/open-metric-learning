@@ -5,13 +5,13 @@ import torch
 from torchvision.ops import MLP
 
 from oml.const import STORAGE_CKPTS
-from oml.interfaces.models import IExtractor, IFreezable
-from oml.models.utils import (
+from oml.interfaces import IExtractor, IFreezable
+from oml.models import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )
-from oml.models.vit_dino.extractor import ViTExtractor
-from oml.utils.io import download_checkpoint
+from oml.models import ViTExtractor
+from oml.utils import download_checkpoint
 
 
 class ExtractorWithMLP(IExtractor, IFreezable):

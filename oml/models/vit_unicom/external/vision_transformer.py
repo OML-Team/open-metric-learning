@@ -6,7 +6,7 @@ import warnings
 
 import torch
 import torch.nn as nn
-from torch.utils.checkpoint import checkpoint
+from torch.utils import checkpoint
 from torchvision.transforms import (
     CenterCrop,
     Compose,

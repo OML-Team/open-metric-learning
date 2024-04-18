@@ -3,13 +3,13 @@ from typing import Any, Dict, List, Optional, Union
 
 import torch
 from torch import Tensor, nn
-from torch.nn.modules.activation import Sigmoid
+from torch.nn import Sigmoid
 from torchvision.ops import MLP
 
-from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
-from oml.models.utils import remove_prefix_from_state_dict
-from oml.utils.io import download_checkpoint
-from oml.utils.misc_torch import elementwise_dist
+from oml.interfaces import IExtractor, IFreezable, IPairwiseModel
+from oml.models import remove_prefix_from_state_dict
+from oml.utils import download_checkpoint
+from oml.utils import elementwise_dist
 
 
 class LinearTrivialDistanceSiamese(IPairwiseModel):

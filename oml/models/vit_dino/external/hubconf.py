@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import torch
-from torchvision.models.resnet import resnet50
+from torchvision.models import resnet50
 
 import oml.models.vit_dino.external.vision_transformer as vits
 
