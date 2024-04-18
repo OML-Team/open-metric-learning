@@ -4,8 +4,8 @@ from typing import Dict, Iterator, List, Union
 
 import numpy as np
 
-from oml.interfaces.samplers import IBatchSampler
-from oml.utils.misc import smart_sample
+from oml.interfaces import IBatchSampler
+from oml.utils import smart_sample
 
 
 class CategoryBalanceSampler(IBatchSampler):
