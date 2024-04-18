@@ -6,7 +6,7 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import MLP
 
-from oml.functional.label_smoothing import label_smoothing
+from oml.functional import label_smoothing
 
 
 class ArcFaceLoss(nn.Module):
