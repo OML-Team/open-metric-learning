@@ -4,9 +4,9 @@ from typing import Dict, List, Optional, Tuple
 import torch
 from torch import Tensor, no_grad
 
-from oml.interfaces.miners import ITripletsMiner
-from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
-from oml.utils.misc_torch import OnlineAvgDict
+from oml.interfaces import ITripletsMiner
+from oml.miners import NHardTripletsMiner
+from oml.utils import OnlineAvgDict
 
 
 class MinerWithBank(ITripletsMiner):

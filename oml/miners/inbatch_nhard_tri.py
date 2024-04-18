@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
-from oml.utils.misc_torch import pairwise_dist, take_2d
+from oml.interfaces import ITripletsMinerInBatch, TTripletsIds
+from oml.utils import pairwise_dist, take_2d
 
 
 class NHardTripletsMiner(ITripletsMinerInBatch):

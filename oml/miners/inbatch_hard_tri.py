@@ -3,9 +3,9 @@ from typing import List
 import numpy as np
 from torch import Tensor
 
-from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
-from oml.utils.misc import find_value_ids
-from oml.utils.misc_torch import pairwise_dist
+from oml.interfaces import ITripletsMinerInBatch, TTripletsIds
+from oml.utils import find_value_ids
+from oml.utils import pairwise_dist
 
 
 class HardTripletsMiner(ITripletsMinerInBatch):
