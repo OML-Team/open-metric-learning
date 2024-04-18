@@ -7,11 +7,7 @@ from tqdm.auto import tqdm
 
 from oml.ddp.patching import patch_dataloader_to_ddp
 from oml.ddp.utils import get_world_size_safe, is_ddp, sync_dicts_ddp
-from oml.utils.misc_torch import (
-    drop_duplicates_by_ids,
-    get_device,
-    temporary_setting_model_mode,
-)
+from oml.utils.misc_torch import get_device, temporary_setting_model_mode, unique_by_ids
 
 
 @torch.no_grad()
@@ -53,10 +49,14 @@ def _inference(
     data_synced = sync_dicts_ddp(data_to_sync, world_size=get_world_size_safe())
     outputs, ids = data_synced["outputs"], data_synced["ids"]
 
-    ids, outputs = drop_duplicates_by_ids(ids=ids, data=outputs, sort=True)
+    ids, outputs = unique_by_ids(ids=ids, data=outputs)
 
     assert len(outputs) == len(dataset), "Data was not collected correctly after DDP sync."
-    assert list(range(len(dataset))) == ids, "Data was not collected correctly after DDP sync."
+    assert list(range(len(dataset))) == ids, (
+        list(range(len(dataset))),
+        ids,
+        "zzz",
+    )  # , "Data was not collected correctly after DDP sync."
 
     return outputs
 

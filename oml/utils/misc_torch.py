@@ -127,39 +127,30 @@ def _check_is_sequence(val: Any) -> bool:
 TData = Tuple[List[Any], BoolTensor, FloatTensor, LongTensor, Tensor, np.ndarray]
 
 
-def drop_duplicates_by_ids(ids: List[int], data: TData, sort: bool = True) -> Tuple[List[int], TData]:
+def unique_by_ids(ids: List[int], data: TData) -> Tuple[List[int], TData]:
     """
-    The function returns rows of data that have unique ids.
+    The function sort data by the corresponding ids and drops duplicates.
     Thus, if there are multiple occurrences of the same id, it takes the first one.
 
     Args:
-        ids: Identifiers of data records with the length of ``N``
+        ids: Indices of data records with the length of ``N``
         data: Data records with the lengths of ``N``
-        sort: Set ``True`` to return unique records sorted by their ids
 
     Returns:
-        Unique data records with their ids in the original container
+        Unique data records with their ids in the sorted order without duplicates
 
     """
     assert len(ids) == len(data)
     assert isinstance(ids, list) and len(ids) >= 1
 
-    positions_unq = np.unique(ids, return_index=True)[1].tolist()
-
-    if positions_unq == ids:
-        return ids, data
-
-    if sort:
-        positions_unq = sorted(positions_unq)
-
-    ids = [ids[i] for i in positions_unq]
+    ids_unq, positions_unq = np.unique(ids, return_index=True)
 
     if isinstance(data, (list, tuple)):
         data = [data[i] for i in positions_unq]  # type: ignore
     else:
         data = data[positions_unq]
 
-    return ids, data
+    return ids_unq.tolist(), data
 
 
 @contextmanager
@@ -474,6 +465,6 @@ __all__ = [
     "take_2d",
     "assign_2d",
     "PCA",
-    "drop_duplicates_by_ids",
+    "unique_by_ids",
     "normalise",
 ]

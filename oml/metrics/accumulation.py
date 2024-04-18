@@ -5,7 +5,7 @@ import torch
 from torch import BoolTensor, FloatTensor, LongTensor, Tensor
 
 from oml.ddp.utils import get_world_size_safe, sync_dicts_ddp
-from oml.utils.misc_torch import drop_duplicates_by_ids
+from oml.utils.misc_torch import unique_by_ids
 
 TStorage = Dict[str, Union[FloatTensor, BoolTensor, LongTensor, Tensor, np.ndarray, List[Any]]]
 
@@ -150,7 +150,7 @@ class Accumulator:
 
         if self.indices_key in storage:
             for key, data in storage.items():
-                storage[key] = drop_duplicates_by_ids(storage[self.indices_key], data, sort=True)[1]  # type: ignore
+                storage[key] = unique_by_ids(storage[self.indices_key], data)[1]  # type: ignore
             indices = storage[self.indices_key]
             need_rebuilding = True
         else:

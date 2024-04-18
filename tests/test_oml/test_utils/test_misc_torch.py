@@ -8,9 +8,9 @@ from oml.utils.misc_torch import (
     PCA,
     TData,
     assign_2d,
-    drop_duplicates_by_ids,
     elementwise_dist,
     take_2d,
+    unique_by_ids,
 )
 
 
@@ -72,9 +72,10 @@ def test_assign_2d() -> None:
 @pytest.mark.parametrize("ids,data,ids_expected,data_expected", [
     (
             # ids
-            [0, 1, 1, 0, 2],
+            [3, 0, 1, 1, 0, 2],
             # data
             torch.tensor([
+                [0.1, 0.1],
                 [0.3, 0.4],
                 [0.5, 0.3],
                 [0.5, 0.3],
@@ -82,12 +83,14 @@ def test_assign_2d() -> None:
                 [0.9, 0.8]
             ]),
             # ids expected
-            [0, 1, 2],
+            [0, 1, 2, 3],
             # data expected
             torch.tensor(
                 [[0.3, 0.4],
                  [0.5, 0.3],
-                 [0.9, 0.8]])
+                 [0.9, 0.8],
+                 [0.1, 0.1]
+                 ])
     ),
     (
             # ids
@@ -168,7 +171,7 @@ def test_assign_2d() -> None:
     )
 ])
 def test_drop_duplicates_by_ids(ids: List[int], data: TData, ids_expected: List[int], data_expected: TData) -> None:
-    ids_calculated, data_calculated = drop_duplicates_by_ids(ids=ids, data=data, sort=True)
+    ids_calculated, data_calculated = unique_by_ids(ids=ids, data=data)
     assert ids_calculated == ids_expected, (ids_calculated, ids_expected)
 
     if isinstance(data_expected, np.ndarray):

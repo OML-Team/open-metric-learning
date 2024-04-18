@@ -17,9 +17,19 @@ def test_ddp_accumulator(world_size: int, device: str, create_duplicate: bool) -
     run_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device, create_duplicate))
 
 
+@pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
+@pytest.mark.parametrize("create_duplicate", [True, False])
+def test_fake_ddp_accumulator(device: str, create_duplicate: bool) -> None:
+    # we expect the same behaviour outside DDP
+    check_accumulator(rank=0, world_size=1, device=device, create_duplicate=create_duplicate)
+
+
 def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplicate: bool) -> None:
     init_ddp(rank, world_size)
+    check_accumulator(rank, world_size, device, create_duplicate)
 
+
+def check_accumulator(rank: int, world_size: int, device: str, create_duplicate: bool) -> None:
     value = rank + 1
     size = value
 
@@ -49,8 +59,6 @@ def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplic
     assert acc_synced.is_storage_full()
 
     len_after_sync = sum(range(1, world_size + 1))
-
-    # print(synced_data, "zzzz")
 
     indices_synced = synced_data[acc.indices_key]
 
