@@ -3,9 +3,8 @@ from typing import Any, Dict, List, Sequence, Union, Optional
 import numpy as np
 import torch
 from torch import Tensor, FloatTensor, BoolTensor, LongTensor
-from torch.distributed import get_world_size
 
-from oml.ddp.utils import is_ddp, sync_dicts_ddp
+from oml.ddp.utils import sync_dicts_ddp, get_world_size_safe
 from oml.utils.misc_torch import drop_duplicates_by_ids
 
 TStorage = Dict[str, Union[FloatTensor, BoolTensor, LongTensor, Tensor, np.ndarray, List[Any]]]
@@ -36,7 +35,9 @@ class Accumulator:
         This method refreshes the state.
 
         Args:
-            num_samples:  The total number of elements you are going to collect (for memory allocation)
+            num_samples:  The total number of elements you are going to collect (for memory allocation).
+                          If you've provided ``ids`` in ``self.update_data`` method, this number may decrease
+                          after ``sync`` because of dropped duplicates.
         """
         assert isinstance(num_samples, int) and num_samples > 0
         self.num_samples = num_samples  # type: ignore
@@ -121,56 +122,44 @@ class Accumulator:
         return self.num_samples == self.collected_samples
 
     def sync(self) -> "Accumulator":
+        """
+        The method drops duplicates if ids have been provided in ``self.update_data``.
+        In DDP it also gathers data collected on several devices.
+
+        """
         # TODO: add option to broadcast instead of sync to avoid duplicating data
         if not self.is_storage_full():
             raise ValueError("Only full storages could be synced")
 
-        if is_ddp():
-            world_size = get_world_size()
-            if world_size == 1:
-                return self
-            else:
-                params = {"num_samples": [self.num_samples], "keys_to_accumulate": self.keys_to_accumulate}
+        params = {"num_samples": [self.num_samples], "keys_to_accumulate": self.keys_to_accumulate}
+        storage = self._storage
 
-                gathered_params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
-                gathered_storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
+        world_size = get_world_size_safe()
+        need_rebuilding = False
 
-                if self.indices_key in self.storage:
-                    # Drop duplicates and restore order of elements if their indices have been provided
-                    ids = gathered_storage[self.indices_key]
-                    ids_unique = drop_duplicates_by_ids(ids, data=torch.tensor(ids), sort=True)[0]
-                    for key, data in gathered_storage.items():
-                        gathered_storage[key] = drop_duplicates_by_ids(ids, data=data, sort=True)[1]
+        if world_size > 1:
+            params = sync_dicts_ddp(params, world_size=world_size, device="cpu")
+            storage = sync_dicts_ddp(self._storage, world_size=world_size, device="cpu")
+            need_rebuilding = True
 
-                    print("mmm", gathered_storage[self.indices_key])
+            assert set(params["keys_to_accumulate"]) == set(
+                self.keys_to_accumulate
+            ), "Keys of accumulators should be the same on each device"
 
-                    num_samples_total = len(ids_unique)
-                else:
-                    num_samples_total = sum(gathered_params["num_samples"])
+        if self.indices_key in storage:
+            for key, data in storage.items():
+                storage[key] = drop_duplicates_by_ids(storage[self.indices_key], data, sort=True)[1]  # type: ignore
+            need_rebuilding = True
 
-                assert set(gathered_params["keys_to_accumulate"]) == set(
-                    self.keys_to_accumulate
-                ), "Keys of accumulators should be the same on each device"
-
-                synced_accum = Accumulator(list(set(gathered_params["keys_to_accumulate"])))
-                synced_accum.refresh(num_samples=num_samples_total)
-                synced_accum.update_data(gathered_storage)
-
-                return synced_accum
-        else:
-
-            # todo: it should also work without ddp, and ddp with worldsize=1 is not the same as no ddp!
-            if self.indices_key in self.storage:
-                # Drop duplicates and restore order of elements if their indices have been provided
-                ids = self._storage[self.indices_key]
-                ids_unique = drop_duplicates_by_ids(ids, data=torch.tensor(ids), sort=True)[0]
-                for key, data in self._storage.items():
-                    self._storage[key] = drop_duplicates_by_ids(ids, data=data, sort=True)[1]
-
-                self._collected_samples = len(ids_unique)
-                self.num_samples = len(ids_unique)
-
+        if not need_rebuilding:
+            # If we found no duplicates and there are no multiple devices, we may save time & memory on re-creating
             return self
+
+        synced_accum = Accumulator(list(set(params["keys_to_accumulate"])))
+        synced_accum.refresh(num_samples=len(storage[list(storage.keys())[0]]))
+        synced_accum.update_data(storage)
+
+        return synced_accum
 
 
 __all__ = ["TStorage", "Accumulator"]

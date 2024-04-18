@@ -3,22 +3,20 @@ from itertools import chain
 import numpy as np
 import pytest
 import torch
-from torch.distributed import get_rank
-from time import sleep
 
 from oml.metrics.accumulation import Accumulator
-
 from .utils import init_ddp, run_in_ddp
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("world_size", [1])  # todo
+@pytest.mark.parametrize("world_size", [1, 2, 3])
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
-def test_ddp_accumulator(world_size: int, device: str) -> None:
-    run_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device,))
+@pytest.mark.parametrize("create_duplicate", [True, False])
+def test_ddp_accumulator(world_size: int, device: str, create_duplicate: bool) -> None:
+    run_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device, create_duplicate))
 
 
-def check_ddp_accumulator(rank: int, world_size: int, device: str) -> None:
+def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplicate: bool) -> None:
     init_ddp(rank, world_size)
 
     value = rank + 1
@@ -30,8 +28,8 @@ def check_ddp_accumulator(rank: int, world_size: int, device: str) -> None:
         2: [3, 4, 5]
     }[rank]
 
-    if rank == 0:
-        # let's pretend we doubled our single record on rank 0
+    if create_duplicate and (rank == 0):
+        # let's pretend we doubled our single record at the rank 0
         size = 2
         indices = [0, 0]
 
@@ -56,8 +54,6 @@ def check_ddp_accumulator(rank: int, world_size: int, device: str) -> None:
     len_after_sync = sum(range(1, world_size + 1))
 
     indices_synced = synced_data[acc.indices_key]
-
-    print("zzz", acc_synced.storage)
 
     assert len_after_sync == synced_num_samples
 

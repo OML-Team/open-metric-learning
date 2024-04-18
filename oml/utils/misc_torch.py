@@ -5,7 +5,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-from torch import Tensor, cdist
+from torch import Tensor, cdist, BoolTensor, FloatTensor, LongTensor
 
 from oml.utils.misc import find_first_occurrences
 
@@ -126,39 +126,40 @@ def _check_is_sequence(val: Any) -> bool:
         return False
 
 
-def drop_duplicates_by_ids(ids: List[int], data: Any, sort: bool = True) -> Tuple[List[int], Tensor]:
+TData = Tuple[List[Any], BoolTensor, FloatTensor, LongTensor, Tensor, np.ndarray]
+
+
+def drop_duplicates_by_ids(ids: List[int], data: TData, sort: bool = True) -> Tuple[List[int], TData]:
     """
     The function returns rows of data that have unique ids.
-    Thus, if there are multiple occurrences of some id, it leaves the first one.
+    Thus, if there are multiple occurrences of the same id, it takes the first one.
 
     Args:
         ids: Identifiers of data records with the length of ``N``
-        data: Tensor of data records in the shape of ``[N, *]``
+        data: Data records with the lengths of ``N``
         sort: Set ``True`` to return unique records sorted by their ids
 
     Returns:
-        Unique data records with their ids
+        Unique data records with their ids in the original container
 
     """
     assert len(ids) == len(data)
-    assert isinstance(ids, list)
+    assert isinstance(ids, list) and len(ids) >= 1
 
-    ids_first = find_first_occurrences(ids)
-    ids = [ids[i] for i in ids_first]
+    positions_unq = np.unique(ids, return_index=True)[1].tolist()
 
-    if isinstance(data, (List, Tuple)):
-        data = [data[i] for i in ids_first]
-    else:
-        data = data[ids_first]
+    if positions_unq == ids:
+        return ids, data
 
     if sort:
-        ii_permute = torch.argsort(torch.tensor(ids))
-        ids = [ids[i] for i in ii_permute]
+        positions_unq = sorted(positions_unq)
 
-        if isinstance(data, (List, Tuple)):
-            data = [data[i] for i in ii_permute]
-        else:
-            data = data[ii_permute]
+    ids = [ids[i] for i in positions_unq]
+
+    if isinstance(data, (List, Tuple)):
+        data = [data[i] for i in positions_unq]
+    else:
+        data = data[positions_unq]  # Tensor, np.ndarray
 
     return ids, data
 
@@ -371,7 +372,7 @@ class PCA:
         # if there are more embeddings than its dimension, then we will not perform full matrices evaluation
         full_matrices = embeddings.shape[0] < embeddings.shape[1]
         _, self.singular_values, self.components = torch.linalg.svd(embeddings, full_matrices=full_matrices)
-        self.explained_variance = self.singular_values**2 / (n_samples - 1)
+        self.explained_variance = self.singular_values ** 2 / (n_samples - 1)
         self.explained_variance_ratio = self.explained_variance / self.explained_variance.sum()
 
         # Make components deterministic.
