@@ -5,9 +5,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-from torch import Tensor, cdist, BoolTensor, FloatTensor, LongTensor
-
-from oml.utils.misc import find_first_occurrences
+from torch import BoolTensor, FloatTensor, LongTensor, Tensor, cdist
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
@@ -156,10 +154,10 @@ def drop_duplicates_by_ids(ids: List[int], data: TData, sort: bool = True) -> Tu
 
     ids = [ids[i] for i in positions_unq]
 
-    if isinstance(data, (List, Tuple)):
-        data = [data[i] for i in positions_unq]
+    if isinstance(data, (list, tuple)):
+        data = [data[i] for i in positions_unq]  # type: ignore
     else:
-        data = data[positions_unq]  # Tensor, np.ndarray
+        data = data[positions_unq]
 
     return ids, data
 
@@ -372,7 +370,7 @@ class PCA:
         # if there are more embeddings than its dimension, then we will not perform full matrices evaluation
         full_matrices = embeddings.shape[0] < embeddings.shape[1]
         _, self.singular_values, self.components = torch.linalg.svd(embeddings, full_matrices=full_matrices)
-        self.explained_variance = self.singular_values ** 2 / (n_samples - 1)
+        self.explained_variance = self.singular_values**2 / (n_samples - 1)
         self.explained_variance_ratio = self.explained_variance / self.explained_variance.sum()
 
         # Make components deterministic.

@@ -25,7 +25,7 @@ def get_data(n: int) -> Any:
 def test_accumulator(n: int) -> None:
     data, data_as_batches = get_data(n)
 
-    acc = Accumulator(keys_to_accumulate=list(data.keys()))
+    acc = Accumulator(keys_to_accumulate=tuple(data.keys()))
 
     for _ in range(3):
 

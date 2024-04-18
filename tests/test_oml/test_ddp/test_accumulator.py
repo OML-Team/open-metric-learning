@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from oml.metrics.accumulation import Accumulator
+
 from .utils import init_ddp, run_in_ddp
 
 
@@ -22,11 +23,7 @@ def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplic
     value = rank + 1
     size = value
 
-    indices = {
-        0: [0],
-        1: [1, 2],
-        2: [3, 4, 5]
-    }[rank]
+    indices = {0: [0], 1: [1, 2], 2: [3, 4, 5]}[rank]
 
     if create_duplicate and (rank == 0):
         # let's pretend we doubled our single record at the rank 0
@@ -41,7 +38,7 @@ def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplic
         "numpy_3d": value * np.ones((size, 4, 5)),
     }
 
-    acc = Accumulator(keys_to_accumulate=list(data.keys()))
+    acc = Accumulator(keys_to_accumulate=tuple(data.keys()))
     acc.refresh(len(data["list"]))
     acc.update_data(data, indices=indices)
 
@@ -52,6 +49,8 @@ def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplic
     assert acc_synced.is_storage_full()
 
     len_after_sync = sum(range(1, world_size + 1))
+
+    # print(synced_data, "zzzz")
 
     indices_synced = synced_data[acc.indices_key]
 

@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import List
 
 import numpy as np
 import pytest
@@ -6,10 +6,11 @@ import torch
 
 from oml.utils.misc_torch import (
     PCA,
+    TData,
     assign_2d,
     drop_duplicates_by_ids,
     elementwise_dist,
-    take_2d, TData,
+    take_2d,
 )
 
 
