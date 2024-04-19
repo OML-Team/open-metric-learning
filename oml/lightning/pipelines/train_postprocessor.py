@@ -11,7 +11,7 @@ from torch import device as tdevice
 from torch.utils.data import DataLoader
 
 from oml.const import BBOXES_COLUMNS, EMBEDDINGS_KEY, TCfg
-from oml.datasets.base import ImagesDatasetLabeled, ImagesDatasetQueryGalleryLabeled
+from oml.datasets.base import ImageDatasetLabeled, ImageDatasetQueryGalleryLabeled
 from oml.inference.flat import inference_on_dataframe
 from oml.interfaces.models import IPairwiseModel
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
@@ -81,13 +81,13 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         use_fp16=int(cfg.get("precision", 32)) == 16,
     )
 
-    train_dataset = ImagesDatasetLabeled(
+    train_dataset = ImageDatasetLabeled(
         df=df_train,
         transform=get_transforms_by_cfg(cfg["transforms_train"]),
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
-    valid_dataset = ImagesDatasetQueryGalleryLabeled(
+    valid_dataset = ImageDatasetQueryGalleryLabeled(
         df=df_val,
         # we don't care about transforms, since the only goal of this dataset is to deliver embeddings
         transform=get_normalisation_resize_torch(im_size=8),

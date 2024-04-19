@@ -75,7 +75,7 @@ def parse_bboxes(df: pd.DataFrame) -> Optional[TBBoxes]:
     return bboxes
 
 
-class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
+class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
     """
     The base class that handles image specific logic.
 
@@ -218,7 +218,7 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
         return self.x1_key, self.y1_key, self.x2_key, self.y2_key
 
 
-class ImagesDatasetLabeled(ImagesBaseDataset, IDatasetLabeled):
+class ImageDatasetLabeled(ImageBaseDataset, IDatasetLabeled):
     """
     The dataset of images having their ground truth labels.
 
@@ -298,7 +298,7 @@ class ImagesDatasetLabeled(ImagesBaseDataset, IDatasetLabeled):
         return label2category
 
 
-class ImagesDatasetQueryGalleryLabeled(ImagesDatasetLabeled, IDatasetQueryGalleryLabeled):
+class ImageDatasetQueryGalleryLabeled(ImageDatasetLabeled, IDatasetQueryGalleryLabeled):
     """
     The dataset of images having `query`/`gallery` split.
 
@@ -399,7 +399,7 @@ def get_retrieval_images_datasets(
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
     df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
 
-    train_dataset = ImagesDatasetLabeled(
+    train_dataset = ImageDatasetLabeled(
         df=df_train,
         dataset_root=dataset_root,
         transform=transforms_train,
@@ -409,7 +409,7 @@ def get_retrieval_images_datasets(
 
     # val (query + gallery)
     df_query_gallery = df[df[SPLIT_COLUMN] == "validation"].reset_index(drop=True)
-    valid_dataset = ImagesDatasetQueryGalleryLabeled(
+    valid_dataset = ImageDatasetQueryGalleryLabeled(
         df=df_query_gallery,
         dataset_root=dataset_root,
         transform=transforms_val,
@@ -421,8 +421,8 @@ def get_retrieval_images_datasets(
 
 
 __all__ = [
-    "ImagesBaseDataset",
-    "ImagesDatasetLabeled",
-    "ImagesDatasetQueryGalleryLabeled",
+    "ImageBaseDataset",
+    "ImageDatasetLabeled",
+    "ImageDatasetQueryGalleryLabeled",
     "get_retrieval_images_datasets",
 ]

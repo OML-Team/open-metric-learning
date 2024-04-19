@@ -74,7 +74,7 @@ class IDatasetQueryGallery(IBaseDataset, ABC):
 
 class IDatasetQueryGalleryLabeled(IDatasetQueryGallery, IDatasetLabeled, ABC):
     """
-    This class is similar to "IDatasetQueryGalleryPrediction", but we also have ground truth labels.
+    This interface is similar to `IDatasetQueryGallery`, but there are ground truth labels.
     """
 
 
