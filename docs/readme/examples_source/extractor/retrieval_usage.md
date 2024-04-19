@@ -7,11 +7,11 @@
 import torch
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.flat import inference_on_images
+from oml.inference import inference_on_images
 from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.utils.misc_torch import pairwise_dist
+from oml.registry import get_transforms_for_pretrained
+from oml.utils import download_mock_dataset
+from oml.utils import pairwise_dist
 
 _, df_val = download_mock_dataset(MOCK_DATASET_PATH)
 df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)

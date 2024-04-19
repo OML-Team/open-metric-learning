@@ -7,16 +7,16 @@
 import pytorch_lightning as pl
 import torch
 
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.extractor import ExtractorModule
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.datasets import DatasetQueryGallery, DatasetWithLabels
+from oml.lightning import ExtractorModule
+from oml.lightning import MetricValCallback
+from oml.losses import TripletLossWithMiner
+from oml.metrics import EmbeddingMetrics
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.lightning.pipelines.logging import (
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
+from oml.lightning import (
     ClearMLPipelineLogger,
     MLFlowPipelineLogger,
     NeptunePipelineLogger,
