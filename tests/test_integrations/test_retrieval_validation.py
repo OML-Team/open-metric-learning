@@ -1,24 +1,19 @@
 from math import isclose
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 import pytest
 import torch
-from torch import Tensor
+from torch import BoolTensor, FloatTensor, LongTensor
 from torch.utils.data import DataLoader
 
-from oml.const import (
-    EMBEDDINGS_KEY,
-    INPUT_TENSORS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
-    LABELS_KEY,
-    OVERALL_CATEGORIES_KEY,
-)
-from oml.interfaces.datasets import IDatasetQueryGallery
+from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, OVERALL_CATEGORIES_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
-from tests.test_integrations.utils import IdealClusterEncoder
+from tests.test_integrations.utils import (
+    EmbeddingsQueryGalleryDataset,
+    IdealClusterEncoder,
+)
 
-TData = Tuple[Tensor, Tensor, Tensor, Tensor, float]
+TData = Tuple[LongTensor, BoolTensor, BoolTensor, FloatTensor, float]
 
 
 def get_separate_query_gallery() -> TData:
@@ -33,7 +28,7 @@ def get_separate_query_gallery() -> TData:
 
     cmc_gt = 3 / 5
 
-    return labels, query_mask, gallery_mask, input_tensors, cmc_gt
+    return labels.long(), query_mask.bool(), gallery_mask.bool(), input_tensors, cmc_gt
 
 
 def get_shared_query_gallery() -> TData:
@@ -46,28 +41,7 @@ def get_shared_query_gallery() -> TData:
 
     cmc_gt = 7 / 8
 
-    return labels, query_mask, gallery_mask, input_tensors, cmc_gt
-
-
-class DummyQGDataset(IDatasetQueryGallery):
-    def __init__(self, labels: Tensor, gallery_mask: Tensor, query_mask: Tensor, input_tensors: Tensor):
-        assert len(labels) == len(gallery_mask) == len(query_mask)
-
-        self.labels = labels
-        self.gallery_mask = gallery_mask
-        self.query_mask = query_mask
-        self.input_tensors = input_tensors
-
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {
-            LABELS_KEY: self.labels[idx],
-            INPUT_TENSORS_KEY: self.input_tensors[idx],
-            IS_QUERY_KEY: self.query_mask[idx],
-            IS_GALLERY_KEY: self.gallery_mask[idx],
-        }
-
-    def __len__(self) -> int:
-        return len(self.labels)
+    return labels.long(), query_mask.bool(), gallery_mask.bool(), input_tensors, cmc_gt
 
 
 @pytest.mark.parametrize("batch_size", [1, 5])
@@ -77,11 +51,11 @@ class DummyQGDataset(IDatasetQueryGallery):
 def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, data: TData) -> None:
     labels, query_mask, gallery_mask, input_tensors, cmc_gt = data
 
-    dataset = DummyQGDataset(
+    dataset = EmbeddingsQueryGalleryDataset(
         labels=labels,
-        input_tensors=input_tensors,
-        query_mask=query_mask,
-        gallery_mask=gallery_mask,
+        embeddings=input_tensors,
+        is_query=query_mask,
+        is_gallery=gallery_mask,
     )
 
     loader = DataLoader(

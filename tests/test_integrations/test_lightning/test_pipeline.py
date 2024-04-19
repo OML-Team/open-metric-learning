@@ -1,3 +1,4 @@
+import sys
 import tempfile
 from functools import partial
 from typing import Any, Dict, List
@@ -92,6 +93,7 @@ def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> Metri
     return metric_callback
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="Does not run on macOS")
 @pytest.mark.parametrize(
     "samples_in_getitem, is_error_expected, pipeline",
     [

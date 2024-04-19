@@ -6,8 +6,8 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from oml.const import MOCK_DATASET_PATH
-from oml.datasets.list_dataset import ListDataset, TBBox
+from oml.const import MOCK_DATASET_PATH, TBBox
+from oml.datasets.list_dataset import ListDataset
 
 
 @pytest.fixture

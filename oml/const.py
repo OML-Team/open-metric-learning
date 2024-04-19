@@ -2,7 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 from sys import platform
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 from omegaconf import DictConfig
 
@@ -50,6 +50,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 GRAY = (120, 120, 120)
+BLACK = (0, 0, 0)
 PAD_COLOR = (255, 255, 255)
 
 TCfg = Union[Dict[str, Any], DictConfig]
@@ -61,6 +62,9 @@ STD: TNormParam = (0.229, 0.224, 0.225)
 
 MEAN_CLIP = (0.48145466, 0.4578275, 0.40821073)
 STD_CLIP = (0.26862954, 0.26130258, 0.27577711)
+
+TBBox = Tuple[int, int, int, int]
+TBBoxes = Sequence[Optional[TBBox]]
 
 CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 

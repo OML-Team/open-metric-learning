@@ -1,8 +1,7 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence
 
-import pandas as pd
 from torch.utils.data import Dataset
 
 from oml.const import (
@@ -14,17 +13,17 @@ from oml.const import (
     X2_COLUMN,
     Y1_COLUMN,
     Y2_COLUMN,
+    TBBoxes,
 )
-from oml.datasets.base import BaseDataset
+from oml.datasets.images import ImagesBaseDataset
 from oml.transforms.images.torchvision import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader
 
-TBBox = Tuple[int, int, int, int]
-TBBoxes = Sequence[Optional[TBBox]]
-
 
 class ListDataset(Dataset):
+    # todo 522: remove the whole dataset
+
     """This is a dataset to iterate over a list of images."""
 
     def __init__(
@@ -68,8 +67,9 @@ class ListDataset(Dataset):
                 data[X2_COLUMN].append(x2)  # type: ignore
                 data[Y2_COLUMN].append(y2)  # type: ignore
 
-        self._dataset = BaseDataset(
-            df=pd.DataFrame(data),
+        self._dataset = ImagesBaseDataset(
+            paths=list(map(str, filenames_list)),
+            bboxes=bboxes,
             transform=transform,
             f_imread=f_imread,
             input_tensors_key=input_tensors_key,
