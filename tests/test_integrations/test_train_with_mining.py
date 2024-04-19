@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from oml.const import INPUT_TENSORS_KEY, LABELS_KEY
-from oml.interfaces.datasets import IDatasetLabeled
+from oml.interfaces.datasets import ILabeledDataset
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.registry.miners import get_miner
@@ -16,7 +16,7 @@ from oml.samplers.balance import BalanceSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
 
-class DummyDataset(IDatasetLabeled):
+class DummyDataset(ILabeledDataset):
     def __init__(self, n_labels: int, n_samples_min: int):
         self.labels = []
         for i in range(n_labels):

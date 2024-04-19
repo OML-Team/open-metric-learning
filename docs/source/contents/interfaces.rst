@@ -58,27 +58,27 @@ IBaseDataset
     :undoc-members:
     :show-inheritance:
 
-IDatasetLabeled
+ILabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IDatasetLabeled
+.. autoclass:: oml.interfaces.datasets.ILabeledDataset
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __getitem__
     .. automethod:: get_labels
 
-IDatasetQueryGallery
+IQueryGalleryDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IDatasetQueryGallery
+.. autoclass:: oml.interfaces.datasets.IQueryGalleryDataset
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
 
-IDatasetQueryGalleryLabeled
+IQueryGalleryLabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IDatasetQueryGalleryLabeled
+.. autoclass:: oml.interfaces.datasets.IQueryGalleryLabeledDataset
     :undoc-members:
     :show-inheritance:
 

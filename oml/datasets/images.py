@@ -39,8 +39,8 @@ from oml.const import (
 )
 from oml.interfaces.datasets import (
     IBaseDataset,
-    IDatasetLabeled,
-    IDatasetQueryGalleryLabeled,
+    ILabeledDataset,
+    IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
 from oml.registry.transforms import get_transforms
@@ -218,7 +218,7 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         return self.x1_key, self.y1_key, self.x2_key, self.y2_key
 
 
-class ImageDatasetLabeled(ImageBaseDataset, IDatasetLabeled):
+class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
     """
     The dataset of images having their ground truth labels.
 
@@ -298,7 +298,7 @@ class ImageDatasetLabeled(ImageBaseDataset, IDatasetLabeled):
         return label2category
 
 
-class ImageDatasetQueryGalleryLabeled(ImageDatasetLabeled, IDatasetQueryGalleryLabeled):
+class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledDataset):
     """
     The dataset of images having `query`/`gallery` split.
 
@@ -385,7 +385,7 @@ def get_retrieval_images_datasets(
     dataframe_name: str = "df.csv",
     cache_size: Optional[int] = 0,
     verbose: bool = True,
-) -> Tuple[IDatasetLabeled, IDatasetQueryGalleryLabeled]:
+) -> Tuple[ILabeledDataset, IQueryGalleryLabeledDataset]:
     df = pd.read_csv(dataset_root / dataframe_name, index_col=False)
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
@@ -399,7 +399,7 @@ def get_retrieval_images_datasets(
     df_train = df[df[SPLIT_COLUMN] == "train"].reset_index(drop=True)
     df_train[LABELS_COLUMN] = df_train[LABELS_COLUMN].map(mapper)
 
-    train_dataset = ImageDatasetLabeled(
+    train_dataset = ImageLabeledDataset(
         df=df_train,
         dataset_root=dataset_root,
         transform=transforms_train,
@@ -409,7 +409,7 @@ def get_retrieval_images_datasets(
 
     # val (query + gallery)
     df_query_gallery = df[df[SPLIT_COLUMN] == "validation"].reset_index(drop=True)
-    valid_dataset = ImageDatasetQueryGalleryLabeled(
+    valid_dataset = ImageQueryGalleryLabeledDataset(
         df=df_query_gallery,
         dataset_root=dataset_root,
         transform=transforms_val,
@@ -422,7 +422,7 @@ def get_retrieval_images_datasets(
 
 __all__ = [
     "ImageBaseDataset",
-    "ImageDatasetLabeled",
-    "ImageDatasetQueryGalleryLabeled",
+    "ImageLabeledDataset",
+    "ImageQueryGalleryLabeledDataset",
     "get_retrieval_images_datasets",
 ]

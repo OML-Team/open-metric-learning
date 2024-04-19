@@ -16,9 +16,9 @@ ImageBaseDataset
     .. automethod:: __init__
     .. automethod:: visualize
 
-ImageDatasetLabeled
+ImageLabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.images.ImageDatasetLabeled
+.. autoclass:: oml.datasets.images.ImageLabeledDataset
     :undoc-members:
     :show-inheritance:
 
@@ -26,9 +26,9 @@ ImageDatasetLabeled
     .. automethod:: __getitem__
     .. automethod:: get_labels
 
-ImageDatasetQueryGalleryLabeled
+ImageQueryGalleryLabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.images.ImageDatasetQueryGalleryLabeled
+.. autoclass:: oml.datasets.images.ImageQueryGalleryLabeledDataset
     :undoc-members:
     :show-inheritance:
 

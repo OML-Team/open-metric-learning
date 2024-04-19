@@ -13,7 +13,7 @@ from oml.const import (
     LABELS_KEY,
     SEQUENCE_COLUMN,
 )
-from oml.interfaces.datasets import IDatasetQueryGalleryLabeled
+from oml.interfaces.datasets import IQueryGalleryLabeledDataset
 from oml.utils.misc import one_hot
 
 
@@ -35,7 +35,7 @@ class IdealClusterEncoder(nn.Module):
         return embeddings
 
 
-class EmbeddingsQueryGalleryDataset(IDatasetQueryGalleryLabeled):
+class EmbeddingsQueryGalleryDataset(IQueryGalleryLabeledDataset):
     def __init__(
         self,
         embeddings: FloatTensor,
