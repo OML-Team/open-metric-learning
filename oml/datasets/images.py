@@ -57,12 +57,12 @@ from oml.utils.images.images import TImReader, get_img_with_bbox, square_pad
 
 
 def parse_bboxes(df: pd.DataFrame) -> Optional[TBBoxes]:
-    n_existing_columns = sum([x in df for x in [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]])
+    n_existing_columns = sum([x in df for x in [X1_COLUMN, Y1_COLUMN, X2_COLUMN, Y2_COLUMN]])
 
     if n_existing_columns == 4:
         bboxes = []
-        for row in df.iterrows():
-            bbox = int(row[X1_COLUMN]), int(row[X2_COLUMN]), int(row[Y1_COLUMN]), int(row[Y2_COLUMN])
+        for _, row in df.iterrows():
+            bbox = int(row[X1_COLUMN]), int(row[Y1_COLUMN]), int(row[X2_COLUMN]), int(row[Y2_COLUMN])
             bbox = None if any(coord is None for coord in bbox) else bbox
             bboxes.append(bbox)
 
@@ -206,7 +206,7 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         return len(self._paths)
 
     def visualize(self, idx: int, color: TColor = BLACK) -> np.ndarray:
-        bbox = torch.tensor(self._bboxes[idx]) if (self._bboxes is not None) else torch.tensor([None] * 4)
+        bbox = torch.tensor(self._bboxes[idx]) if (self._bboxes is not None) else torch.tensor([torch.nan] * 4)
         image = get_img_with_bbox(im_path=self._paths[idx], bbox=bbox, color=color)
         image = square_pad(image)
 
