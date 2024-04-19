@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple
 
 import albumentations as albu
 
-import oml.models.vit_unicom.external.vision_transformer as unicom  # type: ignore
+import oml.models as unicom  # type: ignore
 from oml.transforms.images.albumentations import (
     get_augs_albu,
     get_normalisation_albu,

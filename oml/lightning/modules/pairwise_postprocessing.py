@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, _LRScheduler
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, LABELS_KEY
 from oml.interfaces.models import IFreezable, IPairwiseModel
 from oml.lightning.modules.ddp import ModuleDDP
-from oml.miners.pairs import PairsMiner
+from oml.miners import PairsMiner
 
 
 class PairwiseModule(pl.LightningModule):

@@ -28,7 +28,7 @@ from oml.lightning.pipelines.parser import (
     parse_scheduler_from_config,
 )
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
-from oml.miners.pairs import PairsMiner
+from oml.miners import PairsMiner
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg

@@ -13,7 +13,7 @@ from oml.const import (  # noqa
     PAIR_1ST_KEY,
     PAIR_2ND_KEY,
 )
-from oml.samplers.balance import BalanceSampler  # noqa
+from oml.samplers import BalanceSampler  # noqa
 
 
 class IDatasetWithLabels(Dataset, ABC):
