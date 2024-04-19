@@ -86,7 +86,7 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
 
     def __init__(
         self,
-        paths: List[str],
+        paths: List[Path],
         dataset_root: Optional[Union[str, Path]] = None,
         bboxes: Optional[TBBoxes] = None,
         extra_data: Optional[Dict[str, Any]] = None,
@@ -134,7 +134,7 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
         if dataset_root is not None:
             self._paths = list(map(lambda x: str(Path(dataset_root) / x), paths))
         else:
-            self._paths = paths
+            self._paths = list(map(str, paths))
 
         self.extra_data = extra_data
 
@@ -198,7 +198,7 @@ class ImagesBaseDataset(IBaseDataset, IVisualizableDataset):
         item[self.y1_key] = y1
         item[self.x2_key] = x2
         item[self.y2_key] = y2
-        item[self.paths_key] = str(self._paths[idx])
+        item[self.paths_key] = self._paths[idx]
 
         return item
 

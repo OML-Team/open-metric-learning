@@ -35,15 +35,6 @@ DatasetQueryGallery
     .. automethod:: __init__
     .. automethod:: __getitem__
 
-ListDataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.list_dataset.ListDataset
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: __getitem__
-
 EmbeddingPairsDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.datasets.pairs.EmbeddingPairsDataset
