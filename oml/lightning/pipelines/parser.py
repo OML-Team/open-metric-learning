@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 
 from oml.const import TCfg
-from oml.interfaces.datasets import IDatasetWithLabels
+from oml.interfaces.datasets import IDatasetLabeled
 from oml.interfaces.loggers import IPipelineLogger
 from oml.interfaces.samplers import IBatchSampler
 from oml.lightning.pipelines.logging import TensorBoardPipelineLogger
@@ -76,7 +76,7 @@ def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> 
     return scheduler_kwargs
 
 
-def parse_sampler_from_config(cfg: TCfg, dataset: IDatasetWithLabels) -> Optional[IBatchSampler]:
+def parse_sampler_from_config(cfg: TCfg, dataset: IDatasetLabeled) -> Optional[IBatchSampler]:
     if (
         (not dataset.categories_key)
         and (cfg["sampler"] is not None)

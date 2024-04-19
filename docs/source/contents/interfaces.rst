@@ -52,9 +52,15 @@ ITripletLossWithMiner
 
     .. automethod:: forward
 
-IDatasetWithLabels
+IBaseDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IDatasetWithLabels
+.. autoclass:: oml.interfaces.datasets.IBaseDataset
+    :undoc-members:
+    :show-inheritance:
+
+IDatasetLabeled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IDatasetLabeled
     :undoc-members:
     :show-inheritance:
 
@@ -67,7 +73,18 @@ IDatasetQueryGallery
     :undoc-members:
     :show-inheritance:
 
-    .. automethod:: __getitem__
+    .. automethod:: get_query_ids
+    .. automethod:: get_gallery_ids
+
+IDatasetQueryGalleryLabeled
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IDatasetQueryGalleryLabeled
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: get_query_ids
+    .. automethod:: get_gallery_ids
+    .. automethod:: get_labels
 
 IPairsDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,6 +94,14 @@ IPairsDataset
 
     .. automethod:: __init__
     .. automethod:: __getitem__
+
+IVisualizableDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IVisualizableDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: visualize
 
 IBasicMetric
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

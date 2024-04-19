@@ -28,7 +28,7 @@ class IBaseDataset(Dataset):
         raise NotImplementedError()
 
 
-class IDatasetWithLabels(IBaseDataset, ABC):
+class IDatasetLabeled(IBaseDataset, ABC):
     """
     This is an interface for the datasets which provide labels of containing items.
 
@@ -55,7 +55,7 @@ class IDatasetWithLabels(IBaseDataset, ABC):
         raise NotImplementedError()
 
 
-class IDatasetQueryGalleryPrediction(IBaseDataset, ABC):
+class IDatasetQueryGallery(IBaseDataset, ABC):
     """
     This is an interface for the datasets which hold the information on how to split
     the data into the query and gallery. The query and gallery ids may overlap.
@@ -72,7 +72,7 @@ class IDatasetQueryGalleryPrediction(IBaseDataset, ABC):
         raise NotImplementedError()
 
 
-class IDatasetQueryGallery(IDatasetQueryGalleryPrediction, IDatasetWithLabels, ABC):
+class IDatasetQueryGalleryLabeled(IDatasetQueryGallery, IDatasetLabeled, ABC):
     """
     This class is similar to "IDatasetQueryGalleryPrediction", but we also have ground truth labels.
     """
@@ -117,9 +117,9 @@ class IVisualizableDataset(Dataset, ABC):
 
 __all__ = [
     "IBaseDataset",
-    "IDatasetWithLabels",
+    "IDatasetLabeled",
+    "IDatasetQueryGalleryLabeled",
     "IDatasetQueryGallery",
-    "IDatasetQueryGalleryPrediction",
     "IPairsDataset",
     "IVisualizableDataset",
 ]

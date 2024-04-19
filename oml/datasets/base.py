@@ -1,12 +1,12 @@
-from oml.datasets.images import ImagesDatasetQueryGallery, ImagesDatasetWithLabels
+from oml.datasets.images import ImagesDatasetLabeled, ImagesDatasetQueryGalleryLabeled
 
 
-class DatasetWithLabels(ImagesDatasetWithLabels):
+class DatasetWithLabels(ImagesDatasetLabeled):
     # this class allows to have back compatibility
     pass
 
 
-class DatasetQueryGallery(ImagesDatasetQueryGallery):
+class DatasetQueryGallery(ImagesDatasetQueryGalleryLabeled):
     # this class allows to have back compatibility
     pass
 
