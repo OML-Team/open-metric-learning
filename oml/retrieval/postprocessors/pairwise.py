@@ -1,7 +1,7 @@
 import torch
 
 from oml.inference.abstract import pairwise_inference
-from oml.interfaces.datasets import IDatasetQueryGallery
+from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.retrieval.prediction import RetrievalPrediction
@@ -41,7 +41,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-    def process(self, prediction: RetrievalPrediction, dataset: IDatasetQueryGallery) -> RetrievalPrediction:
+    def process(self, prediction: RetrievalPrediction, dataset: IQueryGalleryDataset) -> RetrievalPrediction:
         """
 
         Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted
@@ -95,6 +95,3 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
 
 __all__ = ["PairwiseReranker"]
-
-
-__all__ = ["PairwiseImagesPostprocessor"]
