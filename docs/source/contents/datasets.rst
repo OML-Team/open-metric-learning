@@ -37,18 +37,9 @@ ImageQueryGalleryLabeledDataset
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
 
-EmbeddingPairsDataset
+PairDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.pairs.EmbeddingPairsDataset
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: __getitem__
-
-ImagePairsDataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.pairs.ImagePairsDataset
+.. autoclass:: oml.datasets.pairs.PairDataset
     :undoc-members:
     :show-inheritance:
 

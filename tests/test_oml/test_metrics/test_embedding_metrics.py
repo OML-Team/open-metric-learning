@@ -18,16 +18,16 @@ from oml.const import (
 )
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
-from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.utils.misc import compare_dicts_recursively, one_hot
 
 FEAT_DIM = 8
 oh = partial(one_hot, dim=FEAT_DIM)
 
 
-def get_trivial_postprocessor(top_n: int) -> PairwiseEmbeddingsPostprocessor:
+def get_trivial_postprocessor(top_n: int) -> PairwiseReranker:
     model = LinearTrivialDistanceSiamese(feat_dim=FEAT_DIM, identity_init=True)
-    processor = PairwiseEmbeddingsPostprocessor(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
+    processor = PairwiseReranker(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
     return processor
 
 

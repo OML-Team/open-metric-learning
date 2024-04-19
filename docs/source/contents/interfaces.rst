@@ -86,9 +86,9 @@ IQueryGalleryLabeledDataset
     .. automethod:: get_gallery_ids
     .. automethod:: get_labels
 
-IPairsDataset
+IPairDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IPairsDataset
+.. autoclass:: oml.interfaces.datasets.IPairDataset
     :undoc-members:
     :show-inheritance:
 
@@ -138,3 +138,11 @@ IPipelineLogger
 
     .. automethod:: log_figure
     .. automethod:: log_pipeline_info
+
+IRetrievalPostprocessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.retrieval.IRetrievalPostprocessor
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: process

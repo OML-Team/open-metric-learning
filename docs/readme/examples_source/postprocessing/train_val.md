@@ -15,7 +15,7 @@ from oml.inference.flat import inference_on_dataframe
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.pairs import PairsMiner
 from oml.models import ConcatSiamese, ViTExtractor
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.samplers.balance import BalanceSampler
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -54,7 +54,7 @@ for batch in train_loader:
 val_dataset = DatasetQueryGallery(df=df_val, extra_data={"embeddings": embeddings_val}, transform=transform)
 valid_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
 
-postprocessor = PairwiseImagesPostprocessor(top_n=3, pairwise_model=siamese, transforms=transform)
+postprocessor = PairwiseReranker(top_n=3, pairwise_model=siamese, transforms=transform)
 calculator = EmbeddingMetrics(postprocessor=postprocessor)
 calculator.setup(num_samples=len(val_dataset))
 

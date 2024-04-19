@@ -78,7 +78,7 @@ class IQueryGalleryLabeledDataset(IQueryGalleryDataset, ILabeledDataset, ABC):
     """
 
 
-class IPairsDataset(Dataset, ABC):
+class IPairDataset(Dataset, ABC):
     """
     This is an interface for the datasets which return pair of something.
 
@@ -120,6 +120,6 @@ __all__ = [
     "ILabeledDataset",
     "IQueryGalleryLabeledDataset",
     "IQueryGalleryDataset",
-    "IPairsDataset",
+    "IPairDataset",
     "IVisualizableDataset",
 ]

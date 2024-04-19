@@ -9,7 +9,7 @@ from oml.const import MOCK_DATASET_PATH
 from oml.inference.flat import inference_on_images
 from oml.models.meta.siamese import TrivialDistanceSiamese
 from oml.models.resnet.extractor import ResnetExtractor
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.transforms.images.utils import TTransforms
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -51,7 +51,7 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int) -> None:
 
     distances, queries, galleries = get_validation_results(model=extractor, transforms=transforms)
 
-    postprocessor = PairwiseImagesPostprocessor(
+    postprocessor = PairwiseReranker(
         top_n=top_n,
         pairwise_model=pairwise_model,
         transforms=transforms,
