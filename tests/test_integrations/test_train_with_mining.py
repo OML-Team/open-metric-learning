@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from oml.const import INPUT_TENSORS_KEY, LABELS_KEY
-from oml.interfaces.datasets import IDatasetWithLabels
+from oml.interfaces.datasets import ILabeledDataset
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.registry.miners import get_miner
@@ -16,15 +16,15 @@ from oml.samplers.balance import BalanceSampler
 from tests.test_integrations.utils import IdealOneHotModel
 
 
-class DummyDataset(IDatasetWithLabels):
+class DummyDataset(ILabeledDataset):
     def __init__(self, n_labels: int, n_samples_min: int):
         self.labels = []
         for i in range(n_labels):
             self.labels.extend([i] * randint(n_samples_min, 2 * n_samples_min))
         shuffle(self.labels)
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {INPUT_TENSORS_KEY: torch.tensor(self.labels[idx]), LABELS_KEY: self.labels[idx]}
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        return {INPUT_TENSORS_KEY: torch.tensor(self.labels[item]), LABELS_KEY: self.labels[item]}
 
     def __len__(self) -> int:
         return len(self.labels)
