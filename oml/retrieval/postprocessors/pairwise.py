@@ -1,22 +1,24 @@
+from typing import Tuple
+
 import torch
+from torch import Tensor
 
 from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
-from oml.retrieval.prediction import RetrievalPrediction
-from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
+from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d, assign_2d
 
 
 class PairwiseReranker(IRetrievalPostprocessor):
     def __init__(
-        self,
-        top_n: int,
-        pairwise_model: IPairwiseModel,
-        num_workers: int,
-        batch_size: int,
-        verbose: bool = False,
-        use_fp16: bool = False,
+            self,
+            top_n: int,
+            pairwise_model: IPairwiseModel,
+            num_workers: int,
+            batch_size: int,
+            verbose: bool = False,
+            use_fp16: bool = False,
     ):
         """
 
@@ -41,7 +43,25 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-    def process(self, prediction: RetrievalPrediction, dataset: IQueryGalleryDataset) -> RetrievalPrediction:
+    def process(self, distances: Tensor, dataset: IQueryGalleryDataset) -> Tensor:
+        """
+        Args:
+            distances: Distances among queries and galleries with the shape of ``[Q, G]``.
+            dataset: Dataset having query-gallery split.
+
+        Returns:
+            The same distances matrix, but `top_n` smallest values are updated.
+        """
+        # todo 522:
+        # after we introduce RetrievalPrediction the signature of the method will change: so, we directly call
+        # self.process_neigh. Thus, the code below is temporary to support the current interface.
+        distances_neigh, ii_neigh = torch.topk(distances, k=min(distances.shape[1], self.top_n))
+        distances_neigh_upd, ii_neigh_upd = self.process_neigh(distances_neigh, ii_neigh, dataset)
+        distances_upd = assign_2d(x=distances, indices=ii_neigh_upd, new_values=distances_neigh_upd)
+        return distances_upd
+
+    def process_neigh(self, distances: Tensor, retrieved_ids: Tensor, dataset: IQueryGalleryDataset) -> Tuple[
+        Tensor, Tensor]:
         """
 
         Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted
@@ -56,10 +76,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         If concatenation of two distances is already sorted, we keep it untouched.
 
         """
-        top_n = min(self.top_n, prediction.top_n)
-
-        retrieved_ids = prediction.retrieved_ids.clone()
-        distances = prediction.distances.clone()
+        top_n = min(self.top_n, distances.shape[1])
 
         # let's list pairs of (query_i, gallery_j) we need to process
         ids_q = dataset.get_query_ids().unsqueeze(-1).repeat_interleave(top_n)
@@ -90,8 +107,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         assert distances_upd.shape == distances.shape
         assert retrieved_ids_upd.shape == retrieved_ids.shape
 
-        prediction_upd = RetrievalPrediction(distances_upd, retrieved_ids=retrieved_ids_upd, gt_ids=prediction.gt_ids)
-        return prediction_upd
+        return distances_upd, retrieved_ids_upd
 
 
 __all__ = ["PairwiseReranker"]

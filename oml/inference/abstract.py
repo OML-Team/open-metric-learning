@@ -6,7 +6,7 @@ from torch import FloatTensor, Tensor, nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
 
-from oml.datasets import PairsDataset
+from oml.datasets import PairDataset
 from oml.ddp.patching import patch_dataloader_to_ddp
 from oml.ddp.utils import get_world_size_safe, is_ddp, sync_dicts_ddp
 from oml.interfaces.datasets import IBaseDataset
@@ -107,7 +107,7 @@ def pairwise_inference(
 ) -> FloatTensor:
     device = get_device(model)
 
-    dataset = PairsDataset(base_dataset=base_dataset, pair_ids=pair_ids)
+    dataset = PairDataset(base_dataset=base_dataset, pair_ids=pair_ids)
 
     def _apply(
         model_: IPairwiseModel,

@@ -145,14 +145,16 @@ class TrivialDistanceSiamese(IPairwiseModel):
 
     pretrained_models: Dict[str, Any] = {}
 
-    def __init__(self, extractor: IExtractor) -> None:
+    def __init__(self, extractor: IExtractor, output_bias: float = 0) -> None:
         """
         Args:
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
+            output_bias: Bias added to the distances.
 
         """
         super(TrivialDistanceSiamese, self).__init__()
         self.extractor = extractor
+        self.output_bias = output_bias
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         """
@@ -166,7 +168,7 @@ class TrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.extractor(x1)
         x2 = self.extractor(x2)
-        return elementwise_dist(x1, x2, p=2)
+        return elementwise_dist(x1, x2, p=2) + self.output_bias
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         return self.forward(x1=x1, x2=x2)
