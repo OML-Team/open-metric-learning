@@ -133,7 +133,7 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         self.index_key = index_key
 
         if dataset_root is not None:
-            paths = list(map(lambda x: Path(dataset_root) / x), paths)  # type: ignore
+            paths = list(map(lambda x: Path(dataset_root) / x, paths))
 
         self._paths = list(map(str, paths))
         self._bboxes = bboxes
