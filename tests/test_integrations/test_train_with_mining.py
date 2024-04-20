@@ -23,8 +23,8 @@ class DummyDataset(ILabeledDataset):
             self.labels.extend([i] * randint(n_samples_min, 2 * n_samples_min))
         shuffle(self.labels)
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        return {INPUT_TENSORS_KEY: torch.tensor(self.labels[idx]), LABELS_KEY: self.labels[idx]}
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        return {INPUT_TENSORS_KEY: torch.tensor(self.labels[item]), LABELS_KEY: self.labels[item]}
 
     def __len__(self) -> int:
         return len(self.labels)

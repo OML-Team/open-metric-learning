@@ -70,24 +70,23 @@ class EmbeddingsQueryGalleryDataset(IQueryGalleryDataset):
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        batch = {
-            self.input_tensors_key: self._embeddings[idx],
-            self.index_key: idx,
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        data = {
+            self.input_tensors_key: self._embeddings[item],
+            self.index_key: item,
             # todo 522: remove
-            IS_QUERY_KEY: self._is_query[idx],
-            IS_GALLERY_KEY: self._is_gallery[idx],
+            IS_QUERY_KEY: self._is_query[item],
+            IS_GALLERY_KEY: self._is_gallery[item],
         }
 
         # todo 522: avoid passing extra data as keys
-        if self.extra_data:
-            for key, record in self.extra_data.items():
-                if key in batch:
-                    raise ValueError(f"<extra_data> and dataset share the same key: {key}")
-                else:
-                    batch[key] = record[idx]
+        for key, record in self.extra_data.items():
+            if key in data:
+                raise ValueError(f"<extra_data> and dataset share the same key: {key}")
+            else:
+                data[key] = record[item]
 
-        return batch
+        return data
 
     def __len__(self) -> int:
         return len(self._embeddings)
@@ -127,10 +126,10 @@ class EmbeddingsQueryGalleryLabeledDataset(EmbeddingsQueryGalleryDataset, IQuery
         self._labels = labels
         self.labels_key = labels_key
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        item = super().__getitem__(idx)
-        item[self.labels_key] = self._labels[idx]
-        return item
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        data = super().__getitem__(item)
+        data[self.labels_key] = self._labels[item]
+        return data
 
     def get_labels(self) -> np.ndarray:
         return np.array(self._labels)

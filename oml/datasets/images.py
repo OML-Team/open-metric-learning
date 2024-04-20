@@ -40,13 +40,14 @@ from oml.const import (
 from oml.interfaces.datasets import (
     IBaseDataset,
     ILabeledDataset,
+    IQueryGalleryDataset,
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
 from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, get_img_with_bbox, square_pad
+from oml.utils.images.images import TImReader, get_img_with_bbox
 
 # todo 522: general comment on Datasets
 # We will remove using keys in __getitem__ for:
@@ -81,9 +82,6 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
 
     """
 
-    input_tensors_key: str
-    index_key: str
-
     def __init__(
         self,
         paths: List[Path],
@@ -105,7 +103,7 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         """
 
         Args:
-            paths: Paths to images. Will be concatenated with ``dataset_root`` is provided.
+            paths: Paths to images. Will be concatenated with ``dataset_root`` if provided.
             dataset_root: Path to the images' dir, set ``None`` if you provided the absolute paths in your dataframe
             bboxes: Bounding boxes of images. Some of the images may not have bounding bboxes.
             extra_data: Dictionary containing records of some additional information.
@@ -127,20 +125,20 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
             assert all(
                 len(record) == len(paths) for record in extra_data.values()
             ), "All the extra records need to have the size equal to the dataset's size"
+            self.extra_data = extra_data
+        else:
+            self.extra_data = {}
 
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
 
         if dataset_root is not None:
-            self._paths = list(map(lambda x: str(Path(dataset_root) / x), paths))
-        else:
-            self._paths = list(map(str, paths))
+            paths = list(map(lambda x: Path(dataset_root) / x, paths))
 
-        self.extra_data = extra_data
-
+        self._paths = list(map(str, paths))
         self._bboxes = bboxes
         self._transform = transform if transform else get_transforms("norm_albu")
-        self._f_imread = f_imread or get_im_reader_for_transforms(transform)
+        self._f_imread = f_imread or get_im_reader_for_transforms(self._transform)
 
         if cache_size:
             self.read_bytes = lru_cache(maxsize=cache_size)(self._read_bytes)  # type: ignore
@@ -162,14 +160,14 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         with open(str(path), "rb") as fin:
             return fin.read()
 
-    def __getitem__(self, idx: int) -> Dict[str, Union[FloatTensor, int]]:
-        img_bytes = self.read_bytes(self._paths[idx])
+    def __getitem__(self, item: int) -> Dict[str, Union[FloatTensor, int]]:
+        img_bytes = self.read_bytes(self._paths[item])
         img = self._f_imread(img_bytes)
 
         im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
 
-        if (self._bboxes is not None) and (self._bboxes[idx] is not None):
-            x1, y1, x2, y2 = self._bboxes[idx]
+        if (self._bboxes is not None) and (self._bboxes[item] is not None):
+            x1, y1, x2, y2 = self._bboxes[item]
         else:
             x1, y1, x2, y2 = 0, 0, im_w, im_h
 
@@ -181,35 +179,32 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
             img = img.crop((x1, y1, x2, y2))
             image_tensor = self._transform(img)
 
-        item = {
+        data = {
             self.input_tensors_key: image_tensor,
-            self.index_key: idx,
+            self.index_key: item,
         }
 
-        # todo 522: avoid passing extra data as keys
-        if self.extra_data:
-            for key, record in self.extra_data.items():
-                if key in item:
-                    raise ValueError(f"<extra_data> and dataset share the same key: {key}")
-                else:
-                    item[key] = record[idx]
+        for key, record in self.extra_data.items():
+            if key in data:
+                raise ValueError(f"<extra_data> and dataset share the same key: {key}")
+            else:
+                data[key] = record[item]
 
         # todo 522: remove
-        item[self.x1_key] = x1
-        item[self.y1_key] = y1
-        item[self.x2_key] = x2
-        item[self.y2_key] = y2
-        item[self.paths_key] = self._paths[idx]
+        data[self.x1_key] = x1
+        data[self.y1_key] = y1
+        data[self.x2_key] = x2
+        data[self.y2_key] = y2
+        data[self.paths_key] = self._paths[item]
 
-        return item
+        return data
 
     def __len__(self) -> int:
         return len(self._paths)
 
-    def visualize(self, idx: int, color: TColor = BLACK) -> np.ndarray:
-        bbox = torch.tensor(self._bboxes[idx]) if (self._bboxes is not None) else torch.tensor([torch.nan] * 4)
-        image = get_img_with_bbox(im_path=self._paths[idx], bbox=bbox, color=color)
-        image = square_pad(image)
+    def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
+        bbox = torch.tensor(self._bboxes[item]) if (self._bboxes is not None) else torch.tensor([torch.nan] * 4)
+        image = get_img_with_bbox(im_path=self._paths[item], bbox=bbox, color=color)
 
         return image
 
@@ -245,11 +240,9 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         y1_key: str = Y1_KEY,
         y2_key: str = Y2_KEY,
     ):
-        assert (LABELS_COLUMN in df) and (PATHS_COLUMN in df), "There are only 2 required columns."
+        assert (x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
         self.labels_key = labels_key
         self.df = df
-
-        extra_data = {} if extra_data is None else extra_data
 
         super().__init__(
             paths=self.df[PATHS_COLUMN].tolist(),
@@ -273,18 +266,18 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
         self.sequence_key = sequence_key if (SEQUENCE_COLUMN in df.columns) else None
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        item = super().__getitem__(idx)
-        item[self.labels_key] = self.df.iloc[idx][LABELS_COLUMN]
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        data = super().__getitem__(item)
+        data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
 
         # todo 522: remove
         if self.sequence_key:
-            item[self.sequence_key] = self.df[SEQUENCE_COLUMN][idx]
+            data[self.sequence_key] = self.df[SEQUENCE_COLUMN][item]
 
         if self.categories_key:
-            item[self.categories_key] = self.df[CATEGORIES_COLUMN][idx]
+            data[self.categories_key] = self.df[CATEGORIES_COLUMN][item]
 
-        return item
+        return data
 
     def get_labels(self) -> np.ndarray:
         return np.array(self.df[LABELS_COLUMN])
@@ -301,7 +294,7 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
 
 class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledDataset):
     """
-    The dataset of images having `query`/`gallery` split.
+    The annotated dataset of images having `query`/`gallery` split.
 
     Note, that some datasets used as benchmarks in Metric Learning
     explicitly provide the splitting information (for example, ``DeepFashion InShop`` dataset), but some of them
@@ -334,8 +327,8 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
     ):
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN))
-        self._df = df
+        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
+        self.df = df
 
         super().__init__(
             df=df,
@@ -361,20 +354,86 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
         self.is_gallery_key = is_gallery_key
 
     def get_query_ids(self) -> LongTensor:
-        return BoolTensor(self._df[IS_QUERY_COLUMN]).nonzero().squeeze()
+        return BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
 
     def get_gallery_ids(self) -> LongTensor:
-        return BoolTensor(self._df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+        return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        item = super().__getitem__(idx)
-        item[self.labels_key] = self._df.iloc[idx][LABELS_COLUMN]
+        data = super().__getitem__(idx)
 
         # todo 522: remove
-        item[self.is_query_key] = bool(self._df[IS_QUERY_COLUMN][idx])
-        item[self.is_gallery_key] = bool(self._df[IS_GALLERY_COLUMN][idx])
+        data[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][idx])
+        data[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][idx])
 
-        return item
+        return data
+
+
+class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
+    """
+    The NOT annotated dataset of images having `query`/`gallery` split.
+
+    """
+
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
+        transform: Optional[albu.Compose] = None,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        # todo 522: remove
+        paths_key: str = PATHS_KEY,
+        categories_key: Optional[str] = CATEGORIES_KEY,
+        sequence_key: Optional[str] = SEQUENCE_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
+    ):
+        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
+        # instead of implementing the whole logic let's just re-use QGL dataset, but with dropped labels
+        df = df.copy()
+        df[LABELS_COLUMN] = "fake_label"
+
+        self.__dataset = ImageQueryGalleryLabeledDataset(
+            df=df,
+            extra_data=extra_data,
+            dataset_root=dataset_root,
+            transform=transform,
+            f_imread=f_imread,
+            cache_size=cache_size,
+            input_tensors_key=input_tensors_key,
+            labels_key=LABELS_COLUMN,
+            # todo 522: remove
+            x1_key=x1_key,
+            y2_key=y2_key,
+            x2_key=x2_key,
+            y1_key=y1_key,
+            paths_key=paths_key,
+            categories_key=categories_key,
+            sequence_key=sequence_key,
+            is_query_key=is_query_key,
+            is_gallery_key=is_gallery_key,
+        )
+
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        batch = self.__dataset[item]
+        del batch[self.__dataset.labels_key]
+        return batch
+
+    def get_query_ids(self) -> LongTensor:
+        return self.__dataset.get_query_ids()
+
+    def get_gallery_ids(self) -> LongTensor:
+        return self.__dataset.get_gallery_ids()
+
+    def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
+        return self.__dataset.visualize(item, color)
 
 
 def get_retrieval_images_datasets(
@@ -424,6 +483,7 @@ def get_retrieval_images_datasets(
 __all__ = [
     "ImageBaseDataset",
     "ImageLabeledDataset",
+    "ImageQueryGalleryDataset",
     "ImageQueryGalleryLabeledDataset",
     "get_retrieval_images_datasets",
 ]

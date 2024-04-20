@@ -14,6 +14,7 @@ ImageBaseDataset
     :show-inheritance:
 
     .. automethod:: __init__
+    .. automethod:: __getitem__
     .. automethod:: visualize
 
 ImageLabeledDataset
@@ -25,6 +26,7 @@ ImageLabeledDataset
     .. automethod:: __init__
     .. automethod:: __getitem__
     .. automethod:: get_labels
+    .. automethod:: visualize
 
 ImageQueryGalleryLabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,12 +38,17 @@ ImageQueryGalleryLabeledDataset
     .. automethod:: __getitem__
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
+    .. automethod:: get_labels
+    .. automethod:: visualize
 
-PairDataset
+ImageQueryGalleryDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.datasets.pairs.PairDataset
+.. autoclass:: oml.datasets.images.ImageQueryGalleryDataset
     :undoc-members:
     :show-inheritance:
 
     .. automethod:: __init__
     .. automethod:: __getitem__
+    .. automethod:: get_query_ids
+    .. automethod:: get_gallery_ids
+    .. automethod:: visualize

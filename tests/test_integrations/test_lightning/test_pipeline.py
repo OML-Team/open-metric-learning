@@ -28,9 +28,9 @@ class DummyRetrievalDataset(Dataset):
         self.labels = labels
         self.im_size = im_size
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, item: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
-        label = torch.tensor(self.labels[idx]).long()
+        label = torch.tensor(self.labels[item]).long()
         return {INPUT_TENSORS_KEY: input_tensors, LABELS_KEY: label, IS_QUERY_KEY: True, IS_GALLERY_KEY: True}
 
     def __len__(self) -> int:

@@ -5,6 +5,8 @@ from torch import Tensor
 from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY
 from oml.interfaces.datasets import IBaseDataset, IPairDataset
 
+# todo 522: make one modality agnostic instead of these two
+
 
 class PairDataset(IPairDataset):
     """

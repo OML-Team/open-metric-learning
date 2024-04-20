@@ -58,6 +58,8 @@ IBaseDataset
     :undoc-members:
     :show-inheritance:
 
+    .. automethod:: __getitem__
+
 ILabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.datasets.ILabeledDataset
