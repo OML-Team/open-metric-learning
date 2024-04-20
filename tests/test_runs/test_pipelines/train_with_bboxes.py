@@ -1,5 +1,5 @@
 import hydra
-import torchvision.transforms as t
+import torchvision.transforms.v2 as t
 from omegaconf import DictConfig
 
 from oml.const import HYDRA_BEHAVIOUR, MOCK_DATASET_PATH

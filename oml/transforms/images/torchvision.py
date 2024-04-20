@@ -1,5 +1,5 @@
-import torchvision.transforms as t
-from torchvision.transforms import Compose, InterpolationMode, Normalize, ToTensor
+import torchvision.transforms.v2 as t
+from torchvision.transforms.v2 import Compose, InterpolationMode, Normalize, ToTensor
 
 from oml.const import MEAN, STD, TNormParam
 
