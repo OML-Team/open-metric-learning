@@ -186,6 +186,7 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
             self.index_key: idx,
         }
 
+        # todo 522: avoid passing extra data as keys
         if self.extra_data:
             for key, record in self.extra_data.items():
                 if key in item:

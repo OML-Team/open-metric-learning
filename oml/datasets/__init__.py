@@ -1,2 +1,6 @@
-from oml.datasets.images import ImageQueryGalleryLabeledDataset, ImageBaseDataset, ImageLabeledDataset
+from oml.datasets.images import (
+    ImageBaseDataset,
+    ImageLabeledDataset,
+    ImageQueryGalleryLabeledDataset,
+)
 from oml.datasets.pairs import PairDataset

@@ -7,18 +7,22 @@ from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
-from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d, assign_2d
+from oml.utils.misc_torch import (
+    assign_2d,
+    cat_two_sorted_tensors_and_keep_it_sorted,
+    take_2d,
+)
 
 
 class PairwiseReranker(IRetrievalPostprocessor):
     def __init__(
-            self,
-            top_n: int,
-            pairwise_model: IPairwiseModel,
-            num_workers: int,
-            batch_size: int,
-            verbose: bool = False,
-            use_fp16: bool = False,
+        self,
+        top_n: int,
+        pairwise_model: IPairwiseModel,
+        num_workers: int,
+        batch_size: int,
+        verbose: bool = False,
+        use_fp16: bool = False,
     ):
         """
 
@@ -43,7 +47,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-    def process(self, distances: Tensor, dataset: IQueryGalleryDataset) -> Tensor:
+    def process(self, distances: Tensor, dataset: IQueryGalleryDataset) -> Tensor:  # type: ignore
         """
         Args:
             distances: Distances among queries and galleries with the shape of ``[Q, G]``.
@@ -60,8 +64,9 @@ class PairwiseReranker(IRetrievalPostprocessor):
         distances_upd = assign_2d(x=distances, indices=ii_neigh_upd, new_values=distances_neigh_upd)
         return distances_upd
 
-    def process_neigh(self, distances: Tensor, retrieved_ids: Tensor, dataset: IQueryGalleryDataset) -> Tuple[
-        Tensor, Tensor]:
+    def process_neigh(
+        self, distances: Tensor, retrieved_ids: Tensor, dataset: IQueryGalleryDataset
+    ) -> Tuple[Tensor, Tensor]:
         """
 
         Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted

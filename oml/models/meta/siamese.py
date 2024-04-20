@@ -18,16 +18,18 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
 
     """
 
-    def __init__(self, feat_dim: int, identity_init: bool):
+    def __init__(self, feat_dim: int, identity_init: bool, output_bias: float = 0):
         """
         Args:
             feat_dim: Expected size of each input.
             identity_init: If ``True``, models' weights initialised in a way when
                 the model simply estimates L2 distance between the original embeddings.
+            output_bias: Value to add to the output.
 
         """
         super(LinearTrivialDistanceSiamese, self).__init__()
         self.feat_dim = feat_dim
+        self.output_bias = output_bias
 
         self.proj = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
 
@@ -46,7 +48,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.proj(x1)
         x2 = self.proj(x2)
-        y = elementwise_dist(x1, x2, p=2)
+        y = elementwise_dist(x1, x2, p=2) + self.output_bias
         return y
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
@@ -149,7 +151,7 @@ class TrivialDistanceSiamese(IPairwiseModel):
         """
         Args:
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
-            output_bias: Bias added to the distances.
+            output_bias: Value to add to the outputs.
 
         """
         super(TrivialDistanceSiamese, self).__init__()

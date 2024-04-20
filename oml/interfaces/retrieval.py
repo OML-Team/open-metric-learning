@@ -7,7 +7,7 @@ class IRetrievalPostprocessor:
 
     """
 
-    def process(self, *args, **kwargs) -> Any:
+    def process(self, *args, **kwargs) -> Any:  # type: ignore
         # todo 522: add actual signature later
         raise NotImplementedError()
 

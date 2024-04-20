@@ -50,9 +50,7 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, pairwise
     distances_processed = postprocessor.process(distances=distances.clone(), dataset=dataset)
 
     if pairwise_distances_bias == 0:
-        # distances are literally the same
         assert torch.allclose(distances_processed.argsort(), distances.argsort())
     else:
-        # since pairwise distances have been shifted, the relative order remain the same, but the values are different
-        assert torch.allclose(distances_processed.argsort(), distances.argsort())
+        assert (distances_processed.argsort() == distances.argsort()).all()
         assert not torch.allclose(distances_processed, distances)

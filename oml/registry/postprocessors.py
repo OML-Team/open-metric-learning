@@ -15,9 +15,9 @@ def get_postprocessor(name: str, **kwargs: Dict[str, Any]) -> IRetrievalPostproc
     constructor = POSTPROCESSORS_REGISTRY[name]
 
     if "pairwise_model" in kwargs:
-        kwargs["pairwise_model"] = get_pairwise_model_by_cfg(kwargs["pairwise_model"])
+        kwargs["pairwise_model"] = get_pairwise_model_by_cfg(kwargs["pairwise_model"])  # type: ignore
 
-    return constructor(**kwargs)
+    return constructor(**kwargs)  # type: ignore
 
 
 def get_postprocessor_by_cfg(cfg: TCfg) -> IRetrievalPostprocessor:

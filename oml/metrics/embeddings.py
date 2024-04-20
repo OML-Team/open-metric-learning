@@ -37,6 +37,7 @@ from oml.functional.metrics import (
     calc_topological_metrics,
     reduce_metrics,
 )
+from oml.interfaces.datasets import IQueryGalleryLabeledDataset
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
@@ -67,6 +68,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def __init__(
         self,
+        dataset: Optional[IQueryGalleryLabeledDataset] = None,
         embeddings_key: str = EMBEDDINGS_KEY,
         labels_key: str = LABELS_KEY,
         is_query_key: str = IS_QUERY_KEY,
@@ -88,6 +90,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
 
         Args:
+            dataset: Annotated dataset having query-gallery split. todo 522: This argument will not be Optional soon.
             embeddings_key: Key to take the embeddings from the batches
             labels_key: Key to take the labels from the batches
             is_query_key: Key to take the information whether every batch sample belongs to the query
@@ -115,6 +118,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             verbose: Set ``True`` if you want to print metrics
 
         """
+        self.dataset = dataset
         self.embeddings_key = embeddings_key
         self.labels_key = labels_key
         self.is_query_key = is_query_key
@@ -148,8 +152,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             keys_to_accumulate.append(self.sequence_key)
         if self.extra_keys:
             keys_to_accumulate.extend(list(extra_keys))
-        if self.postprocessor:
-            keys_to_accumulate.extend(self.postprocessor.needed_keys)
 
         self.keys_to_accumulate = tuple(set(keys_to_accumulate))
         self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
@@ -187,7 +189,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
 
         if self.postprocessor:
-            self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
+            assert self.dataset, "You must pass dataset to init to make postprocessing."
+            self.distance_matrix = self.postprocessor.process(self.distance_matrix, dataset=self.dataset)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():

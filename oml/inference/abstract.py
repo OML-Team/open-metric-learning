@@ -95,6 +95,36 @@ def inference(
     )
 
 
+def inference_cached(
+    model: nn.Module,
+    dataset: IBaseDataset,
+    cache_path: str = "inference_cache.pth",
+    num_workers: int = 0,
+    batch_size: int = 128,
+    use_fp16: bool = False,
+    verbose: bool = True,
+    accumulate_on_cpu: bool = True,
+) -> FloatTensor:
+    if Path(cache_path).is_file():
+        outputs = torch.load(cache_path, map_location="cpu")
+        print(f"Model outputs have been loaded from {cache_path}.")
+    else:
+        outputs = inference(
+            model=model,
+            dataset=dataset,
+            num_workers=num_workers,
+            batch_size=batch_size,
+            use_fp16=use_fp16,
+            verbose=verbose,
+            accumulate_on_cpu=accumulate_on_cpu,
+        )
+
+        torch.save(outputs, cache_path)
+        print(f"Model outputs have been saved to {cache_path}.")
+
+    return outputs
+
+
 def pairwise_inference(
     model: IPairwiseModel,
     base_dataset: IBaseDataset,
@@ -129,34 +159,6 @@ def pairwise_inference(
     )
 
     return output
-
-
-def inference_cached(
-    dataset: IBaseDataset,
-    extractor: nn.Module,
-    output_cache_path: str = "inference_cache.pth",
-    num_workers: int = 0,
-    batch_size: int = 128,
-    use_fp16: bool = False,
-) -> FloatTensor:
-    if Path(output_cache_path).is_file():
-        outputs = torch.load(output_cache_path, map_location="cpu")
-        print(f"Model outputs have been loaded from {output_cache_path}.")
-    else:
-        outputs = inference(
-            model=extractor,
-            dataset=dataset,
-            num_workers=num_workers,
-            batch_size=batch_size,
-            use_fp16=use_fp16,
-            verbose=True,
-            accumulate_on_cpu=True,
-        )
-
-        torch.save(outputs, output_cache_path)
-        print(f"Model outputs have been saved to {output_cache_path}.")
-
-    return outputs
 
 
 __all__ = ["inference", "pairwise_inference", "inference_cached"]

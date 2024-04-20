@@ -3,9 +3,11 @@ from collections import defaultdict
 from functools import partial
 from typing import Any, Tuple
 
+import numpy as np
 import pytest
 import torch
 from torch import Tensor
+from torch.utils.data import DataLoader
 
 from oml.const import (
     CATEGORIES_KEY,
@@ -20,6 +22,7 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.utils.misc import compare_dicts_recursively, one_hot
+from tests.test_integrations.utils import EmbeddingsQueryGalleryLabeledDataset
 
 FEAT_DIM = 8
 oh = partial(one_hot, dim=FEAT_DIM)
@@ -46,22 +49,13 @@ def perfect_case() -> Any:
 
     Thus, we expect all of the metrics equals to 1.
     """
-
-    batch1 = {
-        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([True, True, True]),
-        IS_GALLERY_KEY: torch.tensor([False, False, False]),
-        CATEGORIES_KEY: ["cat", "dog", "dog"],
-    }
-
-    batch2 = {
-        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([False, False, False]),
-        IS_GALLERY_KEY: torch.tensor([True, True, True]),
-        CATEGORIES_KEY: ["cat", "dog", "dog"],
-    }
+    dataset = EmbeddingsQueryGalleryLabeledDataset(
+        embeddings=torch.stack([oh(0), oh(1), oh(1), oh(0), oh(1), oh(1)]).float(),
+        labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
+        is_query=torch.tensor([True, True, True, False, False, False]).bool(),
+        is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
+        categories=np.array(["cat", "dog", "dog", "cat", "dog", "dog"]),
+    )
 
     k = 1
     metrics = defaultdict(lambda: defaultdict(dict))  # type: ignore
@@ -69,26 +63,18 @@ def perfect_case() -> Any:
     metrics["cat"]["cmc"][k] = 1.0
     metrics["dog"]["cmc"][k] = 1.0
 
-    return (batch1, batch2), (metrics, k)
+    return dataset, (metrics, k)
 
 
 @pytest.fixture()
 def imperfect_case() -> Any:
-    batch1 = {
-        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(3)]),  # 3d embedding pretends to be an error
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([True, True, True]),
-        IS_GALLERY_KEY: torch.tensor([False, False, False]),
-        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
-    }
-
-    batch2 = {
-        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([False, False, False]),
-        IS_GALLERY_KEY: torch.tensor([True, True, True]),
-        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
-    }
+    dataset = EmbeddingsQueryGalleryLabeledDataset(
+        embeddings=torch.stack([oh(0), oh(1), oh(3), oh(0), oh(1), oh(1)]).float(),  # 3d val pretends to be an error
+        labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
+        is_query=torch.tensor([True, True, True, False, False, False]).bool(),
+        is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
+        categories=np.array([10, 20, 20, 10, 20, 20]),
+    )
 
     k = 1
     metrics = defaultdict(lambda: defaultdict(dict))  # type: ignore
@@ -96,26 +82,18 @@ def imperfect_case() -> Any:
     metrics[10]["cmc"][k] = 1.0
     metrics[20]["cmc"][k] = 0.5
 
-    return (batch1, batch2), (metrics, k)
+    return dataset, (metrics, k)
 
 
 @pytest.fixture()
 def worst_case() -> Any:
-    batch1 = {
-        EMBEDDINGS_KEY: torch.stack([oh(1), oh(0), oh(0)]),  # 3d embedding pretends to be an error
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([True, True, True]),
-        IS_GALLERY_KEY: torch.tensor([False, False, False]),
-        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
-    }
-
-    batch2 = {
-        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([False, False, False]),
-        IS_GALLERY_KEY: torch.tensor([True, True, True]),
-        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
-    }
+    dataset = EmbeddingsQueryGalleryLabeledDataset(
+        embeddings=torch.stack([oh(1), oh(0), oh(0), oh(0), oh(1), oh(1)]).float(),  # all are errors
+        labels=torch.tensor([0, 1, 1, 0, 1, 1]).long(),
+        is_query=torch.tensor([True, True, True, False, False, False]).bool(),
+        is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
+        categories=np.array([10, 20, 20, 10, 20, 20]),
+    )
 
     k = 1
     metrics = defaultdict(lambda: defaultdict(dict))  # type: ignore
@@ -123,38 +101,32 @@ def worst_case() -> Any:
     metrics[10]["cmc"][k] = 0
     metrics[20]["cmc"][k] = 0
 
-    return (batch1, batch2), (metrics, k)
+    return dataset, (metrics, k)
 
 
 @pytest.fixture()
-def case_for_distance_check() -> Any:
-    batch1 = {
-        EMBEDDINGS_KEY: torch.stack([oh(1) * 2, oh(1) * 3, oh(0)]),
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([True, True, True]),
-        IS_GALLERY_KEY: torch.tensor([False, False, False]),
-        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
-    }
+def case_for_finding_worst_queries() -> Any:
+    dataset = EmbeddingsQueryGalleryLabeledDataset(
+        embeddings=torch.stack([oh(0), oh(1), oh(2), oh(0), oh(5), oh(5)]).float(),  # last 2 are errors
+        labels=torch.tensor([0, 1, 2, 0, 1, 2]).long(),
+        is_query=torch.tensor([True, True, True, False, False, False]).bool(),
+        is_gallery=torch.tensor([False, False, False, True, True, True]).bool(),
+        categories=np.array([10, 20, 20, 10, 20, 20]),
+    )
 
-    batch2 = {
-        EMBEDDINGS_KEY: torch.stack([oh(0), oh(1), oh(1)]),
-        LABELS_KEY: torch.tensor([0, 1, 1]),
-        IS_QUERY_KEY: torch.tensor([False, False, False]),
-        IS_GALLERY_KEY: torch.tensor([True, True, True]),
-        CATEGORIES_KEY: torch.tensor([10, 20, 20]),
-    }
-    ids_ranked_by_distance = [0, 2, 1]
-    return (batch1, batch2), ids_ranked_by_distance
+    worst_two_queries = {1, 2}
+    return dataset, worst_two_queries
 
 
 def run_retrieval_metrics(case) -> None:  # type: ignore
-    (batch1, batch2), (gt_metrics, k) = case
+    dataset, (gt_metrics, k) = case
 
     top_k = (k,)
 
-    num_samples = len(batch1[LABELS_KEY]) + len(batch2[LABELS_KEY])
+    num_samples = len(dataset)
     calc = EmbeddingMetrics(
-        embeddings_key=EMBEDDINGS_KEY,
+        dataset=dataset,
+        embeddings_key=dataset.input_tensors_key,
         labels_key=LABELS_KEY,
         is_query_key=IS_QUERY_KEY,
         is_gallery_key=IS_GALLERY_KEY,
@@ -168,8 +140,9 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     )
 
     calc.setup(num_samples=num_samples)
-    calc.update_data(batch1)
-    calc.update_data(batch2)
+
+    for batch in DataLoader(dataset, batch_size=4, shuffle=False):
+        calc.update_data(batch)
 
     metrics = calc.compute_metrics()
 
@@ -182,15 +155,15 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     assert calc.acc.collected_samples == num_samples  # type: ignore
 
 
-def run_across_epochs(case1, case2) -> None:  # type: ignore
-    (batch11, batch12), (gt_metrics1, k1) = case1
-    (batch21, batch22), (gt_metrics2, k2) = case2
-    assert k1 == k2
+def run_across_epochs(case) -> None:  # type: ignore
+    dataset, (gt_metrics, k) = case
 
-    top_k = (k1,)
+    top_k = (k,)
 
+    num_samples = len(dataset)
     calc = EmbeddingMetrics(
-        embeddings_key=EMBEDDINGS_KEY,
+        dataset=dataset,
+        embeddings_key=dataset.input_tensors_key,
         labels_key=LABELS_KEY,
         is_query_key=IS_QUERY_KEY,
         is_gallery_key=IS_GALLERY_KEY,
@@ -203,32 +176,22 @@ def run_across_epochs(case1, case2) -> None:  # type: ignore
         postprocessor=get_trivial_postprocessor(top_n=3),
     )
 
-    def epoch_case(batch_a, batch_b, ground_truth_metrics) -> None:  # type: ignore
-        num_samples = len(batch_a[LABELS_KEY]) + len(batch_b[LABELS_KEY])
+    metrics_all_epochs = []
+
+    for _ in range(2):  # epochs
         calc.setup(num_samples=num_samples)
-        calc.update_data(batch_a)
-        calc.update_data(batch_b)
-        metrics = calc.compute_metrics()
 
-        compare_dicts_recursively(metrics, ground_truth_metrics)
+        for batch in DataLoader(dataset, batch_size=2, num_workers=0, shuffle=False, drop_last=False):
+            calc.update_data(batch)
 
-        # the euclidean distance between any one-hots is always sqrt(2) or 0
-        assert compare_tensors_as_sets(calc.distance_matrix, torch.tensor([0, math.sqrt(2)]))  # type: ignore
+        metrics_all_epochs.append(calc.compute_metrics())
 
-        assert (calc.mask_gt.unique() == torch.tensor([0, 1])).all()  # type: ignore
-        assert calc.acc.collected_samples == num_samples
+    assert compare_dicts_recursively(metrics_all_epochs[0], metrics_all_epochs[-1])
 
-    # 1st epoch
-    epoch_case(batch11, batch12, gt_metrics1)
+    # the euclidean distance between any one-hots is always sqrt(2) or 0
+    assert compare_tensors_as_sets(calc.distance_matrix, torch.tensor([0, math.sqrt(2)]))
 
-    # 2nd epoch
-    epoch_case(batch21, batch22, gt_metrics2)
-
-    # 3d epoch
-    epoch_case(batch11, batch12, gt_metrics1)
-
-    # 4th epoch
-    epoch_case(batch21, batch22, gt_metrics2)
+    assert calc.acc.collected_samples == num_samples
 
 
 def test_perfect_case(perfect_case) -> None:  # type: ignore
@@ -243,37 +206,37 @@ def test_worst_case(worst_case) -> None:  # type: ignore
     run_retrieval_metrics(worst_case)
 
 
-def test_mixed_epochs(perfect_case, imperfect_case, worst_case):  # type: ignore
-    cases = [perfect_case, imperfect_case, worst_case]
-    for case1 in cases:
-        for case2 in cases:
-            run_across_epochs(case1, case2)
+def test_several_epochs(perfect_case, imperfect_case, worst_case):  # type: ignore
+    run_across_epochs(perfect_case)
+    run_across_epochs(imperfect_case)
+    run_across_epochs(worst_case)
 
 
-def test_worst_k(case_for_distance_check) -> None:  # type: ignore
-    (batch1, batch2), gt_ids = case_for_distance_check
+def test_worst_k(case_for_finding_worst_queries) -> None:  # type: ignore
+    dataset, worst_query_ids = case_for_finding_worst_queries
 
-    num_samples = len(batch1[LABELS_KEY]) + len(batch2[LABELS_KEY])
+    num_samples = len(dataset)
     calc = EmbeddingMetrics(
-        embeddings_key=EMBEDDINGS_KEY,
+        dataset=dataset,
+        embeddings_key=dataset.input_tensors_key,
         labels_key=LABELS_KEY,
         is_query_key=IS_QUERY_KEY,
         is_gallery_key=IS_GALLERY_KEY,
         categories_key=CATEGORIES_KEY,
-        cmc_top_k=(),
+        cmc_top_k=(1,),
         precision_top_k=(),
-        map_top_k=(2,),
+        map_top_k=(),
         fmr_vals=tuple(),
         postprocessor=get_trivial_postprocessor(top_n=1_000),
     )
 
     calc.setup(num_samples=num_samples)
-    calc.update_data(batch1)
-    calc.update_data(batch2)
+    for batch in DataLoader(dataset, batch_size=4, shuffle=False):
+        calc.update_data(batch)
 
     calc.compute_metrics()
 
-    assert calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/map/2", 3) == gt_ids
+    assert set(calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/cmc/1", 2)) == worst_query_ids
 
 
 @pytest.mark.parametrize("extra_keys", [[], [PATHS_KEY], [PATHS_KEY, "a"], ["a"]])
