@@ -111,7 +111,7 @@ class IVisualizableDataset(Dataset, ABC):
     """
 
     @abstractmethod
-    def visualize(self, idx: int, color: TColor) -> np.ndarray:
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
         raise NotImplementedError()
 
 
