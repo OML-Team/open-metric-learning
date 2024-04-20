@@ -40,6 +40,7 @@ from oml.const import (
 from oml.interfaces.datasets import (
     IBaseDataset,
     ILabeledDataset,
+    IQueryGalleryDataset,
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
@@ -298,9 +299,84 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         return label2category
 
 
-class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledDataset):
+class ImageQueryGalleryDataset(ImageBaseDataset, IQueryGalleryDataset):
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        extra_data: Optional[Dict[str, Any]] = None,
+        dataset_root: Optional[Union[str, Path]] = None,
+        transform: Optional[albu.Compose] = None,
+        f_imread: Optional[TImReader] = None,
+        cache_size: Optional[int] = 0,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        # todo 522: remove
+        paths_key: str = PATHS_KEY,
+        categories_key: Optional[str] = CATEGORIES_KEY,
+        sequence_key: Optional[str] = SEQUENCE_KEY,
+        x1_key: str = X1_KEY,
+        x2_key: str = X2_KEY,
+        y1_key: str = Y1_KEY,
+        y2_key: str = Y2_KEY,
+        is_query_key: str = IS_QUERY_KEY,
+        is_gallery_key: str = IS_GALLERY_KEY,
+    ):
+        """
+        This is a not annotated dataset of images having `query`/`gallery` split.
+
+        """
+
+        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
+        self.df = df
+
+        super().__init__(
+            paths=self.df[PATHS_COLUMN].tolist(),
+            extra_data=extra_data,
+            dataset_root=dataset_root,
+            transform=transform,
+            f_imread=f_imread,
+            cache_size=cache_size,
+            input_tensors_key=input_tensors_key,
+            # todo 522: remove
+            x1_key=x1_key,
+            y2_key=y2_key,
+            x2_key=x2_key,
+            y1_key=y1_key,
+            paths_key=paths_key,
+        )
+
+        # todo 522: remove
+        self.is_query_key = is_query_key
+        self.is_gallery_key = is_gallery_key
+
+        self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
+        self.sequence_key = sequence_key if (SEQUENCE_COLUMN in df.columns) else None
+
+    def get_query_ids(self) -> LongTensor:
+        return BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
+
+    def get_gallery_ids(self) -> LongTensor:
+        return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        item = super().__getitem__(idx)
+
+        # todo 522: remove
+        item[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][idx])
+        item[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][idx])
+
+        # todo 522: remove
+        if self.sequence_key:
+            item[self.sequence_key] = self.df[SEQUENCE_COLUMN][idx]
+
+        if self.categories_key:
+            item[self.categories_key] = self.df[CATEGORIES_COLUMN][idx]
+
+        return item
+
+
+class ImageQueryGalleryLabeledDataset(ImageQueryGalleryDataset, ImageLabeledDataset, IQueryGalleryLabeledDataset):
     """
-    The dataset of images having `query`/`gallery` split.
+    This is an annotated dataset of images having `query`/`gallery` split.
 
     Note, that some datasets used as benchmarks in Metric Learning
     explicitly provide the splitting information (for example, ``DeepFashion InShop`` dataset), but some of them
@@ -309,7 +385,6 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
 
     So, if you want an item participate in validation as both: query and gallery, you should mark this item as
     ``is_query == True`` and ``is_gallery == True``, as it's done in the `CARS196` or `CUB200` dataset.
-
     """
 
     def __init__(
@@ -333,8 +408,8 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
     ):
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN))
-        self._df = df
+        assert all(x in df.columns for x in (LABELS_COLUMN, IS_GALLERY_COLUMN, IS_QUERY_COLUMN, PATHS_COLUMN))
+        self.df = df
 
         super().__init__(
             df=df,
@@ -344,7 +419,6 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
             f_imread=f_imread,
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
-            labels_key=labels_key,
             # todo 522: remove
             x1_key=x1_key,
             y2_key=y2_key,
@@ -353,25 +427,14 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
             paths_key=paths_key,
             categories_key=categories_key,
             sequence_key=sequence_key,
+            is_query_key=is_query_key,
+            is_gallery_key=is_gallery_key,
         )
-
-        # todo 522: remove
-        self.is_query_key = is_query_key
-        self.is_gallery_key = is_gallery_key
-
-    def get_query_ids(self) -> LongTensor:
-        return BoolTensor(self._df[IS_QUERY_COLUMN]).nonzero().squeeze()
-
-    def get_gallery_ids(self) -> LongTensor:
-        return BoolTensor(self._df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+        self.labels_key = labels_key
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = super().__getitem__(idx)
-        item[self.labels_key] = self._df.iloc[idx][LABELS_COLUMN]
-
-        # todo 522: remove
-        item[self.is_query_key] = bool(self._df[IS_QUERY_COLUMN][idx])
-        item[self.is_gallery_key] = bool(self._df[IS_GALLERY_COLUMN][idx])
+        item[self.labels_key] = self.df.iloc[idx][LABELS_COLUMN]
 
         return item
 
@@ -423,6 +486,7 @@ def get_retrieval_images_datasets(
 __all__ = [
     "ImageBaseDataset",
     "ImageLabeledDataset",
+    "ImageQueryGalleryDataset",
     "ImageQueryGalleryLabeledDataset",
     "get_retrieval_images_datasets",
 ]

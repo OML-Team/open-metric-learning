@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, OVERALL_CATEGORIES_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from tests.test_integrations.utils import (
-    EmbeddingsQueryGalleryDataset,
+    EmbeddingsQueryGalleryLabeledDataset,
     IdealClusterEncoder,
 )
 
@@ -51,7 +51,7 @@ def get_shared_query_gallery() -> TData:
 def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, data: TData) -> None:
     labels, query_mask, gallery_mask, input_tensors, cmc_gt = data
 
-    dataset = EmbeddingsQueryGalleryDataset(
+    dataset = EmbeddingsQueryGalleryLabeledDataset(
         labels=labels,
         embeddings=input_tensors,
         is_query=query_mask,
