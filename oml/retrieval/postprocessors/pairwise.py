@@ -68,7 +68,6 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self, distances: Tensor, retrieved_ids: Tensor, dataset: IQueryGalleryDataset
     ) -> Tuple[Tensor, Tensor]:
         """
-
         Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted
         to remain distances sorted. Here is an example:
         ``original_distances = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3``
@@ -81,6 +80,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
         If concatenation of two distances is already sorted, we keep it untouched.
 
         """
+        # todo 522: explain what's going on here
+
         top_n = min(self.top_n, distances.shape[1])
 
         # let's list pairs of (query_i, gallery_j) we need to process
