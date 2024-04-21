@@ -450,7 +450,6 @@ def get_retrieval_images_datasets(
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
 
-    # todo 522: why do we need it?
     # first half will consist of "train" split, second one of "val"
     # so labels in train will be from 0 to N-1 and labels in test will be from N to K
     mapper = {l: i for i, l in enumerate(df.sort_values(by=[SPLIT_COLUMN])[LABELS_COLUMN].unique())}
