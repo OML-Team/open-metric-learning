@@ -12,30 +12,60 @@ from .utils import init_ddp, run_in_ddp
 @pytest.mark.long
 @pytest.mark.parametrize("world_size", [1, 2, 3])
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
-def test_ddp_accumulator(world_size: int, device: str) -> None:
-    run_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device,))
+@pytest.mark.parametrize("create_duplicate", [True, False])
+def test_ddp_accumulator(world_size: int, device: str, create_duplicate: bool) -> None:
+    run_in_ddp(world_size=world_size, fn=check_ddp_accumulator, args=(device, create_duplicate))
 
 
-def check_ddp_accumulator(rank: int, world_size: int, device: str) -> None:
+@pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
+@pytest.mark.parametrize("create_duplicate", [True, False])
+def test_fake_ddp_accumulator(device: str, create_duplicate: bool) -> None:
+    # we expect the same duplicate removing behaviour without initializing DDP
+    check_accumulator(rank=0, world_size=1, device=device, create_duplicate=create_duplicate)
+
+
+def check_ddp_accumulator(rank: int, world_size: int, device: str, create_duplicate: bool) -> None:
     init_ddp(rank, world_size)
+    check_accumulator(rank, world_size, device, create_duplicate)
 
+
+def check_accumulator(rank: int, world_size: int, device: str, create_duplicate: bool) -> None:
     value = rank + 1
+    size = value
+
+    indices = {0: [0], 1: [1, 2], 2: [3, 4, 5]}[rank]
+
+    if create_duplicate and (rank == 0):
+        # let's pretend we doubled our single record at the rank 0
+        size = 2
+        indices = [0, 0]
 
     data = {
-        "list": [value] * value,
-        "tensor_1d": value * torch.ones(value, device=device),
-        "tensor_3d": value * torch.ones((value, 2, 3), device=device),
-        "numpy_1d": value * np.ones(value),
-        "numpy_3d": value * np.ones((value, 4, 5)),
+        "list": [value] * size,
+        "tensor_1d": value * torch.ones(size, device=device),
+        "tensor_3d": value * torch.ones((size, 2, 3), device=device),
+        "numpy_1d": value * np.ones(size),
+        "numpy_3d": value * np.ones((size, 4, 5)),
     }
 
-    acc = Accumulator(keys_to_accumulate=list(data.keys()))
+    acc = Accumulator(keys_to_accumulate=tuple(data.keys()))
     acc.refresh(len(data["list"]))
-    acc.update_data(data)
+    acc.update_data(data, indices=indices)
 
-    synced_data = acc.sync().storage
+    acc_synced = acc.sync()
+    synced_data = acc_synced.storage
+    synced_num_samples = acc_synced.num_samples
+
+    assert acc_synced.is_storage_full()
 
     len_after_sync = sum(range(1, world_size + 1))
+
+    indices_synced = synced_data[acc._indices_key]
+
+    assert len_after_sync == synced_num_samples
+
+    assert len(indices_synced) == len(set(indices_synced))
+    assert sorted(indices_synced) == list(range(len_after_sync))
 
     assert len(synced_data["list"]) == len_after_sync
 
