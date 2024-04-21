@@ -421,6 +421,13 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
             is_gallery_key=is_gallery_key,
         )
 
+        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.index_key = self.__dataset.index_key
+
+        # todo 522: remove
+        self.is_query_key = self.__dataset.is_query_key
+        self.is_gallery_key = self.__dataset.is_gallery_key
+
     def __getitem__(self, item: int) -> Dict[str, Any]:
         batch = self.__dataset[item]
         del batch[self.__dataset.labels_key]
@@ -434,6 +441,9 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
 
     def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
         return self.__dataset.visualize(item, color)
+
+    def __len__(self) -> int:
+        return len(self.__dataset)
 
 
 def get_retrieval_images_datasets(

@@ -59,7 +59,9 @@ class PairwiseReranker(IRetrievalPostprocessor):
         # todo 522:
         # after we introduce RetrievalPrediction the signature of the method will change: so, we directly call
         # self.process_neigh. Thus, the code below is temporary to support the current interface.
-        distances_neigh, ii_neigh = torch.topk(distances, k=min(distances.shape[1], self.top_n))
+        distances_neigh, ii_neigh = torch.topk(
+            distances, k=min(distances.shape[1], self.top_n), largest=False
+        )  # todo 522: test it!!!
         distances_neigh_upd, ii_neigh_upd = self.process_neigh(distances_neigh, ii_neigh, dataset)
         distances_upd = assign_2d(x=distances, indices=ii_neigh_upd, new_values=distances_neigh_upd)
         return distances_upd

@@ -96,7 +96,7 @@ class IQueryGalleryLabeledDataset(IQueryGalleryDataset, ILabeledDataset, ABC):
     """
 
 
-class IPairDataset(Dataset, IIndexedDataset):
+class IPairDataset(IIndexedDataset):
     """
     This is an interface for the datasets which return pair of something.
 
