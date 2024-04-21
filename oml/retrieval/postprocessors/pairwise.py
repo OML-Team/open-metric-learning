@@ -50,8 +50,9 @@ class PairwiseReranker(IRetrievalPostprocessor):
             dataset: Dataset having query-gallery split.
 
         Returns:
-            Distances: Where ``distances[i, j]`` is a distance between i-th query and j-th gallery,
-                       but the distances to the first ``top_n`` galleries have been updated.
+            Distances, where ``distances[i, j]`` is a distance between i-th query and j-th gallery,
+            but the distances to the first ``top_n`` galleries have been updated INPLACE.
+
         """
         # todo 522:
         # This function is needed only during the migration time. We will directly use `process_neigh` later.
@@ -84,25 +85,40 @@ class PairwiseReranker(IRetrievalPostprocessor):
             After model is applied to the ``top_n`` retrieved items, the updated ids and distances are returned.
             Thus, you can expect permutation among first ``top_n`` ids and distances, but the rest remains untouched.
 
-        **Example 1:**
-        ``retrieved_ids: [3,   2,   1,   0,   4  ]``
-        ``distances:     [0.1, 0.2, 0.5, 0.6, 0.7]``
-        Let's say postprocessor has been applied to the first 3 elements and new distances are: ``[0.4, 0.2, 0.3]``
-        In this case, updated values are:
-        ``[2,   1,   3,   0,   4  ]``
-        ``[0.2, 0.3, 0.4, 0.6, 0.7]``
+        **Example 1** (for one query):
 
-        **Example 2:**
-        Note, the new distances to the ``top_n`` items produced by the pairwise model may be rescaled
-        to remain distances sorted. Here is an example:
-        ``original_distances = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3``
-        Imagine, the postprocessor didn't change the order of the first 3 items (it's just a convenient example,
-        the logic remains the same), however the new values have a bigger scale:
-        ``distances_upd = [1, 2, 5, 0.5, 0.6]``.
-        Thus, we need to rescale the first three distances, so they don't go above ``0.5``.
-        The scaling factor is ``s = min(0.5, 0.6) / max(1, 2, 5) = 0.1``. Finally:
-        ``distances_upd_scaled = [0.1, 0.2, 0.5, 0.5, 0.6]``.
-        If concatenation of the new and old distances is already sorted, we don't apply any scaling.
+        .. code-block:: python
+
+            retrieved_ids = [3,   2,   1,   0,   4  ]
+            distances     = [0.1, 0.2, 0.5, 0.6, 0.7]
+
+            # Let's say a postprocessor has been applied to the
+            # first 3 elements and the new distances are: [0.4, 0.2, 0.3]
+
+            # In this case, the updated values will be:
+            retrievied_ids = [2,   1,   3,   0,   4  ]
+            distances:     = [0.2, 0.3, 0.4, 0.6, 0.7]
+
+        **Example 2** (for one query):
+
+        .. code-block:: python
+
+            # Note, the new distances to the top_n items produced by the pairwise model
+            #  may be rescaled to keep the distances order. Here is an example:
+            original_distances = [0.1, 0.2, 0.3, 0.5, 0.6]
+            top_n = 3
+
+            # Imagine, the postprocessor didn't change the order of the first 3 items
+            # (it's just a convenient example, the general logic remains the same),
+            # however the new values have a bigger scale:
+            distances_upd = [1, 2, 5, 0.5, 0.6]
+
+            # Thus, we need to downscale the first 3 distances, so they are lower than 0.5:
+            scale = 5 / 0.5 = 0.1
+            # Finally, let's apply the found scale to the top 3 distances:
+            distances_upd_scaled = [0.1, 0.2, 0.5, 0.5, 0.6]
+
+            # Note, if new and old distances are already sorted, we don't apply any scaling.
 
         """
         assert retrieved_ids.shape == distances.shape

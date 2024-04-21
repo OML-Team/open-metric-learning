@@ -5,12 +5,10 @@ from torch import Tensor
 from oml.const import INDEX_KEY, INPUT_TENSORS_KEY_1, INPUT_TENSORS_KEY_2
 from oml.interfaces.datasets import IBaseDataset, IPairDataset
 
-# todo 522: make one modality agnostic instead of these two
-
 
 class PairDataset(IPairDataset):
     """
-    Dataset to iterate over pairs of items.
+    Dataset to iterate over pairs of items of any modality.
 
     """
 

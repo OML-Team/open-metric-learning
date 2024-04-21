@@ -15,3 +15,5 @@ PairwiseReranker
 
     .. automethod:: __init__
     .. automethod:: process
+    .. automethod:: process_neigh
+

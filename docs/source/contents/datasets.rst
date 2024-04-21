@@ -52,3 +52,12 @@ ImageQueryGalleryDataset
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
     .. automethod:: visualize
+
+PairDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.pairs.PairDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
