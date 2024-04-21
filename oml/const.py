@@ -100,8 +100,8 @@ Y2_KEY = "y2"
 INDEX_KEY = "idx"
 SEQUENCE_KEY = "sequence"
 
-PAIR_1ST_KEY = "input_tensors_1"
-PAIR_2ND_KEY = "input_tensors_2"
+INPUT_TENSORS_KEY_1 = "input_tensors_1"
+INPUT_TENSORS_KEY_2 = "input_tensors_2"
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]
 

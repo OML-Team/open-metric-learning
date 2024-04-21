@@ -5,12 +5,28 @@ import numpy as np
 from torch import LongTensor
 from torch.utils.data import Dataset
 
-from oml.const import INDEX_KEY, LABELS_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY, TColor
+from oml.const import INPUT_TENSORS_KEY_1, INPUT_TENSORS_KEY_2, LABELS_KEY, TColor
 
 
-class IBaseDataset(Dataset):
-    input_tensors_key: str
+class IIndexedDataset(Dataset, ABC):
     index_key: str
+
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        """
+
+        Args:
+            item: Idx of the sample
+
+        Returns:
+            Dictionary having the following key:
+            ``self.index_key: int = item``
+
+        """
+        raise NotImplementedError()
+
+
+class IBaseDataset(IIndexedDataset, ABC):
+    input_tensors_key: str
     extra_data: Dict[str, Any]
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
@@ -45,6 +61,8 @@ class ILabeledDataset(IBaseDataset, ABC):
         Returns:
              Dictionary including the following keys:
 
+            ``self.input_tensors_key``
+            ``self.index_key: int = item``
             ``self.labels_key``
 
         """
@@ -78,15 +96,14 @@ class IQueryGalleryLabeledDataset(IQueryGalleryDataset, ILabeledDataset, ABC):
     """
 
 
-class IPairDataset(Dataset, ABC):
+class IPairDataset(Dataset, IIndexedDataset):
     """
     This is an interface for the datasets which return pair of something.
 
     """
 
-    pairs_1st_key: str = PAIR_1ST_KEY
-    pairs_2nd_key: str = PAIR_2ND_KEY
-    index_key: str = INDEX_KEY
+    input_tensors_key_1: str = INPUT_TENSORS_KEY_1
+    input_tensors_key_2: str = INPUT_TENSORS_KEY_2
 
     @abstractmethod
     def __getitem__(self, item: int) -> Dict[str, Any]:
@@ -97,8 +114,8 @@ class IPairDataset(Dataset, ABC):
         Returns:
              Dictionary with the following keys:
 
-            ``self.pairs_1st_key``
-            ``self.pairs_2nd_key``
+            ``self.input_tensors_key_1``
+            ``self.input_tensors_key_2``
             ``self.index_key``
 
         """
@@ -116,6 +133,7 @@ class IVisualizableDataset(Dataset, ABC):
 
 
 __all__ = [
+    "IIndexedDataset",
     "IBaseDataset",
     "ILabeledDataset",
     "IQueryGalleryLabeledDataset",

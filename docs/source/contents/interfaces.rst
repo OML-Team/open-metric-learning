@@ -52,6 +52,14 @@ ITripletLossWithMiner
 
     .. automethod:: forward
 
+IIndexedDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IIndexedDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __getitem__
+
 IBaseDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.datasets.IBaseDataset

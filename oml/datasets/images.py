@@ -359,12 +359,12 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
     def get_gallery_ids(self) -> LongTensor:
         return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        data = super().__getitem__(idx)
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        data = super().__getitem__(item)
 
         # todo 522: remove
-        data[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][idx])
-        data[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][idx])
+        data[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][item])
+        data[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][item])
 
         return data
 

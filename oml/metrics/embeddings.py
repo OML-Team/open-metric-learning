@@ -163,8 +163,18 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self.acc.refresh(num_samples=num_samples)
 
-    def update_data(self, data_dict: Dict[str, Any]) -> None:  # type: ignore
-        self.acc.update_data(data_dict=data_dict)
+    def update_data(self, data_dict: Dict[str, Any], indices: Optional[List[int]] = None) -> None:  # type: ignore
+        """
+        Args:
+            data_dict: Batch of data containing records of the same size: ``bs``.
+            indices: Global indices of the elements in your records within the range of ``(0, dataset_size - 1)``.
+                     Indices are needed in DDP (because data is gathered shuffled, additionally you may also get
+                     some duplicates due to padding). In the single device regime it's may be useful if you accumulate
+                     data in shuffled order.
+
+        """
+        # todo 522: make indices non optional and add the test
+        self.acc.update_data(data_dict=data_dict, indices=indices)
 
     def _calc_matrices(self) -> None:
         embeddings = self.acc.storage[self.embeddings_key]
@@ -384,6 +394,10 @@ class EmbeddingMetrics(IMetricVisualisable):
 class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP):
     def sync(self) -> None:
         self.acc = self.acc.sync()
+
+    def update_data(self, data_dict: Dict[str, Any], indices: List[int]) -> None:  # type: ignore
+        # indices are obligatory in DDP
+        return super().update_data(data_dict, indices)
 
 
 __all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "EmbeddingMetricsDDP"]

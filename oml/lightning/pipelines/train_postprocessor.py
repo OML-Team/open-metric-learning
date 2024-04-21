@@ -58,11 +58,13 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
+    transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
+
     train_extraction, val_extraction = get_retrieval_images_datasets(
         dataset_root=cfg["dataset_root"],
         dataframe_name=cfg["dataframe_name"],
-        transforms_train=get_transforms_by_cfg(cfg["transforms_extraction"]),
-        transforms_val=get_transforms_by_cfg(cfg["transforms_extraction"]),
+        transforms_train=transforms_extraction,
+        transforms_val=transforms_extraction,
     )
 
     args = {
@@ -91,7 +93,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     valid_dataset = ImageQueryGalleryLabeledDataset(
         dataset_root=cfg["dataset_root"],
         df=val_extraction.df,
-        transform=get_transforms_by_cfg(cfg["transforms_extraction"]),
+        transform=transforms_extraction,
         extra_data={EMBEDDINGS_KEY: emb_val},
     )
 

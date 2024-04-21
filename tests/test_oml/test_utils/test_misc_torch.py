@@ -1,4 +1,4 @@
-from typing import Any
+from typing import List
 
 import numpy as np
 import pytest
@@ -6,11 +6,12 @@ import torch
 
 from oml.utils.misc_torch import (
     PCA,
+    TData,
     assign_2d,
     cat_two_sorted_tensors_and_keep_it_sorted,
-    drop_duplicates_by_ids,
     elementwise_dist,
     take_2d,
+    unique_by_ids,
 )
 
 
@@ -104,32 +105,119 @@ def test_assign_2d() -> None:
     assert (expected == assign_2d(x=x, indices=indices, new_values=new_values)).all()
 
 
-@pytest.fixture()
-def drop_duplicates_by_ids_test_data() -> Any:
-    ids = [0, 1, 1, 0, 2]
-    data = torch.tensor([
-        [0.3, 0.4],
-        [0.5, 0.3],
-        [0.5, 0.3],
-        [0.3, 0.4],
-        [0.9, 0.8]
-    ])
+@pytest.mark.parametrize("ids,data,ids_expected,data_expected", [
+    (
+            # ids
+            [3, 0, 1, 1, 0, 2],
+            # data
+            torch.tensor([
+                [0.1, 0.1],
+                [0.3, 0.4],
+                [0.5, 0.3],
+                [0.5, 0.3],
+                [0.3, 0.4],
+                [0.9, 0.8]
+            ]),
+            # ids expected
+            [0, 1, 2, 3],
+            # data expected
+            torch.tensor(
+                [[0.3, 0.4],
+                 [0.5, 0.3],
+                 [0.9, 0.8],
+                 [0.1, 0.1]
+                 ])
+    ),
+    (
+            # ids
+            [0, 0],
+            # data
+            torch.tensor([
+                [0.3, 0.4],
+                [0.3, 0.3],
+            ]),
+            # ids expected
+            [0],
+            # data expected
+            torch.tensor([[0.3, 0.4]])
+    ),
+    (
+            # ids
+            [0, 0],
+            # data
+            np.array([
+                [0.3, 0.4],
+                [0.3, 0.3],
+            ]),
+            # ids expected
+            [0],
+            # data expected
+            np.array([[0.3, 0.4]])
+    ),
+    (
+            # ids
+            [0, 0],
+            # data
+            np.array([0.5, 0.6]),
+            # ids expected
+            [0],
+            # data expected
+            np.array([0.5])
+    ),
+    (
+            # ids
+            [0, 0],
+            # data
+            ["a", "a"],
+            # ids expected
+            [0],
+            # data expected
+            ["a"]
+    ),
+    (
+            # ids
+            [0, 0],
+            # data
+            [
+                ({"hello"}, {"world"}),
+                ({"hello"}, {"world"})
+            ],
+            # ids expected
+            [0],
+            # data expected
+            [
+                ({"hello"}, {"world"})
+            ]
+    ),
+    (
+            # ids
+            [0, 1],
+            # data
+            [
+                ({"hello"}, {"world"}),
+                ({"HELLO"}, {"WORLD"})
+            ],
+            # ids expected
+            [0, 1],
+            # data expected
+            [
+                ({"hello"}, {"world"}),
+                ({"HELLO"}, {"WORLD"})
+            ]
+    )
+])
+def test_drop_duplicates_by_ids(ids: List[int], data: TData, ids_expected: List[int], data_expected: TData) -> None:
+    ids_calculated, data_calculated = unique_by_ids(ids=ids, data=data)
+    assert ids_calculated == ids_expected, (ids_calculated, ids_expected)
 
-    ids_expected = [0, 1, 2]
-    data_expected = torch.tensor([
-        [0.3, 0.4],
-        [0.5, 0.3],
-        [0.9, 0.8],
-    ])
-
-    return (ids, data), (ids_expected, data_expected)
-
-
-def test_drop_duplicates_by_ids(drop_duplicates_by_ids_test_data) -> None:  # type: ignore
-    (ids, data), (ids_expected, data_expected) = drop_duplicates_by_ids_test_data
-    ids_calculated, data_calculated = drop_duplicates_by_ids(ids=ids, data=data)
-    assert ids_calculated == ids_expected
-    assert torch.allclose(data_expected, data_calculated)
+    if isinstance(data_expected, np.ndarray):
+        assert np.allclose(data_expected, data_calculated)
+        assert data_expected.shape == data_calculated.shape  # type: ignore
+    elif isinstance(data_expected, torch.Tensor):
+        assert torch.allclose(data_expected, data_calculated)  # type: ignore
+        assert data_expected.shape == data_calculated.shape  # type: ignore
+    else:
+        assert data_expected == data_calculated
 
 
 @pytest.mark.long
