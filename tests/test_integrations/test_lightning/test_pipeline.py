@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from oml.const import (
     EMBEDDINGS_KEY,
+    INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
@@ -31,7 +32,13 @@ class DummyRetrievalDataset(Dataset):
     def __getitem__(self, item: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
         label = torch.tensor(self.labels[item]).long()
-        return {INPUT_TENSORS_KEY: input_tensors, LABELS_KEY: label, IS_QUERY_KEY: True, IS_GALLERY_KEY: True}
+        return {
+            INPUT_TENSORS_KEY: input_tensors,
+            LABELS_KEY: label,
+            IS_QUERY_KEY: True,
+            IS_GALLERY_KEY: True,
+            INDEX_KEY: item,
+        }
 
     def __len__(self) -> int:
         return len(self.labels)

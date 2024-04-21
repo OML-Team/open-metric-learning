@@ -7,8 +7,6 @@ import numpy as np
 import torch
 from torch import Tensor, cdist
 
-from oml.utils.misc import find_first_occurrences
-
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
 TOnlineValues = Union[TSingleValues, TSequenceValues]
@@ -126,31 +124,33 @@ def _check_is_sequence(val: Any) -> bool:
         return False
 
 
-def drop_duplicates_by_ids(ids: List[Hashable], data: Tensor, sort: bool = True) -> Tuple[List[Hashable], Tensor]:
+TData = Tuple[List[Any], Tensor, np.ndarray]
+
+
+def unique_by_ids(ids: List[int], data: TData) -> Tuple[List[int], TData]:
     """
-    The function returns rows of data that have unique ids.
-    Thus, if there are multiple occurrences of some id, it leaves the first one.
+    The function sort data by the corresponding indices and drops duplicates.
+    Thus, if there are multiple occurrences of the same id, it takes the first one.
 
     Args:
-        ids: Identifiers of data records with the length of ``N``
-        data: Tensor of data records in the shape of ``[N, *]``
-        sort: Set ``True`` to return unique records sorted by their ids
+        ids: Indices of data with the length of ``N``
+        data: Data with the length of ``N``
 
     Returns:
-        Unique data records with their ids
+        Unique data records with their ids in the sorted order without duplicates
 
     """
-    assert isinstance(ids, list)
-    ids_first = find_first_occurrences(ids)
-    ids = [ids[i] for i in ids_first]
-    data = data[ids_first]
+    assert len(ids) == len(data)
+    assert isinstance(ids, list) and len(ids) >= 1
 
-    if sort:
-        ii_permute = torch.argsort(torch.tensor(ids))
-        ids = [ids[i] for i in ii_permute]
-        data = data[ii_permute]
+    ids_unq, positions_unq = np.unique(ids, return_index=True)
 
-    return ids, data
+    if isinstance(data, (list, tuple)):
+        data = [data[i] for i in positions_unq]  # type: ignore
+    else:
+        data = data[positions_unq]
+
+    return ids_unq.tolist(), data
 
 
 @contextmanager
@@ -465,6 +465,6 @@ __all__ = [
     "take_2d",
     "assign_2d",
     "PCA",
-    "drop_duplicates_by_ids",
+    "unique_by_ids",
     "normalise",
 ]
