@@ -29,6 +29,7 @@ def download_mock_dataset(
         dataset_root: Path to save the dataset
         check_md5: Set ``True`` to check md5sum
         df_name: Name of csv file for which output DataFrames will be returned
+        global_paths: Set ``True`` to cancat paths and ``dataset_root``
 
     Returns: Dataframes for the training and validation stages
 

@@ -11,7 +11,7 @@ from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDa
 from oml.interfaces.models import IPairwiseModel
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
-from oml.utils.misc import flatten_dict, one_hot
+from oml.utils.misc import flatten_dict, one_hot, set_global_seed
 from oml.utils.misc_torch import normalise, pairwise_dist
 from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
@@ -37,7 +37,7 @@ def independent_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
 
     dataset = EmbeddingsQueryGalleryDataset(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
 
-    embeddings_inference = embeddings.clone()  # pretend it's our inference
+    embeddings_inference = embeddings.clone()  # pretend it's our inference results
 
     return dataset, embeddings_inference
 
@@ -53,14 +53,14 @@ def shared_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
         embeddings=embeddings, is_query=torch.ones(sz).bool(), is_gallery=torch.ones(sz).bool()
     )
 
-    embeddings_inference = embeddings.clone()  # pretend it's our inference
+    embeddings_inference = embeddings.clone()  # pretend it's our inference results
 
     return dataset, embeddings_inference
 
 
 @pytest.mark.long
 @pytest.mark.parametrize("top_n", [2, 5, 100])
-@pytest.mark.parametrize("pairwise_distances_bias", [0, 100])
+@pytest.mark.parametrize("pairwise_distances_bias", [0, -100, +100])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
 def test_trivial_processing_does_not_change_distances_order(
     request: pytest.FixtureRequest, fixture_name: str, top_n: int, pairwise_distances_bias: float
@@ -74,11 +74,7 @@ def test_trivial_processing_does_not_change_distances_order(
 
     distances_processed = processor.process(distances=distances.clone(), dataset=dataset)
 
-    if pairwise_distances_bias == 0:
-        assert torch.allclose(distances_processed, distances)
-    else:
-        assert (distances_processed.argsort() == distances.argsort()).all()
-        assert not torch.allclose(distances_processed, distances)
+    assert (distances_processed.argsort() == distances.argsort()).all()
 
 
 def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
@@ -97,7 +93,8 @@ def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
 
 
 @pytest.mark.long
-def test_trivial_processing_fixes_broken_perfect_case() -> None:
+@pytest.mark.parametrize("pairwise_distances_bias", [0, -100, +100])
+def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: float) -> None:
     """
     The idea of the test is the following:
 
@@ -135,7 +132,9 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
         metrics = flatten_dict(calc_retrieval_metrics(distances=distances, **args))
 
         # Metrics after broken distances have been fixed
-        model = LinearTrivialDistanceSiamese(feat_dim=embeddings.shape[-1], identity_init=True, output_bias=10)
+        model = LinearTrivialDistanceSiamese(
+            feat_dim=embeddings.shape[-1], identity_init=True, output_bias=pairwise_distances_bias
+        )
         processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=16, num_workers=0)
         distances_upd = processor.process(distances, dataset)
         metrics_upd = flatten_dict(calc_retrieval_metrics(distances=distances_upd, **args))
@@ -164,7 +163,13 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     # The idea of the test is that postprocessing of first n elements
     # cannot change cmc@n and precision@n
 
+    set_global_seed(42)
+
+    # let's get some random inputs
     dataset, embeddings = perfect_case()
+    embeddings = torch.randn_like(embeddings).float()
+
+    top_n = min(top_n, embeddings.shape[1])
 
     distances = pairwise_dist(embeddings[dataset.get_query_ids()], embeddings[dataset.get_gallery_ids()], p=2)
 
@@ -181,11 +186,17 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     }
 
     metrics_before = calc_retrieval_metrics(distances=distances, **args)
+    ii_closest_before = torch.argsort(distances)
 
     model = RandomPairwise()
     processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=4, num_workers=0)
     distances_upd = processor.process(distances=distances, dataset=dataset)
 
     metrics_after = calc_retrieval_metrics(distances=distances_upd, **args)
+    ii_closest_after = torch.argsort(distances_upd)
 
     assert metrics_before == metrics_after
+
+    # also check that we only re-ranked the first top_n items
+    assert (ii_closest_before[:, :top_n] != ii_closest_after[:, :top_n]).any()
+    assert (ii_closest_before[:, top_n:] == ii_closest_after[:, top_n:]).all()

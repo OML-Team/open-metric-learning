@@ -24,21 +24,20 @@ from oml.lightning.pipelines.logging import (
     WandBPipelineLogger,
 )
 
-dataset_root = "mock_dataset/"
-df_train, df_val = download_mock_dataset(dataset_root)
+df_train, df_val = download_mock_dataset(global_paths=True)
 
 # model
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
 

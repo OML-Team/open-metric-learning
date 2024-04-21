@@ -7,11 +7,7 @@ from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
-from oml.utils.misc_torch import (
-    assign_2d,
-    cat_two_sorted_tensors_and_keep_it_sorted,
-    take_2d,
-)
+from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
 
 
 class PairwiseReranker(IRetrievalPostprocessor):
@@ -50,27 +46,54 @@ class PairwiseReranker(IRetrievalPostprocessor):
     def process(self, distances: Tensor, dataset: IQueryGalleryDataset) -> Tensor:  # type: ignore
         """
         Args:
-            distances: Distances among queries and galleries with the shape of ``[Q, G]``.
+            distances: Where ``distances[i, j]`` is a distance between i-th query and j-th gallery.
             dataset: Dataset having query-gallery split.
 
         Returns:
-            The same distances matrix, but `top_n` smallest values are updated.
+            Distances: Where ``distances[i, j]`` is a distance between i-th query and j-th gallery,
+                       but the distances to the first ``top_n`` galleries have been updated.
         """
         # todo 522:
-        # after we introduce RetrievalPrediction the signature of the method will change: so, we directly call
-        # self.process_neigh. Thus, the code below is temporary to support the current interface.
-        distances_neigh, ii_neigh = torch.topk(
-            distances, k=min(distances.shape[1], self.top_n), largest=False
-        )  # todo 522: test it!!!
-        distances_neigh_upd, ii_neigh_upd = self.process_neigh(distances_neigh, ii_neigh, dataset)
-        distances_upd = assign_2d(x=distances, indices=ii_neigh_upd, new_values=distances_neigh_upd)
-        return distances_upd
+        # This function is needed only during the migration time. We will directly use `process_neigh` later.
+        # Thus, the code above is just an adapter for input and output of the `process_neigh` function.
+
+        assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
+
+        distances, ii_retrieved = distances.sort()
+        distances, ii_retrieved_upd = self.process_neigh(
+            retrieved_ids=ii_retrieved, distances=distances, dataset=dataset
+        )
+        distances = take_2d(distances, ii_retrieved_upd.argsort())
+
+        assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
+
+        return distances
 
     def process_neigh(
-        self, distances: Tensor, retrieved_ids: Tensor, dataset: IQueryGalleryDataset
+        self, retrieved_ids: Tensor, distances: Tensor, dataset: IQueryGalleryDataset
     ) -> Tuple[Tensor, Tensor]:
         """
-        Note, the new distances to the ``top_n`` items produced by the pairwise model may be adjusted
+
+        Args:
+            retrieved_ids: Ids of galleries closest to every query with the shape of ``[n_query, n_retrieved]`` sorted
+                           by their distances.
+            distances: The corresponding distances (in sorted order).
+            dataset: Dataset having query/gallery split.
+
+        Returns:
+            After model is applied to the ``top_n`` retrieved items, the updated ids and distances are returned.
+            Thus, you can expect permutation among first ``top_n`` ids and distances, but the rest remains untouched.
+
+        **Example 1:**
+        ``retrieved_ids: [3,   2,   1,   0,   4  ]``
+        ``distances:     [0.1, 0.2, 0.5, 0.6, 0.7]``
+        Let's say postprocessor has been applied to the first 3 elements and new distances are: ``[0.4, 0.2, 0.3]``
+        In this case, updated values are:
+        ``[2,   1,   3,   0,   4  ]``
+        ``[0.2, 0.3, 0.4, 0.6, 0.7]``
+
+        **Example 2:**
+        Note, the new distances to the ``top_n`` items produced by the pairwise model may be rescaled
         to remain distances sorted. Here is an example:
         ``original_distances = [0.1, 0.2, 0.3, 0.5, 0.6], top_n = 3``
         Imagine, the postprocessor didn't change the order of the first 3 items (it's just a convenient example,
@@ -79,10 +102,12 @@ class PairwiseReranker(IRetrievalPostprocessor):
         Thus, we need to rescale the first three distances, so they don't go above ``0.5``.
         The scaling factor is ``s = min(0.5, 0.6) / max(1, 2, 5) = 0.1``. Finally:
         ``distances_upd_scaled = [0.1, 0.2, 0.5, 0.5, 0.6]``.
-        If concatenation of two distances is already sorted, we keep it untouched.
+        If concatenation of the new and old distances is already sorted, we don't apply any scaling.
 
         """
-        # todo 522: explain what's going on here
+        assert retrieved_ids.shape == distances.shape
+        assert len(retrieved_ids) == len(dataset.get_query_ids())
+        assert retrieved_ids.shape[1] <= len(dataset.get_gallery_ids())
 
         top_n = min(self.top_n, distances.shape[1])
 

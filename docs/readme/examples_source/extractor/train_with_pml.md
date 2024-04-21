@@ -13,13 +13,12 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 
 from pytorch_metric_learning import losses, distances, reducers, miners
 
-dataset_root = "mock_dataset/"
-df_train, _ = download_mock_dataset(dataset_root)
+df_train, _ = download_mock_dataset(global_paths=True)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train)
 
 # PML specific
 # criterion = losses.TripletMarginLoss(margin=0.2, triplets_per_anchor="all")
