@@ -20,7 +20,7 @@ def test_ddp_accumulator(world_size: int, device: str, create_duplicate: bool) -
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
 @pytest.mark.parametrize("create_duplicate", [True, False])
 def test_fake_ddp_accumulator(device: str, create_duplicate: bool) -> None:
-    # we expect the same behaviour without initializing DDP
+    # we expect the same duplicate removing behaviour without initializing DDP
     check_accumulator(rank=0, world_size=1, device=device, create_duplicate=create_duplicate)
 
 
@@ -60,7 +60,7 @@ def check_accumulator(rank: int, world_size: int, device: str, create_duplicate:
 
     len_after_sync = sum(range(1, world_size + 1))
 
-    indices_synced = synced_data[acc.indices_key]
+    indices_synced = synced_data[acc._indices_key]
 
     assert len_after_sync == synced_num_samples
 

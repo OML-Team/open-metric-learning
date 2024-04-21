@@ -5,7 +5,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-from torch import BoolTensor, FloatTensor, LongTensor, Tensor, cdist
+from torch import Tensor, cdist
 
 TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
@@ -124,7 +124,7 @@ def _check_is_sequence(val: Any) -> bool:
         return False
 
 
-TData = Tuple[List[Any], BoolTensor, FloatTensor, LongTensor, Tensor, np.ndarray]
+TData = Tuple[List[Any], Tensor, np.ndarray]
 
 
 def unique_by_ids(ids: List[int], data: TData) -> Tuple[List[int], TData]:

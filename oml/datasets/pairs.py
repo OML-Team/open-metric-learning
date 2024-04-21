@@ -3,12 +3,14 @@ from typing import Any, Dict, List, Optional, Union
 
 from torch import Tensor
 
-from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY
-from oml.datasets.list_dataset import ListDataset, TBBoxes
+from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY, TBBoxes
+from oml.datasets.images import ImageBaseDataset
 from oml.interfaces.datasets import IPairsDataset
 from oml.transforms.images.torchvision import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms
 from oml.utils.images.images import TImReader, imread_pillow
+
+# todo 522: make one modality agnostic instead of these two
 
 
 class EmbeddingPairsDataset(IPairsDataset):
@@ -96,8 +98,8 @@ class ImagePairsDataset(IPairsDataset):
 
         cache_size = cache_size // 2 if cache_size else None
         dataset_args = {"transform": transform, "f_imread": f_imread, "cache_size": cache_size}
-        self.dataset1 = ListDataset(paths1, bboxes=bboxes1, **dataset_args)
-        self.dataset2 = ListDataset(paths2, bboxes=bboxes2, **dataset_args)
+        self.dataset1 = ImageBaseDataset(paths=paths1, bboxes=bboxes1, **dataset_args)
+        self.dataset2 = ImageBaseDataset(paths=paths2, bboxes=bboxes2, **dataset_args)
 
         self.pair_1st_key = pair_1st_key
         self.pair_2nd_key = pair_2nd_key

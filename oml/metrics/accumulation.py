@@ -2,12 +2,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-from torch import BoolTensor, FloatTensor, LongTensor, Tensor
+from torch import Tensor
 
 from oml.ddp.utils import get_world_size_safe, sync_dicts_ddp
 from oml.utils.misc_torch import unique_by_ids
 
-TStorage = Dict[str, Union[FloatTensor, BoolTensor, LongTensor, Tensor, np.ndarray, List[Any]]]
+TStorage = Dict[str, Union[Tensor, np.ndarray, List[Any]]]
 
 
 class Accumulator:
@@ -28,7 +28,7 @@ class Accumulator:
         self._collected_samples = 0
         self._storage: TStorage = dict()
 
-        self.indices_key = "element_indices"  # internal key to keep track of elements order if provided
+        self._indices_key = "element_indices"  # internal key to keep track of elements order if provided
 
     def refresh(self, num_samples: int) -> None:
         """
@@ -36,8 +36,7 @@ class Accumulator:
 
         Args:
             num_samples:  The total number of elements you are going to collect (for memory allocation).
-                          If you've provided ``ids`` in ``self.update_data`` method, this number may decrease
-                          after ``sync`` because of dropped duplicates.
+
         """
         assert isinstance(num_samples, int) and num_samples > 0
         self.num_samples = num_samples  # type: ignore
@@ -94,12 +93,15 @@ class Accumulator:
         """
         keys = list(self.keys_to_accumulate)
 
-        if indices is not None:
-            assert isinstance(indices, List)
-            keys += [self.indices_key]
-            data_dict[self.indices_key] = indices
+        if indices is None:
+            assert self._indices_key not in self.storage, "We are tracking ids, but they are not currently provided."
         else:
-            assert self.indices_key not in self.storage, "We are tracking ids, but they are not currently provided."
+            assert isinstance(indices, List)
+            if (self.collected_samples > 0) and (self._indices_key not in self.storage):
+                raise RuntimeError("You provided ids, but seems like you had not done it before.")
+
+            keys += [self._indices_key]
+            data_dict[self._indices_key] = indices
 
         bs_values = [len(data_dict[k]) for k in keys]
         bs = bs_values[0]
@@ -148,10 +150,10 @@ class Accumulator:
                 self.keys_to_accumulate
             ), "Keys of accumulators should be the same on each device"
 
-        if self.indices_key in storage:
+        if self._indices_key in storage:
             for key, data in storage.items():
-                storage[key] = unique_by_ids(storage[self.indices_key], data)[1]  # type: ignore
-            indices = storage[self.indices_key]
+                storage[key] = unique_by_ids(storage[self._indices_key], data)[1]  # type: ignore
+            indices = storage[self._indices_key]
             need_rebuilding = True
         else:
             indices = None
