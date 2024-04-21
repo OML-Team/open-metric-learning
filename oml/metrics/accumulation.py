@@ -28,7 +28,7 @@ class Accumulator:
         self._collected_samples = 0
         self._storage: TStorage = dict()
 
-        self._indices_key = "element_indices"  # internal key to keep track of elements order if provided
+        self._indices_key = "__element_indices"  # internal key to keep track of elements order if provided
 
     def refresh(self, num_samples: int) -> None:
         """
