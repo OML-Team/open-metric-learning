@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import pytest
+import torch
 from torch import Tensor, nn
 
 from oml.const import MOCK_DATASET_PATH
@@ -49,3 +50,8 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, pairwise
     distances_processed = postprocessor.process(distances=distances.clone(), dataset=dataset)
 
     assert (distances_processed.argsort() == distances.argsort()).all()
+
+    if pairwise_distances_bias == 0:
+        assert torch.allclose(distances_processed, distances)
+    else:
+        assert not torch.allclose(distances_processed, distances)

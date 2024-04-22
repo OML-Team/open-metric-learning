@@ -12,6 +12,7 @@ from oml.const import (
     EMBEDDINGS_KEY,
     GRAY,
     GREEN,
+    INDEX_KEY,
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
     LABELS_KEY,
@@ -68,7 +69,7 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def __init__(
         self,
-        dataset: Optional[IQueryGalleryLabeledDataset] = None,
+        dataset: Optional[IQueryGalleryLabeledDataset] = None,  # todo 522: This argument will not be Optional soon.
         embeddings_key: str = EMBEDDINGS_KEY,
         labels_key: str = LABELS_KEY,
         is_query_key: str = IS_QUERY_KEY,
@@ -90,7 +91,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
 
         Args:
-            dataset: Annotated dataset having query-gallery split. todo 522: This argument will not be Optional soon.
+            dataset: Annotated dataset having query-gallery split.
             embeddings_key: Key to take the embeddings from the batches
             labels_key: Key to take the labels from the batches
             is_query_key: Key to take the information whether every batch sample belongs to the query
@@ -146,6 +147,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.verbose = verbose
 
         keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
+        keys_to_accumulate += [INDEX_KEY]  # todo 522: remove it after we make "indices" not optional in .update_data()
         if self.categories_key:
             keys_to_accumulate.append(self.categories_key)
         if self.sequence_key:
@@ -200,6 +202,9 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         if self.postprocessor:
             assert self.dataset, "You must pass dataset to init to make postprocessing."
+            # todo 522: remove this assert after "indices" become not optional
+            ii_aligned = list(range(len(self.dataset)))
+            assert ii_aligned == self.acc.storage[INDEX_KEY].tolist(), "The data is shuffled!"  # type: ignore
             self.distance_matrix = self.postprocessor.process(self.distance_matrix, dataset=self.dataset)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
