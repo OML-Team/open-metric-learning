@@ -72,7 +72,7 @@ def cat_two_sorted_tensors_and_keep_it_sorted(x1: Tensor, x2: Tensor, eps: float
     assert eps >= 0
     assert x1.shape[0] == x2.shape[0]
 
-    scale = (x2[:, 0] / x1[:, -1]).view(-1, 1)
+    scale = (x2[:, 0] / x1[:, -1]).view(-1, 1).type_as(x1)
     need_scaling = x1[:, -1] > x2[:, 0]
     x1[need_scaling] = x1[need_scaling] * scale[need_scaling] - eps
 

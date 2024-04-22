@@ -1,7 +1,7 @@
 postfix: "postprocessing"
 
 seed: 42
-precision: 16
+precision: 32
 accelerator: cpu
 devices: 2
 find_unused_parameters: False

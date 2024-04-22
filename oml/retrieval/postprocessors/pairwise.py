@@ -7,7 +7,11 @@ from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
-from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
+from oml.utils.misc_torch import (
+    assign_2d,
+    cat_two_sorted_tensors_and_keep_it_sorted,
+    take_2d,
+)
 
 
 class PairwiseReranker(IRetrievalPostprocessor):
@@ -55,16 +59,24 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
         """
         # todo 522:
-        # This function is needed only during the migration time. We will directly use `process_neigh` later.
-        # Thus, the code above is just an adapter for input and output of the `process_neigh` function.
+        # This function and the code below is only needed during the migration time.
+        # We will directly use `process_neigh` later on.
+        # So, the code below is just a format adapter:
+        # 1) it takes the top (dists + ii) of the big distance matrix,
+        # 2) passes this top to the `process_neigh()`
+        # 3) puts the processed outputs on their places in the big distance matrix
 
         assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
 
-        distances, ii_retrieved = distances.sort()
-        distances, ii_retrieved_upd = self.process_neigh(
-            retrieved_ids=ii_retrieved, distances=distances, dataset=dataset
+        # we need this "+10" to activate rescaling if needed (so we have both: new and old distances in proces_neigh.
+        # anyway, this code is temporary
+        distances_top, ii_retrieved_top = torch.topk(
+            distances, k=min(self.top_n + 10, distances.shape[1]), largest=False
         )
-        distances = take_2d(distances, ii_retrieved_upd.argsort())
+        distances_top_upd, ii_retrieved_upd = self.process_neigh(
+            retrieved_ids=ii_retrieved_top, distances=distances_top, dataset=dataset
+        )
+        distances = assign_2d(x=distances, indices=ii_retrieved_upd, new_values=distances_top_upd)
 
         assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
 
