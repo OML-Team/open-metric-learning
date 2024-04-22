@@ -65,7 +65,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
 
     # Note! We add the link to our extractor to a Lightning's Module, so it can recognize it and manipulate its devices
-    pl_model.model_link_ = getattr(postprocessor, "extractor", None)
+    pl_model.model_link_ = postprocessor.model  # type: ignore
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(

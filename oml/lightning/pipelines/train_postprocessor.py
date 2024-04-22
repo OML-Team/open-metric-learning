@@ -61,7 +61,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
     transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
 
     train_extraction, val_extraction = get_retrieval_images_datasets(
-        dataset_root=cfg["dataset_root"],
+        dataset_root=Path(cfg["dataset_root"]),
         dataframe_name=cfg["dataframe_name"],
         transforms_train=transforms_extraction,
         transforms_val=transforms_extraction,
