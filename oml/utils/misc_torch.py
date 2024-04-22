@@ -57,7 +57,7 @@ def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     return x
 
 
-def cat_two_sorted_tensors_and_keep_it_sorted(x1: Tensor, x2: Tensor, eps: float = 1e-7) -> Tensor:
+def cat_two_sorted_tensors_and_keep_it_sorted(x1: Tensor, x2: Tensor, eps: float = 1e-6) -> Tensor:
     """
     Args:
         x1: Sorted tensor with the shape of ``[N, M]``

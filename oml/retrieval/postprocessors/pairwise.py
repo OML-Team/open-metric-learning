@@ -96,8 +96,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
             # first 3 elements and the new distances are: [0.4, 0.2, 0.3]
 
             # In this case, the updated values will be:
-            retrievied_ids = [2,   1,   3,   0,   4  ]
-            distances:     = [0.2, 0.3, 0.4, 0.6, 0.7]
+            retrieved_ids = [2,   1,   3,   0,   4  ]
+            distances:    = [0.2, 0.3, 0.4, 0.6, 0.7]
 
         **Example 2** (for one query):
 
