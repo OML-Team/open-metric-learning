@@ -34,6 +34,9 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
     filenames = [list(Path(cfg["data_dir"]).glob(f"**/*.{ext}")) for ext in IMAGE_EXTENSIONS]
     filenames = list(itertools.chain(*filenames))
 
+    if len(filenames) == 0:
+        raise RuntimeError(f"There are no images in the provided directory: {cfg['data_dir']}")
+
     f_imread = get_im_reader_for_transforms(transforms)
 
     print("Let's check if there are broken images:")
