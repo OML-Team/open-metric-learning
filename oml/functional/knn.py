@@ -64,7 +64,7 @@ def batched_knn(
         if labels_gt is not None:
             mask_gt_b = labels_gt[ids_query_b][..., None] == labels_gt[ids_gallery][None, ...]
             mask_gt_b[mask_to_ignore_b] = False
-            gt_ids.extend([LongTensor(row.nonzero()).squeeze() for row in mask_gt_b])  # type: ignore
+            gt_ids.extend([LongTensor(row.nonzero()).view(-1) for row in mask_gt_b])  # type: ignore
 
         distances_b[mask_to_ignore_b] = float("inf")
         distances[i : i + bs], retrieved_ids[i : i + bs] = torch.topk(distances_b, k=top_n, largest=False, sorted=True)

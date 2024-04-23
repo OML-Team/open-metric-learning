@@ -1,6 +1,7 @@
 from typing import List
 
 import matplotlib.pyplot as plt
+import pandas as pd
 from torch import FloatTensor, LongTensor
 
 from oml.const import (
@@ -34,8 +35,10 @@ class RetrievalResults:
                 Every element is within the range ``(0, n_gallery - 1)``.
             gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
                 have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
+
         """
         assert distances.shape == retrieved_ids.shape
+        assert distances.ndim == 2
 
         if gt_ids is not None:
             assert distances.shape[0] == len(gt_ids)
@@ -47,7 +50,7 @@ class RetrievalResults:
         self.gt_ids = gt_ids
 
     @property
-    def top_n(self) -> int:
+    def n_retrieved_items(self) -> int:
         return self.retrieved_ids.shape[1]
 
     @classmethod
@@ -57,21 +60,31 @@ class RetrievalResults:
         dataset: IQueryGalleryDataset,
         n_items_to_retrieve: int = 1_000,
     ) -> "RetrievalResults":
+        """
+        Args:
+            embeddings: The result of inference with the shape of ``[dataset_len, emb_dim]``.
+            dataset: Dataset having query/gallery split.
+            n_items_to_retrieve: Number of the closest gallery items to retrieve.
+                                 It may be clipped by gallery size if needed.
 
-        # todo 522: rework
-        ignoring_groups = dataset.df[SEQUENCE_COLUMN] if SEQUENCE_COLUMN in dataset.df else None
+        """
+        assert len(embeddings) == len(dataset), "Embeddings and dataset must have the same size."
 
-        if isinstance(dataset, IQueryGalleryLabeledDataset):
-            labels_gt = dataset.get_labels()
+        # todo 522: rework taking sequence
+        if hasattr(dataset, "df") and SEQUENCE_COLUMN in dataset.df:
+            dataset.df[SEQUENCE_COLUMN], _ = pd.factorize(dataset.df[SEQUENCE_COLUMN])
+            sequence_ids = LongTensor(dataset.df[SEQUENCE_COLUMN])
         else:
-            labels_gt = None
+            sequence_ids = None
+
+        labels_gt = dataset.get_labels() if isinstance(dataset, IQueryGalleryLabeledDataset) else None
 
         distances, retrieved_ids, gt_ids = batched_knn(
             embeddings=embeddings,
             ids_query=dataset.get_query_ids(),
             ids_gallery=dataset.get_gallery_ids(),
             labels_gt=labels_gt,
-            sequence_ids=ignoring_groups,
+            sequence_ids=sequence_ids,
             top_n=n_items_to_retrieve,
         )
 
@@ -79,7 +92,7 @@ class RetrievalResults:
 
     def __repr__(self) -> str:
         txt = (
-            f"You retrieved {self.top_n} items.\n"
+            f"You retrieved {self.n_retrieved_items} items.\n"
             f"Distances to the retrieved items:\n{self.distances}.\n"
             f"Ids of the retrieved gallery items:\n{self.retrieved_ids}.\n"
         )
@@ -99,6 +112,14 @@ class RetrievalResults:
         n_galleries_to_show: int = 5,
         verbose: bool = False,
     ) -> plt.Figure:
+        """
+        Args:
+            query_ids: Query indices within the range of ``(0, n_query - 1)``.
+            dataset: Dataset that provides query-gallery split and supports visualisation.
+            n_galleries_to_show: Number of closest gallery items to show.
+            verbose: Set ``True`` to allow prints.
+
+        """
         if not isinstance(dataset, (IVisualizableDataset, IQueryGalleryDataset)):
             raise ValueError(
                 f"Dataset has to support {IVisualizableDataset.__name__} and "
@@ -106,53 +127,51 @@ class RetrievalResults:
             )
 
         if verbose:
-            # todo: add something smarter later
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")
 
         ii_query = dataset.get_query_ids()
         ii_gallery = dataset.get_gallery_ids()
 
-        n_galleries_to_show = min(n_galleries_to_show, self.distances.shape[1])
+        n_galleries_to_show = min(n_galleries_to_show, self.n_retrieved_items)
+        n_gt_to_show = N_GT_SHOW_EMBEDDING_METRICS if (self.gt_ids is not None) else 0
 
-        n_gt = N_GT_SHOW_EMBEDDING_METRICS if (self.gt_ids is not None) else 0
-
-        fig = plt.figure(figsize=(16, 16 / (n_galleries_to_show + n_gt + 1) * len(query_ids)))
-
-        n_rows, n_cols = len(query_ids), n_galleries_to_show + 1 + N_GT_SHOW_EMBEDDING_METRICS
+        fig = plt.figure(figsize=(16, 16 / (n_galleries_to_show + n_gt_to_show + 1) * len(query_ids)))
+        n_rows, n_cols = len(query_ids), n_galleries_to_show + 1 + n_gt_to_show
 
         # iterate over queries
         for j, query_idx in enumerate(query_ids):
 
-            plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt) + 1)
+            plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt_to_show) + 1)
 
             img = dataset.visualize(item=ii_query[query_idx].item(), color=BLUE)
 
             plt.imshow(img)
-            plt.title("Query")
+            plt.title(f"Query #{query_idx}")
             plt.axis("off")
 
             # iterate over retrieved items
-            for i, ret_idx in enumerate(self.retrieved_ids[query_idx][:n_galleries_to_show]):
+            for i, ret_idx in enumerate(self.retrieved_ids[query_idx, :][:n_galleries_to_show]):
                 if self.gt_ids is not None:
                     color = GREEN if ret_idx in self.gt_ids[query_idx] else RED
                 else:
                     color = BLACK
 
-                plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt) + i + 2)
+                plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt_to_show) + i + 2)
                 img = dataset.visualize(item=ii_gallery[ret_idx].item(), color=color)
 
-                print(self.distances.shape, "vvvv")
-                plt.title(f"{i} - {round(self.distances[query_idx, ret_idx].item(), 3)}")
+                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx, i].item(), 3)}")
                 plt.imshow(img)
                 plt.axis("off")
 
             if self.gt_ids is not None:
 
-                for k, gt_idx in enumerate(self.gt_ids[query_idx][:N_GT_SHOW_EMBEDDING_METRICS]):
-                    plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt) + k + n_galleries_to_show + 2)
+                for k, gt_idx in enumerate(self.gt_ids[query_idx][:n_gt_to_show]):
+                    plt.subplot(
+                        n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt_to_show) + k + n_galleries_to_show + 2
+                    )
 
                     img = dataset.visualize(item=ii_gallery[gt_idx].item(), color=GRAY)
-                    plt.title("GT " + str(round(self.distances[query_idx, gt_idx].item(), 3)))
+                    plt.title("GT")
                     plt.imshow(img)
                     plt.axis("off")
 

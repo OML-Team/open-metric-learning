@@ -1,14 +1,10 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
+import torch
 
-from oml.const import (
-    IS_GALLERY_COLUMN,
-    IS_QUERY_COLUMN,
-    LABELS_COLUMN,
-    MOCK_DATASET_PATH,
-    PATHS_COLUMN,
-)
+from oml.const import IS_QUERY_COLUMN, LABELS_COLUMN, MOCK_DATASET_PATH, PATHS_COLUMN
 from oml.datasets.images import (
     ImageQueryGalleryDataset,
     ImageQueryGalleryLabeledDataset,
@@ -20,13 +16,15 @@ from oml.transforms.images.torchvision import get_normalisation_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
 
 
-@pytest.mark.parametrize("with_gt_labels", [True, False])
-@pytest.mark.parametrize("df_name", ["df.csv"])
+@pytest.mark.parametrize("with_gt_labels", [False, True])
+@pytest.mark.parametrize("df_name", ["df.csv", "df_with_bboxes.csv", "df_with_sequence.csv"])
 def test_retrieval_results_om_images(with_gt_labels: bool, df_name: str) -> None:
+    # todo 522: add test on Embeddings after we merge unified inference
+
     _, df_val = download_mock_dataset(dataset_root=MOCK_DATASET_PATH, df_name=df_name)
     df_val[PATHS_COLUMN] = df_val[PATHS_COLUMN].apply(lambda x: Path(MOCK_DATASET_PATH) / x)
 
-    n_query, n_gallery = df_val[IS_QUERY_COLUMN].sum(), df_val[IS_GALLERY_COLUMN].sum()
+    n_query = df_val[IS_QUERY_COLUMN].sum()
 
     if with_gt_labels:
         dataset = ImageQueryGalleryLabeledDataset(df_val)
@@ -44,16 +42,19 @@ def test_retrieval_results_om_images(with_gt_labels: bool, df_name: str) -> None
     ).float()
 
     top_n = 2
-    retrieval_results = RetrievalResults.compute_from_embeddings(
-        embeddings=embeddings, dataset=dataset, n_items_to_retrieve=top_n
-    )
+    rr = RetrievalResults.compute_from_embeddings(embeddings=embeddings, dataset=dataset, n_items_to_retrieve=top_n)
 
-    assert retrieval_results.distances.shape == (n_query, top_n)
-    assert retrieval_results.retrieved_ids.shape == (n_query, top_n)
+    assert rr.distances.shape == (n_query, top_n)
+    assert rr.retrieved_ids.shape == (n_query, top_n)
+    assert torch.allclose(rr.distances.clone().sort()[0], rr.distances)
 
     if with_gt_labels:
-        assert retrieval_results.gt_ids is not None
+        assert rr.gt_ids is not None
 
-    fig = retrieval_results.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3)
-    print(dir(fig))
-    print(n_gallery)
+    fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3)
+    plt.show(fig=fig)
+    plt.close()
+
+    print(rr)
+
+    assert True

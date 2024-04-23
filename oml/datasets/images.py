@@ -428,6 +428,9 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         del batch[self.__dataset.labels_key]
         return batch
 
+    def __len__(self) -> int:
+        return len(self.__dataset)
+
     def get_query_ids(self) -> LongTensor:
         return self.__dataset.get_query_ids()
 

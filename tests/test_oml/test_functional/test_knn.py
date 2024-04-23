@@ -31,7 +31,7 @@ def straight_knn(
     if labels is not None:
         mask_gt = labels[ids_query][..., None] == labels[ids_gallery][None, ...]
         mask_gt[mask_to_ignore] = False
-        gt_ids = [LongTensor(row.nonzero()).squeeze() for row in mask_gt]
+        gt_ids = [LongTensor(row.nonzero()).view(-1) for row in mask_gt]
     else:
         gt_ids = None
 
