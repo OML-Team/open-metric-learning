@@ -397,8 +397,9 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         is_gallery_key: str = IS_GALLERY_KEY,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
+        self.df = df.copy()
+
         # instead of implementing the whole logic let's just re-use QGL dataset, but with dropped labels
-        df = df.copy()
         df[LABELS_COLUMN] = "fake_label"
 
         self.__dataset = ImageQueryGalleryLabeledDataset(
@@ -434,7 +435,7 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         return self.__dataset.get_gallery_ids()
 
     def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
-        return self.__dataset.visualize(item, color)
+        return self.__dataset.visualize(item=item, color=color)
 
 
 def get_retrieval_images_datasets(
