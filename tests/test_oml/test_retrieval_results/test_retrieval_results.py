@@ -52,8 +52,8 @@ def test_retrieval_results_om_images(with_gt_labels: bool, df_name: str) -> None
         assert rr.gt_ids is not None
 
     fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3)
-    plt.show(fig=fig)
-    plt.close()
+    fig.show()
+    plt.close(fig=fig)
 
     print(rr)
 
