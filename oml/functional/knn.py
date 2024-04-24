@@ -56,8 +56,11 @@ def batched_knn(
         distances_b = pairwise_dist(x1=emb_q[i : i + bs], x2=emb_g)
         ids_query_b = ids_query[i : i + bs]
 
+        # the logic behind: we want to ignore the item during search if it was used for both: query and gallery
         mask_to_ignore_b = ids_query_b[..., None] == ids_gallery[None, ...]
         if sequence_ids is not None:
+            # sometimes our items may be packed into the groups, so we ignore other members of this group during search
+            # more info in the docs: find for "Handling sequences of photos"
             mask_sequence = sequence_ids[ids_query_b][..., None] == sequence_ids[ids_gallery][None, ...]
             mask_to_ignore_b = torch.logical_or(mask_to_ignore_b, mask_sequence)
 
