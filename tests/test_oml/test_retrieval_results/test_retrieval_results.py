@@ -55,6 +55,4 @@ def test_retrieval_results_om_images(with_gt_labels: bool, df_name: str) -> None
     fig.show()
     plt.close(fig=fig)
 
-    print(rr)
-
     assert True

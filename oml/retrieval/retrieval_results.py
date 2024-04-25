@@ -42,7 +42,7 @@ class RetrievalResults:
 
         if gt_ids is not None:
             assert distances.shape[0] == len(gt_ids)
-            if not all(len(x) > 0 for x in gt_ids):
+            if any(len(x) == 0 for x in gt_ids):
                 raise RuntimeError("Every query must have at least one relevant gallery id.")
 
         self.distances = distances
@@ -58,7 +58,7 @@ class RetrievalResults:
         cls,
         embeddings: FloatTensor,
         dataset: IQueryGalleryDataset,
-        n_items_to_retrieve: int = 1_000,
+        n_items_to_retrieve: int = 100,
     ) -> "RetrievalResults":
         """
         Args:
@@ -90,7 +90,7 @@ class RetrievalResults:
 
         return RetrievalResults(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         txt = (
             f"You retrieved {self.n_retrieved_items} items.\n"
             f"Distances to the retrieved items:\n{self.distances}.\n"
@@ -110,6 +110,7 @@ class RetrievalResults:
         query_ids: List[int],
         dataset: IQueryGalleryDataset,
         n_galleries_to_show: int = 5,
+        n_gt_to_show: int = N_GT_SHOW_EMBEDDING_METRICS,
         verbose: bool = False,
     ) -> plt.Figure:
         """
@@ -117,13 +118,14 @@ class RetrievalResults:
             query_ids: Query indices within the range of ``(0, n_query - 1)``.
             dataset: Dataset that provides query-gallery split and supports visualisation.
             n_galleries_to_show: Number of closest gallery items to show.
+            n_gt_to_show: Number of ground truth gallery items to show for reference (if available).
             verbose: Set ``True`` to allow prints.
 
         """
         if not isinstance(dataset, (IVisualizableDataset, IQueryGalleryDataset)):
-            raise ValueError(
+            raise TypeError(
                 f"Dataset has to support {IVisualizableDataset.__name__} and "
-                f"{IQueryGalleryDataset} interfaces. Got {type(dataset)}."
+                f"{IQueryGalleryDataset.__name__} interfaces. Got {type(dataset)}."
             )
 
         if verbose:
@@ -133,15 +135,15 @@ class RetrievalResults:
         ii_gallery = dataset.get_gallery_ids()
 
         n_galleries_to_show = min(n_galleries_to_show, self.n_retrieved_items)
-        n_gt_to_show = N_GT_SHOW_EMBEDDING_METRICS if (self.gt_ids is not None) else 0
+        n_gt_to_show = n_gt_to_show if (self.gt_ids is not None) else 0
 
         fig = plt.figure(figsize=(16, 16 / (n_galleries_to_show + n_gt_to_show + 1) * len(query_ids)))
         n_rows, n_cols = len(query_ids), n_galleries_to_show + 1 + n_gt_to_show
 
         # iterate over queries
-        for j, query_idx in enumerate(query_ids):
+        for i, query_idx in enumerate(query_ids):
 
-            plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt_to_show) + 1)
+            plt.subplot(n_rows, n_cols, i * (n_galleries_to_show + 1 + n_gt_to_show) + 1)
 
             img = dataset.visualize(item=ii_query[query_idx].item(), color=BLUE)
 
@@ -150,16 +152,16 @@ class RetrievalResults:
             plt.axis("off")
 
             # iterate over retrieved items
-            for i, ret_idx in enumerate(self.retrieved_ids[query_idx, :][:n_galleries_to_show]):
+            for j, ret_idx in enumerate(self.retrieved_ids[query_idx, :][:n_galleries_to_show]):
                 if self.gt_ids is not None:
                     color = GREEN if ret_idx in self.gt_ids[query_idx] else RED
                 else:
                     color = BLACK
 
-                plt.subplot(n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt_to_show) + i + 2)
+                plt.subplot(n_rows, n_cols, i * (n_galleries_to_show + 1 + n_gt_to_show) + j + 2)
                 img = dataset.visualize(item=ii_gallery[ret_idx].item(), color=color)
 
-                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx, i].item(), 3)}")
+                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx, j].item(), 3)}")
                 plt.imshow(img)
                 plt.axis("off")
 
@@ -167,7 +169,7 @@ class RetrievalResults:
 
                 for k, gt_idx in enumerate(self.gt_ids[query_idx][:n_gt_to_show]):
                     plt.subplot(
-                        n_rows, n_cols, j * (n_galleries_to_show + 1 + n_gt_to_show) + k + n_galleries_to_show + 2
+                        n_rows, n_cols, i * (n_galleries_to_show + 1 + n_gt_to_show) + k + n_galleries_to_show + 2
                     )
 
                     img = dataset.visualize(item=ii_gallery[gt_idx].item(), color=GRAY)

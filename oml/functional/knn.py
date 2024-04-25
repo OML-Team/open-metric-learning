@@ -19,27 +19,27 @@ def batched_knn(
     """
 
     Args:
-        embeddings: Matrix with the shape of ``[n, dim]``
-        ids_query:  Tensor with the size of ``Q``, where ``Q <= n``. Each element is withing the range ``(0, n - 1)``.
-        ids_gallery:  Tensor with the size of ``G`` where ``G <= n``. Each element is withing the range ``(0, n - 1)``.
+        embeddings: Matrix with the shape of ``[L, dim]``
+        ids_query:  Tensor with the size of ``Q``, where ``Q <= n``. Each element is within the range ``(0, L - 1)``.
+        ids_gallery:  Tensor with the size of ``G`` where ``G <= n``. Each element is within the range ``(0, L - 1)``.
                       May overlap with ``ids_query``.
         top_n: Number of neighbors to find and return.
-        sequence_ids: Sequence identifiers with the size of ``n`` (if known).
-        labels_gt: Ground truth labels of every element with the size of ``n`` (if known).
+        sequence_ids: Sequence identifiers with the size of ``L`` (if known).
+        labels_gt: Ground truth labels of every element with the size of ``L`` (if known).
         bs: Batch size for computing distances to avoid OOM errors when processing the whole matrix at once.
 
     Returns:
         distances: Sorted distances from every query to the closest ``top_n`` galleries with the size of ``(Q, top_n)``.
         retrieved_ids: The corresponding ids of gallery items with the shape of ``(Q, top_n)``.
-                       Each element is withing the range ``(0, G - 1)``.
-        gt_ids: Ids of the gallery items relevant to every query. Each element is withing the range ``(0, G - 1)``.
+                       Each element is within the range ``(0, G - 1)``.
+        gt_ids: Ids of the gallery items relevant to every query. Each element is within the range ``(0, G - 1)``.
                 It's only computed if ``labels_gt`` is provided.
 
     """
     assert (ids_query.ndim == 1) and (ids_gallery.ndim == 1) and (embeddings.ndim == 2)
     assert len(embeddings) <= len(ids_query) + len(ids_gallery)
-    assert (sequence_ids is None) or (len(sequence_ids) == len(embeddings) and (sequence_ids.ndim == 1))
-    assert (labels_gt is None) or (len(labels_gt) <= len(ids_query) + len(ids_gallery) and (labels_gt.ndim == 1))
+    assert (sequence_ids is None) or ((len(sequence_ids) == len(embeddings)) and (sequence_ids.ndim == 1))
+    assert (labels_gt is None) or ((len(labels_gt) == embeddings.shape[0]) and (labels_gt.ndim == 1))
 
     top_n = min(top_n, len(ids_gallery))
 
@@ -53,7 +53,7 @@ def batched_knn(
 
     # we do batching over first (queries) dimension
     for i in range(0, nq, bs):
-        distances_b = pairwise_dist(x1=emb_q[i : i + bs], x2=emb_g)
+        distances_b = pairwise_dist(x1=emb_q[i : i + bs, :], x2=emb_g)
         ids_query_b = ids_query[i : i + bs]
 
         # the logic behind: we want to ignore the item during search if it was used for both: query and gallery
@@ -70,7 +70,9 @@ def batched_knn(
             gt_ids.extend([LongTensor(row.nonzero()).view(-1) for row in mask_gt_b])  # type: ignore
 
         distances_b[mask_to_ignore_b] = float("inf")
-        distances[i : i + bs], retrieved_ids[i : i + bs] = torch.topk(distances_b, k=top_n, largest=False, sorted=True)
+        distances[i : i + bs, :], retrieved_ids[i : i + bs, :] = torch.topk(
+            distances_b, k=top_n, largest=False, sorted=True
+        )
 
     return distances, retrieved_ids, gt_ids or None
 
