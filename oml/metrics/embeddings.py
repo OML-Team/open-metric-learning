@@ -31,11 +31,13 @@ from oml.functional.metrics import (
     TMetricsDict,
     apply_mask_to_ignore,
     calc_distance_matrix,
+    calc_fnmr_at_fmr_from_matrices,
     calc_gt_mask,
     calc_mask_to_ignore,
-    calc_retrieval_metrics,
+    calc_retrieval_metrics_on_full,
     calc_topological_metrics,
     reduce_metrics,
+    take_unreduced_metrics_by_mask,
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
@@ -213,14 +215,12 @@ class EmbeddingMetrics(IMetricVisualisable):
             "cmc_top_k": self.cmc_top_k,
             "precision_top_k": self.precision_top_k,
             "map_top_k": self.map_top_k,
-            "fmr_vals": self.fmr_vals,
         }
-        args_topological_metrics = {"pcf_variance": self.pcf_variance}
 
         metrics: TMetricsDict_ByLabels = dict()
 
         # note, here we do micro averaging
-        metrics[self.overall_categories_key] = calc_retrieval_metrics(
+        metrics[self.overall_categories_key] = calc_retrieval_metrics_on_full(
             distances=self.distance_matrix,
             mask_gt=self.mask_gt,
             reduce=False,
@@ -229,7 +229,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         )
 
         embeddings = self.acc.storage[self.embeddings_key]
-        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
+        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, self.pcf_variance))
+        metrics[self.overall_categories_key].update(
+            calc_fnmr_at_fmr_from_matrices(self.distance_matrix, self.mask_gt, self.fmr_vals)
+        )
 
         if self.categories_key is not None:
             categories = np.array(self.acc.storage[self.categories_key])
@@ -237,18 +240,17 @@ class EmbeddingMetrics(IMetricVisualisable):
             query_categories = categories[is_query]
 
             for category in np.unique(query_categories):
-                mask = query_categories == category
+                mask_query_sz = query_categories == category
 
-                metrics[category] = calc_retrieval_metrics(
-                    distances=self.distance_matrix[mask],  # type: ignore
-                    mask_gt=self.mask_gt[mask],  # type: ignore
-                    reduce=False,
-                    mask_to_ignore=None,  # we already applied it
-                    **args_retrieval_metrics,  # type: ignore
+                metrics[category] = take_unreduced_metrics_by_mask(metrics[self.overall_categories_key], mask_query_sz)
+                metrics[category].update(
+                    calc_fnmr_at_fmr_from_matrices(
+                        self.distance_matrix[mask_query_sz], self.mask_gt[mask_query_sz], self.fmr_vals  # type: ignore
+                    )
                 )
 
-                mask = categories == category
-                metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
+                mask_dataset_sz = categories == category
+                metrics[category].update(calc_topological_metrics(embeddings[mask_dataset_sz], self.pcf_variance))
 
         self.metrics_unreduced = metrics  # type: ignore
         self.metrics = reduce_metrics(metrics)  # type: ignore

@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
-from torch import BoolTensor, LongTensor, Tensor, isin, stack, tensor
+from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin, stack, tensor
 
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import PCA, pairwise_dist
@@ -37,6 +37,8 @@ def calc_retrieval_metrics(
         Metrics dictionary.
 
     """
+    # todo 522: clipping
+
     assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
     assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
     n_queries = len(retrieved_ids)
@@ -74,7 +76,7 @@ def calc_retrieval_metrics_on_full(
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
 ) -> TMetricsDict:
-    # todo 522: get rid of this tmp function
+    # todo 522: get rid of this tmp function or at least move to the tests
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
@@ -136,10 +138,8 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
     output: TMetricsDict = {}
 
     for k, v in metrics.items():
-        if isinstance(v, Tensor) and v.numel() > 1:
-            output[k] = v[mask]
-        elif isinstance(v, np.ndarray) and v.size > 1:
-            output[k] = v[mask]
+        if isinstance(v, Tensor):
+            output[k] = v[mask] if v.numel() > 1 else v
         elif isinstance(v, (float, int)):
             output[k] = v
         else:
@@ -469,6 +469,19 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     return fnmr_at_fmr
 
 
+def calc_fnmr_at_fmr_from_matrices(
+    distance_matrix: FloatTensor, mask_gt: BoolTensor, fmr_vals: Tuple[float, ...]
+) -> TMetricsDict:
+    metrics: TMetricsDict = dict()
+
+    if fmr_vals:
+        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, mask_gt)
+        fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+        metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
+
+    return metrics
+
+
 def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor]:
     """
     Function estimates the Principal Components Fraction (PCF) of embeddings using Principal Component Analysis.
@@ -532,28 +545,20 @@ def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor
     return metric
 
 
-def extract_pos_neg_dists(
-    distances: Tensor, mask_gt: Tensor, mask_to_ignore: Optional[Tensor]
-) -> Tuple[Tensor, Tensor]:
+def extract_pos_neg_dists(distances: Tensor, mask_gt: Tensor) -> Tuple[Tensor, Tensor]:
     """
     Extract distances between relevant samples, and distances between non-relevant samples.
 
     Args:
         distances: Distance matrix with the shape of ``[query_size, gallery_size]``
         mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
-        mask_to_ignore: Binary matrix to indicate that some elements in gallery cannot be used
-                     as answers and must be ignored
+
     Returns:
         pos_dist: Tensor of distances between relevant samples
         neg_dist: Tensor of distances between non-relevant samples
     """
-    if mask_to_ignore is not None:
-        mask_to_not_ignore = ~mask_to_ignore
-        pos_dist = distances[mask_gt & mask_to_not_ignore]
-        neg_dist = distances[~mask_gt & mask_to_not_ignore]
-    else:
-        pos_dist = distances[mask_gt]
-        neg_dist = distances[~mask_gt]
+    pos_dist = distances[mask_gt]
+    neg_dist = distances[~mask_gt]
     return pos_dist, neg_dist
 
 
@@ -595,6 +600,7 @@ def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: st
 __all__ = [
     "TMetricsDict",
     "calc_retrieval_metrics",
+    "calc_retrieval_metrics_on_full",
     "calc_topological_metrics",
     "apply_mask_to_ignore",
     "calc_gt_mask",
