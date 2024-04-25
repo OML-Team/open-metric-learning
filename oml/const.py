@@ -53,6 +53,8 @@ GRAY = (120, 120, 120)
 BLACK = (0, 0, 0)
 PAD_COLOR = (255, 255, 255)
 
+BS_KNN = 5_000
+
 TCfg = Union[Dict[str, Any], DictConfig]
 
 # ImageNet Params
