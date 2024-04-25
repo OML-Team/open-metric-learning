@@ -7,7 +7,10 @@ import pytest
 import torch
 from torch import Tensor
 
-from oml.functional.metrics import calc_distance_matrix, calc_retrieval_metrics
+from oml.functional.metrics import calc_distance_matrix
+from oml.functional.metrics import (
+    calc_retrieval_metrics_on_full as calc_retrieval_metrics,
+)
 from oml.interfaces.models import IPairwiseModel
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseEmbeddingsPostprocessor
@@ -121,7 +124,7 @@ def test_trivial_processing_fixes_broken_perfect_case() -> None:
         top_k = (randint(1, ng - 1),)
         top_n = randint(2, 10)
 
-        args = {"mask_gt": mask_gt, "precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k, "fmr_vals": ()}
+        args = {"mask_gt": mask_gt, "precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
 
         # Metrics before
         metrics = flatten_dict(calc_retrieval_metrics(distances=distances, **args))
@@ -207,7 +210,6 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     args = {
         "cmc_top_k": (top_n,),
         "precision_top_k": (top_n,),
-        "fmr_vals": tuple(),
         "map_top_k": tuple(),
         "mask_gt": mask_gt,
     }
