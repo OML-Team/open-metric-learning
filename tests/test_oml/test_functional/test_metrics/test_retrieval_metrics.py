@@ -14,7 +14,9 @@ from oml.functional.metrics import (
     calc_map,
     calc_mask_to_ignore,
     calc_precision,
-    calc_retrieval_metrics,
+)
+from oml.functional.metrics import (
+    calc_retrieval_metrics_on_full as calc_retrieval_metrics,
 )
 from oml.metrics.embeddings import validate_dataset
 from oml.utils.misc import remove_unused_kwargs

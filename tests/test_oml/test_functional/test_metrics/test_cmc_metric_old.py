@@ -6,7 +6,9 @@ import pytest
 import torch
 from torch import Tensor
 
-from oml.functional.metrics import calc_retrieval_metrics
+from oml.functional.metrics import (
+    calc_retrieval_metrics_on_full as calc_retrieval_metrics,
+)
 from oml.utils.misc_torch import pairwise_dist
 
 
@@ -18,7 +20,6 @@ def cmc_score_count(distances: Tensor, mask_gt: Tensor, topk: int, mask_to_ignor
         cmc_top_k=(topk,),
         map_top_k=tuple(),
         precision_top_k=tuple(),
-        fmr_vals=tuple(),
     )
     return metrics["cmc"][topk]
 
