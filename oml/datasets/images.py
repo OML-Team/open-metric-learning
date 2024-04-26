@@ -157,8 +157,17 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
 
     @staticmethod
     def _read_bytes(path: Union[Path, str]) -> bytes:
-        with open(str(path), "rb") as fin:
-            return fin.read()
+        if isinstance(path, str) and path.startswith(('http://', 'https://')):
+            # If the path is a URL, use requests to fetch the content
+            response = requests.get(path)
+            if response.status_code == 200:
+                return response.content
+            else:
+                raise ValueError(f"Failed to fetch image from URL: {path}")
+        else:
+            # Otherwise, assume it's a local file path
+            with open(str(path), "rb") as fin:
+                return fin.read()
 
     def __getitem__(self, item: int) -> Dict[str, Union[FloatTensor, int]]:
         img_bytes = self.read_bytes(self._paths[item])
