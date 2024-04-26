@@ -5,7 +5,8 @@
 [comment]:lightning-start
 ```python
 import pytorch_lightning as pl
-import torch
+from torch.utils.data import DataLoader
+from torch.optim import SGD
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.lightning.modules.extractor import ExtractorModule
@@ -30,16 +31,16 @@ df_train, df_val = download_mock_dataset(global_paths=True)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
-optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
+optimizer = SGD(extractor.parameters(), lr=1e-6)
 train_dataset = DatasetWithLabels(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
+train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
 val_dataset = DatasetQueryGallery(df_val)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
+val_loader = DataLoader(val_dataset, batch_size=4)
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
 
 # 1) Logging with Tensorboard
 logger = TensorBoardPipelineLogger(".")

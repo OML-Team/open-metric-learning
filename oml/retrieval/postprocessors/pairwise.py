@@ -55,7 +55,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
         """
         gt_ids = rr.gt_ids
-        retrieved_ids_upd, distances_upd = self.process_raw(
+        distances_upd, retrieved_ids_upd = self.process_raw(
             retrieved_ids=rr.retrieved_ids, distances=rr.distances, dataset=dataset
         )
         rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd)
@@ -64,7 +64,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
     def process_raw(
         self, retrieved_ids: Tensor, distances: Tensor, dataset: IQueryGalleryDataset
-    ) -> Tuple[LongTensor, FloatTensor]:
+    ) -> Tuple[FloatTensor, LongTensor]:
         """
 
         Args:

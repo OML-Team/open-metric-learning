@@ -152,24 +152,6 @@ def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
     return True
 
 
-def find_first_occurrences(x: List[Hashable]) -> List[int]:
-    """
-    Args:
-        x: Sequence of something hashable
-
-    Returns:
-        Indices of elements which are first occurrences
-
-    """
-    seen = set()
-    first_ids = []
-    for i, el in enumerate(x):
-        if el not in seen:
-            first_ids.append(i)
-        seen.add(el)
-    return first_ids
-
-
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -180,5 +162,4 @@ __all__ = [
     "clip_max",
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
-    "find_first_occurrences",
 ]

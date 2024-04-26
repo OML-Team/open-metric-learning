@@ -333,39 +333,28 @@ for batch in tqdm(train_loader):
 
 [comment]:vanilla-validation-start
 ```python
-import torch
-from tqdm import tqdm
 
 from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.inference import inference
+from oml.metrics import calc_retrieval_metrics_rr
 from oml.models import ViTExtractor
+from oml.retrieval import RetrievalResults
 from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.registry.transforms import get_transforms_for_pretrained
+
+extractor = ViTExtractor.from_pretrained("vits16_dino")
+transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 _, df_val = download_mock_dataset(global_paths=True)
+dataset = DatasetQueryGallery(df_val, transform=transform)
 
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
+embeddings = inference(extractor, dataset, batch_size=4)
 
-val_dataset = DatasetQueryGallery(df_val)
+rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+metrics = calc_retrieval_metrics_rr(rr, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
 
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics(extra_keys=("paths",))
-calculator.setup(num_samples=len(val_dataset))
-
-with torch.no_grad():
-    for batch in tqdm(val_loader):
-        batch["embeddings"] = extractor(batch["input_tensors"])
-        calculator.update_data(batch)
-
-metrics = calculator.compute_metrics()
-
-# Logging
-print(calculator.metrics)  # metrics
-print(calculator.metrics_unreduced)  # metrics without averaging over queries
-
-# Visualisation
-calculator.get_plot_for_queries(query_ids=[0, 2], n_instances=5)  # draw predictions on predefined queries
-calculator.get_plot_for_worst_queries(metric_name="OVERALL/map/5", n_queries=2, n_instances=5)  # draw mistakes
-calculator.visualize()  # draw mistakes for all the available metrics
+print(rr, "\n", metrics)
+rr.visualize(query_ids=[2, 1], dataset=dataset).show()
 
 ```
 [comment]:vanilla-validation-end
@@ -380,7 +369,8 @@ calculator.visualize()  # draw mistakes for all the available metrics
 [comment]:lightning-start
 ```python
 import pytorch_lightning as pl
-import torch
+from torch.utils.data import DataLoader
+from torch.optim import SGD
 
 from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
 from oml.lightning.modules.extractor import ExtractorModule
@@ -405,16 +395,16 @@ df_train, df_val = download_mock_dataset(global_paths=True)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
-optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
+optimizer = SGD(extractor.parameters(), lr=1e-6)
 train_dataset = DatasetWithLabels(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
+train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
 val_dataset = DatasetQueryGallery(df_val)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
+val_loader = DataLoader(val_dataset, batch_size=4)
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
 
 # 1) Logging with Tensorboard
 logger = TensorBoardPipelineLogger(".")
@@ -450,14 +440,13 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 [comment]:usage-retrieval-start
 ```python
-import torch
-
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference
 from oml.models import ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.utils.misc_torch import pairwise_dist
+from oml.retrieval.retrieval_results import RetrievalResults
+
 
 _, df_test = download_mock_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
@@ -466,25 +455,14 @@ extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 dataset = ImageQueryGalleryDataset(df_test, transform=transform)
-
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
-embeddings_query = embeddings[dataset.get_query_ids()]
-embeddings_gallery = embeddings[dataset.get_gallery_ids()]
 
-# Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
-use_knn = False
-top_k = 3
+retrieval_results = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
 
-if use_knn:
-    from sklearn.neighbors import NearestNeighbors
-    knn = NearestNeighbors(algorithm="auto", p=2).fit(embeddings_query)
-    dists, ii_closest = knn.kneighbors(embeddings_gallery, n_neighbors=top_k, return_distance=True)
+retrieval_results.visualize(query_ids=[0, 1], dataset=dataset).show()
 
-else:
-    dist_mat = pairwise_dist(x1=embeddings_query, x2=embeddings_gallery, p=2)
-    dists, ii_closest = torch.topk(dist_mat, dim=1, k=top_k, largest=False)
+print(retrieval_results)  # you get the ids of retrieved items and the corresponding distances
 
-print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 ```
 [comment]:usage-retrieval-end
 </p>

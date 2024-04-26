@@ -31,8 +31,14 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-def calc_retrieval_metrics_rr(rr: RetrievalResults, *args, **kwargs):
-    return calc_retrieval_metrics(retrieved_ids=rr.retrieved_ids, gt_ids=rr.gt_ids, *args, **kwargs)
+def calc_retrieval_metrics_rr(rr: RetrievalResults,
+                              cmc_top_k: Tuple[int, ...] = (5,),
+                              precision_top_k: Tuple[int, ...] = (5,),
+                              map_top_k: Tuple[int, ...] = (5,),
+                              reduce: bool = True,
+                              ) -> TMetricsDict:
+    return calc_retrieval_metrics(retrieved_ids=rr.retrieved_ids, gt_ids=rr.gt_ids, cmc_top_k=cmc_top_k,
+                                  precision_top_k=precision_top_k, map_top_k=map_top_k, reduce=reduce)
 
 
 class EmbeddingMetrics(IMetricVisualisable):
@@ -45,18 +51,18 @@ class EmbeddingMetrics(IMetricVisualisable):
     metric_name = ""
 
     def __init__(
-        self,
-        dataset: Optional[IQueryGalleryLabeledDataset],
-        cmc_top_k: Tuple[int, ...] = (5,),
-        precision_top_k: Tuple[int, ...] = (5,),
-        map_top_k: Tuple[int, ...] = (5,),
-        fmr_vals: Tuple[float, ...] = tuple(),
-        pcf_variance: Tuple[float, ...] = (0.5,),
-        postprocessor: Optional[IRetrievalPostprocessor] = None,
-        metrics_to_exclude_from_visualization: Iterable[str] = (),
-        return_only_overall_category: bool = False,
-        visualize_only_overall_category: bool = True,
-        verbose: bool = True,
+            self,
+            dataset: Optional[IQueryGalleryLabeledDataset],
+            cmc_top_k: Tuple[int, ...] = (5,),
+            precision_top_k: Tuple[int, ...] = (5,),
+            map_top_k: Tuple[int, ...] = (5,),
+            fmr_vals: Tuple[float, ...] = tuple(),
+            pcf_variance: Tuple[float, ...] = (0.5,),
+            postprocessor: Optional[IRetrievalPostprocessor] = None,
+            metrics_to_exclude_from_visualization: Iterable[str] = (),
+            return_only_overall_category: bool = False,
+            visualize_only_overall_category: bool = True,
+            verbose: bool = True,
     ):
         """
 
@@ -216,7 +222,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
 
     def get_plot_for_worst_queries(
-        self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
+            self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
     ) -> plt.Figure:
         query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
@@ -237,4 +243,4 @@ class EmbeddingMetrics(IMetricVisualisable):
         return fig
 
 
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics"]
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "calc_retrieval_metrics_rr"]

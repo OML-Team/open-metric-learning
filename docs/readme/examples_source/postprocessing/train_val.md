@@ -4,7 +4,6 @@
 
 [comment]:postprocessor-start
 ```python
-from pprint import pprint
 
 import torch
 from torch.nn import BCEWithLogitsLoss
@@ -12,27 +11,27 @@ from torch.utils.data import DataLoader
 
 from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset, ImageBaseDataset
 from oml.inference import inference
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners.pairs import PairsMiner
 from oml.models import ConcatSiamese, ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
-from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.transforms.images.torchvision import get_augs_torch
+from oml.retrieval import RetrievalResults, PairwiseReranker
 
 # In these example we will train a pairwise model as a re-ranker for ViT
 extractor = ViTExtractor.from_pretrained("vits16_dino")
 transforms, _ = get_transforms_for_pretrained("vits16_dino")
 df_train, df_val = download_mock_dataset(global_paths=True)
 
-# SAVE VIT EMBEDDINGS
+# STEP 0: SAVE VIT EMBEDDINGS
 # - training ones are needed for hard negative sampling when training pairwise model
 # - validation ones are needed to construct the original prediction (which we will re-rank)
 embeddings_train = inference(extractor, ImageBaseDataset(df_train["path"].tolist(), transform=transforms), batch_size=4, num_workers=0)
 embeddings_valid = inference(extractor, ImageBaseDataset(df_val["path"].tolist(), transform=transforms), batch_size=4, num_workers=0)
 
-# TRAIN PAIRWISE MODEL
+# STEP 1: TRAIN PAIRWISE MODEL
 train_dataset = ImageLabeledDataset(df_train, transform=get_augs_torch(224), extra_data={"embeddings": embeddings_train})
 pairwise_model = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])
 optimizer = torch.optim.SGD(pairwise_model.parameters(), lr=1e-6)
@@ -50,21 +49,34 @@ for batch in train_loader:
     optimizer.step()
     optimizer.zero_grad()
 
-# VALIDATE RE-RANKING MODEL
+# STEP 2: VALIDATE RE-RANKING MODEL (DOES IT IMPROVE METRICS?)
 val_dataset = ImageQueryGalleryLabeledDataset(df=df_val, transform=transforms, extra_data={"embeddings": embeddings_valid})
-valid_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
+rr = RetrievalResults.compute_from_embeddings(embeddings_valid, val_dataset, n_items_to_retrieve=5)
 
-postprocessor = PairwiseReranker(top_n=3, pairwise_model=pairwise_model, num_workers=0, batch_size=4)
-calculator = EmbeddingMetrics(dataset=val_dataset, postprocessor=postprocessor)
-calculator.setup(num_samples=len(val_dataset))
+reranker = PairwiseReranker(top_n=5, pairwise_model=pairwise_model, num_workers=0, batch_size=4)
+rr_upd = reranker.process(rr, dataset=val_dataset)
 
-for batch in valid_loader:
-    calculator.update_data(data_dict=batch)
+metrics = calc_retrieval_metrics_rr(rr, precision_top_k=(5,))
+metrics_upd = calc_retrieval_metrics_rr(rr_upd, precision_top_k=(5,))
+print(metrics, "\n", metrics_upd)
 
-pprint(calculator.compute_metrics())  # Pairwise inference happens here
 ```
 [comment]:postprocessor-end
 </p>
 </details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1LBmusxwo8dPqWznmK627GNMzeDVdjMwv?usp=sharing)
+
+
+# Siamese re-ranks top-n retrieval outputs of the original model performing inference on pairs (query, output_i)
+val_dataset = DatasetQueryGallery(df=df_val, extra_data={"embeddings": embeddings_val}, transform=transform)
+valid_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
+
+postprocessor = PairwiseImagesPostprocessor(top_n=3, pairwise_model=siamese, transforms=transform)
+calculator = EmbeddingMetrics(postprocessor=postprocessor)
+calculator.setup(num_samples=len(val_dataset))
+
+for batch in valid_loader:
+    calculator.update_data(data_dict=batch)
+
+pprint(calculator.compute_metrics())  # Pairwise inference happens here

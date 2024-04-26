@@ -1,20 +1,19 @@
 from functools import partial
-from random import randint, random
+from random import randint
 from typing import Tuple
 
 import pytest
 import torch
 from torch import Tensor
 
-from oml.functional.metrics import (
-    calc_retrieval_metrics_on_full as calc_retrieval_metrics,
-)
 from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDataset
 from oml.interfaces.models import IPairwiseModel
+from oml.metrics.embeddings import calc_retrieval_metrics_rr
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
+from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.misc import flatten_dict, one_hot, set_global_seed
-from oml.utils.misc_torch import normalise, pairwise_dist
+from oml.utils.misc_torch import normalise
 from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
     EmbeddingsQueryGalleryLabeledDataset,
@@ -67,21 +66,22 @@ def shared_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
 def test_trivial_processing_does_not_change_distances_order(
     request: pytest.FixtureRequest, fixture_name: str, top_n: int, pairwise_distances_bias: float
 ) -> None:
+    # todo 522: fix shared case like [1.1011, 1.4530, 1.4670, 1.6010, 1.6478, 1.7395,    inf],
     dataset, embeddings = request.getfixturevalue(fixture_name)
 
-    distances = pairwise_dist(x1=embeddings[dataset.get_query_ids()], x2=embeddings[dataset.get_gallery_ids()], p=2)
+    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=150)
 
     model = LinearTrivialDistanceSiamese(embeddings.shape[-1], output_bias=pairwise_distances_bias, identity_init=True)
     processor = PairwiseReranker(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
 
-    distances_processed = processor.process(distances=distances.clone(), dataset=dataset)
+    rr_upd = processor.process(rr, dataset=dataset)
 
-    assert (distances_processed.argsort() == distances.argsort()).all()
+    assert (rr.retrieved_ids == rr_upd.retrieved_ids).all()
 
     if pairwise_distances_bias == 0:
-        assert torch.allclose(distances, distances_processed)
+        assert torch.allclose(rr.distances, rr_upd.distances)
     else:
-        assert not torch.allclose(distances, distances_processed)
+        assert not torch.allclose(rr.distances, rr_upd.distances)
 
 
 def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
@@ -115,36 +115,32 @@ def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: f
     for _ in range(n_repetitions):
 
         dataset, embeddings = perfect_case()
-        distances = pairwise_dist(embeddings[dataset.get_query_ids()], embeddings[dataset.get_gallery_ids()], p=2)
+        rr = RetrievalResults.compute_from_embeddings(embeddings.float(), dataset, n_items_to_retrieve=100)
 
-        labels_q = torch.tensor(dataset.get_labels()[dataset.get_query_ids()])
-        labels_g = torch.tensor(dataset.get_labels()[dataset.get_gallery_ids()])
-        mask_gt = labels_q.unsqueeze(-1) == labels_g
+        nq, ng = rr.distances.shape
 
-        nq, ng = distances.shape
-
-        # Let's randomly change some distances to break the case
+        # Let's randomly break the case
         for _ in range(5):
-            i = randint(0, nq - 1)
-            j = randint(0, ng - 1)
-            distances[i, j] = random()
+            i0, j0 = randint(0, nq - 1), randint(0, ng - 1)
+            i1, j1 = randint(0, nq - 1), randint(0, ng - 1)
+            rr.retrieved_ids[i0, j0] = rr.retrieved_ids[i1, j1]
 
         # As mentioned before, for this test the exact values of parameters don't matter
         top_k = (randint(1, ng - 1),)
         top_n = randint(2, 10)
 
-        args = {"mask_gt": mask_gt, "precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
+        args = {"precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
 
         # Metrics before
-        metrics = flatten_dict(calc_retrieval_metrics(distances=distances, **args))
+        metrics = flatten_dict(calc_retrieval_metrics_rr(rr, **args))
 
         # Metrics after broken distances have been fixed
         model = LinearTrivialDistanceSiamese(
             feat_dim=embeddings.shape[-1], identity_init=True, output_bias=pairwise_distances_bias
         )
         processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=16, num_workers=0)
-        distances_upd = processor.process(distances, dataset)
-        metrics_upd = flatten_dict(calc_retrieval_metrics(distances=distances_upd, **args))
+        rr_upd = processor.process(rr, dataset)
+        metrics_upd = flatten_dict(calc_retrieval_metrics_rr(rr_upd, **args))
 
         for key in metrics.keys():
             metric = metrics[key]
@@ -178,31 +174,24 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
 
     top_n = min(top_n, embeddings.shape[1])
 
-    distances = pairwise_dist(embeddings[dataset.get_query_ids()], embeddings[dataset.get_gallery_ids()], p=2)
-
-    labels_q = torch.tensor(dataset.get_labels()[dataset.get_query_ids()])
-    labels_g = torch.tensor(dataset.get_labels()[dataset.get_gallery_ids()])
-    mask_gt = labels_q.unsqueeze(-1) == labels_g
+    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset)
 
     args = {
         "cmc_top_k": (top_n,),
         "precision_top_k": (top_n,),
         "map_top_k": tuple(),
-        "mask_gt": mask_gt,
     }
 
-    metrics_before = calc_retrieval_metrics(distances=distances, **args)
-    ii_closest_before = torch.argsort(distances)
+    metrics_before = calc_retrieval_metrics_rr(rr, **args)
 
     model = RandomPairwise()
     processor = PairwiseReranker(pairwise_model=model, top_n=top_n, batch_size=4, num_workers=0)
-    distances_upd = processor.process(distances=distances, dataset=dataset)
+    rr_upd = processor.process(rr, dataset=dataset)
 
-    metrics_after = calc_retrieval_metrics(distances=distances_upd, **args)
-    ii_closest_after = torch.argsort(distances_upd)
+    metrics_after = calc_retrieval_metrics_rr(rr_upd, **args)
 
     assert metrics_before == metrics_after
 
     # also check that we only re-ranked the first top_n items
-    assert (ii_closest_before[:, :top_n] != ii_closest_after[:, :top_n]).any()
-    assert (ii_closest_before[:, top_n:] == ii_closest_after[:, top_n:]).all()
+    assert (rr.retrieved_ids[:, :top_n] != rr_upd.retrieved_ids[:, :top_n]).any()
+    assert (rr.retrieved_ids[:, top_n:] == rr_upd.retrieved_ids[:, top_n:]).all()

@@ -74,7 +74,7 @@ def calc_retrieval_metrics_on_full(
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
 ) -> TMetricsDict:
-    # todo 522: get rid of this tmp function or at least move to the tests
+    # todo 522: move to tests
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
@@ -153,6 +153,7 @@ def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Ten
 
 
 def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
+    # todo 522: move to tests
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
 
@@ -168,6 +169,7 @@ def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor
 def calc_mask_to_ignore(
     is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
 ) -> Tensor:
+    # todo 522: move to tests
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
@@ -188,20 +190,6 @@ def calc_mask_to_ignore(
         mask_to_ignore = torch.tensor(mask_to_ignore, dtype=torch.bool)
 
     return mask_to_ignore
-
-
-def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
-    assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
-    assert embeddings.shape[0] == len(is_query) == len(is_gallery)
-
-    query_mask = is_query == 1
-    gallery_mask = is_gallery == 1
-    query_embeddings = embeddings[query_mask]
-    gallery_embeddings = embeddings[gallery_mask]
-
-    distance_matrix = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
-
-    return distance_matrix
 
 
 def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
@@ -603,7 +591,6 @@ __all__ = [
     "apply_mask_to_ignore",
     "calc_gt_mask",
     "calc_mask_to_ignore",
-    "calc_distance_matrix",
     "reduce_metrics",
     "take_unreduced_metrics_by_mask",
 ]
