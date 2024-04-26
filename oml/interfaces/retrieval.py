@@ -1,4 +1,5 @@
-from typing import Any
+from oml.interfaces.datasets import IQueryGalleryDataset
+from oml.retrieval.retrieval_results import RetrievalResults
 
 
 class IRetrievalPostprocessor:
@@ -7,8 +8,7 @@ class IRetrievalPostprocessor:
 
     """
 
-    def process(self, *args, **kwargs) -> Any:  # type: ignore
-        # todo 522: add actual signature later
+    def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:
         raise NotImplementedError()
 
 

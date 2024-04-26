@@ -37,8 +37,6 @@ def calc_retrieval_metrics(
         Metrics dictionary.
 
     """
-    # todo 522: clipping
-
     assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
     assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
     n_queries = len(retrieved_ids)

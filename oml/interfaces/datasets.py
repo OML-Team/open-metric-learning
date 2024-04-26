@@ -24,10 +24,13 @@ class IIndexedDataset(Dataset, ABC):
         """
         raise NotImplementedError()
 
+    def __len__(self) -> int:
+        raise NotImplementedError()
+
 
 class IBaseDataset(IIndexedDataset, ABC):
     input_tensors_key: str
-    extra_data: Dict[str, Any]
+    extra_data: Dict[str, Any]  # container for storing extra records having the same size as the dataset
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         """

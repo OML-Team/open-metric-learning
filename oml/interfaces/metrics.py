@@ -51,24 +51,10 @@ class IBasicMetric(ABC):
         raise NotImplementedError()
 
 
-class IMetricDDP(IBasicMetric):
-    """
-    This is an extension of a base metric interface to work in DDP mode
-
-    """
-
-    @abstractmethod
-    def sync(self) -> None:
-        """
-        Method aggregates data in DDP mode before metrics calculations
-        """
-        raise NotImplementedError()
-
-
 class IMetricVisualisable(IBasicMetric):
     """
     This is an interface for all metrics which can visualize themselves.
-    For example, mAP@5 can plot worst queries.
+
     """
 
     @abstractmethod
@@ -86,4 +72,4 @@ class IMetricVisualisable(IBasicMetric):
         raise NotImplementedError()
 
 
-__all__ = ["IBasicMetric", "IMetricDDP", "IMetricVisualisable"]
+__all__ = ["IBasicMetric", "IMetricVisualisable"]

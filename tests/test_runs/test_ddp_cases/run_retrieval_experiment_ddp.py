@@ -16,7 +16,7 @@ from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
 from oml.losses.arcface import ArcFaceLoss
-from oml.metrics.embeddings import EmbeddingMetricsDDP
+from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import set_global_seed
 
 
@@ -39,6 +39,7 @@ def create_pred_and_gt_labels(
 
 
 class DummyDataset(Dataset):
+    # todo 522: rework
     input_name = "input_tensors"
     labels_name = "labels"
     item_name = INDEX_KEY
@@ -198,7 +199,7 @@ def experiment(args: Namespace) -> None:
     train_dataset = DummyDataset(gt_labels=gt_labels, pred_labels=gt_labels)
     train_dataloader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=batch_size)
 
-    emb_metrics = EmbeddingMetricsDDP(cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))
+    emb_metrics = EmbeddingMetrics(dataset=val_dataset, cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))
     val_callback = MetricValCallbackWithSaving(
         metric=emb_metrics, devices=devices, num_labels=num_labels, batch_size=batch_size
     )

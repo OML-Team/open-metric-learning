@@ -70,10 +70,8 @@ class RetrievalResults:
         """
         assert len(embeddings) == len(dataset), "Embeddings and dataset must have the same size."
 
-        # todo 522: rework taking sequence
-        if hasattr(dataset, "df") and SEQUENCE_COLUMN in dataset.df:
-            dataset.df[SEQUENCE_COLUMN], _ = pd.factorize(dataset.df[SEQUENCE_COLUMN])
-            sequence_ids = LongTensor(dataset.df[SEQUENCE_COLUMN])
+        if SEQUENCE_COLUMN in dataset.extra_data:
+            sequence_ids = LongTensor(pd.factorize(dataset.extra_data[SEQUENCE_COLUMN])[0])
         else:
             sequence_ids = None
 

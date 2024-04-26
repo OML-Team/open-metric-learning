@@ -6,7 +6,7 @@ import torch
 from torch import BoolTensor, FloatTensor, LongTensor
 from torch.utils.data import DataLoader
 
-from oml.const import EMBEDDINGS_KEY, INPUT_TENSORS_KEY, OVERALL_CATEGORIES_KEY
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryLabeledDataset,
@@ -62,15 +62,14 @@ def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, 
         dataset=dataset, batch_size=batch_size, shuffle=shuffle, drop_last=False, num_workers=num_workers
     )
 
-    calc = EmbeddingMetrics(cmc_top_k=(1,))
-    calc.setup(num_samples=len(dataset))
+    calc = EmbeddingMetrics(dataset=dataset, cmc_top_k=(1,))
+    calc.setup()
 
     model = IdealClusterEncoder()
 
     for batch in loader:
-        output = model(batch[INPUT_TENSORS_KEY])
-        batch[EMBEDDINGS_KEY] = output
-        calc.update_data(data_dict=batch)
+        output = model(batch[dataset.input_tensors_key])
+        calc.update_data(embeddings=output, indices=batch[dataset.index_key])
 
     metrics = calc.compute_metrics()
 

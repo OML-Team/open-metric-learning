@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from oml.const import INDEX_KEY, LOG_IMAGE_FOLDER
 from oml.ddp.patching import check_loaders_is_patched, patch_dataloader_to_ddp
 from oml.interfaces.loggers import IFigureLogger
-from oml.interfaces.metrics import IBasicMetric, IMetricDDP, IMetricVisualisable
+from oml.interfaces.metrics import IBasicMetric, IMetricVisualisable
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.utils.misc import flatten_dict
 
@@ -44,7 +44,7 @@ class MetricValCallback(Callback):
         self.metric = metric
         self.log_images = log_images
         assert not log_images or (
-            isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()  # type: ignore
+            isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()
         )
 
         self.loader_idx = loader_idx
@@ -68,7 +68,7 @@ class MetricValCallback(Callback):
                 self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
                 self._collected_samples = 0
 
-                self.metric.setup(num_samples=self._expected_samples)
+                self.metric.setup(num_samples=self._expected_samples)  # todo 522: we don't need it anymore?
                 self._ready_to_accumulate = True
 
     def on_validation_batch_end(
@@ -83,7 +83,7 @@ class MetricValCallback(Callback):
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
 
-            self.metric.update_data(outputs, indices=outputs[INDEX_KEY].tolist())
+            self.metric.update_data(embedings=outputs[pl_module.embeddings_key], indices=outputs[pl_module.index_key])
 
             self._collected_samples += len(outputs[list(outputs.keys())[0]])
             if self._collected_samples > self._expected_samples:
@@ -160,10 +160,9 @@ class MetricValCallbackDDP(MetricValCallback):
 
     """
 
-    metric: IMetricDDP
+    metric: IBasicMetric
 
-    def __init__(self, metric: IMetricDDP, *args: Any, **kwargs: Any):
-        assert isinstance(metric, IMetricDDP), "Metric has to support DDP interface"
+    def __init__(self, metric: IBasicMetric, *args: Any, **kwargs: Any):
         super().__init__(metric, *args, **kwargs)
 
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int = 0) -> int:
@@ -180,7 +179,6 @@ class MetricValCallbackDDP(MetricValCallback):
         # TODO: optimize to avoid duplication of metrics on all devices.
         #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
         #  because they need this metric for checkpointing
-        self.metric.sync()
         return super().calc_and_log_metrics(pl_module=pl_module)
 
     @staticmethod

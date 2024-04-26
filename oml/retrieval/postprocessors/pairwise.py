@@ -1,12 +1,13 @@
 from typing import Tuple
 
 import torch
-from torch import Tensor
+from torch import FloatTensor, LongTensor, Tensor
 
 from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
+from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.misc_torch import (
     assign_2d,
     cat_two_sorted_tensors_and_keep_it_sorted,
@@ -47,44 +48,23 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-    def process(self, distances: Tensor, dataset: IQueryGalleryDataset) -> Tensor:  # type: ignore
+    def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:
         """
-        Args:
-            distances: Where ``distances[i, j]`` is a distance between i-th query and j-th gallery.
-            dataset: Dataset having query-gallery split.
-
-        Returns:
-            Distances, where ``distances[i, j]`` is a distance between i-th query and j-th gallery,
-            but the distances to the first ``top_n`` galleries have been updated INPLACE.
+        See `self.process_raw()` docs.
+        todo 522: rst docs
 
         """
-        # todo 522:
-        # This function and the code below is only needed during the migration time.
-        # We will directly use `process_neigh` later on.
-        # So, the code below is just a format adapter:
-        # 1) it takes the top (dists + ii) of the big distance matrix,
-        # 2) passes this top to the `process_neigh()`
-        # 3) puts the processed outputs on their places in the big distance matrix
-
-        assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
-
-        # we need this "+10" to activate rescaling if needed (so we have both: new and old distances in proces_neigh.
-        # anyway, this code is temporary
-        distances_top, ii_retrieved_top = torch.topk(
-            distances, k=min(self.top_n + 10, distances.shape[1]), largest=False
+        gt_ids = rr.gt_ids
+        retrieved_ids_upd, distances_upd = self.process_raw(
+            retrieved_ids=rr.retrieved_ids, distances=rr.distances, dataset=dataset
         )
-        distances_top_upd, ii_retrieved_upd = self.process_neigh(
-            retrieved_ids=ii_retrieved_top, distances=distances_top, dataset=dataset
-        )
-        distances = assign_2d(x=distances, indices=ii_retrieved_upd, new_values=distances_top_upd)
+        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd)
+        rr_upd.gt_ids = gt_ids
+        return rr_upd
 
-        assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
-
-        return distances
-
-    def process_neigh(
+    def process_raw(
         self, retrieved_ids: Tensor, distances: Tensor, dataset: IQueryGalleryDataset
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> Tuple[LongTensor, FloatTensor]:
         """
 
         Args:

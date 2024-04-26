@@ -18,7 +18,6 @@ from oml.functional.metrics import (
 from oml.functional.metrics import (
     calc_retrieval_metrics_on_full as calc_retrieval_metrics,
 )
-from oml.metrics.embeddings import validate_dataset
 from oml.utils.misc import remove_unused_kwargs
 from oml.utils.misc_torch import take_2d
 
@@ -171,27 +170,6 @@ def test_on_synthetic_cases(
         metrics_expected["map"] = {k: naive_map(positions, k) for k in top_k}
 
         compare_metrics(positions, labels, is_query, is_gallery, metrics_expected, top_k, reduce=True)
-
-
-def test_validate_dataset_good_case() -> None:
-    isq = torch.tensor([True, False, False, True, False, False], dtype=torch.bool)
-    isg = torch.tensor([False, True, True, False, True, True], dtype=torch.bool)
-    labels = torch.tensor([0, 0, 0, 1, 1, 1], dtype=torch.int)
-
-    mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
-    m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
-    validate_dataset(mask_gt=mgt, mask_to_ignore=m2i)
-
-
-def test_validate_dataset_bad_case() -> None:
-    with pytest.raises(RuntimeError):
-        isq = torch.tensor([True, False, False, True, True], dtype=torch.bool)
-        isg = torch.tensor([False, True, True, False, True], dtype=torch.bool)
-        labels = torch.tensor([0, 0, 0, 1, 1], dtype=torch.int)
-
-        mgt = calc_gt_mask(labels=labels, is_query=isq, is_gallery=isg)
-        m2i = calc_mask_to_ignore(is_query=isq, is_gallery=isg)
-        validate_dataset(mask_gt=mgt, mask_to_ignore=m2i)
 
 
 def compare_metrics(

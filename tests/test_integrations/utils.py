@@ -5,15 +5,13 @@ import torch
 from torch import BoolTensor, FloatTensor, LongTensor, nn
 
 from oml.const import (
-    CATEGORIES_KEY,
+    CATEGORIES_COLUMN,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
     LABELS_KEY,
-    SEQUENCE_KEY,
+    SEQUENCE_COLUMN,
 )
-from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDataset
+from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDataset, IIndexedDataset
 from oml.utils.misc import one_hot
 
 
@@ -45,9 +43,6 @@ class EmbeddingsQueryGalleryDataset(IQueryGalleryDataset):
         sequence: Optional[np.ndarray] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
-        # todo 522: remove keys later
-        categories_key: str = CATEGORIES_KEY,
-        sequence_key: str = SEQUENCE_KEY,
     ):
         super().__init__()
         assert len(embeddings) == len(is_query) == len(is_gallery)
@@ -56,16 +51,14 @@ class EmbeddingsQueryGalleryDataset(IQueryGalleryDataset):
         self._is_query = is_query
         self._is_gallery = is_gallery
 
-        # todo 522: remove keys
-        self.categories_key = categories_key
-        self.sequence_key = sequence_key
-
         self.extra_data = {}
         if categories is not None:
-            self.extra_data[self.categories_key] = categories
+            assert len(categories) == len(embeddings)
+            self.extra_data[CATEGORIES_COLUMN] = categories
 
         if sequence is not None:
-            self.extra_data[self.sequence_key] = sequence
+            assert len(sequence) == len(embeddings)
+            self.extra_data[SEQUENCE_COLUMN] = sequence
 
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
@@ -74,12 +67,8 @@ class EmbeddingsQueryGalleryDataset(IQueryGalleryDataset):
         data = {
             self.input_tensors_key: self._embeddings[item],
             self.index_key: item,
-            # todo 522: remove
-            IS_QUERY_KEY: self._is_query[item],
-            IS_GALLERY_KEY: self._is_gallery[item],
         }
 
-        # todo 522: avoid passing extra data as keys
         for key, record in self.extra_data.items():
             if key in data:
                 raise ValueError(f"<extra_data> and dataset share the same key: {key}")
