@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
+from torch import isclose, tensor
 from torch.utils.data import DataLoader
 
 from oml.const import OVERALL_CATEGORIES_KEY
@@ -129,10 +130,8 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     compare_dicts_recursively(gt_metrics, metrics)
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
-    assert (
-        torch.isclose(calc.retrieval_results.distances, torch.tensor([0.0])).any()
-        or torch.isclose(calc.retrieval_results.distances, torch.tensor([math.sqrt(2)])).any()
-    )
+    distances = calc.retrieval_results.distances  # type: ignore
+    assert isclose(distances, tensor([0.0])).any() or isclose(distances, tensor([math.sqrt(2)])).any()
 
     assert calc.acc.collected_samples == num_samples
 
@@ -166,10 +165,8 @@ def run_across_epochs(case) -> None:  # type: ignore
     assert compare_dicts_recursively(metrics_all_epochs[0], metrics_all_epochs[-1])
 
     # the euclidean distance between any one-hots is always sqrt(2) or 0
-    assert (
-        torch.isclose(calc.retrieval_results.distances, torch.tensor([0.0])).any()
-        or torch.isclose(calc.retrieval_results.distances, torch.tensor([math.sqrt(2)])).any()
-    )
+    distances = calc.retrieval_results.distances  # type: ignore
+    assert isclose(distances, tensor([0.0])).any() or isclose(distances, tensor([math.sqrt(2)])).any()
 
     assert calc.acc.collected_samples == num_samples
 
