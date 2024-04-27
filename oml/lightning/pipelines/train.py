@@ -105,6 +105,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     )
 
     metrics_calc = EmbeddingMetrics(
+        dataset=loaders_val.dataset,
         **cfg.get("metric_args", {}),
     )
 

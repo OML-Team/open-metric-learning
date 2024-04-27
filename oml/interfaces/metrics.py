@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any, Collection, Tuple
+from typing import Any, Collection, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
+from torch import LongTensor
 
 from oml.const import OVERALL_CATEGORIES_KEY
+
+TIndices = Union[LongTensor, List[int]]
 
 
 class IBasicMetric(ABC):
@@ -25,7 +28,7 @@ class IBasicMetric(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def update_data(self, *args: Any, **kwargs: Any) -> Any:
+    def update_data(self, data: Dict[str, Any], indices: TIndices) -> None:
         """
         Method for passing data to calculate the metrics later on.
 
@@ -61,6 +64,7 @@ class IMetricVisualisable(IBasicMetric):
     def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
         """
         Method which returns results of visualization and titles for logging.
+
         """
         raise NotImplementedError()
 
@@ -68,6 +72,7 @@ class IMetricVisualisable(IBasicMetric):
     def ready_to_visualize(self) -> bool:
         """
         Method which checks if visualization can be done.
+
         """
         raise NotImplementedError()
 

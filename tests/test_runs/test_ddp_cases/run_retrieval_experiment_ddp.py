@@ -8,9 +8,9 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch import nn
 from torch.optim import Adam
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
-from oml.const import INDEX_KEY, TMP_PATH
+from oml.const import INDEX_KEY, INPUT_TENSORS_KEY, LABELS_KEY, TMP_PATH
 from oml.ddp.utils import sync_dicts_ddp
 from oml.lightning.callbacks.metric import MetricValCallbackDDP
 from oml.lightning.modules.ddp import ModuleDDP
@@ -18,6 +18,7 @@ from oml.lightning.pipelines.parser import parse_engine_params_from_config
 from oml.losses.arcface import ArcFaceLoss
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.misc import set_global_seed
+from tests.test_integrations.utils import EmbeddingsQueryGalleryLabeledDataset
 
 
 def create_pred_and_gt_labels(
@@ -36,29 +37,6 @@ def create_pred_and_gt_labels(
         pred_labels += instances
 
     return pred_labels, gt_labels
-
-
-class DummyDataset(Dataset):
-    # todo 522: rework
-    input_name = "input_tensors"
-    labels_name = "labels"
-    item_name = INDEX_KEY
-
-    def __init__(self, pred_labels: List[int], gt_labels: List[int]):
-        self.gt_labels = gt_labels
-        self.pred_labels = pred_labels
-
-    def __len__(self) -> int:
-        return len(self.gt_labels)
-
-    def __getitem__(self, item: int) -> Dict[str, Any]:
-        return {
-            self.input_name: self.pred_labels[item] * torch.ones((3, 10, 10)),
-            self.labels_name: self.gt_labels[item],
-            "is_query": True,
-            "is_gallery": True,
-            self.item_name: item,
-        }
 
 
 class DummyModule(ModuleDDP):
@@ -89,7 +67,7 @@ class DummyModule(ModuleDDP):
         if batch_idx == 0:
             self.validation_step_outputs = []
 
-        embeddings = self.model(batch[DummyDataset.input_name])
+        embeddings = self.model(batch[INPUT_TENSORS_KEY])
 
         self.validation_step_outputs.append(batch)
         return {**batch, **{"embeddings": embeddings}}
@@ -98,8 +76,8 @@ class DummyModule(ModuleDDP):
         if batch_idx == 0:
             self.training_step_outputs = []
 
-        embeddings = self.model(batch[DummyDataset.input_name])
-        loss = self.criterion(embeddings, batch[DummyDataset.labels_name])
+        embeddings = self.model(batch[INPUT_TENSORS_KEY])
+        loss = self.criterion(embeddings, batch[LABELS_KEY])
         batch["loss"] = loss
 
         self.training_step_outputs.append(batch)
@@ -116,7 +94,7 @@ class DummyModule(ModuleDDP):
     def check_outputs_of_epoch(self, outputs: List[Any]) -> None:
         # Check point 1 of motivation
         world_size = self.trainer.world_size
-        output_batches = [tuple(out[DummyDataset.item_name].tolist()) for out in outputs]
+        output_batches = [tuple(out[INDEX_KEY].tolist()) for out in outputs]
         output_batches_synced = sync_dicts_ddp({"batches": output_batches}, world_size)["batches"]
 
         assert len(output_batches_synced) == len(output_batches) * world_size
@@ -193,10 +171,15 @@ def experiment(args: Namespace) -> None:
 
     pred_labels, gt_labels = create_pred_and_gt_labels(num_labels=num_labels, min_max_instances=(3, 5), err_prob=0.3)
 
-    val_dataset = DummyDataset(gt_labels=gt_labels, pred_labels=pred_labels)
+    pred_tensors = torch.stack([label * torch.ones((3, 10, 10)) for label in pred_labels]).float()
+    is_query = torch.ones(len(gt_labels)).bool()
+    is_gallery = torch.ones(len(gt_labels)).bool()
+    gt_labels = torch.tensor(gt_labels).long()
+
+    val_dataset = EmbeddingsQueryGalleryLabeledDataset(pred_tensors, gt_labels, is_query, is_gallery)
     val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size)
 
-    train_dataset = DummyDataset(gt_labels=gt_labels, pred_labels=gt_labels)
+    train_dataset = EmbeddingsQueryGalleryLabeledDataset(pred_tensors, gt_labels, is_query, is_gallery)
     train_dataloader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=batch_size)
 
     emb_metrics = EmbeddingMetrics(dataset=val_dataset, cmc_top_k=(5, 10), precision_top_k=(5, 10), map_top_k=(5, 10))

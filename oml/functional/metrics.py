@@ -7,7 +7,7 @@ import torch
 from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin, stack, tensor
 
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import PCA, pairwise_dist
+from oml.utils.misc_torch import PCA
 
 TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
@@ -39,6 +39,7 @@ def calc_retrieval_metrics(
     """
     assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
     assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
+
     n_queries = len(retrieved_ids)
 
     # let's mark every correctly retrieved item as True and vice versa

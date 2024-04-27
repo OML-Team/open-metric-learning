@@ -2,7 +2,7 @@ from typing import Tuple
 
 import pytest
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 from oml.const import MOCK_DATASET_PATH
 from oml.datasets.images import ImageQueryGalleryLabeledDataset
@@ -15,7 +15,6 @@ from oml.retrieval.retrieval_results import RetrievalResults
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.transforms.images.utils import TTransforms
 from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.utils.misc_torch import pairwise_dist
 
 
 def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[RetrievalResults, IQueryGalleryDataset]:

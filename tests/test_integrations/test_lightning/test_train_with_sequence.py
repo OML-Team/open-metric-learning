@@ -24,7 +24,7 @@ def validation(df: pd.DataFrame) -> TMetricsDict_ByLabels:
     with torch.no_grad():
         for batch in tqdm(val_loader):
             embeddings = extractor(batch[val_dataset.input_tensors_key])
-            calculator.update_data(embeddings=embeddings, indices=batch[val_dataset.index_key])
+            calculator.update(embeddings=embeddings, indices=batch[val_dataset.index_key])
 
     metrics = calculator.compute_metrics()
 

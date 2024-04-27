@@ -43,9 +43,7 @@ class MetricValCallback(Callback):
 
         self.metric = metric
         self.log_images = log_images
-        assert not log_images or (
-            isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize()
-        )
+        assert not log_images or (isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize())
 
         self.loader_idx = loader_idx
         self.samples_in_getitem = samples_in_getitem
@@ -68,7 +66,7 @@ class MetricValCallback(Callback):
                 self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
                 self._collected_samples = 0
 
-                self.metric.setup(num_samples=self._expected_samples)  # todo 522: we don't need it anymore?
+                self.metric.setup(num_samples=self._expected_samples)
                 self._ready_to_accumulate = True
 
     def on_validation_batch_end(
@@ -83,7 +81,7 @@ class MetricValCallback(Callback):
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
 
-            self.metric.update_data(embedings=outputs[pl_module.embeddings_key], indices=outputs[pl_module.index_key])
+            self.metric.update_data(data=outputs, indices=outputs[INDEX_KEY])  # type: ignore
 
             self._collected_samples += len(outputs[list(outputs.keys())[0]])
             if self._collected_samples > self._expected_samples:

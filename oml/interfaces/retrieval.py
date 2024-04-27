@@ -1,5 +1,5 @@
-from oml.interfaces.datasets import IQueryGalleryDataset
-from oml.retrieval.retrieval_results import RetrievalResults
+from abc import abstractmethod
+from typing import Any
 
 
 class IRetrievalPostprocessor:
@@ -8,7 +8,8 @@ class IRetrievalPostprocessor:
 
     """
 
-    def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:
+    @abstractmethod
+    def process(self, *args, **kwargs) -> Any:  # type: ignore
         raise NotImplementedError()
 
 

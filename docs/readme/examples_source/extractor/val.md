@@ -5,7 +5,7 @@
 [comment]:vanilla-validation-start
 ```python
 
-from oml.datasets.base import DatasetQueryGallery
+from oml.datasets import ImageQueryGalleryLabeledDataset
 from oml.inference import inference
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.models import ViTExtractor
@@ -17,7 +17,7 @@ extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 _, df_val = download_mock_dataset(global_paths=True)
-dataset = DatasetQueryGallery(df_val, transform=transform)
+dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 
 embeddings = inference(extractor, dataset, batch_size=4)
 

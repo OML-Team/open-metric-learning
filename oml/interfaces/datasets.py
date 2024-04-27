@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 from torch import LongTensor
@@ -73,6 +73,14 @@ class ILabeledDataset(IBaseDataset, ABC):
 
     @abstractmethod
     def get_labels(self) -> np.ndarray:
+        raise NotImplementedError()
+
+    def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
+        """
+        Returns:
+            Mapping from label to category if known.
+
+        """
         raise NotImplementedError()
 
 

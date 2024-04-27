@@ -133,7 +133,7 @@ class Accumulator:
         """
         # TODO: add option to broadcast instead of sync to avoid duplicating data
         if not self.is_storage_full():
-            raise ValueError("Only full storages could be synced")
+            raise ValueError(f"Cannot sync. Collected: {self.num_samples}/{self.collected_samples} items.")
 
         params = {"num_samples": [self.num_samples], "keys_to_accumulate": self.keys_to_accumulate}
         storage = self._storage

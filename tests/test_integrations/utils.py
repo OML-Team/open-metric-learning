@@ -11,7 +11,7 @@ from oml.const import (
     LABELS_KEY,
     SEQUENCE_COLUMN,
 )
-from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDataset, IIndexedDataset
+from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDataset
 from oml.utils.misc import one_hot
 
 

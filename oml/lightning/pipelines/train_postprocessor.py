@@ -132,7 +132,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
-    assert isinstance(postprocessor, PairwiseReranker), "We support only images processing in this pipeline."
+    assert isinstance(postprocessor, PairwiseReranker), f"We only support {PairwiseReranker.__name__} at the moment."
     assert isinstance(postprocessor.model, IPairwiseModel), f"You model must be a child of {IPairwiseModel.__name__}"
 
     criterion = torch.nn.BCEWithLogitsLoss()

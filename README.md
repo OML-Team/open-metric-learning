@@ -294,7 +294,7 @@ docker pull omlteam/oml:cpu
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
+from oml.datasets import ImageLabeledDataset
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models import ViTExtractor
@@ -306,7 +306,7 @@ df_train, _ = download_mock_dataset(global_paths=True)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train)
+train_dataset = ImageLabeledDataset(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
@@ -334,7 +334,7 @@ for batch in tqdm(train_loader):
 [comment]:vanilla-validation-start
 ```python
 
-from oml.datasets.base import DatasetQueryGallery
+from oml.datasets import ImageQueryGalleryLabeledDataset
 from oml.inference import inference
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.models import ViTExtractor
@@ -346,7 +346,7 @@ extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 _, df_val = download_mock_dataset(global_paths=True)
-dataset = DatasetQueryGallery(df_val, transform=transform)
+dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 
 embeddings = inference(extractor, dataset, batch_size=4)
 
@@ -372,7 +372,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from torch.optim import SGD
 
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
+from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
@@ -396,13 +396,13 @@ extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = SGD(extractor.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train)
+train_dataset = ImageLabeledDataset(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
-val_dataset = DatasetQueryGallery(df_val)
+val_dataset = ImageQueryGalleryLabeledDataset(df_val)
 val_loader = DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
 

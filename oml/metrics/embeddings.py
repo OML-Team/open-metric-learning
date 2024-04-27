@@ -1,14 +1,15 @@
 from copy import deepcopy
 from pprint import pprint
-from typing import Collection, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch import FloatTensor, LongTensor
+from torch import FloatTensor
 
 from oml.const import (
     CATEGORIES_COLUMN,
+    EMBEDDINGS_KEY,
     LOG_TOPK_IMAGES_PER_ROW,
     LOG_TOPK_ROWS_PER_METRIC,
     OVERALL_CATEGORIES_KEY,
@@ -22,7 +23,7 @@ from oml.functional.metrics import (
     take_unreduced_metrics_by_mask,
 )
 from oml.interfaces.datasets import IQueryGalleryLabeledDataset, IVisualizableDataset
-from oml.interfaces.metrics import IMetricVisualisable
+from oml.interfaces.metrics import IMetricVisualisable, TIndices
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.retrieval.retrieval_results import RetrievalResults
@@ -31,14 +32,21 @@ from oml.utils.misc import flatten_dict
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-def calc_retrieval_metrics_rr(rr: RetrievalResults,
-                              cmc_top_k: Tuple[int, ...] = (5,),
-                              precision_top_k: Tuple[int, ...] = (5,),
-                              map_top_k: Tuple[int, ...] = (5,),
-                              reduce: bool = True,
-                              ) -> TMetricsDict:
-    return calc_retrieval_metrics(retrieved_ids=rr.retrieved_ids, gt_ids=rr.gt_ids, cmc_top_k=cmc_top_k,
-                                  precision_top_k=precision_top_k, map_top_k=map_top_k, reduce=reduce)
+def calc_retrieval_metrics_rr(
+    rr: RetrievalResults,
+    cmc_top_k: Tuple[int, ...] = (5,),
+    precision_top_k: Tuple[int, ...] = (5,),
+    map_top_k: Tuple[int, ...] = (5,),
+    reduce: bool = True,
+) -> TMetricsDict:
+    return calc_retrieval_metrics(
+        retrieved_ids=rr.retrieved_ids,
+        gt_ids=rr.gt_ids,
+        cmc_top_k=cmc_top_k,
+        precision_top_k=precision_top_k,
+        map_top_k=map_top_k,
+        reduce=reduce,
+    )
 
 
 class EmbeddingMetrics(IMetricVisualisable):
@@ -51,18 +59,18 @@ class EmbeddingMetrics(IMetricVisualisable):
     metric_name = ""
 
     def __init__(
-            self,
-            dataset: Optional[IQueryGalleryLabeledDataset],
-            cmc_top_k: Tuple[int, ...] = (5,),
-            precision_top_k: Tuple[int, ...] = (5,),
-            map_top_k: Tuple[int, ...] = (5,),
-            fmr_vals: Tuple[float, ...] = tuple(),
-            pcf_variance: Tuple[float, ...] = (0.5,),
-            postprocessor: Optional[IRetrievalPostprocessor] = None,
-            metrics_to_exclude_from_visualization: Iterable[str] = (),
-            return_only_overall_category: bool = False,
-            visualize_only_overall_category: bool = True,
-            verbose: bool = True,
+        self,
+        dataset: Optional[IQueryGalleryLabeledDataset],
+        cmc_top_k: Tuple[int, ...] = (5,),
+        precision_top_k: Tuple[int, ...] = (5,),
+        map_top_k: Tuple[int, ...] = (5,),
+        fmr_vals: Tuple[float, ...] = tuple(),
+        pcf_variance: Tuple[float, ...] = (0.5,),
+        postprocessor: Optional[IRetrievalPostprocessor] = None,
+        metrics_to_exclude_from_visualization: Iterable[str] = (),
+        return_only_overall_category: bool = False,
+        visualize_only_overall_category: bool = True,
+        verbose: bool = True,
     ):
         """
 
@@ -107,17 +115,18 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
 
-        self._acc_embeddings_key = "embeddings"
+        self._acc_embeddings_key = "__embeddings"
         self.acc = Accumulator(keys_to_accumulate=(self._acc_embeddings_key,))
 
-    def setup(self) -> None:  # type: ignore
+    def setup(self, num_samples: Optional[int] = None) -> None:  # type: ignore
         self.prediction = None
         self.metrics = None
         self.metrics_unreduced = None
 
-        self.acc.refresh(len(self.dataset))
+        num_samples = num_samples if num_samples is not None else len(self.dataset)
+        self.acc.refresh(num_samples)
 
-    def update_data(self, embeddings: FloatTensor, indices: Optional[Union[LongTensor, List[int]]]) -> None:
+    def update(self, embeddings: FloatTensor, indices: TIndices) -> None:
         """
         Args:
             embeddings: Representations of the dataset items containing in the current batch.
@@ -128,11 +137,14 @@ class EmbeddingMetrics(IMetricVisualisable):
         indices = indices if isinstance(indices, List) else indices.tolist()
         self.acc.update_data(data_dict={self._acc_embeddings_key: embeddings}, indices=indices)
 
+    def update_data(self, data: Dict[str, Any], indices: TIndices) -> Any:
+        self.update(embeddings=data[EMBEDDINGS_KEY], indices=indices)
+
     def _compute_retrieval_results(self) -> None:
         max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
 
         self.retrieval_results = RetrievalResults.compute_from_embeddings(
-            embeddings=self.acc.storage[self._acc_embeddings_key].float(),
+            embeddings=self.acc.storage[self._acc_embeddings_key],
             dataset=self.dataset,
             n_items_to_retrieve=max_k,
         )
@@ -141,7 +153,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
-        self.acc.sync()
+        self.acc = self.acc.sync()
 
         # todo 522: what do we do with fnmr?
 
@@ -168,7 +180,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         embeddings = self.acc.storage[self._acc_embeddings_key]
         metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, self.pcf_variance))
 
-        if CATEGORIES_COLUMN in self.dataset.extra_data:  # todo 522: add test that we have categories in metrics
+        if CATEGORIES_COLUMN in self.dataset.extra_data:
             categories = np.array(self.dataset.extra_data[CATEGORIES_COLUMN])
             ids_query = self.dataset.get_query_ids()
             query_categories = categories[ids_query]
@@ -222,7 +234,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
 
     def get_plot_for_worst_queries(
-            self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
+        self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
     ) -> plt.Figure:
         query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
         return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
@@ -238,7 +250,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         assert self.retrieval_results is not None, "We are not ready to plot, because there are no retrieval results."
         assert self.metrics_unreduced is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        fig = self.retrieval_results.visualize(query_ids=query_ids, n_galleries_to_show=n_instances, verbose=verbose)
+        fig = self.retrieval_results.visualize(
+            query_ids=query_ids, n_galleries_to_show=n_instances, verbose=verbose, dataset=self.dataset
+        )
         fig.tight_layout()
         return fig
 

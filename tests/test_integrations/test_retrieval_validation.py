@@ -69,7 +69,7 @@ def test_retrieval_validation(batch_size: int, shuffle: bool, num_workers: int, 
 
     for batch in loader:
         output = model(batch[dataset.input_tensors_key])
-        calc.update_data(embeddings=output, indices=batch[dataset.index_key])
+        calc.update(embeddings=output, indices=batch[dataset.index_key])
 
     metrics = calc.compute_metrics()
 

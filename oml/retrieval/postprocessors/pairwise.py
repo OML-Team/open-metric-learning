@@ -8,11 +8,7 @@ from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.retrieval.retrieval_results import RetrievalResults
-from oml.utils.misc_torch import (
-    assign_2d,
-    cat_two_sorted_tensors_and_keep_it_sorted,
-    take_2d,
-)
+from oml.utils.misc_torch import cat_two_sorted_tensors_and_keep_it_sorted, take_2d
 
 
 class PairwiseReranker(IRetrievalPostprocessor):
@@ -48,10 +44,9 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-    def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:
+    def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:  # type: ignore
         """
         See `self.process_raw()` docs.
-        todo 522: rst docs
 
         """
         gt_ids = rr.gt_ids
