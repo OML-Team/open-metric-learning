@@ -3,7 +3,7 @@ from typing import List, Tuple
 import pytest
 import torch
 
-from oml.functional.metrics import (
+from tests.test_integrations.utils import (
     apply_mask_to_ignore,
     calc_gt_mask,
     calc_mask_to_ignore,
