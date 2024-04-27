@@ -66,17 +66,3 @@ print(metrics, "\n", metrics_upd)
 </details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1LBmusxwo8dPqWznmK627GNMzeDVdjMwv?usp=sharing)
-
-
-# Siamese re-ranks top-n retrieval outputs of the original model performing inference on pairs (query, output_i)
-val_dataset = DatasetQueryGallery(df=df_val, extra_data={"embeddings": embeddings_val}, transform=transform)
-valid_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
-
-postprocessor = PairwiseImagesPostprocessor(top_n=3, pairwise_model=siamese, transforms=transform)
-calculator = EmbeddingMetrics(postprocessor=postprocessor)
-calculator.setup(num_samples=len(val_dataset))
-
-for batch in valid_loader:
-    calculator.update_data(data_dict=batch)
-
-pprint(calculator.compute_metrics())  # Pairwise inference happens here

@@ -49,7 +49,7 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, pairwise
     )
     rr_upd = postprocessor.process(rr, dataset=dataset)
 
-    assert (rr_upd.retrieved_ids == rr_upd.retrieved_ids).all()
+    assert (rr.retrieved_ids == rr_upd.retrieved_ids).all()
 
     if pairwise_distances_bias == 0:
         assert torch.allclose(rr_upd.distances, rr.distances)

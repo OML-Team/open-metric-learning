@@ -104,7 +104,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.pcf_variance = pcf_variance
         self.postprocessor = postprocessor
 
-        self.prediction = None
+        self.retrieval_results = None
 
         self.metrics = None
         self.metrics_unreduced = None
@@ -119,7 +119,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.acc = Accumulator(keys_to_accumulate=(self._acc_embeddings_key,))
 
     def setup(self, num_samples: Optional[int] = None) -> None:  # type: ignore
-        self.prediction = None
+        self.retrieval_results = None
         self.metrics = None
         self.metrics_unreduced = None
 
@@ -143,7 +143,7 @@ class EmbeddingMetrics(IMetricVisualisable):
     def _compute_retrieval_results(self) -> None:
         max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
 
-        self.retrieval_results = RetrievalResults.compute_from_embeddings(
+        self.retrieval_results = RetrievalResults.compute_from_embeddings(  # type: ignore
             embeddings=self.acc.storage[self._acc_embeddings_key],
             dataset=self.dataset,
             n_items_to_retrieve=max_k,
@@ -153,9 +153,9 @@ class EmbeddingMetrics(IMetricVisualisable):
             self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
-        self.acc = self.acc.sync()
+        self.acc = self.acc.sync()  # if DDP gathering happens here
 
-        # todo 522: what do we do with fnmr?
+        # todo 522: put back fnmr metric
 
         if not self.acc.is_storage_full():
             raise ValueError(
@@ -243,7 +243,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
         Args:
             query_ids: Indices of the queries
-            n_instances: Amount of the predictions to show
+            n_instances: Amount of the retrieved items to show
             verbose: Set ``True`` for additional information
 
         """
