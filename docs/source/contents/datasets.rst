@@ -26,6 +26,7 @@ ImageLabeledDataset
     .. automethod:: __init__
     .. automethod:: __getitem__
     .. automethod:: get_labels
+    .. automethod:: get_label2category
     .. automethod:: visualize
 
 ImageQueryGalleryLabeledDataset
@@ -39,6 +40,7 @@ ImageQueryGalleryLabeledDataset
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
     .. automethod:: get_labels
+    .. automethod:: get_label2category
     .. automethod:: visualize
 
 ImageQueryGalleryDataset

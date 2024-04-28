@@ -6,7 +6,7 @@
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
+from oml.datasets import ImageLabeledDataset
 from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
@@ -18,7 +18,7 @@ df_train, _ = download_mock_dataset(global_paths=True)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train)
+train_dataset = ImageLabeledDataset(df_train)
 
 # PML specific
 distance = distances.LpDistance(p=2)

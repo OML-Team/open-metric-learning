@@ -13,7 +13,7 @@ from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
     parse_engine_params_from_config,
 )
-from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
+from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
@@ -68,17 +68,9 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
     if postprocessor is not None:
         pl_model.model_link_ = postprocessor.model  # type: ignore
 
-    metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
-    metrics_calc = metrics_constructor(
+    metrics_calc = EmbeddingMetrics(
         dataset=valid_dataset,
-        embeddings_key=pl_model.embeddings_key,
-        categories_key=valid_dataset.categories_key,
-        labels_key=valid_dataset.labels_key,
-        is_query_key=valid_dataset.is_query_key,
-        is_gallery_key=valid_dataset.is_gallery_key,
-        extra_keys=(valid_dataset.paths_key, *valid_dataset.bboxes_keys),
         postprocessor=postprocessor,
-        sequence_key=valid_dataset.sequence_key,
         **cfg.get("metric_args", {}),
     )
     metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback

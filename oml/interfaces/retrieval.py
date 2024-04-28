@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Any
 
 
@@ -7,8 +8,8 @@ class IRetrievalPostprocessor:
 
     """
 
+    @abstractmethod
     def process(self, *args, **kwargs) -> Any:  # type: ignore
-        # todo 522: add actual signature later
         raise NotImplementedError()
 
 

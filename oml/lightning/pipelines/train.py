@@ -17,7 +17,7 @@ from oml.lightning.pipelines.parser import (
     parse_sampler_from_config,
     parse_scheduler_from_config,
 )
-from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
+from oml.metrics.embeddings import EmbeddingMetrics
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
@@ -104,15 +104,8 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
         **module_kwargs,
     )
 
-    metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
-    metrics_calc = metrics_constructor(
-        embeddings_key=pl_module.embeddings_key,
-        categories_key=loaders_val.dataset.categories_key,
-        labels_key=loaders_val.dataset.labels_key,
-        is_query_key=loaders_val.dataset.is_query_key,
-        is_gallery_key=loaders_val.dataset.is_gallery_key,
-        extra_keys=(loaders_val.dataset.paths_key, *loaders_val.dataset.bboxes_keys),
-        sequence_key=loaders_val.dataset.sequence_key,
+    metrics_calc = EmbeddingMetrics(
+        dataset=loaders_val.dataset,
         **cfg.get("metric_args", {}),
     )
 

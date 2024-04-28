@@ -27,7 +27,7 @@ from oml.lightning.pipelines.parser import (
     parse_sampler_from_config,
     parse_scheduler_from_config,
 )
-from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
+from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.pairs import PairsMiner
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
@@ -132,7 +132,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
-    assert isinstance(postprocessor, PairwiseReranker), "We support only images processing in this pipeline."
+    assert isinstance(postprocessor, PairwiseReranker), f"We only support {PairwiseReranker.__name__} at the moment."
     assert isinstance(postprocessor.model, IPairwiseModel), f"You model must be a child of {IPairwiseModel.__name__}"
 
     criterion = torch.nn.BCEWithLogitsLoss()
@@ -159,15 +159,8 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
         **module_kwargs,
     )
 
-    metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
-    metrics_calc = metrics_constructor(
+    metrics_calc = EmbeddingMetrics(
         dataset=loader_val.dataset,
-        embeddings_key=pl_module.embeddings_key,
-        categories_key=loader_val.dataset.categories_key,
-        labels_key=loader_val.dataset.labels_key,
-        is_query_key=loader_val.dataset.is_query_key,
-        is_gallery_key=loader_val.dataset.is_gallery_key,
-        extra_keys=(loader_val.dataset.paths_key, *loader_val.dataset.bboxes_keys),
         postprocessor=postprocessor,
         **cfg.get("metric_args", {}),
     )

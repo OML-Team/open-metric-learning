@@ -4,39 +4,28 @@
 
 [comment]:vanilla-validation-start
 ```python
-import torch
-from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.datasets import ImageQueryGalleryLabeledDataset
+from oml.inference import inference
+from oml.metrics import calc_retrieval_metrics_rr
 from oml.models import ViTExtractor
+from oml.retrieval import RetrievalResults
 from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.registry.transforms import get_transforms_for_pretrained
+
+extractor = ViTExtractor.from_pretrained("vits16_dino")
+transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 _, df_val = download_mock_dataset(global_paths=True)
+dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
+embeddings = inference(extractor, dataset, batch_size=4)
 
-val_dataset = DatasetQueryGallery(df_val)
+rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+metrics = calc_retrieval_metrics_rr(rr, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
 
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics(extra_keys=("paths",))
-calculator.setup(num_samples=len(val_dataset))
-
-with torch.no_grad():
-    for batch in tqdm(val_loader):
-        batch["embeddings"] = extractor(batch["input_tensors"])
-        calculator.update_data(batch)
-
-metrics = calculator.compute_metrics()
-
-# Logging
-print(calculator.metrics)  # metrics
-print(calculator.metrics_unreduced)  # metrics without averaging over queries
-
-# Visualisation
-calculator.get_plot_for_queries(query_ids=[0, 2], n_instances=5)  # draw predictions on predefined queries
-calculator.get_plot_for_worst_queries(metric_name="OVERALL/map/5", n_queries=2, n_instances=5)  # draw mistakes
-calculator.visualize()  # draw mistakes for all the available metrics
+print(rr, "\n", metrics)
+rr.visualize(query_ids=[2, 1], dataset=dataset).show()
 
 ```
 [comment]:vanilla-validation-end

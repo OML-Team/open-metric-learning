@@ -119,6 +119,11 @@ pip_install_actual_oml:
 .PHONY: clean
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
+	find . -type d -name "lightning_logs" -exec rm -r {} +
+	find . -type d -name "ml-runs" -exec rm -r {} +
+	find . -type d -name "logs" -exec rm -r {} +
+	find . -type d -name ".ipynb_checkpoints" -exec rm -r {} +
 	find . -type f -name "*.log" -exec rm {} +
-	find . -type f -name "*.predictions.json" -exec rm {} +
+	find . -type f -name "*predictions.json" -exec rm {} +
 	rm -rf docs/build
+	rm -rf outputs/

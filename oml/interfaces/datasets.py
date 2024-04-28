@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 from torch import LongTensor
@@ -24,10 +24,13 @@ class IIndexedDataset(Dataset, ABC):
         """
         raise NotImplementedError()
 
+    def __len__(self) -> int:
+        raise NotImplementedError()
+
 
 class IBaseDataset(IIndexedDataset, ABC):
     input_tensors_key: str
-    extra_data: Dict[str, Any]
+    extra_data: Dict[str, Any]  # container for storing extra records having the same size as the dataset
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         """
@@ -70,6 +73,14 @@ class ILabeledDataset(IBaseDataset, ABC):
 
     @abstractmethod
     def get_labels(self) -> np.ndarray:
+        raise NotImplementedError()
+
+    def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
+        """
+        Returns:
+            Mapping from label to category if known.
+
+        """
         raise NotImplementedError()
 
 
