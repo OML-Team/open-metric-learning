@@ -359,13 +359,12 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
     def get_gallery_ids(self) -> LongTensor:
         return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        data = super().__getitem__(idx)
-        data[self.labels_key] = self.df.iloc[idx][LABELS_COLUMN]
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        data = super().__getitem__(item)
 
         # todo 522: remove
-        data[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][idx])
-        data[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][idx])
+        data[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][item])
+        data[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][item])
 
         return data
 
@@ -423,6 +422,13 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
             is_gallery_key=is_gallery_key,
         )
 
+        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.index_key = self.__dataset.index_key
+
+        # todo 522: remove
+        self.is_query_key = self.__dataset.is_query_key
+        self.is_gallery_key = self.__dataset.is_gallery_key
+
     def __getitem__(self, item: int) -> Dict[str, Any]:
         batch = self.__dataset[item]
         del batch[self.__dataset.labels_key]
@@ -455,7 +461,6 @@ def get_retrieval_images_datasets(
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
 
-    # todo 522: why do we need it?
     # first half will consist of "train" split, second one of "val"
     # so labels in train will be from 0 to N-1 and labels in test will be from N to K
     mapper = {l: i for i, l in enumerate(df.sort_values(by=[SPLIT_COLUMN])[LABELS_COLUMN].unique())}

@@ -18,16 +18,18 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
 
     """
 
-    def __init__(self, feat_dim: int, identity_init: bool):
+    def __init__(self, feat_dim: int, identity_init: bool, output_bias: float = 0):
         """
         Args:
             feat_dim: Expected size of each input.
             identity_init: If ``True``, models' weights initialised in a way when
                 the model simply estimates L2 distance between the original embeddings.
+            output_bias: Value to add to the output.
 
         """
         super(LinearTrivialDistanceSiamese, self).__init__()
         self.feat_dim = feat_dim
+        self.output_bias = output_bias
 
         self.proj = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
 
@@ -46,7 +48,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.proj(x1)
         x2 = self.proj(x2)
-        y = elementwise_dist(x1, x2, p=2)
+        y = elementwise_dist(x1, x2, p=2) + self.output_bias
         return y
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
@@ -145,14 +147,16 @@ class TrivialDistanceSiamese(IPairwiseModel):
 
     pretrained_models: Dict[str, Any] = {}
 
-    def __init__(self, extractor: IExtractor) -> None:
+    def __init__(self, extractor: IExtractor, output_bias: float = 0) -> None:
         """
         Args:
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
+            output_bias: Value to add to the outputs.
 
         """
         super(TrivialDistanceSiamese, self).__init__()
         self.extractor = extractor
+        self.output_bias = output_bias
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         """
@@ -166,7 +170,7 @@ class TrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.extractor(x1)
         x2 = self.extractor(x2)
-        return elementwise_dist(x1, x2, p=2)
+        return elementwise_dist(x1, x2, p=2) + self.output_bias
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         return self.forward(x1=x1, x2=x2)

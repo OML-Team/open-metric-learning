@@ -301,13 +301,12 @@ from oml.models import ViTExtractor
 from oml.samplers.balance import BalanceSampler
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root = "mock_dataset/"
-df_train, _ = download_mock_dataset(dataset_root)
+df_train, _ = download_mock_dataset(global_paths=True)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
@@ -342,12 +341,11 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root = "mock_dataset/"
-_, df_val = download_mock_dataset(dataset_root)
+_, df_val = download_mock_dataset(global_paths=True)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 calculator = EmbeddingMetrics(extra_keys=("paths",))
@@ -401,21 +399,20 @@ from oml.lightning.pipelines.logging import (
     WandBPipelineLogger,
 )
 
-dataset_root = "mock_dataset/"
-df_train, df_val = download_mock_dataset(dataset_root)
+df_train, df_val = download_mock_dataset(global_paths=True)
 
 # model
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
+train_dataset = DatasetWithLabels(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(extra_keys=[train_dataset.paths_key,]), log_images=True)
 
@@ -455,24 +452,24 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 ```python
 import torch
 
-from oml.const import MOCK_DATASET_PATH
-from oml.inference.flat import inference_on_images
+from oml.datasets import ImageQueryGalleryDataset
+from oml.inference import inference
 from oml.models import ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc_torch import pairwise_dist
 
-_, df_val = download_mock_dataset(MOCK_DATASET_PATH)
-df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)
-queries = df_val[df_val["is_query"]]["path"].tolist()
-galleries = df_val[df_val["is_gallery"]]["path"].tolist()
+_, df_test = download_mock_dataset(global_paths=True)
+del df_test["label"]  # we don't need gt labels for doing predictions
 
 extractor = ViTExtractor.from_pretrained("vits16_dino")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
-args = {"num_workers": 0, "batch_size": 8}
-features_queries = inference_on_images(extractor, paths=queries, transform=transform, **args)
-features_galleries = inference_on_images(extractor, paths=galleries, transform=transform, **args)
+dataset = ImageQueryGalleryDataset(df_test, transform=transform)
+
+embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
+embeddings_query = embeddings[dataset.get_query_ids()]
+embeddings_gallery = embeddings[dataset.get_gallery_ids()]
 
 # Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
 use_knn = False
@@ -480,12 +477,11 @@ top_k = 3
 
 if use_knn:
     from sklearn.neighbors import NearestNeighbors
-    knn = NearestNeighbors(algorithm="auto", p=2)
-    knn.fit(features_galleries)
-    dists, ii_closest = knn.kneighbors(features_queries, n_neighbors=top_k, return_distance=True)
+    knn = NearestNeighbors(algorithm="auto", p=2).fit(embeddings_query)
+    dists, ii_closest = knn.kneighbors(embeddings_gallery, n_neighbors=top_k, return_distance=True)
 
 else:
-    dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
+    dist_mat = pairwise_dist(x1=embeddings_query, x2=embeddings_gallery, p=2)
     dists, ii_closest = torch.topk(dist_mat, dim=1, k=top_k, largest=False)
 
 print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
