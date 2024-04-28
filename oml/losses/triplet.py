@@ -4,12 +4,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from oml.functional.losses import get_reduced
-from oml.interfaces.criterions import ITripletLossWithMiner
-from oml.interfaces.miners import ITripletsMiner, labels2list
-from oml.miners.cross_batch import TripletMinerWithMemory
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.utils.misc_torch import elementwise_dist
+from oml.functional import get_reduced
+from oml.interfaces import ITripletLossWithMiner
+from oml.interfaces import ITripletsMiner, labels2list
+from oml.miners import TripletMinerWithMemory
+from oml.miners import AllTripletsMiner
+from oml.utils import elementwise_dist
 
 TLogs = Dict[str, float]
 

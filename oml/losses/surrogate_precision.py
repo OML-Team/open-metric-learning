@@ -1,9 +1,9 @@
 import torch
 from torch import Tensor
 
-from oml.functional.losses import surrogate_precision
-from oml.functional.metrics import calc_gt_mask
-from oml.utils.misc_torch import pairwise_dist
+from oml.functional import surrogate_precision
+from oml.functional import calc_gt_mask
+from oml.utils import pairwise_dist
 
 
 class SurrogatePrecision(torch.nn.Module):
