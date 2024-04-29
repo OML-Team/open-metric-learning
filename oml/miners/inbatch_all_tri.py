@@ -7,8 +7,8 @@ from typing import List
 import numpy as np
 import torch
 
-from oml.interfaces.miners import ITripletsMinerInBatch, TLabels, TTripletsIds
-from oml.utils.misc import find_value_ids
+from oml.interfaces import ITripletsMinerInBatch, TLabels, TTripletsIds
+from oml.utils import find_value_ids
 
 
 class AllTripletsMiner(ITripletsMinerInBatch):

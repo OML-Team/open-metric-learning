@@ -5,9 +5,9 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from oml.interfaces.miners import ITripletsMiner, TLabels, TTriplets, labels2list
-from oml.utils.misc import find_value_ids
-from oml.utils.misc_torch import pairwise_dist
+from oml.interfaces import ITripletsMiner, TLabels, TTriplets, labels2list
+from oml.utils import find_value_ids
+from oml.utils import pairwise_dist
 
 
 class HardClusterMiner(ITripletsMiner):

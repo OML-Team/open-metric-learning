@@ -3,9 +3,9 @@ from typing import List, Tuple
 import torch
 from torch import Tensor
 
-from oml.interfaces.miners import ITripletsMinerInBatch
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.miners.inbatch_hard_tri import HardTripletsMiner
+from oml.interfaces import ITripletsMinerInBatch
+from oml.miners import AllTripletsMiner
+from oml.miners import HardTripletsMiner
 
 
 class PairsMiner:

@@ -18,7 +18,7 @@ from torch import (
     zeros,
 )
 
-from oml.interfaces.miners import ITripletsMiner
+from oml.interfaces import ITripletsMiner
 
 
 class TripletMinerWithMemory(ITripletsMiner):

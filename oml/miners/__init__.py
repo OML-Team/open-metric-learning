@@ -4,3 +4,5 @@ from oml.miners.inbatch_all_tri import (
     get_available_triplets,
     get_available_triplets_naive
 )
+from oml.miners.inbatch_hard_tri import HardTripletsMiner
+from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
