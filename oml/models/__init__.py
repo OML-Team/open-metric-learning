@@ -9,6 +9,7 @@ from oml.models.resnet.extractor import ResnetExtractor
 from oml.models.vit_clip.extractor import ViTCLIPExtractor
 from oml.models.vit_dino.extractor import ViTExtractor
 from oml.models.vit_unicom.extractor import ViTUnicomExtractor
+<<<<<<< HEAD
 from oml.models.utils import (
     TStateDict,
     filter_state_dict,
@@ -36,3 +37,5 @@ from oml.models.vit_dino.external_v2.config import use_fused_attn
 from oml.models.vit_unicom.external import vision_transformer
 from oml.models.vit_unicom.external.vision_transformer import load_model_and_transform
 from oml.models.vit_unicom.external.model import load  # type: ignore
+=======
+>>>>>>> parent of 8469696 (Simplify 'models' module imports)

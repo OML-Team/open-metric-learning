@@ -10,7 +10,7 @@ from typing import List
 import torch
 from tqdm import tqdm
 
-from oml.models import load_model_and_transform
+from oml.models.vit_unicom.external.vision_transformer import load_model_and_transform
 
 # ============== CODE FROM UNICOM ==============
 # https://github.com/deepglint/unicom/blob/main/unicom/model.py

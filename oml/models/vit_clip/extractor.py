@@ -3,7 +3,11 @@ from typing import Any, Dict, Iterable, Optional
 
 import torch
 
+<<<<<<< HEAD
 from oml.interfaces import IExtractor
+=======
+from oml.interfaces.models import IExtractor
+>>>>>>> parent of 8469696 (Simplify 'models' module imports)
 from oml.models.utils import (
     TStateDict,
     filter_state_dict,
