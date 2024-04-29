@@ -4,7 +4,8 @@ from oml.interfaces.miners import (
     ITripletsMiner,
     ITripletsMinerInBatch,
     TLabels,
-    TTripletsIds
+    TTripletsIds,
+    TTriplets
 )
 from oml.interfaces.models import (
     IExtractor, IFreezable, IPairwiseModel

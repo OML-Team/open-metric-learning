@@ -9,8 +9,8 @@ from torch import nn
 from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet152
 
 from oml.interfaces import IExtractor
-from oml.models import GEM
-from oml.models import (
+from oml.models.resnet.pooling import GEM
+from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )

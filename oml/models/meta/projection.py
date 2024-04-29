@@ -6,7 +6,7 @@ from torchvision.ops import MLP
 
 from oml.const import STORAGE_CKPTS
 from oml.interfaces import IExtractor, IFreezable
-from oml.models import (
+from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )

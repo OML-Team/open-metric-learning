@@ -7,7 +7,7 @@ from torch.nn.modules.activation import Sigmoid
 from torchvision.ops import MLP
 
 from oml.interfaces import IExtractor, IFreezable, IPairwiseModel
-from oml.models import remove_prefix_from_state_dict
+from oml.models.utils import remove_prefix_from_state_dict
 from oml.utils import download_checkpoint
 from oml.utils import elementwise_dist
 

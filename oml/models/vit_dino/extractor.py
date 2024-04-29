@@ -9,17 +9,17 @@ from torch import nn
 
 from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
 from oml.interfaces import IExtractor
-from oml.models import (
+from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )
-from oml.models import (  # type: ignore
+from oml.models.vit_dino.external.hubconf import (  # type: ignore
     dino_vitb8,
     dino_vitb16,
     dino_vits8,
     dino_vits16,
 )
-from oml.models import (  # type: ignore
+from oml.models.vit_dino.external_v2.hubconf import (  # type: ignore
     dinov2_vitb14,
     dinov2_vitb14_reg,
     dinov2_vitl14,

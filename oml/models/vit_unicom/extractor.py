@@ -5,7 +5,7 @@ import torch
 
 from oml.const import CKPT_SAVE_ROOT
 from oml.interfaces import IExtractor
-from oml.models import (
+from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )
