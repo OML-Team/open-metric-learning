@@ -4,14 +4,14 @@ from typing import Optional, Union
 import torch
 
 from oml.const import CKPT_SAVE_ROOT
-from oml.interfaces.models import IExtractor
-from oml.models.utils import (
+from oml.interfaces import IExtractor
+from oml.models import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )
-from oml.models.vit_unicom.external import vision_transformer
-from oml.models.vit_unicom.external.model import load  # type: ignore
-from oml.utils.misc_torch import normalise
+from oml.models import vision_transformer
+from oml.models import load  # type: ignore
+from oml.utils import normalise
 
 
 def unicom_vitb32() -> vision_transformer.VisionTransformer:  # type: ignore
