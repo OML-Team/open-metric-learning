@@ -4,11 +4,7 @@ from typing import Optional, Union
 import torch
 
 from oml.const import CKPT_SAVE_ROOT
-<<<<<<< HEAD
-from oml.interfaces import IExtractor
-=======
 from oml.interfaces.models import IExtractor
->>>>>>> parent of 8469696 (Simplify 'models' module imports)
 from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,

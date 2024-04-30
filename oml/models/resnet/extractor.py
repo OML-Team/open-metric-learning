@@ -8,11 +8,7 @@ from PIL.Image import Image as TPILImage
 from torch import nn
 from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet152
 
-<<<<<<< HEAD
-from oml.interfaces import IExtractor
-=======
 from oml.interfaces.models import IExtractor
->>>>>>> parent of 8469696 (Simplify 'models' module imports)
 from oml.models.resnet.pooling import GEM
 from oml.models.utils import (
     remove_criterion_in_state_dict,

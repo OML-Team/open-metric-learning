@@ -5,11 +5,7 @@ import torch
 from torchvision.ops import MLP
 
 from oml.const import STORAGE_CKPTS
-<<<<<<< HEAD
-from oml.interfaces import IExtractor, IFreezable
-=======
 from oml.interfaces.models import IExtractor, IFreezable
->>>>>>> parent of 8469696 (Simplify 'models' module imports)
 from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
