@@ -1,1 +1,2 @@
 from oml.transforms.images.albumentations import get_normalisation_albu
+from oml.transforms.images.torchvision import get_normalisation_resize_torch

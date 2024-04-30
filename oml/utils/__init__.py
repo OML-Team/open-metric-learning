@@ -25,3 +25,4 @@ from oml.utils.misc_torch import (
     OnlineSumDict,
     PCA
 )
+from oml.utils.download_mock_dataset import download_mock_dataset
