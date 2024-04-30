@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable, Optional
 
 import torch
 
-from oml.interfaces.models import IExtractor
+from oml.interfaces import IExtractor
 from oml.models.utils import (
     TStateDict,
     filter_state_dict,
@@ -11,8 +11,8 @@ from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )
-from oml.models.vit_clip.external.model import VisionTransformer
-from oml.utils.io import download_checkpoint
+from oml.models import VisionTransformer
+from oml.utils import download_checkpoint
 
 _OPENAI_URL = "https://openaipublic.azureedge.net/clip/models"
 _SBER_URL = "https://huggingface.co/sberbank-ai"

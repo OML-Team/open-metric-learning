@@ -8,7 +8,7 @@ from PIL.Image import Image as TPILImage
 from torch import nn
 
 from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
-from oml.interfaces.models import IExtractor
+from oml.interfaces import IExtractor
 from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
@@ -27,9 +27,9 @@ from oml.models.vit_dino.external_v2.hubconf import (  # type: ignore
     dinov2_vits14,
     dinov2_vits14_reg,
 )
-from oml.transforms.images.albumentations import get_normalisation_albu
-from oml.utils.io import download_checkpoint_one_of
-from oml.utils.misc_torch import normalise, temporary_setting_model_mode
+from oml.transforms import get_normalisation_albu
+from oml.utils import download_checkpoint_one_of
+from oml.utils import normalise, temporary_setting_model_mode
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 

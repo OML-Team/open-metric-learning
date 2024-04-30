@@ -7,3 +7,4 @@ from .miners import (
     TLabels,
     TTripletsIds
 )
+from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel

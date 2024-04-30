@@ -8,15 +8,15 @@ from PIL.Image import Image as TPILImage
 from torch import nn
 from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet152
 
-from oml.interfaces.models import IExtractor
+from oml.interfaces import IExtractor
 from oml.models.resnet.pooling import GEM
 from oml.models.utils import (
     remove_criterion_in_state_dict,
     remove_prefix_from_state_dict,
 )
-from oml.transforms.images.albumentations import get_normalisation_albu
-from oml.utils.io import download_checkpoint
-from oml.utils.misc_torch import get_device, normalise
+from oml.transforms import get_normalisation_albu
+from oml.utils import download_checkpoint
+from oml.utils import get_device, normalise
 
 
 def resnet50_projector() -> nn.Module:
