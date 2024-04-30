@@ -15,6 +15,10 @@
 * Create a branch with a name that speaks for itself.
 * Set up the environment. You can install the library in dev mode via `pip install -e .`
   or build / pull [docker image](https://github.com/OML-Team/open-metric-learning#installation).
+* Install additional dependencies based on your needs. Choose from the following sets of requirements:
+  * `ci/requirements_test.txt`
+  * `ci/requirements_optional.txt`
+  * `docs/requirements.txt`
 * Implement the discussed functionality, **docstrings**, and **tests** for it.
 * Run tests locally using commands from `Makefile`.
 * Push the code to your forked repository.
@@ -26,6 +30,7 @@
 * Don't forget to update the documentation if needed. Its source is located in `docs/source`. To inspect
   it locally, you should run `make html` (from `docs` folder) and then open `docs/build/html/index.html` in your
   browser.
+* Install additional dependencies from `docs/requirements.txt` based on your needs.
 
 ## Contributing to models ZOO
 * Add the model's implementation under `oml/models`.
