@@ -6,7 +6,7 @@ from oml.utils.io import (
     download_checkpoint_one_of,
     download_checkpoint
 )
-from oml.utils.misc import find_value_ids
+from oml.utils.misc import find_value_ids, smart_sample
 from oml.utils.misc_torch import (
     take_2d,
     assign_2d,

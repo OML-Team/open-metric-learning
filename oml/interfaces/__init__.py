@@ -8,3 +8,4 @@ from .miners import (
     TTripletsIds
 )
 from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
+from oml.interfaces.samplers import IBatchSampler
