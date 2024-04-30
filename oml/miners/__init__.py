@@ -6,3 +6,6 @@ from oml.miners.inbatch_all_tri import (
 )
 from oml.miners.inbatch_hard_tri import HardTripletsMiner
 from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
+from oml.miners.pairs import PairsMiner
+from oml.miners.inbatch_hard_cluster import HardClusterMiner
+from oml.miners.miner_with_bank import MinerWithBank

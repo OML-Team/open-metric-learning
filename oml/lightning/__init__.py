@@ -7,3 +7,4 @@ from oml.lightning.pipelines.logging import (
     TensorBoardPipelineLogger,
     WandBPipelineLogger,
 )
+from oml.lightning.modules.ddp import ModuleDDP

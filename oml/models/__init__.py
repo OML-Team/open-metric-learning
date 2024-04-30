@@ -32,3 +32,13 @@ from oml.models.vit_unicom.external.vision_transformer import load_model_and_tra
 #     dinov2_vits14,
 #     dinov2_vits14_reg,
 # )
+from oml.models.meta.projection import ExtractorWithMLP
+from oml.models.meta.siamese import (
+    ConcatSiamese,
+    LinearTrivialDistanceSiamese,
+    TrivialDistanceSiamese,
+)
+from oml.models.resnet.extractor import ResnetExtractor
+from oml.models.vit_clip.extractor import ViTCLIPExtractor
+from oml.models.vit_dino.extractor import ViTExtractor
+from oml.models.vit_unicom.extractor import ViTUnicomExtractor
