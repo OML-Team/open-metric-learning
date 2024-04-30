@@ -7,12 +7,12 @@
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.datasets import DatasetWithLabels
+from oml.losses import TripletLossWithMiner
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
 
 dataset_root = "mock_dataset/"
 df_train, _ = download_mock_dataset(dataset_root)

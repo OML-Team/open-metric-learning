@@ -7,13 +7,13 @@
 import pytorch_lightning as pl
 import torch
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.lightning.modules.extractor import ExtractorModule
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.datasets import DatasetQueryGallery
+from oml.lightning import MetricValCallback
+from oml.lightning import ExtractorModule
+from oml.metrics import EmbeddingMetrics
 from oml.models import ViTExtractor
-from oml.transforms.images.torchvision import get_normalisation_resize_torch
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.transforms import get_normalisation_resize_torch
+from oml.utils import download_mock_dataset
 
 dataset_root = "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root)

@@ -37,10 +37,10 @@ To use this functionality you only need to provide `sequence` column in your dat
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.datasets import DatasetQueryGallery
+from oml.metrics import EmbeddingMetrics
 from oml.models import ViTExtractor
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils import download_mock_dataset
 
 dataset_root = "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root, df_name="df_with_sequence.csv")  # <- sequence info is in the file

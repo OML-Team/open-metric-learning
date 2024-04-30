@@ -6,10 +6,10 @@
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
+from oml.datasets import DatasetWithLabels
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
 
 from pytorch_metric_learning import losses, distances, reducers, miners
 
