@@ -7,6 +7,17 @@ Retrieval Post-Processing
 .. contents::
    :local:
 
+RetrievalResults
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.retrieval.retrieval_results.RetrievalResults
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: compute_from_embeddings
+    .. automethod:: n_retrieved_items
+    .. automethod:: visualize
+
 PairwiseReranker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.retrieval.postprocessors.pairwise.PairwiseReranker
@@ -15,5 +26,5 @@ PairwiseReranker
 
     .. automethod:: __init__
     .. automethod:: process
-    .. automethod:: process_neigh
+    .. automethod:: process_raw
 

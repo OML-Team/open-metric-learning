@@ -76,6 +76,7 @@ ILabeledDataset
 
     .. automethod:: __getitem__
     .. automethod:: get_labels
+    .. automethod:: get_label2category
 
 IQueryGalleryDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,6 +96,7 @@ IQueryGalleryLabeledDataset
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
     .. automethod:: get_labels
+    .. automethod:: get_label2category
 
 IPairDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

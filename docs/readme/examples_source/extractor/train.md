@@ -7,7 +7,7 @@
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
+from oml.datasets import ImageLabeledDataset
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
 from oml.models import ViTExtractor
@@ -19,7 +19,7 @@ df_train, _ = download_mock_dataset(global_paths=True)
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
 optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
-train_dataset = DatasetWithLabels(df_train)
+train_dataset = ImageLabeledDataset(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)

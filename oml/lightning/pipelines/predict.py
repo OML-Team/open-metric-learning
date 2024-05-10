@@ -60,7 +60,7 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
 
     paths, embeddings = [], []
     for prediction in predictions:
-        paths.extend(prediction[dataset.paths_key])
+        paths.extend([filenames[i] for i in prediction[dataset.index_key].tolist()])
         embeddings.extend(prediction[pl_model.embeddings_key].tolist())
 
     paths = sync_dicts_ddp({"key": list(map(str, paths))}, get_world_size_safe())["key"]

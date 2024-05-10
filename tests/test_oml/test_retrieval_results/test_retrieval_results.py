@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-from torch import nn
+from torch import LongTensor, nn
 
 from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, PATHS_COLUMN
 from oml.datasets.images import (
@@ -92,3 +92,12 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
             plt.close(fig=fig)
 
     assert True
+
+
+def test_retrieval_results_creation() -> None:
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=torch.randn((2, 3)).float(),
+            retrieved_ids=LongTensor([[1, 0, 2], [4, 0, 1]]),
+            gt_ids=[LongTensor([0, 1, 3]), []],
+        )

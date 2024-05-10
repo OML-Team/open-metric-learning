@@ -5,65 +5,54 @@ from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch import Tensor
+from torch import FloatTensor
 
 from oml.const import (
-    BLUE,
+    CATEGORIES_COLUMN,
     EMBEDDINGS_KEY,
-    GRAY,
-    GREEN,
-    INDEX_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
-    LABELS_KEY,
     LOG_TOPK_IMAGES_PER_ROW,
     LOG_TOPK_ROWS_PER_METRIC,
-    N_GT_SHOW_EMBEDDING_METRICS,
     OVERALL_CATEGORIES_KEY,
-    PATHS_KEY,
-    RED,
-    X1_KEY,
-    X2_KEY,
-    Y1_KEY,
-    Y2_KEY,
 )
 from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
-    apply_mask_to_ignore,
-    calc_distance_matrix,
-    calc_fnmr_at_fmr_from_matrices,
-    calc_gt_mask,
-    calc_mask_to_ignore,
-    calc_retrieval_metrics_on_full,
+    calc_retrieval_metrics,
     calc_topological_metrics,
     reduce_metrics,
     take_unreduced_metrics_by_mask,
 )
-from oml.interfaces.datasets import IQueryGalleryLabeledDataset
-from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
+from oml.interfaces.datasets import IQueryGalleryLabeledDataset, IVisualizableDataset
+from oml.interfaces.metrics import IMetricVisualisable, TIndices
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
-from oml.utils.images.images import get_img_with_bbox, square_pad
+from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.misc import flatten_dict
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
-def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
-    is_valid = (mask_gt & ~mask_to_ignore).any(1).all()
-
-    if not is_valid:
-        raise RuntimeError("There are queries without available correct answers in the gallery!")
+def calc_retrieval_metrics_rr(
+    rr: RetrievalResults,
+    cmc_top_k: Tuple[int, ...] = (5,),
+    precision_top_k: Tuple[int, ...] = (5,),
+    map_top_k: Tuple[int, ...] = (5,),
+    reduce: bool = True,
+) -> TMetricsDict:
+    return calc_retrieval_metrics(
+        retrieved_ids=rr.retrieved_ids,
+        gt_ids=rr.gt_ids,
+        cmc_top_k=cmc_top_k,
+        precision_top_k=precision_top_k,
+        map_top_k=map_top_k,
+        reduce=reduce,
+    )
 
 
 class EmbeddingMetrics(IMetricVisualisable):
     """
-    This class accumulates the information from the batches and embeddings produced by the model
-    at every batch in epoch. After all the samples have been stored, you can call the function
-    which computes retrievals metrics. To get the needed information from the batches, it uses
-    keys which have to be provided as init arguments. Please, check the usage example in
-    `Readme`.
+    This class is designed to accumulate model outputs produced for every batch.
+    Since retrieval metrics are not additive, we can compute them only after all data has been collected.
 
     """
 
@@ -71,19 +60,12 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def __init__(
         self,
-        dataset: Optional[IQueryGalleryLabeledDataset] = None,  # todo 522: This argument will not be Optional soon.
-        embeddings_key: str = EMBEDDINGS_KEY,
-        labels_key: str = LABELS_KEY,
-        is_query_key: str = IS_QUERY_KEY,
-        is_gallery_key: str = IS_GALLERY_KEY,
-        extra_keys: Tuple[str, ...] = (),
+        dataset: Optional[IQueryGalleryLabeledDataset],
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         fmr_vals: Tuple[float, ...] = tuple(),
         pcf_variance: Tuple[float, ...] = (0.5,),
-        categories_key: Optional[str] = None,
-        sequence_key: Optional[str] = None,
         postprocessor: Optional[IRetrievalPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         return_only_overall_category: bool = False,
@@ -94,11 +76,6 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         Args:
             dataset: Annotated dataset having query-gallery split.
-            embeddings_key: Key to take the embeddings from the batches
-            labels_key: Key to take the labels from the batches
-            is_query_key: Key to take the information whether every batch sample belongs to the query
-            is_gallery_key: Key to take the information whether every batch sample belongs to the gallery
-            extra_keys: Keys to accumulate some additional information from the batches
             cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
             precision_top_k: Values of ``k`` to calculate ``precision@k``
             map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
@@ -111,8 +88,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                           of variance that needs to be explained is greater than the percentage specified
                           by ``pcf_variance``.
-            categories_key: Key to take the samples' categories from the batches (if you have ones)
-            sequence_key: Key to take sequence ids from the batches (if you have ones)
             postprocessor: Postprocessor which applies some techniques like query reranking
             metrics_to_exclude_from_visualization: Names of the metrics to exclude from the visualization. It will not
              affect calculations.
@@ -122,23 +97,15 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         """
         self.dataset = dataset
-        self.embeddings_key = embeddings_key
-        self.labels_key = labels_key
-        self.is_query_key = is_query_key
-        self.is_gallery_key = is_gallery_key
-        self.extra_keys = extra_keys
         self.cmc_top_k = cmc_top_k
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
         self.pcf_variance = pcf_variance
-
-        self.categories_key = categories_key
-        self.sequence_key = sequence_key
         self.postprocessor = postprocessor
 
-        self.distance_matrix = None
-        self.mask_gt = None
+        self.retrieval_results = None
+
         self.metrics = None
         self.metrics_unreduced = None
 
@@ -148,68 +115,48 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
 
-        keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
-        keys_to_accumulate += [INDEX_KEY]  # todo 522: remove it after we make "indices" not optional in .update_data()
-        if self.categories_key:
-            keys_to_accumulate.append(self.categories_key)
-        if self.sequence_key:
-            keys_to_accumulate.append(self.sequence_key)
-        if self.extra_keys:
-            keys_to_accumulate.extend(list(extra_keys))
+        self._acc_embeddings_key = "__embeddings"
+        self.acc = Accumulator(keys_to_accumulate=(self._acc_embeddings_key,))
 
-        self.keys_to_accumulate = tuple(set(keys_to_accumulate))
-        self.acc = Accumulator(keys_to_accumulate=self.keys_to_accumulate)
-
-    def setup(self, num_samples: int) -> None:  # type: ignore
-        self.distance_matrix = None
-        self.mask_gt = None
+    def setup(self, num_samples: Optional[int] = None) -> None:  # type: ignore
+        self.retrieval_results = None
         self.metrics = None
+        self.metrics_unreduced = None
 
-        self.acc.refresh(num_samples=num_samples)
+        num_samples = num_samples if num_samples is not None else len(self.dataset)
+        self.acc.refresh(num_samples)
 
-    def update_data(self, data_dict: Dict[str, Any], indices: Optional[List[int]] = None) -> None:  # type: ignore
+    def update(self, embeddings: FloatTensor, indices: TIndices) -> None:
         """
         Args:
-            data_dict: Batch of data containing records of the same size: ``bs``.
-            indices: Global indices of the elements in your records within the range of ``(0, dataset_size - 1)``.
-                     Indices are needed in DDP (because data is gathered shuffled, additionally you may also get
-                     some duplicates due to padding). In the single device regime it's may be useful if you accumulate
-                     data in shuffled order.
+            embeddings: Representations of the dataset items containing in the current batch.
+            indices: Global indices of the dataset items within the range of ``(0, dataset_size - 1)``.
+                     Indices are needed to make sure that we can align dataset items and collected information.
 
         """
-        # todo 522: make indices non optional and add the test
-        self.acc.update_data(data_dict=data_dict, indices=indices)
+        indices = indices if isinstance(indices, List) else indices.tolist()
+        self.acc.update_data(data_dict={self._acc_embeddings_key: embeddings}, indices=indices)
 
-    def _calc_matrices(self) -> None:
-        embeddings = self.acc.storage[self.embeddings_key]
-        labels = self.acc.storage[self.labels_key]
-        is_query = self.acc.storage[self.is_query_key]
-        is_gallery = self.acc.storage[self.is_gallery_key]
-        sequence_ids = self.acc.storage[self.sequence_key] if self.sequence_key is not None else None
+    def update_data(self, data: Dict[str, Any], indices: TIndices) -> Any:
+        self.update(embeddings=data[EMBEDDINGS_KEY], indices=indices)
 
-        if isinstance(sequence_ids, list):
-            # if sequence ids are strings we get list here
-            sequence_ids = np.array(sequence_ids)
+    def _compute_retrieval_results(self) -> None:
+        max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
 
-        mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery, sequence_ids=sequence_ids)
-
-        mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
-
-        self.distance_matrix, self.mask_gt = apply_mask_to_ignore(
-            distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore
+        self.retrieval_results = RetrievalResults.compute_from_embeddings(  # type: ignore
+            embeddings=self.acc.storage[self._acc_embeddings_key],
+            dataset=self.dataset,
+            n_items_to_retrieve=max_k,
         )
 
-        validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
-
         if self.postprocessor:
-            assert self.dataset, "You must pass dataset to init to make postprocessing."
-            # todo 522: remove this assert after "indices" become not optional
-            ii_aligned = list(range(len(self.dataset)))
-            assert ii_aligned == self.acc.storage[INDEX_KEY].tolist(), "The data is shuffled!"  # type: ignore
-            self.distance_matrix = self.postprocessor.process(self.distance_matrix, dataset=self.dataset)
+            self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
+        self.acc = self.acc.sync()  # if DDP gathering happens here
+
+        # todo 522: put back fnmr metric
+
         if not self.acc.is_storage_full():
             raise ValueError(
                 f"Metrics have to be calculated on fully collected data. "
@@ -217,45 +164,30 @@ class EmbeddingMetrics(IMetricVisualisable):
                 f"we've collected {self.acc.collected_samples} out of {self.acc.num_samples}."
             )
 
-        self._calc_matrices()
-
-        args_retrieval_metrics = {
-            "cmc_top_k": self.cmc_top_k,
-            "precision_top_k": self.precision_top_k,
-            "map_top_k": self.map_top_k,
-        }
+        self._compute_retrieval_results()
 
         metrics: TMetricsDict_ByLabels = dict()
 
         # note, here we do micro averaging
-        metrics[self.overall_categories_key] = calc_retrieval_metrics_on_full(
-            distances=self.distance_matrix,
-            mask_gt=self.mask_gt,
+        metrics[self.overall_categories_key] = calc_retrieval_metrics_rr(
+            rr=self.retrieval_results,
+            cmc_top_k=self.cmc_top_k,
+            precision_top_k=self.precision_top_k,
+            map_top_k=self.map_top_k,
             reduce=False,
-            mask_to_ignore=None,  # we already applied it
-            **args_retrieval_metrics,  # type: ignore
         )
 
-        embeddings = self.acc.storage[self.embeddings_key]
+        embeddings = self.acc.storage[self._acc_embeddings_key]
         metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, self.pcf_variance))
-        metrics[self.overall_categories_key].update(
-            calc_fnmr_at_fmr_from_matrices(self.distance_matrix, self.mask_gt, self.fmr_vals)
-        )
 
-        if self.categories_key is not None:
-            categories = np.array(self.acc.storage[self.categories_key])
-            is_query = self.acc.storage[self.is_query_key]
-            query_categories = categories[is_query]
+        if CATEGORIES_COLUMN in self.dataset.extra_data:
+            categories = np.array(self.dataset.extra_data[CATEGORIES_COLUMN])
+            ids_query = self.dataset.get_query_ids()
+            query_categories = categories[ids_query]
 
             for category in np.unique(query_categories):
                 mask_query_sz = query_categories == category
-
                 metrics[category] = take_unreduced_metrics_by_mask(metrics[self.overall_categories_key], mask_query_sz)
-                metrics[category].update(
-                    calc_fnmr_at_fmr_from_matrices(
-                        self.distance_matrix[mask_query_sz], self.mask_gt[mask_query_sz], self.fmr_vals  # type: ignore
-                    )
-                )
 
                 mask_dataset_sz = categories == category
                 metrics[category].update(calc_topological_metrics(embeddings[mask_dataset_sz], self.pcf_variance))
@@ -276,6 +208,9 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         return metric_to_return  # type: ignore
 
+    def ready_to_visualize(self) -> bool:
+        return isinstance(self.dataset, IVisualizableDataset)
+
     def visualize(self) -> Tuple[Collection[plt.Figure], Collection[str]]:
         """
         Visualize worst queries by all the available metrics.
@@ -294,9 +229,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             titles.append(log_str)
         return figures, titles
 
-    def ready_to_visualize(self) -> bool:
-        return PATHS_KEY in self.extra_keys
-
     def get_worst_queries_ids(self, metric_name: str, n_queries: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
         return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
@@ -309,102 +241,20 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def get_plot_for_queries(self, query_ids: List[int], n_instances: int, verbose: bool = True) -> plt.Figure:
         """
-        Visualize the predictions for the query with the indicies <query_ids>.
-
         Args:
-            query_ids: Index of the query
-            n_instances: Amount of the predictions to show
-            verbose: wether to show image paths or not
+            query_ids: Indices of the queries
+            n_instances: Amount of the retrieved items to show
+            verbose: Set ``True`` for additional information
 
         """
-        assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
+        assert self.retrieval_results is not None, "We are not ready to plot, because there are no retrieval results."
+        assert self.metrics_unreduced is not None, "We are not ready to plot, because metrics were not calculated yet."
 
-        is_query = self.acc.storage[self.is_query_key]
-        is_gallery = self.acc.storage[self.is_gallery_key]
-
-        query_paths = np.array(self.acc.storage[PATHS_KEY])[is_query]
-        gallery_paths = np.array(self.acc.storage[PATHS_KEY])[is_gallery]
-
-        if all([k in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
-            bboxes = list(
-                zip(
-                    self.acc.storage[X1_KEY],
-                    self.acc.storage[Y1_KEY],
-                    self.acc.storage[X2_KEY],
-                    self.acc.storage[Y2_KEY],
-                )
-            )
-        elif all([k not in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
-            fake_coord = np.array([float("nan")] * len(is_query))
-            bboxes = list(zip(fake_coord, fake_coord, fake_coord, fake_coord))
-        else:
-            raise KeyError(f"Not all the keys collected in storage! {[*self.acc.storage]}")
-
-        query_bboxes = torch.tensor(bboxes)[is_query]
-        gallery_bboxes = torch.tensor(bboxes)[is_gallery]
-
-        fig = plt.figure(figsize=(16, 16 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
-        for j, query_idx in enumerate(query_ids):
-            ids = torch.argsort(self.distance_matrix[query_idx])[:n_instances]
-
-            n_gt = self.mask_gt[query_idx].sum()  # type: ignore
-
-            plt.subplot(
-                len(query_ids),
-                n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS,
-                j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + 1,
-            )
-
-            img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
-            img = square_pad(img)
-
-            if verbose:
-                print("Q  ", query_paths[query_idx])
-
-            plt.imshow(img)
-            plt.title(f"Query, #gt = {n_gt}")
-            plt.axis("off")
-
-            for i, idx in enumerate(ids):
-                color = GREEN if self.mask_gt[query_idx, idx] else RED  # type: ignore
-                if verbose:
-                    print("G", i, gallery_paths[idx])
-                plt.subplot(
-                    len(query_ids),
-                    n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
-                    j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
-                )
-                img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
-                img = square_pad(img)
-                plt.title(f"{i} - {round(self.distance_matrix[query_idx, idx].item(), 3)}")
-                plt.imshow(img)
-                plt.axis("off")
-
-            gt_ids = self.mask_gt[query_idx].nonzero(as_tuple=True)[0][:N_GT_SHOW_EMBEDDING_METRICS]  # type: ignore
-
-            for i, gt_idx in enumerate(gt_ids):
-                plt.subplot(
-                    len(query_ids),
-                    n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
-                    j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + n_instances + 2,
-                )
-                img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
-                img = square_pad(img)
-                plt.title("GT " + str(round(self.distance_matrix[query_idx, gt_idx].item(), 3)))
-                plt.imshow(img)
-                plt.axis("off")
-
+        fig = self.retrieval_results.visualize(
+            query_ids=query_ids, n_galleries_to_show=n_instances, verbose=verbose, dataset=self.dataset
+        )
         fig.tight_layout()
         return fig
 
 
-class EmbeddingMetricsDDP(EmbeddingMetrics, IMetricDDP):
-    def sync(self) -> None:
-        self.acc = self.acc.sync()
-
-    def update_data(self, data_dict: Dict[str, Any], indices: List[int]) -> None:  # type: ignore
-        # indices are obligatory in DDP
-        return super().update_data(data_dict, indices)
-
-
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "EmbeddingMetricsDDP"]
+__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "calc_retrieval_metrics_rr"]
