@@ -12,12 +12,11 @@ from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models import ViTExtractor
 from oml.utils.download_mock_dataset import download_mock_dataset
 
-dataset_root = "mock_dataset/"
-_, df_val = download_mock_dataset(dataset_root)
+_, df_val = download_mock_dataset(global_paths=True)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
 
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+val_dataset = DatasetQueryGallery(df_val)
 
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
 calculator = EmbeddingMetrics(extra_keys=("paths",))

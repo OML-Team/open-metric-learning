@@ -122,11 +122,10 @@ class RetrievalResults:
             verbose: Set ``True`` to allow prints.
 
         """
-        if not isinstance(dataset, (IVisualizableDataset, IQueryGalleryDataset)):
-            raise TypeError(
-                f"Dataset has to support {IVisualizableDataset.__name__} and "
-                f"{IQueryGalleryDataset.__name__} interfaces. Got {type(dataset)}."
-            )
+        if not isinstance(dataset, IVisualizableDataset):
+            raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")
+        if not isinstance(dataset, IQueryGalleryDataset):
+            raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {type(dataset)}.")
 
         if verbose:
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")

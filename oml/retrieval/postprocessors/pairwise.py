@@ -1,100 +1,20 @@
-import itertools
-from abc import ABC
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Tuple
 
-import numpy as np
 import torch
 from torch import Tensor
 
-from oml.const import EMBEDDINGS_KEY, IS_GALLERY_KEY, IS_QUERY_KEY, PATHS_KEY
-from oml.inference.pairs import (
-    pairwise_inference_on_embeddings,
-    pairwise_inference_on_images,
-)
+from oml.inference.abstract import pairwise_inference
+from oml.interfaces.datasets import IQueryGalleryDataset
 from oml.interfaces.models import IPairwiseModel
-from oml.interfaces.retrieval import IDistancesPostprocessor
-from oml.transforms.images.utils import TTransforms
-from oml.utils.misc_torch import assign_2d
+from oml.interfaces.retrieval import IRetrievalPostprocessor
+from oml.utils.misc_torch import (
+    assign_2d,
+    cat_two_sorted_tensors_and_keep_it_sorted,
+    take_2d,
+)
 
 
-class PairwisePostprocessor(IDistancesPostprocessor, ABC):
-    """
-    This postprocessor allows us to re-estimate the distances between queries and ``top-n`` galleries
-    closest to them. It creates pairs of queries and galleries and feeds them to a pairwise model.
-
-    """
-
-    top_n: int
-    verbose: bool = False
-
-    def process(self, distances: Tensor, queries: Any, galleries: Any) -> Tensor:
-        """
-        Args:
-            distances: Matrix with the shape of ``[Q, G]``
-            queries: Queries in the amount of ``Q``
-            galleries: Galleries in the amount of ``G``
-
-        Returns:
-            Distance matrix with the shape of ``[Q, G]``,
-                where ``top_n`` minimal values in each row have been updated by the pairwise model,
-                other distances are shifted by a margin to keep the relative order.
-
-        """
-        n_queries = len(queries)
-        n_galleries = len(galleries)
-
-        assert list(distances.shape) == [n_queries, n_galleries]
-
-        # 1. Adjust top_n with respect to the actual gallery size and find top-n pairs
-        top_n = min(self.top_n, n_galleries)
-        ii_top = torch.topk(distances, k=top_n, largest=False)[1]
-
-        # 2. Create (n_queries * top_n) pairs of each query and related galleries and re-estimate distances for them
-        if self.verbose:
-            print("\nPostprocessor's inference has been started...")
-        distances_upd = self.inference(queries=queries, galleries=galleries, ii_top=ii_top, top_n=top_n)
-        distances_upd = distances_upd.to(distances.device).to(distances.dtype)
-
-        # 3. Update distances for top-n galleries
-        # The idea is that we somehow permute top-n galleries, but rest of the galleries
-        # we keep in the end of the list as before permutation.
-        # To do so, we add an offset to these galleries' distances (which haven't participated in the permutation)
-        if top_n < n_galleries:
-            # Here we use the fact that distances not participating in permutation start with top_n + 1 position
-            min_in_old_distances = torch.topk(distances, k=top_n + 1, largest=False)[0][:, -1]
-            max_in_new_distances = distances_upd.max(dim=1)[0]
-            offset = max_in_new_distances - min_in_old_distances + 1e-5  # we also need some eps if max == min
-            distances += offset.unsqueeze(-1)
-        else:
-            # Pairwise postprocessor has been applied to all possible pairs, so, there are no rest distances.
-            # Thus, we don't need to care about order and offset at all.
-            pass
-
-        distances = assign_2d(x=distances, indices=ii_top, new_values=distances_upd)
-
-        assert list(distances.shape) == [n_queries, n_galleries]
-
-        return distances
-
-    def inference(self, queries: Any, galleries: Any, ii_top: Tensor, top_n: int) -> Tensor:
-        """
-        Depends on the exact types of queries/galleries this method may be implemented differently.
-
-        Args:
-            queries: Queries in the amount of ``Q``
-            galleries: Galleries in the amount of ``G``
-            ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
-            top_n: Number of the closest galleries to re-rank
-
-        Returns:
-            An updated distance matrix with the shape of ``[Q, G]``
-
-        """
-        raise NotImplementedError()
-
-
-class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
+class PairwiseReranker(IRetrievalPostprocessor):
     def __init__(
         self,
         top_n: int,
@@ -103,155 +23,152 @@ class PairwiseEmbeddingsPostprocessor(PairwisePostprocessor):
         batch_size: int,
         verbose: bool = False,
         use_fp16: bool = False,
-        is_query_key: str = IS_QUERY_KEY,
-        is_gallery_key: str = IS_GALLERY_KEY,
-        embeddings_key: str = EMBEDDINGS_KEY,
     ):
         """
+
         Args:
             top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
                 and ``top_n`` most relevant galleries.
-            pairwise_model: Model which is able to take two embeddings as inputs
+            pairwise_model: Model which is able to take two items as inputs
                 and estimate the *distance* (not in a strictly mathematical sense) between them.
             num_workers: Number of workers in DataLoader
             batch_size: Batch size that will be used in DataLoader
             verbose: Set ``True`` if you want to see progress bar for an inference
             use_fp16: Set ``True`` if you want to use half precision
-            is_query_key: Key to access a binary mask indicates queries in case of using ``process_by_dict``
-            is_gallery_key: Key to access a binary mask indicates galleries in case of using ``process_by_dict``
-            embeddings_key: Key to access embeddings in case of using ``process_by_dict``
 
         """
-        assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
+        assert top_n > 1, "The number of the retrieved results for each query to process has to be greater than 1."
 
         self.top_n = top_n
         self.model = pairwise_model
+
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
-        self.is_query_key = is_query_key
-        self.is_gallery_key = is_gallery_key
-        self.embeddings_key = embeddings_key
-
-    def inference(self, queries: Tensor, galleries: Tensor, ii_top: Tensor, top_n: int) -> Tensor:
+    def process(self, distances: Tensor, dataset: IQueryGalleryDataset) -> Tensor:  # type: ignore
         """
         Args:
-            queries: Queries representations with the shape of ``[Q, *]``
-            galleries: Galleries representations with the shape of ``[G, *]``
-            ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
-            top_n: Number of the closest galleries to re-rank
+            distances: Where ``distances[i, j]`` is a distance between i-th query and j-th gallery.
+            dataset: Dataset having query-gallery split.
 
         Returns:
-            Updated distance matrix with the shape of ``[Q, G]``
+            Distances, where ``distances[i, j]`` is a distance between i-th query and j-th gallery,
+            but the distances to the first ``top_n`` galleries have been updated INPLACE.
 
         """
-        n_queries = len(queries)
-        queries = queries.repeat_interleave(top_n, dim=0)
-        galleries = galleries[ii_top.view(-1)]
-        distances_upd = pairwise_inference_on_embeddings(
+        # todo 522:
+        # This function and the code below is only needed during the migration time.
+        # We will directly use `process_neigh` later on.
+        # So, the code below is just a format adapter:
+        # 1) it takes the top (dists + ii) of the big distance matrix,
+        # 2) passes this top to the `process_neigh()`
+        # 3) puts the processed outputs on their places in the big distance matrix
+
+        assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
+
+        # we need this "+10" to activate rescaling if needed (so we have both: new and old distances in proces_neigh.
+        # anyway, this code is temporary
+        distances_top, ii_retrieved_top = torch.topk(
+            distances, k=min(self.top_n + 10, distances.shape[1]), largest=False
+        )
+        distances_top_upd, ii_retrieved_upd = self.process_neigh(
+            retrieved_ids=ii_retrieved_top, distances=distances_top, dataset=dataset
+        )
+        distances = assign_2d(x=distances, indices=ii_retrieved_upd, new_values=distances_top_upd)
+
+        assert distances.shape == (len(dataset.get_query_ids()), len(dataset.get_gallery_ids()))
+
+        return distances
+
+    def process_neigh(
+        self, retrieved_ids: Tensor, distances: Tensor, dataset: IQueryGalleryDataset
+    ) -> Tuple[Tensor, Tensor]:
+        """
+
+        Args:
+            retrieved_ids: Ids of galleries closest to every query with the shape of ``[n_query, n_retrieved]`` sorted
+                           by their distances.
+            distances: The corresponding distances (in sorted order).
+            dataset: Dataset having query/gallery split.
+
+        Returns:
+            After model is applied to the ``top_n`` retrieved items, the updated ids and distances are returned.
+            Thus, you can expect permutation among first ``top_n`` ids and distances, but the rest remains untouched.
+
+        **Example 1** (for one query):
+
+        .. code-block:: python
+
+            retrieved_ids = [3,   2,   1,   0,   4  ]
+            distances     = [0.1, 0.2, 0.5, 0.6, 0.7]
+
+            # Let's say a postprocessor has been applied to the
+            # first 3 elements and the new distances are: [0.4, 0.2, 0.3]
+
+            # In this case, the updated values will be:
+            retrieved_ids = [2,   1,   3,   0,   4  ]
+            distances:    = [0.2, 0.3, 0.4, 0.6, 0.7]
+
+        **Example 2** (for one query):
+
+        .. code-block:: python
+
+            # Note, the new distances to the top_n items produced by the pairwise model
+            #  may be rescaled to keep the distances order. Here is an example:
+            original_distances = [0.1, 0.2, 0.3, 0.5, 0.6]
+            top_n = 3
+
+            # Imagine, the postprocessor didn't change the order of the first 3 items
+            # (it's just a convenient example, the general logic remains the same),
+            # however the new values have a bigger scale:
+            distances_upd = [1, 2, 5, 0.5, 0.6]
+
+            # Thus, we need to downscale the first 3 distances, so they are lower than 0.5:
+            scale = 5 / 0.5 = 0.1
+            # Finally, let's apply the found scale to the top 3 distances:
+            distances_upd_scaled = [0.1, 0.2, 0.5, 0.5, 0.6]
+
+            # Note, if new and old distances are already sorted, we don't apply any scaling.
+
+        """
+        assert retrieved_ids.shape == distances.shape
+        assert len(retrieved_ids) == len(dataset.get_query_ids())
+        assert retrieved_ids.shape[1] <= len(dataset.get_gallery_ids())
+
+        top_n = min(self.top_n, distances.shape[1])
+
+        # let's list pairs of (query_i, gallery_j) we need to process
+        ids_q = dataset.get_query_ids().unsqueeze(-1).repeat_interleave(top_n)
+        ii_g = dataset.get_gallery_ids().unsqueeze(-1)
+        ids_g = ii_g[retrieved_ids[:, :top_n]].flatten()
+        assert len(ids_q) == len(ids_g)
+        pairs = list(zip(ids_q.tolist(), ids_g.tolist()))
+
+        distances_top = pairwise_inference(
             model=self.model,
-            embeddings1=queries,
-            embeddings2=galleries,
+            base_dataset=dataset,
+            pair_ids=pairs,
             num_workers=self.num_workers,
             batch_size=self.batch_size,
             verbose=self.verbose,
             use_fp16=self.use_fp16,
         )
-        distances_upd = distances_upd.view(n_queries, top_n)
-        return distances_upd
+        distances_top = distances_top.view(distances.shape[0], top_n)
 
-    def process_by_dict(self, distances: Tensor, data: Dict[str, Any]) -> Tensor:
-        queries = data[self.embeddings_key][data[self.is_query_key]]
-        galleries = data[self.embeddings_key][data[self.is_gallery_key]]
-        return self.process(distances=distances, queries=queries, galleries=galleries)
+        distances_upd, ii_rerank = distances_top.sort()
+        retrieved_ids_upd = take_2d(retrieved_ids, ii_rerank)
 
-    @property
-    def needed_keys(self) -> List[str]:
-        return [self.is_query_key, self.is_gallery_key, self.embeddings_key]
+        # Stack with the unprocessed values outside the first top_n items
+        if top_n < distances.shape[1]:
+            distances_upd = cat_two_sorted_tensors_and_keep_it_sorted(distances_upd, distances[:, top_n:])
+            retrieved_ids_upd = torch.concat([retrieved_ids_upd, retrieved_ids[:, top_n:]], dim=1).long()
 
+        assert distances_upd.shape == distances.shape
+        assert retrieved_ids_upd.shape == retrieved_ids.shape
 
-class PairwiseImagesPostprocessor(PairwisePostprocessor):
-    def __init__(
-        self,
-        top_n: int,
-        pairwise_model: IPairwiseModel,
-        transforms: TTransforms,
-        num_workers: int = 0,
-        batch_size: int = 128,
-        verbose: bool = True,
-        use_fp16: bool = False,
-        is_query_key: str = IS_QUERY_KEY,
-        is_gallery_key: str = IS_GALLERY_KEY,
-        paths_key: str = PATHS_KEY,
-    ):
-        """
-        Args:
-            top_n: Model will be applied to the ``num_queries * top_n`` pairs formed by each query
-                and its ``top_n`` most relevant galleries.
-            pairwise_model: Model which is able to take two images as inputs
-                and estimate the *distance* (not in a strictly mathematical sense) between them.
-            transforms: Transforms that will be applied to an image
-            num_workers: Number of workers in DataLoader
-            batch_size: Batch size that will be used in DataLoader
-            verbose: Set ``True`` if you want to see progress bar for an inference
-            use_fp16: Set ``True`` if you want to use half precision
-            is_query_key: Key to access a binary mask indicates queries in case of using ``process_by_dict``
-            is_gallery_key: Key to access a binary mask indicates galleries in case of using ``process_by_dict``
-            paths_key: Key to access paths to images in case of using ``process_by_dict``
-
-        """
-        assert top_n > 1, "Number of galleries for each query to process has to be greater than 1."
-
-        self.top_n = top_n
-        self.model = pairwise_model
-        self.image_transforms = transforms
-        self.num_workers = num_workers
-        self.batch_size = batch_size
-        self.verbose = verbose
-        self.use_fp16 = use_fp16
-
-        self.is_query_key = is_query_key
-        self.is_gallery_key = is_gallery_key
-        self.paths_key = paths_key
-
-    def inference(self, queries: List[Path], galleries: List[Path], ii_top: Tensor, top_n: int) -> Tensor:
-        """
-        Args:
-            queries: Paths to queries with the length of ``Q``
-            galleries: Paths to galleries with the length of ``G``
-            ii_top: Indices of the closest galleries with the shape of ``[Q, top_n]``
-            top_n: Number of the closest galleries to re-rank
-
-        Returns:
-            Updated distance matrix with the shape of ``[Q, G]``
-
-        """
-        n_queries = len(queries)
-        queries = list(itertools.chain.from_iterable(itertools.repeat(x, top_n) for x in queries))
-        galleries = [galleries[i] for i in ii_top.view(-1)]
-        distances_upd = pairwise_inference_on_images(
-            model=self.model,
-            paths1=queries,
-            paths2=galleries,
-            transform=self.image_transforms,
-            num_workers=self.num_workers,
-            batch_size=self.batch_size,
-            verbose=self.verbose,
-            use_fp16=self.use_fp16,
-        )
-        distances_upd = distances_upd.view(n_queries, top_n)
-        return distances_upd
-
-    def process_by_dict(self, distances: Tensor, data: Dict[str, Any]) -> Tensor:
-        queries = np.array(data[self.paths_key])[data[self.is_query_key]]
-        galleries = np.array(data[self.paths_key])[data[self.is_gallery_key]]
-        return self.process(distances=distances, queries=queries, galleries=galleries)
-
-    @property
-    def needed_keys(self) -> List[str]:
-        return [self.is_query_key, self.is_gallery_key, self.paths_key]
+        return distances_upd, retrieved_ids_upd
 
 
-__all__ = ["PairwisePostprocessor", "PairwiseEmbeddingsPostprocessor", "PairwiseImagesPostprocessor"]
+__all__ = ["PairwiseReranker"]

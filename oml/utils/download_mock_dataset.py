@@ -17,7 +17,10 @@ def get_argparser() -> ArgumentParser:
 
 
 def download_mock_dataset(
-    dataset_root: Union[str, Path], check_md5: bool = True, df_name: str = "df.csv"
+    dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
+    check_md5: bool = True,
+    df_name: str = "df.csv",
+    global_paths: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to download mock dataset which is already prepared in the required format.
@@ -26,6 +29,7 @@ def download_mock_dataset(
         dataset_root: Path to save the dataset
         check_md5: Set ``True`` to check md5sum
         df_name: Name of csv file for which output DataFrames will be returned
+        global_paths: Set ``True`` to cancat paths and ``dataset_root``
 
     Returns: Dataframes for the training and validation stages
 
@@ -47,6 +51,9 @@ def download_mock_dataset(
         raise Exception("Downloaded mock dataset is invalid.")
 
     df = pd.read_csv(Path(dataset_root) / df_name)
+
+    if global_paths:
+        df["path"] = df["path"].apply(lambda x: str(Path(dataset_root) / x))
 
     df_train = df[df["split"] == "train"].reset_index(drop=True)
     df_val = df[df["split"] == "validation"].reset_index(drop=True)

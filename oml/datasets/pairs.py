@@ -1,115 +1,43 @@
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Tuple, Union
 
 from torch import Tensor
 
-from oml.const import INDEX_KEY, PAIR_1ST_KEY, PAIR_2ND_KEY, TBBoxes
-from oml.datasets.images import ImageBaseDataset
-from oml.interfaces.datasets import IPairsDataset
-from oml.transforms.images.torchvision import get_normalisation_torch
-from oml.transforms.images.utils import TTransforms
-from oml.utils.images.images import TImReader, imread_pillow
-
-# todo 522: make one modality agnostic instead of these two
+from oml.const import INDEX_KEY, INPUT_TENSORS_KEY_1, INPUT_TENSORS_KEY_2
+from oml.interfaces.datasets import IBaseDataset, IPairDataset
 
 
-class EmbeddingPairsDataset(IPairsDataset):
+class PairDataset(IPairDataset):
     """
-    Dataset to iterate over pairs of embeddings.
+    Dataset to iterate over pairs of items of any modality.
 
     """
 
     def __init__(
         self,
-        embeddings1: Tensor,
-        embeddings2: Tensor,
-        pair_1st_key: str = PAIR_1ST_KEY,
-        pair_2nd_key: str = PAIR_2ND_KEY,
+        base_dataset: IBaseDataset,
+        pair_ids: List[Tuple[int, int]],
+        input_tensors_key_1: str = INPUT_TENSORS_KEY_1,
+        input_tensors_key_2: str = INPUT_TENSORS_KEY_2,
         index_key: str = INDEX_KEY,
     ):
-        """
+        self.base_dataset = base_dataset
+        self.pair_ids = pair_ids
 
-        Args:
-            embeddings1: The first input embeddings
-            embeddings2: The second input embeddings
-            pair_1st_key: Key to put ``embeddings1`` into the batches
-            pair_2nd_key: Key to put ``embeddings2`` into the batches
-            index_key: Key to put samples' ids into the batches
+        self.input_tensors_key_1 = input_tensors_key_1
+        self.input_tensors_key_2 = input_tensors_key_2
+        self.index_key: str = index_key
 
-        """
-        assert embeddings1.shape == embeddings2.shape
-        assert embeddings1.ndim >= 2
-
-        self.pair_1st_key = pair_1st_key
-        self.pair_2nd_key = pair_2nd_key
-        self.index_key = index_key
-
-        self.embeddings1 = embeddings1
-        self.embeddings2 = embeddings2
-
-    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
-        return {self.pair_1st_key: self.embeddings1[idx], self.pair_2nd_key: self.embeddings2[idx], self.index_key: idx}
+    def __getitem__(self, item: int) -> Dict[str, Union[Tensor, int]]:
+        i1, i2 = self.pair_ids[item]
+        key = self.base_dataset.input_tensors_key
+        return {
+            self.input_tensors_key_1: self.base_dataset[i1][key],
+            self.input_tensors_key_2: self.base_dataset[i2][key],
+            self.index_key: item,
+        }
 
     def __len__(self) -> int:
-        return len(self.embeddings1)
+        return len(self.pair_ids)
 
 
-class ImagePairsDataset(IPairsDataset):
-    """
-    Dataset to iterate over pairs of images.
-
-    """
-
-    def __init__(
-        self,
-        paths1: List[Path],
-        paths2: List[Path],
-        bboxes1: Optional[TBBoxes] = None,
-        bboxes2: Optional[TBBoxes] = None,
-        transform: Optional[TTransforms] = None,
-        f_imread: TImReader = imread_pillow,
-        pair_1st_key: str = PAIR_1ST_KEY,
-        pair_2nd_key: str = PAIR_2ND_KEY,
-        index_key: str = INDEX_KEY,
-        cache_size: Optional[int] = 0,
-    ):
-        """
-        Args:
-            paths1: Paths to the 1st input images
-            paths2: Paths to the 2nd input images
-            bboxes1: Should be either ``None`` or a sequence of bboxes.
-                If an image has ``N`` boxes, duplicate its
-                path ``N`` times and provide bounding box for each of them.
-                If you want to get an embedding for the whole image, set bbox to ``None`` for
-                this particular image path. The format is ``x1, y1, x2, y2``.
-            bboxes2: The same as ``bboxes2``, but for the second inputs.
-            transform: Augmentations for the images, set ``None`` to perform only normalisation and casting to tensor
-            f_imread: Function to read the images
-            pair_1st_key: Key to put the 1st images into the batches
-            pair_2nd_key: Key to put the 2nd images into the batches
-            index_key: Key to put samples' ids into the batches
-            cache_size: Size of the dataset's cache
-
-        """
-        assert len(paths1) == len(paths2)
-
-        if transform is None:
-            transform = get_normalisation_torch()
-
-        cache_size = cache_size // 2 if cache_size else None
-        dataset_args = {"transform": transform, "f_imread": f_imread, "cache_size": cache_size}
-        self.dataset1 = ImageBaseDataset(paths=paths1, bboxes=bboxes1, **dataset_args)
-        self.dataset2 = ImageBaseDataset(paths=paths2, bboxes=bboxes2, **dataset_args)
-
-        self.pair_1st_key = pair_1st_key
-        self.pair_2nd_key = pair_2nd_key
-        self.index_key = index_key
-
-    def __getitem__(self, idx: int) -> Dict[str, Union[int, Dict[str, Any]]]:
-        return {self.pair_1st_key: self.dataset1[idx], self.pair_2nd_key: self.dataset2[idx], self.index_key: idx}
-
-    def __len__(self) -> int:
-        return len(self.dataset1)
-
-
-__all__ = ["EmbeddingPairsDataset", "ImagePairsDataset"]
+__all__ = ["PairDataset"]

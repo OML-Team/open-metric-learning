@@ -6,6 +6,7 @@ import torch
 from oml.const import (
     CATEGORIES_KEY,
     EMBEDDINGS_KEY,
+    INDEX_KEY,
     IS_GALLERY_KEY,
     IS_QUERY_KEY,
     LABELS_KEY,
@@ -32,6 +33,7 @@ def test_visualization() -> None:
         IS_GALLERY_KEY: torch.tensor([False, False, False]),
         CATEGORIES_KEY: torch.tensor([10, 20, 20]),
         PATHS_KEY: [cf / "temp.png", cf / "temp.png", cf / "temp.png"],
+        INDEX_KEY: torch.tensor([0, 1, 2]),
     }
 
     batch2 = {
@@ -41,6 +43,7 @@ def test_visualization() -> None:
         IS_GALLERY_KEY: torch.tensor([True, True, True]),
         CATEGORIES_KEY: torch.tensor([10, 20, 20]),
         PATHS_KEY: [cf / "temp.png", cf / "temp.png", cf / "temp.png"],
+        INDEX_KEY: torch.tensor([3, 4, 5]),
     }
 
     calc = EmbeddingMetrics(

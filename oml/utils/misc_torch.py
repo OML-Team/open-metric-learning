@@ -57,6 +57,30 @@ def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     return x
 
 
+def cat_two_sorted_tensors_and_keep_it_sorted(x1: Tensor, x2: Tensor, eps: float = 1e-6) -> Tensor:
+    """
+    Args:
+        x1: Sorted tensor with the shape of ``[N, M]``
+        x2: Sorted tensor with the shape of ``[N, P]``
+        eps: Eps to have a gap between the last x1 and the first x2
+
+    Returns:
+        Concatenation of two sorted tensors.
+        The first tensor may be rescaled if needed to keep the order sorted.
+
+    """
+    assert eps >= 0
+    assert x1.shape[0] == x2.shape[0]
+
+    scale = (x2[:, 0] / x1[:, -1]).view(-1, 1).type_as(x1)
+    need_scaling = x1[:, -1] > x2[:, 0]
+    x1[need_scaling] = x1[need_scaling] * scale[need_scaling] - eps
+
+    x = torch.concatenate([x1, x2], dim=1).float()
+
+    return x
+
+
 def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     """
     Args:
@@ -455,6 +479,7 @@ class PCA:
 
 __all__ = [
     "elementwise_dist",
+    "cat_two_sorted_tensors_and_keep_it_sorted",
     "pairwise_dist",
     "OnlineCalc",
     "AvgOnline",

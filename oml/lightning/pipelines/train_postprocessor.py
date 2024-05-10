@@ -3,16 +3,16 @@ from pathlib import Path
 from pprint import pprint
 from typing import Any, Dict, Tuple
 
-import pandas as pd
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig
 from torch import device as tdevice
 from torch.utils.data import DataLoader
 
-from oml.const import BBOXES_COLUMNS, EMBEDDINGS_KEY, TCfg
+from oml.const import EMBEDDINGS_KEY, TCfg
 from oml.datasets.base import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
-from oml.inference.flat import inference_on_dataframe
+from oml.datasets.images import get_retrieval_images_datasets
+from oml.inference import inference, inference_cached
 from oml.interfaces.models import IPairwiseModel
 from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
 from oml.lightning.modules.pairwise_postprocessing import (
@@ -33,8 +33,7 @@ from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
-from oml.transforms.images.torchvision import get_normalisation_resize_torch
+from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.utils.misc import dictconfig_to_dict, flatten_dict, set_global_seed
 
 
@@ -56,46 +55,51 @@ def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
 
 
 def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
-    # todo: support bounding bboxes
-    df = pd.read_csv(Path(cfg["dataset_root"]) / cfg["dataframe_name"])
-    assert not set(BBOXES_COLUMNS).intersection(
-        df.columns
-    ), "We've found bboxes in the dataframe, but they're not supported yet."
-
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
-    if cfg["embeddings_cache_dir"] is not None:
-        cache_file = Path(cfg["embeddings_cache_dir"]) / f"embeddings_{get_hash_of_extraction_stage_cfg(cfg)[:5]}.pkl"
-    else:
-        cache_file = None
+    transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
 
-    emb_train, emb_val, df_train, df_val = inference_on_dataframe(
-        extractor=extractor,
-        dataset_root=cfg["dataset_root"],
-        output_cache_path=cache_file,
+    train_extraction, val_extraction = get_retrieval_images_datasets(
+        dataset_root=Path(cfg["dataset_root"]),
         dataframe_name=cfg["dataframe_name"],
-        transforms=get_transforms_by_cfg(cfg["transforms_extraction"]),
-        num_workers=cfg["num_workers"],
-        batch_size=cfg["batch_size_inference"],
-        use_fp16=int(cfg.get("precision", 32)) == 16,
+        transforms_train=transforms_extraction,
+        transforms_val=transforms_extraction,
     )
 
+    args = {
+        "model": extractor,
+        "num_workers": cfg["num_workers"],
+        "batch_size": cfg["batch_size_inference"],
+        "use_fp16": int(cfg.get("precision", 32)) == 16,
+    }
+
+    if cfg["embeddings_cache_dir"] is not None:
+        hash_ = get_hash_of_extraction_stage_cfg(cfg)[:5]
+        dir_ = Path(cfg["embeddings_cache_dir"])
+        emb_train = inference_cached(dataset=train_extraction, cache_path=str(dir_ / f"emb_train_{hash_}.pkl"), **args)
+        emb_val = inference_cached(dataset=val_extraction, cache_path=str(dir_ / f"emb_val_{hash_}.pkl"), **args)
+    else:
+        emb_train = inference(dataset=train_extraction, **args)
+        emb_val = inference(dataset=val_extraction, **args)
+
     train_dataset = ImageLabeledDataset(
-        df=df_train,
+        dataset_root=cfg["dataset_root"],
+        df=train_extraction.df,
         transform=get_transforms_by_cfg(cfg["transforms_train"]),
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
     valid_dataset = ImageQueryGalleryLabeledDataset(
-        df=df_val,
-        # we don't care about transforms, since the only goal of this dataset is to deliver embeddings
-        transform=get_normalisation_resize_torch(im_size=8),
+        dataset_root=cfg["dataset_root"],
+        df=val_extraction.df,
+        transform=transforms_extraction,
         extra_data={EMBEDDINGS_KEY: emb_val},
     )
 
     sampler = parse_sampler_from_config(cfg, dataset=train_dataset)
-    assert sampler is not None
+    assert sampler is not None, "We will be training on pairs, so, having sampler is obligatory."
+
     loader_train = DataLoader(batch_sampler=sampler, dataset=train_dataset, num_workers=cfg["num_workers"])
 
     loader_val = DataLoader(
@@ -128,7 +132,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
-    assert isinstance(postprocessor, PairwiseImagesPostprocessor), "We support only images processing in this pipeline."
+    assert isinstance(postprocessor, PairwiseReranker), "We support only images processing in this pipeline."
     assert isinstance(postprocessor.model, IPairwiseModel), f"You model must be a child of {IPairwiseModel.__name__}"
 
     criterion = torch.nn.BCEWithLogitsLoss()
@@ -157,6 +161,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
 
     metrics_constructor = EmbeddingMetricsDDP if is_ddp else EmbeddingMetrics
     metrics_calc = metrics_constructor(
+        dataset=loader_val.dataset,
         embeddings_key=pl_module.embeddings_key,
         categories_key=loader_val.dataset.categories_key,
         labels_key=loader_val.dataset.labels_key,
