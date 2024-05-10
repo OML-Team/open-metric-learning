@@ -4,7 +4,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy as np
 import torch
-from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin, stack, tensor
+from torch import BoolTensor, LongTensor, Tensor, isin, stack, tensor
 
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import PCA
@@ -378,19 +378,6 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
     return fnmr_at_fmr
-
-
-def calc_fnmr_at_fmr_from_matrices(
-    distance_matrix: FloatTensor, mask_gt: BoolTensor, fmr_vals: Tuple[float, ...]
-) -> TMetricsDict:
-    metrics: TMetricsDict = dict()
-
-    if fmr_vals:
-        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, mask_gt)
-        fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
-        metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
-
-    return metrics
 
 
 def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor]:

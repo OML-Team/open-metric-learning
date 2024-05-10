@@ -9,7 +9,7 @@ import torch
 from torch import isclose, tensor
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY
+from oml.const import CATEGORIES_COLUMN, OVERALL_CATEGORIES_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
@@ -115,7 +115,6 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
-        fmr_vals=tuple(),
         pcf_variance=tuple(),
         postprocessor=get_trivial_postprocessor(top_n=num_samples),
     )
@@ -147,7 +146,6 @@ def run_across_epochs(case) -> None:  # type: ignore
         cmc_top_k=top_k,
         precision_top_k=tuple(),
         map_top_k=tuple(),
-        fmr_vals=tuple(),
         pcf_variance=tuple(),
         postprocessor=get_trivial_postprocessor(top_n=num_samples),
     )
@@ -197,7 +195,6 @@ def test_worst_k(case_for_finding_worst_queries) -> None:  # type: ignore
         cmc_top_k=(1,),
         precision_top_k=(),
         map_top_k=(),
-        fmr_vals=tuple(),
         postprocessor=get_trivial_postprocessor(top_n=len(dataset)),
     )
 
@@ -208,3 +205,31 @@ def test_worst_k(case_for_finding_worst_queries) -> None:  # type: ignore
     calc.compute_metrics()
 
     assert set(calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/cmc/1", 2)) == worst_query_ids
+
+
+def test_all_requested_metrics_are_calculated(perfect_case) -> None:  # type: ignore
+    dataset, worst_query_ids = perfect_case
+
+    calc = EmbeddingMetrics(
+        dataset=dataset,
+        cmc_top_k=(1,),
+        precision_top_k=(2,),
+        map_top_k=(4, 500),
+        pcf_variance=(0.2, 0.1),
+        postprocessor=get_trivial_postprocessor(top_n=len(dataset)),
+    )
+
+    calc.setup()
+    for batch in DataLoader(dataset, batch_size=4, shuffle=False):
+        calc.update(embeddings=batch[dataset.input_tensors_key], indices=batch[dataset.index_key])
+
+    metrics = calc.compute_metrics()
+
+    for category_key in np.unique(dataset.extra_data[CATEGORIES_COLUMN]):
+
+        assert metrics[category_key]["cmc"][1] is not None
+        assert metrics[category_key]["precision"][2] is not None
+        assert metrics[category_key]["map"][4] is not None
+        assert metrics[category_key]["map"][500] is not None
+        assert metrics[category_key]["pcf"][0.2] is not None
+        assert metrics[category_key]["pcf"][0.1] is not None

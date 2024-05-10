@@ -51,7 +51,6 @@ metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
   cmc_top_k: [1, 10, 20, 30, 100]
   map_top_k: [5, 10]
-  fmr_vals: []
   precision_top_k: []
   pcf_variance: []
   return_only_overall_category: True

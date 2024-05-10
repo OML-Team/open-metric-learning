@@ -64,7 +64,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
-        fmr_vals: Tuple[float, ...] = tuple(),
         pcf_variance: Tuple[float, ...] = (0.5,),
         postprocessor: Optional[IRetrievalPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
@@ -79,12 +78,6 @@ class EmbeddingMetrics(IMetricVisualisable):
             cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
             precision_top_k: Values of ``k`` to calculate ``precision@k``
             map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
-            fmr_vals: Values of ``fmr`` (measured in quantiles) to calculate ``fnmr@fmr`` (`False Non Match Rate
-                      at the given False Match Rate`).
-                      For example, if ``fmr_values`` is (0.2, 0.4) we will calculate ``fnmr@fmr=0.2``
-                      and ``fnmr@fmr=0.4``.
-                      Note, computing this metric requires additional memory overhead,
-                      that is why it's turned off by default.
             pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                           of variance that needs to be explained is greater than the percentage specified
                           by ``pcf_variance``.
@@ -100,7 +93,6 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.cmc_top_k = cmc_top_k
         self.precision_top_k = precision_top_k
         self.map_top_k = map_top_k
-        self.fmr_vals = fmr_vals
         self.pcf_variance = pcf_variance
         self.postprocessor = postprocessor
 
@@ -112,7 +104,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.visualize_only_overall_category = visualize_only_overall_category
         self.return_only_overall_category = return_only_overall_category
 
-        self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
+        self.metrics_to_exclude_from_visualization = ["pcf", *metrics_to_exclude_from_visualization]
         self.verbose = verbose
 
         self._acc_embeddings_key = "__embeddings"
@@ -153,9 +145,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
-        self.acc = self.acc.sync()  # if DDP gathering happens here
-
-        # todo 522: put back fnmr metric
+        self.acc = self.acc.sync()  # gathering data from devices happens here if DDP
 
         if not self.acc.is_storage_full():
             raise ValueError(
