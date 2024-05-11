@@ -93,6 +93,8 @@ def calc_topological_metrics(
         Metrics dictionary.
 
     """
+    assert (categories is None) or (len(categories) == len(embeddings))
+
     metrics: TMetricsDict = defaultdict(dict)
 
     if pcf_variance:
