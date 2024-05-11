@@ -5,7 +5,7 @@ from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch import FloatTensor
+from torch import FloatTensor, LongTensor
 
 from oml.const import (
     CATEGORIES_COLUMN,
@@ -20,7 +20,6 @@ from oml.functional.metrics import (
     calc_retrieval_metrics,
     calc_topological_metrics,
     reduce_metrics,
-    take_unreduced_metrics_by_mask,
 )
 from oml.interfaces.datasets import IQueryGalleryLabeledDataset, IVisualizableDataset
 from oml.interfaces.metrics import IMetricVisualisable, TIndices
@@ -29,22 +28,23 @@ from oml.metrics.accumulation import Accumulator
 from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.misc import flatten_dict
 
-TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
-
 
 def calc_retrieval_metrics_rr(
     rr: RetrievalResults,
+    query_categories: Optional[Union[LongTensor, np.ndarray]] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
 ) -> TMetricsDict:
+    # todo 522: docs
     return calc_retrieval_metrics(
         retrieved_ids=rr.retrieved_ids,
         gt_ids=rr.gt_ids,
         cmc_top_k=cmc_top_k,
         precision_top_k=precision_top_k,
         map_top_k=map_top_k,
+        query_categories=query_categories,
         reduce=reduce,
     )
 
@@ -96,10 +96,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.pcf_variance = pcf_variance
         self.postprocessor = postprocessor
 
-        self.retrieval_results = None
+        self.retrieval_results: Optional[RetrievalResults] = None
 
-        self.metrics = None
-        self.metrics_unreduced = None
+        self.metrics: Optional[TMetricsDict] = None
+        self.metrics_unreduced: Optional[TMetricsDict] = None
 
         self.visualize_only_overall_category = visualize_only_overall_category
         self.return_only_overall_category = return_only_overall_category
@@ -135,8 +135,8 @@ class EmbeddingMetrics(IMetricVisualisable):
     def _compute_retrieval_results(self) -> None:
         max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
 
-        self.retrieval_results = RetrievalResults.compute_from_embeddings(  # type: ignore
-            embeddings=self.acc.storage[self._acc_embeddings_key],
+        self.retrieval_results = RetrievalResults.compute_from_embeddings(
+            embeddings=self.acc.storage[self._acc_embeddings_key],  # type: ignore
             dataset=self.dataset,
             n_items_to_retrieve=max_k,
         )
@@ -144,7 +144,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         if self.postprocessor:
             self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
 
-    def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
+    def compute_metrics(self) -> TMetricsDict:  # type: ignore
         self.acc = self.acc.sync()  # gathering data from devices happens here if DDP
 
         if not self.acc.is_storage_full():
@@ -156,39 +156,34 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self._compute_retrieval_results()
 
-        metrics: TMetricsDict_ByLabels = dict()
+        args_r = {
+            "cmc_top_k": self.cmc_top_k,
+            "precision_top_k": self.precision_top_k,
+            "map_top_k": self.map_top_k,
+            "rr": self.retrieval_results,
+            "reduce": False,
+        }
 
-        # note, here we do micro averaging
-        metrics[self.overall_categories_key] = calc_retrieval_metrics_rr(
-            rr=self.retrieval_results,
-            cmc_top_k=self.cmc_top_k,
-            precision_top_k=self.precision_top_k,
-            map_top_k=self.map_top_k,
-            reduce=False,
-        )
-
-        embeddings = self.acc.storage[self._acc_embeddings_key]
-        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, self.pcf_variance))
+        args_t = {"embeddings": self.acc.storage[self._acc_embeddings_key], "pcf_variance": self.pcf_variance}
 
         if CATEGORIES_COLUMN in self.dataset.extra_data:
             categories = np.array(self.dataset.extra_data[CATEGORIES_COLUMN])
-            ids_query = self.dataset.get_query_ids()
-            query_categories = categories[ids_query]
+            query_categories = categories[self.dataset.get_query_ids()]
 
-            for category in np.unique(query_categories):
-                mask_query_sz = query_categories == category
-                metrics[category] = take_unreduced_metrics_by_mask(metrics[self.overall_categories_key], mask_query_sz)
+            metrics_r = calc_retrieval_metrics_rr(query_categories=query_categories, **args_r)  # type: ignore
+            metrics_t = calc_topological_metrics(categories=categories, **args_t)  # type: ignore
 
-                mask_dataset_sz = categories == category
-                metrics[category].update(calc_topological_metrics(embeddings[mask_dataset_sz], self.pcf_variance))
+            self.metrics_unreduced = {cat: {**metrics_r[cat], **metrics_t[cat]} for cat in metrics_r.keys()}
 
-        self.metrics_unreduced = metrics  # type: ignore
-        self.metrics = reduce_metrics(metrics)  # type: ignore
+        else:
+            metrics_r = calc_retrieval_metrics_rr(**args_r)  # type: ignore
+            metrics_t = calc_topological_metrics(**args_t)  # type: ignore
+            self.metrics_unreduced = {OVERALL_CATEGORIES_KEY: {**metrics_r, **metrics_t}}
+
+        self.metrics = reduce_metrics(deepcopy(self.metrics_unreduced))
 
         if self.return_only_overall_category:
-            metric_to_return = {
-                self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])  # type: ignore
-            }
+            metric_to_return = {OVERALL_CATEGORIES_KEY: deepcopy(self.metrics[OVERALL_CATEGORIES_KEY])}
         else:
             metric_to_return = deepcopy(self.metrics)
 
@@ -196,7 +191,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             print("\nMetrics:")
             pprint(metric_to_return)
 
-        return metric_to_return  # type: ignore
+        return metric_to_return
 
     def ready_to_visualize(self) -> bool:
         return isinstance(self.dataset, IVisualizableDataset)
@@ -220,7 +215,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         return figures, titles
 
     def get_worst_queries_ids(self, metric_name: str, n_queries: int) -> List[int]:
-        metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
+        metric_values = flatten_dict(self.metrics_unreduced)[metric_name]
         return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
 
     def get_plot_for_worst_queries(
@@ -247,4 +242,4 @@ class EmbeddingMetrics(IMetricVisualisable):
         return fig
 
 
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "calc_retrieval_metrics_rr"]
+__all__ = ["EmbeddingMetrics", "calc_retrieval_metrics_rr"]

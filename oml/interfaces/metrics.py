@@ -4,8 +4,6 @@ from typing import Any, Collection, Dict, List, Tuple, Union
 import matplotlib.pyplot as plt
 from torch import LongTensor
 
-from oml.const import OVERALL_CATEGORIES_KEY
-
 TIndices = Union[LongTensor, List[int]]
 
 
@@ -16,7 +14,6 @@ class IBasicMetric(ABC):
     """
 
     metric_name = "BASE"
-    overall_categories_key = OVERALL_CATEGORIES_KEY
 
     @abstractmethod
     def setup(self, *args: Any, **kwargs: Any) -> Any:
@@ -43,7 +40,7 @@ class IBasicMetric(ABC):
         .. code-block:: python
 
             {
-                "self.overall_categories_key": {"metric1": ..., "metric2": ...},
+                "OVERALL": {"metric1": ..., "metric2": ...},
                 "category1": {"metric1": ..., "metric2": ...},
                 "category2": {"metric1": ..., "metric2": ...}
             }

@@ -6,12 +6,13 @@ from tqdm import tqdm
 
 from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, SEQUENCE_COLUMN
 from oml.datasets.images import ImageQueryGalleryLabeledDataset
-from oml.metrics.embeddings import EmbeddingMetrics, TMetricsDict_ByLabels
+from oml.functional.metrics import TMetricsDict
+from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import compare_dicts_recursively, set_global_seed
 
 
-def validation(df: pd.DataFrame) -> TMetricsDict_ByLabels:
+def validation(df: pd.DataFrame) -> TMetricsDict:
     set_global_seed(42)
     extractor = nn.Flatten()
 

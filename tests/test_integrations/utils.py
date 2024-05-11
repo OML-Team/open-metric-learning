@@ -11,7 +11,7 @@ from oml.const import (
     LABELS_KEY,
     SEQUENCE_COLUMN,
 )
-from oml.functional.metrics import TMetricsDict, calc_retrieval_metrics
+from oml.functional.metrics import calc_retrieval_metrics
 from oml.interfaces.datasets import IQueryGalleryDataset, IQueryGalleryLabeledDataset
 from oml.utils.misc import one_hot
 
@@ -177,7 +177,7 @@ def calc_retrieval_metrics_on_full(
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
-) -> TMetricsDict:
+) -> Dict[Any, Any]:
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 

@@ -1,20 +1,22 @@
 import warnings
 from collections import defaultdict
-from typing import Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
 from torch import BoolTensor, LongTensor, Tensor, isin, stack, tensor
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import PCA
 
-TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
+TMetricsDict = Dict[str, Any]
 
 
 def calc_retrieval_metrics(
     retrieved_ids: LongTensor,
     gt_ids: List[LongTensor],
+    query_categories: Optional[Union[LongTensor, np.ndarray]] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -28,6 +30,7 @@ def calc_retrieval_metrics(
             Every element is within the range ``(0, n_gallery - 1)``.
         gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
             have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
+        query_categories: Categories of queries with the size of ``n_query`` to compute metrics for each category.
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
@@ -39,6 +42,7 @@ def calc_retrieval_metrics(
     """
     assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
     assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
+    assert (query_categories is None) or (len(query_categories) == len(retrieved_ids))
 
     n_queries = len(retrieved_ids)
 
@@ -57,8 +61,12 @@ def calc_retrieval_metrics(
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map = calc_map(gt_tops, n_gts, map_top_k)
-        metrics["map"] = dict(zip(map_top_k, map))
+        map_ = calc_map(gt_tops, n_gts, map_top_k)
+        metrics["map"] = dict(zip(map_top_k, map_))
+
+    if query_categories is not None:
+        metrics_cat = {c: take_unreduced_metrics_by_mask(metrics, query_categories == c) for c in query_categories}
+        metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -66,12 +74,17 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_topological_metrics(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> TMetricsDict:
+def calc_topological_metrics(
+    embeddings: Tensor,
+    pcf_variance: Tuple[float, ...],
+    categories: Optional[Union[LongTensor, np.ndarray]] = None,
+) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+        categories: Categories of embeddings to compute category wise metrics.
         pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                       of variance that needs to be explained is greater than the percentage specified
                       by ``pcf_variance``.
@@ -80,17 +93,21 @@ def calc_topological_metrics(embeddings: Tensor, pcf_variance: Tuple[float, ...]
         Metrics dictionary.
 
     """
-    metrics: TMetricsDict = dict()
+    metrics: TMetricsDict = defaultdict(dict)
 
     if pcf_variance:
         main_components = calc_pcf(embeddings, pcf_variance)
         metrics["pcf"] = dict(zip(pcf_variance, main_components))
 
+    if categories is not None:
+        metrics_cat = {c: calc_topological_metrics(embeddings[categories == c], pcf_variance) for c in categories}
+        metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
+
     return metrics
 
 
-def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
-    output: TMetricsDict = {}
+def reduce_metrics(metrics_to_reduce: Dict[Any, Any]) -> Dict[Any, Any]:
+    output = {}
 
     for k, v in metrics_to_reduce.items():
         if isinstance(v, (Tensor, np.ndarray)):
@@ -98,13 +115,13 @@ def reduce_metrics(metrics_to_reduce: TMetricsDict) -> TMetricsDict:
         elif isinstance(v, (float, int)):
             output[k] = v
         else:
-            output[k] = reduce_metrics(v)  # type: ignore
+            output[k] = reduce_metrics(v)
 
     return output
 
 
-def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> TMetricsDict:
-    output: TMetricsDict = {}
+def take_unreduced_metrics_by_mask(metrics: Dict[Any, Any], mask: BoolTensor) -> Dict[Any, Any]:
+    output = {}
 
     for k, v in metrics.items():
         if isinstance(v, Tensor):
@@ -112,7 +129,7 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
         elif isinstance(v, (float, int)):
             output[k] = v
         else:
-            output[k] = take_unreduced_metrics_by_mask(v, mask)  # type: ignore
+            output[k] = take_unreduced_metrics_by_mask(v, mask)
 
     return output
 
@@ -443,23 +460,6 @@ def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor
     return metric
 
 
-def extract_pos_neg_dists(distances: Tensor, mask_gt: Tensor) -> Tuple[Tensor, Tensor]:
-    """
-    Extract distances between relevant samples, and distances between non-relevant samples.
-
-    Args:
-        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
-        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
-
-    Returns:
-        pos_dist: Tensor of distances between relevant samples
-        neg_dist: Tensor of distances between non-relevant samples
-    """
-    pos_dist = distances[mask_gt]
-    neg_dist = distances[~mask_gt]
-    return pos_dist, neg_dist
-
-
 def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     """
     Clip ``arr`` by upper bound ``max_el`` and raise warning if required.
@@ -499,6 +499,7 @@ __all__ = [
     "TMetricsDict",
     "calc_retrieval_metrics",
     "calc_topological_metrics",
+    "calc_fnmr_at_fmr",
     "reduce_metrics",
     "take_unreduced_metrics_by_mask",
 ]
