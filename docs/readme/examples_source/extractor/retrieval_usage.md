@@ -23,7 +23,7 @@ embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
 retrieval_results = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
 
-retrieval_results.visualize(query_ids=[0, 1], dataset=dataset).show()
+retrieval_results.visualize(query_ids=[0, 1], dataset=dataset, show=True)
 
 print(retrieval_results)  # you get the ids of retrieved items and the corresponding distances
 
