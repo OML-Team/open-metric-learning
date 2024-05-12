@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import TCfg
 from oml.datasets.images import get_retrieval_images_datasets
-from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
+from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
@@ -109,11 +109,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
         **cfg.get("metric_args", {}),
     )
 
-    metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
-    metrics_clb = metrics_clb_constructor(
-        metric=metrics_calc,
-        log_images=cfg.get("log_images", False),
-    )
+    metrics_clb = MetricValCallback(metric=metrics_calc, log_images=cfg.get("log_images", False))
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],

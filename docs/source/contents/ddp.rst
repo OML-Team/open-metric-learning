@@ -26,9 +26,9 @@ ExtractorModuleDDP
 
     .. automethod:: __init__
 
-MetricValCallbackDDP
+PairwiseModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.callbacks.metric.MetricValCallbackDDP
+.. autoclass:: oml.lightning.modules.pairwise_postprocessing.PairwiseModuleDDP
     :undoc-members:
     :show-inheritance:
 

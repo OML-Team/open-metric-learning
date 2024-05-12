@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import TCfg
 from oml.datasets.images import get_retrieval_images_datasets
-from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
+from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
@@ -73,11 +73,7 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
         postprocessor=postprocessor,
         **cfg.get("metric_args", {}),
     )
-    metrics_clb_constructor = MetricValCallbackDDP if is_ddp else MetricValCallback
-    clb_metric = metrics_clb_constructor(
-        metric=metrics_calc,
-        log_images=False,
-    )
+    clb_metric = MetricValCallback(metric=metrics_calc, log_images=False)
 
     trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)
 

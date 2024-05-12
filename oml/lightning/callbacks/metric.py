@@ -56,7 +56,11 @@ class MetricValCallback(Callback):
         loaders = (
             [trainer.val_dataloaders] if isinstance(trainer.val_dataloaders, DataLoader) else trainer.val_dataloaders
         )
-        return self.samples_in_getitem * len(loaders[dataloader_idx].dataset)
+        len_dataset = len(loaders[dataloader_idx].dataset)
+        if trainer.world_size > 1:
+            # we use padding in DDP and sequential sampler for validation
+            len_dataset = ceil(len_dataset / trainer.world_size)
+        return self.samples_in_getitem * len_dataset
 
     def on_validation_batch_start(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -134,6 +138,18 @@ class MetricValCallback(Callback):
             f"you set 'drop_last=False'. The idea is that lengths of dataset and dataloader must match."
         )
 
+    @staticmethod
+    def _check_loaders(trainer: "pl.Trainer") -> None:
+        if trainer.world_size > 1 and trainer.val_dataloaders is not None:
+            if not check_loaders_is_patched(trainer.val_dataloaders):
+                raise RuntimeError(err_message_loaders_is_not_patched)
+
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
 
 err_message_loaders_is_not_patched = (
     "\nExperiment is runned in DDP mode, but some of validation dataloaders is not patched. Metric callback will "
@@ -150,46 +166,4 @@ err_message_loaders_is_not_patched = (
     f"5) Turn off the 'overfit_batches' parameter in 'pl.Trainer'."
 )
 
-
-class MetricValCallbackDDP(MetricValCallback):
-    """
-    This is an extension to the regular callback that takes into account data reduction and padding
-    on the inference for each device in DDP setup
-
-    """
-
-    metric: IBasicMetric
-
-    def __init__(self, metric: IBasicMetric, *args: Any, **kwargs: Any):
-        super().__init__(metric, *args, **kwargs)
-
-    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int = 0) -> int:
-        loaders = (
-            [trainer.val_dataloaders] if isinstance(trainer.val_dataloaders, DataLoader) else trainer.val_dataloaders
-        )
-        len_dataset = len(loaders[dataloader_idx].dataset)
-        if trainer.world_size > 1:
-            # we use padding in DDP and sequential sampler for validation
-            len_dataset = ceil(len_dataset / trainer.world_size)
-        return self.samples_in_getitem * len_dataset
-
-    def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
-        # TODO: optimize to avoid duplication of metrics on all devices.
-        #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
-        #  because they need this metric for checkpointing
-        return super().calc_and_log_metrics(pl_module=pl_module)
-
-    @staticmethod
-    def _check_loaders(trainer: "pl.Trainer") -> None:
-        if trainer.world_size > 1 and trainer.val_dataloaders is not None:
-            if not check_loaders_is_patched(trainer.val_dataloaders):
-                raise RuntimeError(err_message_loaders_is_not_patched)
-
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        self._check_loaders(trainer)
-
-    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        self._check_loaders(trainer)
-
-
-__all__ = ["MetricValCallback", "MetricValCallbackDDP"]
+__all__ = ["MetricValCallback"]
