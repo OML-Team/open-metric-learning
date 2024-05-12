@@ -27,9 +27,9 @@ df_train, df_val = download_mock_dataset(global_paths=True)
 
 # STEP 0: SAVE VIT EMBEDDINGS
 # - training ones are needed for hard negative sampling when training pairwise model
-# - validation ones are needed to construct the original prediction (which we will re-rank)  # todo 522: bboxes
-embeddings_train = inference_cached(extractor, ImageBaseDataset(df_train["path"].tolist(), transform=transforms), batch_size=4, num_workers=0)
-embeddings_valid = inference_cached(extractor, ImageBaseDataset(df_val["path"].tolist(), transform=transforms), batch_size=4, num_workers=0)
+# - validation ones are needed to construct the original prediction (which we will re-rank)
+embeddings_train = inference_cached(extractor, ImageLabeledDataset(df_train, transform=transforms), batch_size=4, num_workers=0)
+embeddings_valid = inference_cached(extractor, ImageLabeledDataset(df_val, transform=transforms), batch_size=4, num_workers=0)
 
 # STEP 1: TRAIN PAIRWISE MODEL
 train_dataset = ImageLabeledDataset(df_train, transform=get_augs_torch(224), extra_data={"embeddings": embeddings_train})
