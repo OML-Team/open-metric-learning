@@ -27,17 +27,12 @@ class MetricValCallback(Callback):
         metric: IBasicMetric,
         log_images: bool = False,
         loader_idx: int = 0,
-        samples_in_getitem: int = 1,
     ):
         """
         Args:
             metric: Metric
             log_images: Set ``True`` if you want to have visual logging
             loader_idx: Idx of the loader to calculate metric for
-            samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
-                so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
-                but for the dataset which explicitly return triplets, this value must be equal to 3,
-                for a dataset of pairs it must be equal to 2.
 
         """
 
@@ -46,7 +41,6 @@ class MetricValCallback(Callback):
         assert not log_images or (isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize())
 
         self.loader_idx = loader_idx
-        self.samples_in_getitem = samples_in_getitem
 
         self._expected_samples = 0
         self._collected_samples = 0
@@ -56,7 +50,11 @@ class MetricValCallback(Callback):
         loaders = (
             [trainer.val_dataloaders] if isinstance(trainer.val_dataloaders, DataLoader) else trainer.val_dataloaders
         )
-        return self.samples_in_getitem * len(loaders[dataloader_idx].dataset)
+        len_dataset = len(loaders[dataloader_idx].dataset)
+        if trainer.world_size > 1:
+            # we use padding in DDP and sequential sampler for validation
+            len_dataset = ceil(len_dataset / trainer.world_size)
+        return len_dataset
 
     def on_validation_batch_start(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -128,11 +126,22 @@ class MetricValCallback(Callback):
         raise ValueError(
             f"Incorrect calculation for {self.metric.__class__.__name__} metric. "
             f"Inconsistent number of samples, obtained: {self._collected_samples}, "
-            f"expected: {self._expected_samples}, "
-            f"'samples_in_getitem': {self.samples_in_getitem}.\n"
+            f"expected: {self._expected_samples}. "
             f"Make sure that you don't use the 'overfit_batches' parameter in 'pl.Trainer' and "
             f"you set 'drop_last=False'. The idea is that lengths of dataset and dataloader must match."
         )
+
+    @staticmethod
+    def _check_loaders(trainer: "pl.Trainer") -> None:
+        if trainer.world_size > 1 and trainer.val_dataloaders is not None:
+            if not check_loaders_is_patched(trainer.val_dataloaders):
+                raise RuntimeError(err_message_loaders_is_not_patched)
+
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
+
+    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._check_loaders(trainer)
 
 
 err_message_loaders_is_not_patched = (
@@ -150,46 +159,4 @@ err_message_loaders_is_not_patched = (
     f"5) Turn off the 'overfit_batches' parameter in 'pl.Trainer'."
 )
 
-
-class MetricValCallbackDDP(MetricValCallback):
-    """
-    This is an extension to the regular callback that takes into account data reduction and padding
-    on the inference for each device in DDP setup
-
-    """
-
-    metric: IBasicMetric
-
-    def __init__(self, metric: IBasicMetric, *args: Any, **kwargs: Any):
-        super().__init__(metric, *args, **kwargs)
-
-    def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int = 0) -> int:
-        loaders = (
-            [trainer.val_dataloaders] if isinstance(trainer.val_dataloaders, DataLoader) else trainer.val_dataloaders
-        )
-        len_dataset = len(loaders[dataloader_idx].dataset)
-        if trainer.world_size > 1:
-            # we use padding in DDP and sequential sampler for validation
-            len_dataset = ceil(len_dataset / trainer.world_size)
-        return self.samples_in_getitem * len_dataset
-
-    def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
-        # TODO: optimize to avoid duplication of metrics on all devices.
-        #  Note: if we calculate metric only on main device, we need to log (!!!) metric for all devices,
-        #  because they need this metric for checkpointing
-        return super().calc_and_log_metrics(pl_module=pl_module)
-
-    @staticmethod
-    def _check_loaders(trainer: "pl.Trainer") -> None:
-        if trainer.world_size > 1 and trainer.val_dataloaders is not None:
-            if not check_loaders_is_patched(trainer.val_dataloaders):
-                raise RuntimeError(err_message_loaders_is_not_patched)
-
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        self._check_loaders(trainer)
-
-    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        self._check_loaders(trainer)
-
-
-__all__ = ["MetricValCallback", "MetricValCallbackDDP"]
+__all__ = ["MetricValCallback"]

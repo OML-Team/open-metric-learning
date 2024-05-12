@@ -131,7 +131,6 @@ def run_retrieval_metrics(case) -> None:  # type: ignore
     # the euclidean distance between any one-hots is always sqrt(2) or 0
     distances = calc.retrieval_results.distances  # type: ignore
     assert isclose(distances, tensor([0.0])).any() or isclose(distances, tensor([math.sqrt(2)])).any()
-
     assert calc.acc.collected_samples == num_samples
 
 
@@ -165,7 +164,6 @@ def run_across_epochs(case) -> None:  # type: ignore
     # the euclidean distance between any one-hots is always sqrt(2) or 0
     distances = calc.retrieval_results.distances  # type: ignore
     assert isclose(distances, tensor([0.0])).any() or isclose(distances, tensor([math.sqrt(2)])).any()
-
     assert calc.acc.collected_samples == num_samples
 
 
@@ -226,7 +224,6 @@ def test_all_requested_metrics_are_calculated(perfect_case) -> None:  # type: ig
     metrics = calc.compute_metrics()
 
     for category_key in np.unique(dataset.extra_data[CATEGORIES_COLUMN]):
-
         assert metrics[category_key]["cmc"][1] is not None
         assert metrics[category_key]["precision"][2] is not None
         assert metrics[category_key]["map"][4] is not None

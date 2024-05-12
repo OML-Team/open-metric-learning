@@ -15,7 +15,7 @@ from oml.datasets.images import get_retrieval_images_datasets
 from oml.inference import inference, inference_cached
 from oml.interfaces.datasets import ILabeledDataset, IQueryGalleryLabeledDataset
 from oml.interfaces.models import IPairwiseModel
-from oml.lightning.callbacks.metric import MetricValCallback, MetricValCallbackDDP
+from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.pairwise_postprocessing import (
     PairwiseModule,
     PairwiseModuleDDP,
@@ -162,9 +162,8 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
         **module_kwargs,
     )
 
-    log_images = cfg.get("log_images", True)
     metric = EmbeddingMetrics(dataset=dataset_val, postprocessor=postprocessor, **cfg.get("metric_args", {}))
-    metrics_clb = MetricValCallbackDDP(metric, log_images) if is_ddp else MetricValCallback(metric, log_images)
+    metrics_clb = MetricValCallback(metric=metric, log_images=cfg.get("log_images", True))
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],

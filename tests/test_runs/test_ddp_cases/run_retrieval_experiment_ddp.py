@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from oml.const import INDEX_KEY, INPUT_TENSORS_KEY, LABELS_KEY, TMP_PATH
 from oml.ddp.utils import sync_dicts_ddp
-from oml.lightning.callbacks.metric import MetricValCallbackDDP
+from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.ddp import ModuleDDP
 from oml.lightning.pipelines.parser import parse_engine_params_from_config
 from oml.losses.arcface import ArcFaceLoss
@@ -138,7 +138,7 @@ class DummyModule(ModuleDDP):
         torch.save(self.model, self.save_path_ckpt_pattern.format(experiment=self.exp_num))
 
 
-class MetricValCallbackWithSaving(MetricValCallbackDDP):
+class MetricValCallbackWithSaving(MetricValCallback):
     """
     We add saving of metrics for later comparison
     """

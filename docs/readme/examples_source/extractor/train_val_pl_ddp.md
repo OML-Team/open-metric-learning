@@ -11,7 +11,7 @@ from torch.optim import SGD
 
 from oml.datasets import ImageQueryGalleryLabeledDataset, ImageLabeledDataset
 from oml.lightning.modules.extractor import ExtractorModuleDDP
-from oml.lightning.callbacks.metric import MetricValCallbackDDP
+from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.inbatch_all_tri import AllTripletsMiner
@@ -35,7 +35,7 @@ train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 # val
 val_dataset = ImageQueryGalleryLabeledDataset(df_val)
 val_loader = DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallbackDDP(metric=EmbeddingMetrics(dataset=val_dataset))  # DDP specific
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset))
 
 # run
 pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimizer=optimizer,
