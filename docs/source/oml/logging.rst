@@ -153,9 +153,6 @@ There are two main sources of logs:
 
 We also recommend you take a look at:
 
-* `Visualisation notebook <https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/features_extraction/visualization.ipynb>`_
-  for interactive errors analysis and visualizing attention maps.
-
 * `ViTExtractor.draw_attention() <https://open-metric-learning.readthedocs.io/en/latest/contents/models.html#oml.models.vit.vit.ViTExtractor.draw_attention>`_
 
 * `ResnetExtractor.draw_gradcam() <https://open-metric-learning.readthedocs.io/en/latest/contents/models.html#oml.models.resnet.ResnetExtractor.draw_gradcam>`_
