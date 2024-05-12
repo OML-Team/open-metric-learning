@@ -91,25 +91,14 @@ def create_retrieval_dataloader(
     return train_retrieval_loader
 
 
-def create_retrieval_callback(
-    dataset: IQueryGalleryLabeledDataset, loader_idx: int, samples_in_getitem: int
-) -> MetricValCallback:
+def create_retrieval_callback(dataset: IQueryGalleryLabeledDataset, loader_idx: int) -> MetricValCallback:
     metric = EmbeddingMetrics(dataset=dataset)
-    metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
+    metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx)
     return metric_callback
 
 
-@pytest.mark.parametrize(
-    "samples_in_getitem, is_error_expected, pipeline",
-    [
-        (1, False, "retrieval"),
-        (2, True, "retrieval"),
-    ],
-)
 @pytest.mark.parametrize("num_dataloaders", [1, 2])
-def test_lightning(
-    samples_in_getitem: int, is_error_expected: bool, num_dataloaders: int, pipeline: str, num_workers: int
-) -> None:
+def test_lightning(num_dataloaders: int, num_workers: int) -> None:
     num_samples = 12
     im_size = 6
     n_labels = 2
@@ -128,7 +117,8 @@ def test_lightning(
     ]
     callbacks = [
         create_retrieval_callback(
-            dataset=val_dataloaders[k].dataset, loader_idx=k, samples_in_getitem=samples_in_getitem
+            dataset=val_dataloaders[k].dataset,
+            loader_idx=k,
         )
         for k in range(num_dataloaders)
     ]
@@ -143,10 +133,5 @@ def test_lightning(
         num_sanity_val_steps=0,
     )
 
-    if is_error_expected:
-        with pytest.raises(ValueError, match=callbacks[0].metric.__class__.__name__):
-            trainer.fit(model=lightning_module, train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
-            trainer.validate(model=lightning_module, dataloaders=val_dataloaders)
-    else:
-        trainer.fit(model=lightning_module, train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
-        trainer.validate(model=lightning_module, dataloaders=val_dataloaders)
+    trainer.fit(model=lightning_module, train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
+    trainer.validate(model=lightning_module, dataloaders=val_dataloaders)
