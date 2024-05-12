@@ -27,17 +27,12 @@ class MetricValCallback(Callback):
         metric: IBasicMetric,
         log_images: bool = False,
         loader_idx: int = 0,
-        samples_in_getitem: int = 1,
     ):
         """
         Args:
             metric: Metric
             log_images: Set ``True`` if you want to have visual logging
             loader_idx: Idx of the loader to calculate metric for
-            samples_in_getitem: Some of the datasets return several samples when calling ``__getitem__``,
-                so we need to handle it for the proper calculation. For most of the cases this value equals to 1,
-                but for the dataset which explicitly return triplets, this value must be equal to 3,
-                for a dataset of pairs it must be equal to 2.
 
         """
 
@@ -46,7 +41,6 @@ class MetricValCallback(Callback):
         assert not log_images or (isinstance(metric, IMetricVisualisable) and metric.ready_to_visualize())
 
         self.loader_idx = loader_idx
-        self.samples_in_getitem = samples_in_getitem
 
         self._expected_samples = 0
         self._collected_samples = 0
@@ -60,7 +54,7 @@ class MetricValCallback(Callback):
         if trainer.world_size > 1:
             # we use padding in DDP and sequential sampler for validation
             len_dataset = ceil(len_dataset / trainer.world_size)
-        return self.samples_in_getitem * len_dataset
+        return len_dataset
 
     def on_validation_batch_start(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -132,8 +126,7 @@ class MetricValCallback(Callback):
         raise ValueError(
             f"Incorrect calculation for {self.metric.__class__.__name__} metric. "
             f"Inconsistent number of samples, obtained: {self._collected_samples}, "
-            f"expected: {self._expected_samples}, "
-            f"'samples_in_getitem': {self.samples_in_getitem}.\n"
+            f"expected: {self._expected_samples}. "
             f"Make sure that you don't use the 'overfit_batches' parameter in 'pl.Trainer' and "
             f"you set 'drop_last=False'. The idea is that lengths of dataset and dataloader must match."
         )
