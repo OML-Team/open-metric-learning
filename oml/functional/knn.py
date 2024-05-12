@@ -1,7 +1,8 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import torch
-from torch import FloatTensor, LongTensor
+from torch import FloatTensor, LongTensor, Tensor, bincount, full
+from tqdm.auto import tqdm
 
 from oml.const import BS_KNN
 from oml.utils.misc_torch import pairwise_dist
@@ -15,8 +16,9 @@ def batched_knn(
     sequence_ids: Optional[LongTensor] = None,
     labels_gt: Optional[LongTensor] = None,
     bs: int = BS_KNN,
-) -> Tuple[FloatTensor, LongTensor, Optional[List[LongTensor]]]:
+) -> Tuple[FloatTensor, Tensor, Optional[Tensor]]:
     """
+    # todo 522: CHANGE DOCS
 
     Args:
         embeddings: Matrix with the shape of ``[L, dim]``
@@ -47,12 +49,17 @@ def batched_knn(
     emb_g = embeddings[ids_gallery]
 
     nq = len(ids_query)
-    retrieved_ids = LongTensor(nq, top_n)
+    retrieved_ids = Tensor(nq, top_n)
     distances = FloatTensor(nq, top_n)
-    gt_ids = []
+
+    gt_ids = None if labels_gt is None else full((nq, bincount(labels_gt).max() - 1), float("nan"))
+
+    # since we don't now the size of mask_to_ignore in advance, we probably pre allocated some extra
+    # memory for gt ids, that is why we need to keep track of max seen number of gts for further clipping
+    max_seen_n_gt = 0
 
     # we do batching over first (queries) dimension
-    for i in range(0, nq, bs):
+    for i in tqdm(range(0, nq, bs), desc="Batched KNN."):
         distances_b = pairwise_dist(x1=emb_q[i : i + bs, :], x2=emb_g)
         ids_query_b = ids_query[i : i + bs]
 
@@ -67,14 +74,22 @@ def batched_knn(
         if labels_gt is not None:
             mask_gt_b = labels_gt[ids_query_b][..., None] == labels_gt[ids_gallery][None, ...]
             mask_gt_b[mask_to_ignore_b] = False
-            gt_ids.extend([LongTensor(row.nonzero()).view(-1) for row in mask_gt_b])  # type: ignore
+            for k in range(i, min(nq, i + bs)):
+                gt_ids_query = mask_gt_b[k - i, :].nonzero()
+                gt_ids[k, : len(gt_ids_query)] = gt_ids_query.view(-1)
+                max_seen_n_gt = max(max_seen_n_gt, len(gt_ids_query))
 
-        distances_b[mask_to_ignore_b] = float("inf")
-        distances[i : i + bs, :], retrieved_ids[i : i + bs, :] = torch.topk(
-            distances_b, k=top_n, largest=False, sorted=True
-        )
+        distances_b[mask_to_ignore_b] = float("nan")
+        dists, ids = torch.topk(distances_b, k=top_n, largest=False, sorted=True)
+        ids = ids.float()
+        ids[dists.isnan()] = float("nan")
 
-    return distances, retrieved_ids, gt_ids or None
+        distances[i : i + bs, :], retrieved_ids[i : i + bs, :] = dists, ids
+
+    if labels_gt is not None:
+        gt_ids = gt_ids[:, :max_seen_n_gt]
+
+    return distances, retrieved_ids, gt_ids
 
 
 __all__ = ["batched_knn"]
