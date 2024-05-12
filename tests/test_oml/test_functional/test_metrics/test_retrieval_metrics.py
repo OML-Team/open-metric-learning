@@ -1,9 +1,13 @@
+import math
 from collections import defaultdict
 from typing import Callable, List, Tuple
 
+import numpy as np
 import pytest
 import torch
+from torch import LongTensor
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
     TMetricsDict,
@@ -11,6 +15,7 @@ from oml.functional.metrics import (
     calc_fnmr_at_fmr,
     calc_map,
     calc_precision,
+    calc_retrieval_metrics,
 )
 from oml.utils.misc import remove_unused_kwargs
 from oml.utils.misc_torch import take_2d
@@ -18,9 +23,7 @@ from tests.test_integrations.utils import (
     apply_mask_to_ignore,
     calc_gt_mask,
     calc_mask_to_ignore,
-)
-from tests.test_integrations.utils import (
-    calc_retrieval_metrics_on_full as calc_retrieval_metrics,
+    calc_retrieval_metrics_on_full,
 )
 
 from .synthetic import generate_distance_matrix, generate_retrieval_case
@@ -187,7 +190,7 @@ def compare_metrics(
     mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
     mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
 
-    metrics_calculated = calc_retrieval_metrics(
+    metrics_calculated = calc_retrieval_metrics_on_full(
         distances=distances,
         mask_gt=mask_gt,
         mask_to_ignore=mask_to_ignore,
@@ -277,3 +280,30 @@ def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
         pos_dist = torch.zeros(10)
         neg_dist = torch.ones(10)
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
+
+
+def test_metrics_with_categories() -> None:
+    retrieved_ids = LongTensor([[0, 5, 4], [2, 1, 5], [2, 1, 5]])
+    gt_ids = [LongTensor([0, 10, 4]), LongTensor([2, 3]), LongTensor([2, 3])]
+    query_categories = np.array(["cat", "dog", "dog"])
+
+    metrics = calc_retrieval_metrics(
+        retrieved_ids=retrieved_ids,
+        gt_ids=gt_ids,
+        query_categories=query_categories,
+        cmc_top_k=(1,),
+        precision_top_k=(3, 5),
+        map_top_k=tuple(),
+    )
+
+    assert math.isclose(metrics["cat"]["cmc"][1], 1)
+    assert math.isclose(metrics["cat"]["precision"][3], 2 / 3, rel_tol=1e-3)
+    assert math.isclose(metrics["cat"]["precision"][5], 2 / 3, rel_tol=1e-3)
+
+    assert math.isclose(metrics["dog"]["cmc"][1], 1)
+    assert math.isclose(metrics["dog"]["precision"][3], 1 / 2, rel_tol=1e-3)
+    assert math.isclose(metrics["dog"]["precision"][5], 1 / 2, rel_tol=1e-3)
+
+    assert math.isclose(metrics[OVERALL_CATEGORIES_KEY]["cmc"][1], 1)
+    assert math.isclose(metrics[OVERALL_CATEGORIES_KEY]["precision"][3], (2 / 3 + 2 * 1 / 2) / 3, rel_tol=1e-3)
+    assert math.isclose(metrics[OVERALL_CATEGORIES_KEY]["precision"][5], (2 / 3 + 2 * 1 / 2) / 3, rel_tol=1e-3)

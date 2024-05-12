@@ -126,12 +126,18 @@ class EmbeddingsQueryGalleryLabeledDataset(EmbeddingsQueryGalleryDataset, IQuery
 
 
 def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
+    # this function allows not to re-implement tests after we changed the interfaces of metrics
+    # todo: refactor test and use new functions directly
+
     distances[mask_to_ignore] = float("inf")
     mask_gt[mask_to_ignore] = False
     return distances, mask_gt
 
 
 def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
+    # this function allows not to re-implement tests after we changed the interfaces of metrics
+    # todo: refactor test and use new functions directly
+
     assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
     assert len(labels) == len(is_query) == len(is_gallery)
 
@@ -147,6 +153,9 @@ def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor
 def calc_mask_to_ignore(
     is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
 ) -> Tensor:
+    # this function allows not to re-implement tests after we changed the interfaces of metrics
+    # todo: refactor test and use new functions directly
+
     assert is_query.ndim == is_gallery.ndim == 1
     assert len(is_query) == len(is_gallery)
 
@@ -178,6 +187,9 @@ def calc_retrieval_metrics_on_full(
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
 ) -> Dict[Any, Any]:
+    # this function allows not to re-implement tests after we changed the interfaces of metrics
+    # todo: refactor test and use new functions directly
+
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
