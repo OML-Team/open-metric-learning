@@ -60,7 +60,7 @@ def check_retrieval_dataframe_format(
             ((df[IS_QUERY_COLUMN][val_mask].astype(bool)) | df[IS_GALLERY_COLUMN][val_mask].astype(bool)).to_list()
         )
 
-    assert df[LABELS_COLUMN].dtypes == int
+    assert np.issubdtype(df[LABELS_COLUMN].dtypes, np.integer)
 
     # we explicitly put ==True here because of Nones
     labels_query = set(df[LABELS_COLUMN][df[IS_QUERY_COLUMN] == True])  # noqa
