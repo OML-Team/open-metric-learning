@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 
 import torch
-from torch import FloatTensor, LongTensor
+from torch import BoolTensor, FloatTensor, LongTensor
 
 from oml.const import BS_KNN
 from oml.utils.misc_torch import pairwise_dist
@@ -15,8 +15,9 @@ def batched_knn(
     sequence_ids: Optional[LongTensor] = None,
     labels_gt: Optional[LongTensor] = None,
     bs: int = BS_KNN,
-) -> Tuple[FloatTensor, LongTensor, Optional[List[LongTensor]]]:
+) -> Tuple[FloatTensor, LongTensor, Optional[List[LongTensor]]]:  # todo 522: types
     """
+    # todo 522: docs
 
     Args:
         embeddings: Matrix with the shape of ``[L, dim]``
@@ -47,8 +48,8 @@ def batched_knn(
     emb_g = embeddings[ids_gallery]
 
     nq = len(ids_query)
-    retrieved_ids = LongTensor(nq, top_n)
-    distances = FloatTensor(nq, top_n)
+    retrieved_ids = []
+    distances = []
     gt_ids = []
 
     # we do batching over first (queries) dimension
@@ -65,14 +66,19 @@ def batched_knn(
             mask_to_ignore_b = torch.logical_or(mask_to_ignore_b, mask_sequence)
 
         if labels_gt is not None:
-            mask_gt_b = labels_gt[ids_query_b][..., None] == labels_gt[ids_gallery][None, ...]
+            mask_gt_b = BoolTensor(labels_gt[ids_query_b][..., None] == labels_gt[ids_gallery][None, ...])
             mask_gt_b[mask_to_ignore_b] = False
-            gt_ids.extend([LongTensor(row.nonzero()).view(-1) for row in mask_gt_b])  # type: ignore
+            gt_ids.extend([row.nonzero().view(-1) for row in mask_gt_b])  # type: ignore
 
         distances_b[mask_to_ignore_b] = float("inf")
-        distances[i : i + bs, :], retrieved_ids[i : i + bs, :] = torch.topk(
-            distances_b, k=top_n, largest=False, sorted=True
-        )
+
+        # every query may have arbitrary number of retrieved items, so we are forced to use a loop
+        distances_b_sorted, retrieved_ids_b = torch.topk(distances_b, k=top_n, largest=False, sorted=True)
+        for k, (dist, ids) in enumerate(zip(distances_b_sorted, retrieved_ids_b)):
+            mask_to_keep = ~dist.isinf()
+
+            distances.append(dist[mask_to_keep].view(-1))
+            retrieved_ids.append(ids[mask_to_keep].view(-1))
 
     return distances, retrieved_ids, gt_ids or None
 

@@ -37,13 +37,13 @@ def calc_retrieval_metrics(
         Metrics dictionary.
 
     """
-    assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
-    assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
+    # assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
+    # assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
 
     n_queries = len(retrieved_ids)
 
     # let's mark every correctly retrieved item as True and vice versa
-    gt_tops = stack([isin(retrieved_ids[i], gt_ids[i]) for i in range(n_queries)]).bool()
+    gt_tops = [isin(r, g) for r, g in zip(retrieved_ids, gt_ids)]
     n_gts = tensor([len(ids) for ids in gt_ids]).long()
 
     metrics: TMetricsDict = defaultdict(dict)
@@ -56,8 +56,9 @@ def calc_retrieval_metrics(
         precision = calc_precision(gt_tops, n_gts, precision_top_k)
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
+    # todo 522: check
     if map_top_k:
-        map = calc_map(gt_tops, n_gts, map_top_k)
+        map = calc_map(gt_tops, map_top_k)
         metrics["map"] = dict(zip(map_top_k, map))
 
     if reduce:
@@ -76,12 +77,13 @@ def calc_retrieval_metrics_on_full(
     reduce: bool = True,
 ) -> TMetricsDict:
     # todo 522: move to tests
+
     if mask_to_ignore is not None:
         distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
 
     max_k_arg = max([*cmc_top_k, *precision_top_k, *map_top_k])
     k = min(distances.shape[1], max_k_arg)
-    _, retrieved_ids = torch.topk(distances, largest=False, k=k)
+    _, retrieved_ids = torch.topk(distances, largest=False, k=k)  # todo 522: adapt types
 
     gt_ids = [LongTensor(row.nonzero()).view(-1) for row in mask_gt]
 
@@ -226,10 +228,15 @@ def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
         [tensor([1., 0., 0.]), tensor([1., 1., 0.])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+
+    def cmc_single(is_correct: BoolTensor, k_: int) -> float:
+        value = float(is_correct[:k_].any())
+        return value
+
     cmc = []
     for k in top_k:
-        cmc.append(torch.any(gt_tops[:, :k], dim=1).float())
+        cmc.append(FloatTensor([cmc_single(gts, k) for gts in gt_tops]))
+
     return cmc
 
 
@@ -304,16 +311,20 @@ def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> Lis
         [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+
+    def precision_single(is_correct, n_gt_, k_):
+        k_ = min(k_, len(is_correct))
+        value = torch.cumsum(is_correct, dim=0)[k_ - 1] / min(n_gt_, k_)
+        return float(value)
+
     precision = []
-    correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
-        precision.append(correct_preds[:, k - 1] / _n_gt)
+        precision.append(FloatTensor([precision_single(gts, n_gt_, k) for gts, n_gt_ in zip(gt_tops, n_gt)]))
+
     return precision
 
 
-def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_map(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -324,8 +335,6 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
         gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
                  ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
                  with the smallest distances to the corresponding queries.
-        n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
-              to ``i``-th query.
         top_k: Values of ``k`` to calculate ``map@k``.
 
     Returns:
@@ -371,14 +380,20 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
         [tensor([1., 0., 0.]), tensor([1.0000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
-    map = []
-    correct_preds = torch.cumsum(gt_tops.float(), dim=1)
-    for k in top_k:
-        positions = torch.arange(1, k + 1).unsqueeze(0).to(correct_preds.device)
-        n_k = correct_preds[:, k - 1].clone()
+
+    def map_single(is_correct, k_):
+        k_ = min(k_, len(is_correct))
+        correct_preds = torch.cumsum(is_correct, dim=0).float()
+        positions = torch.arange(1, k_ + 1).to(correct_preds.device)
+        n_k = correct_preds[k_ - 1].clone()
         n_k[n_k < 1] = torch.inf  # hack to avoid zero division
-        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / n_k)
+        value = torch.sum((correct_preds[:k_] / positions) * is_correct[:k_], dim=0) / n_k
+        return value
+
+    map = []
+    for k in top_k:
+        map.append(FloatTensor([map_single(is_correct, k) for is_correct in gt_tops]))
+
     return map
 
 
@@ -560,6 +575,7 @@ def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]
     Returns:
         Clipped value of ``arr``.
     """
+    # todo 522: rm?
     if any(a > max_el for a in arr):
         warnings.warn(
             f"The desired value of top_k can't be larger than {max_el}, but got {arr}. "

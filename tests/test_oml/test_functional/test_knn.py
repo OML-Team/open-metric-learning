@@ -1,3 +1,5 @@
+import math
+from functools import partial
 from random import randint
 from typing import Optional, Tuple
 
@@ -6,6 +8,7 @@ import torch
 from torch import FloatTensor, LongTensor
 
 from oml.functional.knn import batched_knn
+from oml.utils.misc import one_hot
 from oml.utils.misc_torch import pairwise_dist
 
 
@@ -103,3 +106,41 @@ def test_batched_knn(dataset_len: int, need_sequence: bool, need_gt: bool, separ
         if need_gt:
             for (ii, ii_) in zip(gt_ids, gt_ids_):
                 assert (ii == ii_).all()
+
+
+@pytest.mark.parametrize("knn_func", [batched_knn])  # todo
+def test_on_exact_case(knn_func):  # type: ignore
+    oh = partial(one_hot, dim=4)
+
+    embeddings = torch.stack([oh(0), oh(0), oh(0), oh(1), oh(1), oh(1)]).float()
+    labels_gt = torch.tensor([0, 0, 0, 1, 1, 1]).long()
+    sequence_id = torch.tensor([0, 1, 2, 3, 3, 4]).long()
+    ids_query = torch.tensor([0, 3]).long()
+    ids_gallery = torch.tensor([0, 1, 2, 3, 4, 5]).long()
+    top_n = 10
+
+    # expected results
+
+    distances = [
+        FloatTensor([0, 0, math.sqrt(2), math.sqrt(2), math.sqrt(2)]),
+        FloatTensor([0, math.sqrt(2), math.sqrt(2), math.sqrt(2)]),
+    ]
+
+    # todo: handle better sorting of the same distances
+    retrieved_ids = [LongTensor([1, 2, 3, 4, 5]), LongTensor([5, 1, 2, 0])]
+
+    gt_ids = [LongTensor([1, 2]), LongTensor([5])]
+
+    distances_, retrieved_ids_, gt_ids_ = knn_func(
+        embeddings=embeddings,
+        labels_gt=labels_gt,
+        ids_query=ids_query,
+        ids_gallery=ids_gallery,
+        top_n=top_n,
+        sequence_ids=sequence_id,
+    )
+
+    for d, d_, r, r_, g, g_ in zip(distances, distances_, retrieved_ids, retrieved_ids_, gt_ids, gt_ids_):
+        assert torch.allclose(d, d_)
+        assert (r == r_).all()
+        assert (g == g_).all()

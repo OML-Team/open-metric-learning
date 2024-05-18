@@ -2,6 +2,7 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import torch
 from torch import FloatTensor, LongTensor
 
 from oml.const import (
@@ -27,7 +28,9 @@ class RetrievalResults:
         distances: FloatTensor,
         retrieved_ids: LongTensor,
         gt_ids: List[LongTensor] = None,
-    ):
+    ):  # todo 522: types
+        # todo 522: docs
+
         """
         Args:
             distances: Sorted distances to the first ``top_n`` gallery items with the shape of ``[n_query, top_n]``.
@@ -37,11 +40,12 @@ class RetrievalResults:
                 have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
 
         """
-        assert distances.shape == retrieved_ids.shape
-        assert distances.ndim == 2
+        for d, r in zip(distances, retrieved_ids):
+            assert (d[:-1] <= d[1:]).all()  # distances must be sorted
+            assert len(d) == len(r) > 0
 
         if gt_ids is not None:
-            assert distances.shape[0] == len(gt_ids)
+            assert len(distances) == len(gt_ids)
             if any(len(x) == 0 for x in gt_ids):
                 raise RuntimeError("Every query must have at least one relevant gallery id.")
 
@@ -51,7 +55,7 @@ class RetrievalResults:
 
     @property
     def n_retrieved_items(self) -> int:
-        return self.retrieved_ids.shape[1]
+        return max(len(x) for x in self.retrieved_ids)
 
     @classmethod
     def compute_from_embeddings(
@@ -149,7 +153,7 @@ class RetrievalResults:
             plt.axis("off")
 
             # iterate over retrieved items
-            for j, ret_idx in enumerate(self.retrieved_ids[query_idx, :][:n_galleries_to_show]):
+            for j, ret_idx in enumerate(self.retrieved_ids[query_idx][:n_galleries_to_show]):
                 if self.gt_ids is not None:
                     color = GREEN if ret_idx in self.gt_ids[query_idx] else RED
                 else:
@@ -158,7 +162,7 @@ class RetrievalResults:
                 plt.subplot(n_rows, n_cols, i * (n_galleries_to_show + 1 + n_gt_to_show) + j + 2)
                 img = dataset.visualize(item=ii_gallery[ret_idx].item(), color=color)
 
-                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx, j].item(), 3)}")
+                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx][j].item(), 3)}")
                 plt.imshow(img)
                 plt.axis("off")
 

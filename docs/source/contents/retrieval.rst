@@ -15,7 +15,6 @@ RetrievalResults
 
     .. automethod:: __init__
     .. automethod:: compute_from_embeddings
-    .. automethod:: n_retrieved_items
     .. automethod:: visualize
 
 PairwiseReranker
