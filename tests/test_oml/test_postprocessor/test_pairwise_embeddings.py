@@ -18,6 +18,7 @@ from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
     EmbeddingsQueryGalleryLabeledDataset,
 )
+from tests.utils import check_if_lists_of_tensors_are_equal
 
 FEAT_SIZE = 8
 oh = partial(one_hot, dim=FEAT_SIZE)
@@ -75,12 +76,12 @@ def test_trivial_processing_does_not_change_distances_order(
 
     rr_upd = processor.process(rr, dataset=dataset)
 
-    assert (rr.retrieved_ids == rr_upd.retrieved_ids).all()
+    assert check_if_lists_of_tensors_are_equal(rr.retrieved_ids, rr_upd.retrieved_ids)
 
     if pairwise_distances_bias == 0:
-        assert torch.allclose(rr.distances, rr_upd.distances)
+        assert check_if_lists_of_tensors_are_equal(rr.distances, rr_upd.distances)
     else:
-        assert not torch.allclose(rr.distances, rr_upd.distances)
+        assert not check_if_lists_of_tensors_are_equal(rr.distances, rr_upd.distances)
 
 
 def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
@@ -116,13 +117,14 @@ def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: f
         dataset, embeddings = perfect_case()
         rr = RetrievalResults.compute_from_embeddings(embeddings.float(), dataset, n_items_to_retrieve=100)
 
-        nq, ng = rr.distances.shape
+        nq = len(rr.distances)
+        ng = len(rr.distances[0])
 
         # Let's randomly break the case
         for _ in range(5):
             i0, j0 = randint(0, nq - 1), randint(0, ng - 1)
             i1, j1 = randint(0, nq - 1), randint(0, ng - 1)
-            rr.retrieved_ids[i0, j0] = rr.retrieved_ids[i1, j1]
+            rr.retrieved_ids[i0][j0] = rr.retrieved_ids[i1][j1]
 
         # As mentioned before, for this test the exact values of parameters don't matter
         top_k = (randint(1, ng - 1),)
@@ -192,5 +194,6 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
     assert metrics_before == metrics_after
 
     # also check that we only re-ranked the first top_n items
-    assert (rr.retrieved_ids[:, :top_n] != rr_upd.retrieved_ids[:, :top_n]).any()
-    assert (rr.retrieved_ids[:, top_n:] == rr_upd.retrieved_ids[:, top_n:]).all()
+    for i in range(len(rr.retrieved_ids)):
+        assert (rr.retrieved_ids[i][:top_n] != rr_upd.retrieved_ids[i][:top_n]).any()
+        assert (rr.retrieved_ids[i][top_n:] == rr_upd.retrieved_ids[i][top_n:]).all()

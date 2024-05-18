@@ -15,9 +15,8 @@ def batched_knn(
     sequence_ids: Optional[LongTensor] = None,
     labels_gt: Optional[LongTensor] = None,
     bs: int = BS_KNN,
-) -> Tuple[FloatTensor, LongTensor, Optional[List[LongTensor]]]:  # todo 522: types
+) -> Tuple[List[FloatTensor], List[LongTensor], Optional[List[LongTensor]]]:
     """
-    # todo 522: docs
 
     Args:
         embeddings: Matrix with the shape of ``[L, dim]``
@@ -30,11 +29,11 @@ def batched_knn(
         bs: Batch size for computing distances to avoid OOM errors when processing the whole matrix at once.
 
     Returns:
-        distances: Sorted distances from every query to the closest ``top_n`` galleries with the size of ``(Q, top_n)``.
-        retrieved_ids: The corresponding ids of gallery items with the shape of ``(Q, top_n)``.
-                       Each element is within the range ``(0, G - 1)``.
-        gt_ids: Ids of the gallery items relevant to every query. Each element is within the range ``(0, G - 1)``.
-                It's only computed if ``labels_gt`` is provided.
+        distances: Sorted distances from queries to the first gallery items with the size of ``Q``.
+        retrieved_ids: First gallery indices retrieved for every query with the size of ``Q``.
+                Every index is within the range ``(0, G - 1)``.
+        gt_ids: Gallery indices relevant to every query with the size of ``Q``.
+                Every element is within the range ``(0, G - 1)``
 
     """
     assert (ids_query.ndim == 1) and (ids_gallery.ndim == 1) and (embeddings.ndim == 2)
@@ -48,6 +47,7 @@ def batched_knn(
     emb_g = embeddings[ids_gallery]
 
     nq = len(ids_query)
+
     retrieved_ids = []
     distances = []
     gt_ids = []
@@ -76,7 +76,6 @@ def batched_knn(
         distances_b_sorted, retrieved_ids_b = torch.topk(distances_b, k=top_n, largest=False, sorted=True)
         for k, (dist, ids) in enumerate(zip(distances_b_sorted, retrieved_ids_b)):
             mask_to_keep = ~dist.isinf()
-
             distances.append(dist[mask_to_keep].view(-1))
             retrieved_ids.append(ids[mask_to_keep].view(-1))
 

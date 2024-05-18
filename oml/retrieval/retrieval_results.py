@@ -2,7 +2,6 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import torch
 from torch import FloatTensor, LongTensor
 
 from oml.const import (
@@ -25,23 +24,22 @@ from oml.interfaces.datasets import (
 class RetrievalResults:
     def __init__(
         self,
-        distances: FloatTensor,
-        retrieved_ids: LongTensor,
+        distances: List[FloatTensor],
+        retrieved_ids: List[LongTensor],
         gt_ids: List[LongTensor] = None,
-    ):  # todo 522: types
-        # todo 522: docs
-
+    ):
         """
         Args:
-            distances: Sorted distances to the first ``top_n`` gallery items with the shape of ``[n_query, top_n]``.
-            retrieved_ids: Top N gallery ids retrieved for every query with the shape of ``[n_query, top_n]``.
-                Every element is within the range ``(0, n_gallery - 1)``.
-            gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
-                have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
+            distances: Sorted distances from queries to the first gallery items with the size of ``n_query``.
+            retrieved_ids: First gallery indices retrieved for every query with the size of ``n_query``.
+                Every index is within the range ``(0, n_gallery - 1)``.
+            gt_ids: Gallery indices relevant to every query with the size of ``n_query``.
+                Every element is within the range ``(0, n_gallery - 1)``
 
         """
         for d, r in zip(distances, retrieved_ids):
-            assert (d[:-1] <= d[1:]).all()  # distances must be sorted
+            assert (d[:-1] <= d[1:]).all(), "Distances must be sorted."
+            assert len(set(r)) == len(r), "Retrieved ids must be unique."
             assert len(d) == len(r) > 0
 
         if gt_ids is not None:
@@ -55,6 +53,11 @@ class RetrievalResults:
 
     @property
     def n_retrieved_items(self) -> int:
+        """
+        Returns: Number of items retrieved for each query. If queries have different number of retrieved items,
+            returns the maximum of them.
+
+        """
         return max(len(x) for x in self.retrieved_ids)
 
     @classmethod
@@ -68,8 +71,9 @@ class RetrievalResults:
         Args:
             embeddings: The result of inference with the shape of ``[dataset_len, emb_dim]``.
             dataset: Dataset having query/gallery split.
-            n_items_to_retrieve: Number of the closest gallery items to retrieve.
-                                 It may be clipped by gallery size if needed.
+            n_items_to_retrieve: Number of the closest gallery items to retrieve. It may be clipped by
+                gallery size if needed. Note, some queries may get less than this number of retrieved items if they
+                don't have enough gallery items available.
 
         """
         assert len(embeddings) == len(dataset), "Embeddings and dataset must have the same size."
@@ -93,17 +97,19 @@ class RetrievalResults:
         return RetrievalResults(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
 
     def __str__(self) -> str:
+        max_el_to_show = 100
+
         txt = (
             f"You retrieved {self.n_retrieved_items} items.\n"
-            f"Distances to the retrieved items:\n{self.distances}.\n"
-            f"Ids of the retrieved gallery items:\n{self.retrieved_ids}.\n"
+            f"Distances to the retrieved items:\n{self.distances[:max_el_to_show]}.\n"
+            f"Ids of the retrieved gallery items:\n{self.retrieved_ids[:max_el_to_show]}.\n"
         )
 
         if self.gt_ids is None:
             txt += "Ground truths are unknown.\n"
         else:
             gt_ids_list = [x.tolist() for x in self.gt_ids]
-            txt += f"Ground truth gallery ids are:\n{gt_ids_list}.\n"
+            txt += f"Ground truth gallery ids are:\n{gt_ids_list[:max_el_to_show]}.\n"
 
         return txt
 

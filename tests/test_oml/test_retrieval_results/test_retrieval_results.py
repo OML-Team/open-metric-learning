@@ -73,9 +73,11 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
         top_n = 2
         rr = RetrievalResults.compute_from_embeddings(embeddings=embeddings, dataset=dataset, n_items_to_retrieve=top_n)
 
-        assert rr.distances.shape == (n_query, top_n)
-        assert rr.retrieved_ids.shape == (n_query, top_n)
-        assert torch.allclose(rr.distances.clone().sort()[0], rr.distances)
+        assert len(rr.distances) == n_query
+
+        for dist in rr.distances:
+            assert (dist[:-1] <= dist[1:]).all()
+            assert len(dist) == top_n
 
         if with_gt_labels:
             assert rr.gt_ids is not None
@@ -98,6 +100,6 @@ def test_retrieval_results_creation() -> None:
     with pytest.raises(RuntimeError):
         RetrievalResults(
             distances=torch.randn((2, 3)).float(),
-            retrieved_ids=LongTensor([[1, 0, 2], [4, 0, 1]]),
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 0, 1])],
             gt_ids=[LongTensor([0, 1, 3]), []],
         )
