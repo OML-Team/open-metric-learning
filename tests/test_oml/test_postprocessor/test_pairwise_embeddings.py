@@ -38,7 +38,12 @@ def independent_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
 
     embeddings = normalise(torch.randn((sz, feat_dim))).float()
 
-    dataset = EmbeddingsQueryGalleryDataset(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+    dataset = EmbeddingsQueryGalleryDataset(
+        embeddings=embeddings,
+        is_query=is_query,
+        is_gallery=is_gallery,
+        sequence=torch.tensor([0, 1, 0, 0, 4, 5, 4]).long(),
+    )
 
     embeddings_inference = embeddings.clone()  # pretend it's our inference results
 
@@ -53,7 +58,10 @@ def shared_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
     embeddings = normalise(torch.randn((sz, feat_dim))).float()
 
     dataset = EmbeddingsQueryGalleryDataset(
-        embeddings=embeddings, is_query=torch.ones(sz).bool(), is_gallery=torch.ones(sz).bool()
+        embeddings=embeddings,
+        is_query=torch.ones(sz).bool(),
+        is_gallery=torch.ones(sz).bool(),
+        sequence=torch.tensor([0, 1, 0, 0, 4, 5, 4]).long(),
     )
 
     embeddings_inference = embeddings.clone()  # pretend it's our inference results
@@ -93,6 +101,7 @@ def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
         labels=torch.tensor([1, 2, 3, 1, 2, 1, 2, 3]).long(),
         is_query=torch.tensor([1, 1, 1, 1, 0, 0, 0, 0]).bool(),
         is_gallery=torch.tensor([0, 0, 0, 0, 1, 1, 1, 1]).bool(),
+        sequence=torch.tensor([0, 1, 2, 3, 0, 1, 0, 0]).long(),
     )
 
     embeddings_inference = embeddings.clone()
@@ -119,17 +128,16 @@ def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: f
         rr = RetrievalResults.compute_from_embeddings(embeddings.float(), dataset, n_items_to_retrieve=100)
 
         nq = len(rr.distances)
-        ng = len(rr.distances[0])
 
-        # Let's randomly break the case
-        for _ in range(5):
+        # Let's randomly break the retrieved results for 2 queries
+        for _ in range(2):
             iq = random.randint(0, nq - 1)
-            perm = torch.randperm(len(rr.retrieved_ids))
+            perm = torch.randperm(len(rr.retrieved_ids[iq]))
             rr.retrieved_ids[iq][:] = rr.retrieved_ids[iq][perm]
 
         # As mentioned before, for this test the exact values of parameters don't matter
-        top_k = (randint(1, ng - 1),)
-        top_n = randint(2, 10)
+        top_k = (randint(1, 5),)
+        top_n = randint(2, 6)
 
         args = {"precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
 

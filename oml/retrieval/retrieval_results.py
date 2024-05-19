@@ -86,7 +86,8 @@ class RetrievalResults:
         assert len(embeddings) == len(dataset), "Embeddings and dataset must have the same size."
 
         if SEQUENCE_COLUMN in dataset.extra_data:
-            sequence_ids = LongTensor(pd.factorize(dataset.extra_data[SEQUENCE_COLUMN])[0])
+            sequence = pd.Series(dataset.extra_data[SEQUENCE_COLUMN])
+            sequence_ids = LongTensor(pd.factorize(sequence)[0])
         else:
             sequence_ids = None
 

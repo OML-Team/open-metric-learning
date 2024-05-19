@@ -135,7 +135,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
             distances_upd += [
                 cat_two_sorted_tensors_and_keep_it_sorted(
                     dist_recomputed_q.view(1, -1), dist_orig[top_n:].view(1, -1)
-                ).squeeze()
+                ).view(-1)
             ]
             retrieved_ids_upd += [concat([ri_orig[ii_rerank], ri_orig[top_n:]])]
 
