@@ -44,8 +44,8 @@ class RetrievalResults:
                 raise RuntimeError("Distances must be sorted.")
             if not len(torch.unique(r)) == len(r):
                 raise RuntimeError("Retrieved ids must be unique.")
-            if not len(d) == len(r) > 0:
-                raise RuntimeError("Number of distances and retrieved items must match and be greater than zero.")
+            if not len(d) == len(r):
+                raise RuntimeError("Number of distances and retrieved items must match.")
             if (d.ndim != 1) or (r.ndim != 1):
                 raise RuntimeError("Distances and retrieved items must be 1-d tensors.")
 
@@ -142,6 +142,8 @@ class RetrievalResults:
             raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")
         if not isinstance(dataset, IQueryGalleryDataset):
             raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {type(dataset)}.")
+        if len(dataset.get_query_ids()) != len(self.retrieved_ids):
+            raise RuntimeError("Number of queries in RetrievalResults and dataset must match.")
 
         if verbose:
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")
@@ -149,7 +151,7 @@ class RetrievalResults:
         ii_query = dataset.get_query_ids()
         ii_gallery = dataset.get_gallery_ids()
 
-        n_galleries_to_show = min(n_galleries_to_show, self.n_retrieved_items)
+        n_galleries_to_show = min(n_galleries_to_show, max(len(self.retrieved_ids[iq]) for iq in query_ids))
         n_gt_to_show = n_gt_to_show if (self.gt_ids is not None) else 0
 
         fig = plt.figure(figsize=(16, 16 / (n_galleries_to_show + n_gt_to_show + 1) * len(query_ids)))

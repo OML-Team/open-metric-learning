@@ -96,6 +96,20 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
     assert True
 
 
+def test_visualisation_when_retrieved_different_number_of_items() -> None:
+    datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
+    # just some random RR with different shapes
+    rr = RetrievalResults(
+        distances=[FloatTensor([0.1, 0.2]), FloatTensor([0.3, 0.4, 0.5]), FloatTensor([0.1]), FloatTensor([0.5])],
+        retrieved_ids=[LongTensor([1, 0]), LongTensor([1, 2, 0]), LongTensor([2]), LongTensor([1])],
+        gt_ids=[LongTensor([0]), LongTensor([1]), LongTensor([1, 2]), LongTensor([0])],
+    )
+
+    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0])
+    fig.show()
+    plt.close(fig=fig)
+
+
 def test_retrieval_results_creation() -> None:
     # there is a query with no gt
     with pytest.raises(RuntimeError):
@@ -118,14 +132,6 @@ def test_retrieval_results_creation() -> None:
         RetrievalResults(
             distances=[torch.arange(3).float(), torch.arange(3).float()],
             retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 4, 4])],
-            gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
-        )
-
-    # empty retrieved ids and distances
-    with pytest.raises(RuntimeError):
-        RetrievalResults(
-            distances=[torch.arange(3).float(), FloatTensor([])],
-            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([])],
             gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
         )
 

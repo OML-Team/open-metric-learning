@@ -125,14 +125,12 @@ def test_on_exact_case(knn_func):  # type: ignore
     ids_gallery = torch.tensor([0, 1, 2, 3, 4, 5]).long()
     top_n = 10
 
-    # expected results
-
     distances_expected = [
         FloatTensor([0, 0, math.sqrt(2), math.sqrt(2), math.sqrt(2)]),
         FloatTensor([0, math.sqrt(2), math.sqrt(2), math.sqrt(2)]),
     ]
 
-    # todo: handle better sorting of the same distances
+    # todo: handle better sorting of the same distances because it may change with seed
     retrieved_ids_expected = [LongTensor([1, 2, 3, 4, 5]), LongTensor([5, 1, 2, 0])]
 
     gt_ids_expected = [LongTensor([1, 2]), LongTensor([5])]
