@@ -4,11 +4,13 @@ on:
   pull_request:
     branches:
       - main
+      - oml_3.0_release  # todo 522
     paths-ignore:
       - 'README.md'
   push:
     branches:
       - main
+      - oml_3.0_release  # todo 522
     paths-ignore:
       - 'README.md'
 

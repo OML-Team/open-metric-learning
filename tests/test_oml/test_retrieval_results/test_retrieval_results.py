@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-from torch import LongTensor, nn
+from torch import FloatTensor, LongTensor, nn
 
 from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, PATHS_COLUMN
 from oml.datasets.images import (
@@ -97,9 +97,42 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
 
 
 def test_retrieval_results_creation() -> None:
+    # there is a query with no gt
     with pytest.raises(RuntimeError):
         RetrievalResults(
-            distances=torch.randn((2, 3)).float(),
+            distances=[torch.arange(3).float(), torch.arange(3).float()],
             retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 0, 1])],
             gt_ids=[LongTensor([0, 1, 3]), []],
+        )
+
+    # distances are not sorted
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[FloatTensor([0, 1, 0]), FloatTensor([0, 1, 0])],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 0, 1])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([2])],
+        )
+
+    # retrieved ids are not unique
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[torch.arange(3).float(), torch.arange(3).float()],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 4, 4])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
+        )
+
+    # empty retrieved ids and distances
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[torch.arange(3).float(), FloatTensor([])],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
+        )
+
+    # retrieved ids and distances have different size
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[torch.arange(3).float(), FloatTensor([0.5, 0.6])],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([1, 2, 1])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
         )

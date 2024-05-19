@@ -2,6 +2,7 @@ from typing import List, Sequence
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import torch
 from torch import FloatTensor, LongTensor
 
 from oml.const import (
@@ -38,9 +39,12 @@ class RetrievalResults:
 
         """
         for d, r in zip(distances, retrieved_ids):
-            assert (d[:-1] <= d[1:]).all(), "Distances must be sorted."
-            assert len(set(r)) == len(r), "Retrieved ids must be unique."
-            assert len(d) == len(r) > 0, "Number of distances and retrieved items must match."
+            if not (d[:-1] <= d[1:]).all():
+                raise RuntimeError("Distances must be sorted.")
+            if not len(torch.unique(r)) == len(r):
+                raise RuntimeError("Retrieved ids must be unique.")
+            if not len(d) == len(r) > 0:
+                raise RuntimeError("Number of distances and retrieved items must match and be greater than zero.")
 
         if gt_ids is not None:
             assert len(distances) == len(gt_ids)

@@ -1,3 +1,4 @@
+import random
 from functools import partial
 from random import randint
 from typing import Tuple
@@ -61,7 +62,7 @@ def shared_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("top_n", [2, 5])
+@pytest.mark.parametrize("top_n", [2, 5, 100])
 @pytest.mark.parametrize("pairwise_distances_bias", [0, -5, +5])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
 def test_trivial_processing_does_not_change_distances_order(
@@ -122,9 +123,9 @@ def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: f
 
         # Let's randomly break the case
         for _ in range(5):
-            i0, j0 = randint(0, nq - 1), randint(0, ng - 1)
-            i1, j1 = randint(0, nq - 1), randint(0, ng - 1)
-            rr.retrieved_ids[i0][j0] = rr.retrieved_ids[i1][j1]
+            iq = random.randint(0, nq - 1)
+            perm = torch.randperm(len(rr.retrieved_ids))
+            rr.retrieved_ids[iq][:] = rr.retrieved_ids[iq][perm]
 
         # As mentioned before, for this test the exact values of parameters don't matter
         top_k = (randint(1, ng - 1),)
@@ -169,13 +170,11 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
 
     set_global_seed(42)
 
-    # let's get some random inputs
     dataset, embeddings = perfect_case()
-    embeddings = torch.randn_like(embeddings).float()
 
     top_n = min(top_n, embeddings.shape[1])
 
-    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset)
+    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=100)
 
     args = {
         "cmc_top_k": (top_n,),
@@ -193,7 +192,10 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
 
     assert metrics_before == metrics_after
 
-    # also check that we only re-ranked the first top_n items
-    for i in range(len(rr.retrieved_ids)):
-        assert (rr.retrieved_ids[i][:top_n] != rr_upd.retrieved_ids[i][:top_n]).any()
-        assert (rr.retrieved_ids[i][top_n:] == rr_upd.retrieved_ids[i][top_n:]).all()
+    top_ids = [r[:top_n] for r in rr.retrieved_ids]
+    top_ids_upd = [r[:top_n] for r in rr_upd.retrieved_ids]
+    assert not check_if_sequence_of_tensors_are_equal(top_ids, top_ids_upd)
+
+    last_ids = [r[top_n:] for r in rr.retrieved_ids]
+    last_ids_upd = [r[top_n:] for r in rr_upd.retrieved_ids]
+    assert check_if_sequence_of_tensors_are_equal(last_ids, last_ids_upd)

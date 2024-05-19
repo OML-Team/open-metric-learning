@@ -99,8 +99,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         distances_upd, retrieved_ids_upd = self._process_raw(
             retrieved_ids=rr.retrieved_ids, distances=rr.distances, dataset=dataset
         )
-        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd)
-        rr_upd.gt_ids = gt_ids
+        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd, gt_ids=gt_ids)
         return rr_upd
 
     def _process_raw(
@@ -144,6 +143,9 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
         assert distances_upd.shape == distances.shape
         assert retrieved_ids_upd.shape == retrieved_ids.shape
+
+        distances_upd = [d for d in distances_upd]
+        retrieved_ids_upd = [r for r in retrieved_ids_upd]
 
         return distances_upd, retrieved_ids_upd
 

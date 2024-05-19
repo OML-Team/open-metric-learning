@@ -53,8 +53,8 @@ def calc_retrieval_metrics(
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map = calc_map(gt_tops, map_top_k)
-        metrics["map"] = dict(zip(map_top_k, map))
+        map_ = calc_map(gt_tops, map_top_k)
+        metrics["map"] = dict(zip(map_top_k, map_))
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -78,7 +78,7 @@ def calc_retrieval_metrics_on_full(
 
     max_k_arg = max([*cmc_top_k, *precision_top_k, *map_top_k])
     k = min(distances.shape[1], max_k_arg)
-    _, retrieved_ids = torch.topk(distances, largest=False, k=k)  # todo 522: adapt types
+    _, retrieved_ids = torch.topk(distances, largest=False, k=k)
 
     gt_ids = [LongTensor(row.nonzero()).view(-1) for row in mask_gt]
 
@@ -369,8 +369,7 @@ def calc_map(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[Floa
         ...    BoolTensor([0, 1]),
         ...    BoolTensor([0, 0, 0, 0])
         ... ]
-        >>> n_gt = [2, 3, 5]
-        >>> calc_map(gt_tops, n_gt, top_k=(1, 2))
+        >>> calc_map(gt_tops, top_k=(1, 2))
         [tensor([1., 0., 0.]), tensor([1.0000, 0.5000, 0.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
@@ -384,11 +383,11 @@ def calc_map(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[Floa
         value = torch.sum((correct_preds[:k_] / positions) * is_correct[:k_], dim=0) / n_k
         return float(value)
 
-    map = []
+    map_ = []
     for k in top_k:
-        map.append(FloatTensor([map_single(is_correct, k) for is_correct in gt_tops]))
+        map_.append(FloatTensor([map_single(is_correct, k) for is_correct in gt_tops]))
 
-    return map
+    return map_
 
 
 def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> Tensor:
