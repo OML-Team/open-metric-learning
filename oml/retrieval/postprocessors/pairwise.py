@@ -94,6 +94,10 @@ class PairwiseReranker(IRetrievalPostprocessor):
             # Note, if new and old distances are already sorted, we don't apply any scaling.
 
         """
+        assert len(dataset.get_query_ids()) == len(
+            rr.retrieved_ids
+        ), "RetrievalResults and dataset must have the same number of queries."
+
         gt_ids = rr.gt_ids
         distances_upd, retrieved_ids_upd = self._process_raw(
             retrieved_ids=rr.retrieved_ids, distances=rr.distances, dataset=dataset
@@ -104,14 +108,13 @@ class PairwiseReranker(IRetrievalPostprocessor):
     def _process_raw(
         self, retrieved_ids: Sequence[LongTensor], distances: Sequence[FloatTensor], dataset: IQueryGalleryDataset
     ) -> Tuple[Sequence[FloatTensor], Sequence[LongTensor]]:
-        top_n = self.top_n
 
         # let's make list of pairs of queries and top_n gallery items for which we need to recompute distances
         # since queries may have different number of retrieved items, we also need bounds variable
         pairs = []
         bounds = [0]
         for iq, ids_gallery in enumerate(retrieved_ids):
-            ids_gallery_global = dataset.get_gallery_ids()[ids_gallery][:top_n].tolist()
+            ids_gallery_global = dataset.get_gallery_ids()[ids_gallery][: self.top_n].tolist()
             ids_query_global = [dataset.get_query_ids()[iq].item()] * len(ids_gallery_global)
 
             pairs.extend(list(zip(ids_query_global, ids_gallery_global)))
@@ -134,10 +137,10 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
             distances_upd += [
                 cat_two_sorted_tensors_and_keep_it_sorted(
-                    dist_recomputed_q.view(1, -1), dist_orig[top_n:].view(1, -1)
+                    dist_recomputed_q.view(1, -1), dist_orig[self.top_n :].view(1, -1)
                 ).view(-1)
             ]
-            retrieved_ids_upd += [concat([ri_orig[ii_rerank], ri_orig[top_n:]])]
+            retrieved_ids_upd += [concat([ri_orig[ii_rerank], ri_orig[self.top_n :]])]
 
         assert len(retrieved_ids_upd) == len(retrieved_ids) == len(distances) == len(distances_upd)
 
