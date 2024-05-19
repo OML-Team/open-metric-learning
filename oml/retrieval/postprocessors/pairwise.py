@@ -1,7 +1,7 @@
-from typing import Tuple
+from typing import Sequence, Tuple
 
 import torch
-from torch import FloatTensor, LongTensor, Tensor
+from torch import FloatTensor, LongTensor
 
 from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
@@ -36,7 +36,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         """
         assert top_n > 1, "The number of the retrieved results for each query to process has to be greater than 1."
 
-        self.top_n = top_n
+        self._top_n = top_n
         self.model = pairwise_model
 
         self.num_workers = num_workers
@@ -44,73 +44,75 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self.verbose = verbose
         self.use_fp16 = use_fp16
 
+    @property
+    def top_n(self) -> int:
+        return self._top_n
+
     def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:  # type: ignore
-        """
-        See `self.process_raw()` docs.
-
-        """
-        gt_ids = rr.gt_ids
-        distances_upd, retrieved_ids_upd = self.process_raw(
-            retrieved_ids=rr.retrieved_ids, distances=rr.distances, dataset=dataset
-        )
-        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd)
-        rr_upd.gt_ids = gt_ids
-        return rr_upd
-
-    def process_raw(
-        self, retrieved_ids: Tensor, distances: Tensor, dataset: IQueryGalleryDataset
-    ) -> Tuple[FloatTensor, LongTensor]:
         """
 
         Args:
-            retrieved_ids: Ids of galleries closest to every query with the shape of ``[n_query, n_retrieved]`` sorted
-                           by their distances.
-            distances: The corresponding distances (in sorted order).
+            rr: RetrievalResults object.
             dataset: Dataset having query/gallery split.
 
         Returns:
-            After model is applied to the ``top_n`` retrieved items, the updated ids and distances are returned.
-            Thus, you can expect permutation among first ``top_n`` ids and distances, but the rest remains untouched.
+            After model is applied to the ``top_n`` retrieved items, the updated RetrievalResults are returned.
+            In other words, we permute the first ``top_n`` items, but the rest remains untouched.
 
         **Example 1** (for one query):
 
         .. code-block:: python
 
-            retrieved_ids = [3,   2,   1,   0,   4  ]
-            distances     = [0.1, 0.2, 0.5, 0.6, 0.7]
+            rr.retrieved_ids = [[3,   2,   1,   0,   4  ]]
+            rr.distances     = [[0.1, 0.2, 0.5, 0.6, 0.7]]
 
             # Let's say a postprocessor has been applied to the
             # first 3 elements and the new distances are: [0.4, 0.2, 0.3]
 
             # In this case, the updated values will be:
-            retrieved_ids = [2,   1,   3,   0,   4  ]
-            distances:    = [0.2, 0.3, 0.4, 0.6, 0.7]
+            rr.retrieved_ids = [[2,   1,   3,   0,   4  ]]
+            rr.distances:    = [[0.2, 0.3, 0.4, 0.6, 0.7]]
 
         **Example 2** (for one query):
 
         .. code-block:: python
 
             # Note, the new distances to the top_n items produced by the pairwise model
-            #  may be rescaled to keep the distances order. Here is an example:
-            original_distances = [0.1, 0.2, 0.3, 0.5, 0.6]
+            # may be rescaled to keep the distances order. Here is an example:
+            rr.distances = [0.1, 0.2, 0.3, 0.5, 0.6]
             top_n = 3
 
             # Imagine, the postprocessor didn't change the order of the first 3 items
             # (it's just a convenient example, the general logic remains the same),
             # however the new values have a bigger scale:
-            distances_upd = [1, 2, 5, 0.5, 0.6]
+            distances_new = [1, 2, 5, 0.5, 0.6]
 
             # Thus, we need to downscale the first 3 distances, so they are lower than 0.5:
             scale = 5 / 0.5 = 0.1
             # Finally, let's apply the found scale to the top 3 distances:
-            distances_upd_scaled = [0.1, 0.2, 0.5, 0.5, 0.6]
+            rr_upd.distances = [0.1, 0.2, 0.5, 0.5, 0.6]
 
             # Note, if new and old distances are already sorted, we don't apply any scaling.
 
         """
-        assert retrieved_ids.shape == distances.shape
-        assert len(retrieved_ids) == len(dataset.get_query_ids())
-        assert retrieved_ids.shape[1] <= len(dataset.get_gallery_ids())
+        gt_ids = rr.gt_ids
+        distances_upd, retrieved_ids_upd = self._process_raw(
+            retrieved_ids=rr.retrieved_ids, distances=rr.distances, dataset=dataset
+        )
+        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd)
+        rr_upd.gt_ids = gt_ids
+        return rr_upd
+
+    def _process_raw(
+        self, retrieved_ids: Sequence[LongTensor], distances: Sequence[FloatTensor], dataset: IQueryGalleryDataset
+    ) -> Tuple[Sequence[FloatTensor], Sequence[LongTensor]]:
+
+        if len(set(len(r) for r in retrieved_ids)) != 1:
+            # todo 522: implement "else" logic
+            raise RuntimeError("We don't support the case when queries have different number of retrieved items.")
+
+        distances = torch.stack(distances)
+        retrieved_ids = torch.stack(retrieved_ids)
 
         top_n = min(self.top_n, distances.shape[1])
 

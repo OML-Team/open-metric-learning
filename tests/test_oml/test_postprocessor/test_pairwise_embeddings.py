@@ -18,7 +18,7 @@ from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
     EmbeddingsQueryGalleryLabeledDataset,
 )
-from tests.utils import check_if_lists_of_tensors_are_equal
+from tests.utils import check_if_sequence_of_tensors_are_equal
 
 FEAT_SIZE = 8
 oh = partial(one_hot, dim=FEAT_SIZE)
@@ -76,12 +76,12 @@ def test_trivial_processing_does_not_change_distances_order(
 
     rr_upd = processor.process(rr, dataset=dataset)
 
-    assert check_if_lists_of_tensors_are_equal(rr.retrieved_ids, rr_upd.retrieved_ids)
+    assert check_if_sequence_of_tensors_are_equal(rr.retrieved_ids, rr_upd.retrieved_ids)
 
     if pairwise_distances_bias == 0:
-        assert check_if_lists_of_tensors_are_equal(rr.distances, rr_upd.distances)
+        assert check_if_sequence_of_tensors_are_equal(rr.distances, rr_upd.distances)
     else:
-        assert not check_if_lists_of_tensors_are_equal(rr.distances, rr_upd.distances)
+        assert not check_if_sequence_of_tensors_are_equal(rr.distances, rr_upd.distances)
 
 
 def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:

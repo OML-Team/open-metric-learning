@@ -12,8 +12,8 @@ TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
 
 def calc_retrieval_metrics(
-    retrieved_ids: List[LongTensor],
-    gt_ids: List[LongTensor],
+    retrieved_ids: Sequence[LongTensor],
+    gt_ids: Sequence[LongTensor],
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -39,7 +39,7 @@ def calc_retrieval_metrics(
     assert len(retrieved_ids) == len(gt_ids)
 
     # let's mark every correctly retrieved item as True and vice versa
-    gt_tops = [isin(r, g).bool() for r, g in zip(retrieved_ids, gt_ids)]
+    gt_tops = tuple([isin(r, g).bool() for r, g in zip(retrieved_ids, gt_ids)])
     n_gts = [len(ids) for ids in gt_ids]
 
     metrics: TMetricsDict = defaultdict(dict)
@@ -191,7 +191,7 @@ def calc_mask_to_ignore(
     return mask_to_ignore
 
 
-def calc_cmc(gt_tops: List[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_cmc(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
@@ -235,7 +235,7 @@ def calc_cmc(gt_tops: List[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTen
     return cmc
 
 
-def calc_precision(gt_tops: List[BoolTensor], n_gt: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_precision(gt_tops: Sequence[BoolTensor], n_gt: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -319,7 +319,7 @@ def calc_precision(gt_tops: List[BoolTensor], n_gt: List[int], top_k: Tuple[int,
     return precision
 
 
-def calc_map(gt_tops: List[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_map(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 

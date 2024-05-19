@@ -25,5 +25,4 @@ PairwiseReranker
 
     .. automethod:: __init__
     .. automethod:: process
-    .. automethod:: process_raw
-
+    .. automethod:: top_n

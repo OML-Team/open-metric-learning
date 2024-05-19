@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import torch
 from torch import BoolTensor, FloatTensor, LongTensor
@@ -15,7 +15,7 @@ def batched_knn(
     sequence_ids: Optional[LongTensor] = None,
     labels_gt: Optional[LongTensor] = None,
     bs: int = BS_KNN,
-) -> Tuple[List[FloatTensor], List[LongTensor], Optional[List[LongTensor]]]:
+) -> Tuple[Sequence[FloatTensor], Sequence[LongTensor], Optional[Sequence[LongTensor]]]:
     """
 
     Args:
@@ -79,7 +79,7 @@ def batched_knn(
             distances.append(dist[mask_to_keep].view(-1))
             retrieved_ids.append(ids[mask_to_keep].view(-1))
 
-    return distances, retrieved_ids, gt_ids or None
+    return tuple(distances), tuple(retrieved_ids), tuple(gt_ids) or None
 
 
 __all__ = ["batched_knn"]

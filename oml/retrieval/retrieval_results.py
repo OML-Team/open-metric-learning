@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -24,9 +24,9 @@ from oml.interfaces.datasets import (
 class RetrievalResults:
     def __init__(
         self,
-        distances: List[FloatTensor],
-        retrieved_ids: List[LongTensor],
-        gt_ids: List[LongTensor] = None,
+        distances: Sequence[FloatTensor],
+        retrieved_ids: Sequence[LongTensor],
+        gt_ids: Sequence[LongTensor] = None,
     ):
         """
         Args:
@@ -40,7 +40,7 @@ class RetrievalResults:
         for d, r in zip(distances, retrieved_ids):
             assert (d[:-1] <= d[1:]).all(), "Distances must be sorted."
             assert len(set(r)) == len(r), "Retrieved ids must be unique."
-            assert len(d) == len(r) > 0
+            assert len(d) == len(r) > 0, "Number of distances and retrieved items must match."
 
         if gt_ids is not None:
             assert len(distances) == len(gt_ids)

@@ -14,7 +14,7 @@ from oml.retrieval.retrieval_results import RetrievalResults
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.transforms.images.utils import TTransforms
 from oml.utils.download_mock_dataset import download_mock_dataset
-from tests.utils import check_if_lists_of_tensors_are_equal
+from tests.utils import check_if_sequence_of_tensors_are_equal
 
 
 def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[RetrievalResults, IQueryGalleryDataset]:
@@ -49,9 +49,9 @@ def test_trivial_processing_does_not_change_distances_order(top_n: int, pairwise
     )
     rr_upd = postprocessor.process(rr, dataset=dataset)
 
-    assert check_if_lists_of_tensors_are_equal(rr.retrieved_ids, rr_upd.retrieved_ids)
+    assert check_if_sequence_of_tensors_are_equal(rr.retrieved_ids, rr_upd.retrieved_ids)
 
     if pairwise_distances_bias == 0:
-        assert check_if_lists_of_tensors_are_equal(rr_upd.distances, rr.distances)
+        assert check_if_sequence_of_tensors_are_equal(rr_upd.distances, rr.distances)
     else:
-        assert not check_if_lists_of_tensors_are_equal(rr_upd.distances, rr.distances)
+        assert not check_if_sequence_of_tensors_are_equal(rr_upd.distances, rr.distances)
