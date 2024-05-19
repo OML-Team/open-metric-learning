@@ -49,4 +49,4 @@ OML is a PyTorch-based framework to train and validate the models producing high
    contents/lightning
    contents/utils
    contents/ddp
-   contents/postprocessing
+   contents/retrieval

@@ -1,3 +1,4 @@
+from pprint import pformat
 from typing import List, Sequence
 
 import matplotlib.pyplot as plt
@@ -45,6 +46,8 @@ class RetrievalResults:
                 raise RuntimeError("Retrieved ids must be unique.")
             if not len(d) == len(r) > 0:
                 raise RuntimeError("Number of distances and retrieved items must match and be greater than zero.")
+            if (d.ndim != 1) or (r.ndim != 1):
+                raise RuntimeError("Distances and retrieved items must be 1-d tensors.")
 
         if gt_ids is not None:
             assert len(distances) == len(gt_ids)
@@ -105,15 +108,15 @@ class RetrievalResults:
 
         txt = (
             f"You retrieved {self.n_retrieved_items} items.\n"
-            f"Distances to the retrieved items:\n{self.distances[:max_el_to_show]}.\n"
-            f"Ids of the retrieved gallery items:\n{self.retrieved_ids[:max_el_to_show]}.\n"
+            f"Distances to the retrieved items:\n{pformat(self.distances[:max_el_to_show])}.\n"
+            f"Ids of the retrieved gallery items:\n{pformat(self.retrieved_ids[:max_el_to_show])}.\n"
         )
 
         if self.gt_ids is None:
             txt += "Ground truths are unknown.\n"
         else:
             gt_ids_list = [x.tolist() for x in self.gt_ids]
-            txt += f"Ground truth gallery ids are:\n{gt_ids_list[:max_el_to_show]}.\n"
+            txt += f"Ground truth gallery ids are:\n{pformat(gt_ids_list[:max_el_to_show])}.\n"
 
         return txt
 
