@@ -56,7 +56,7 @@ class RetrievalResults:
 
         self.distances = tuple(distances)
         self.retrieved_ids = tuple(retrieved_ids)
-        self.gt_ids = tuple(gt_ids)
+        self.gt_ids = tuple(gt_ids) if gt_ids is not None else None
 
     @property
     def n_retrieved_items(self) -> int:
