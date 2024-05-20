@@ -49,7 +49,7 @@ def calc_retrieval_metrics(
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
-        cmc = calc_cmc(gt_tops, cmc_top_k)
+        cmc = calc_cmc(gt_tops, n_gts, cmc_top_k)
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
@@ -57,7 +57,7 @@ def calc_retrieval_metrics(
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map_ = calc_map(gt_tops, map_top_k)
+        map_ = calc_map(gt_tops, n_gts, map_top_k)
         metrics["map"] = dict(zip(map_top_k, map_))
 
     if query_categories is not None:
@@ -199,7 +199,7 @@ def calc_mask_to_ignore(
     return mask_to_ignore
 
 
-def calc_cmc(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
@@ -210,6 +210,7 @@ def calc_cmc(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[Floa
     Args:
         gt_tops: Indicators that show if retrievied items are correct or not:
             ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
+        n_gts: Number of existing ground truths for every query.
         top_k: Values of ``k`` to calculate ``cmc@k``.
 
     Returns:
@@ -225,25 +226,32 @@ def calc_cmc(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[Floa
         >>> gt_tops = [
         ...     BoolTensor([1, 0]),
         ...     BoolTensor([0, 1, 1]),
-        ...     BoolTensor([0, 0])
+        ...     BoolTensor([0, 0]),
+        ...     BoolTensor([])
         ... ]
-        >>> calc_cmc(gt_tops, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([1., 1., 0.])]
+        >>> n_gts = [2, 2, 1, 0]
+        >>> calc_cmc(gt_tops, n_gts, top_k=(1, 2))
+        [tensor([1., 0., 0., 1.]), tensor([1., 1., 0., 1.])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
 
-    def cmc_single(is_correct: BoolTensor, k_: int) -> float:
-        value = float(is_correct[:k_].any())
-        return value
+    def cmc_single(is_correct: BoolTensor, n_gt: int, k_: int) -> float:
+        if n_gt == 0 and len(is_correct) == 0:
+            return 1.0
+        elif n_gt > 0 and len(is_correct) == 0:
+            return 0.0
+        else:
+            value = float(is_correct[:k_].any())
+            return value
 
     cmc = []
     for k in top_k:
-        cmc.append(FloatTensor([cmc_single(gts, k) for gts in gt_tops]))
+        cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in zip(gt_tops, n_gts)]))
 
     return cmc
 
 
-def calc_precision(gt_tops: Sequence[BoolTensor], n_gt: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_precision(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -254,7 +262,7 @@ def calc_precision(gt_tops: Sequence[BoolTensor], n_gt: List[int], top_k: Tuple[
     Args:
         gt_tops: Indicators that show if retrievied items are correct or not:
             ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
-        n_gt: Number of existing ground truth for every query.
+        n_gts: Number of existing ground truth for every query.
         top_k: Values of ``k`` to calculate ``precision@k``.
 
     Returns:
@@ -306,28 +314,34 @@ def calc_precision(gt_tops: Sequence[BoolTensor], n_gt: List[int], top_k: Tuple[
         >>> gt_tops = [
         ...     BoolTensor([1, 0]),
         ...     BoolTensor([0, 1, 1]),
-        ...     BoolTensor([0, 0])
+        ...     BoolTensor([0, 0]),
+        ...     BoolTensor([])
         ... ]
-        >>> n_gt = [2, 3, 5]
-        >>> calc_precision(gt_tops, n_gt, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000])]
+        >>> n_gts = [2, 3, 5, 2]
+        >>> calc_precision(gt_tops, n_gts, top_k=(1, 2))
+        [tensor([1., 0., 0., 0.]), tensor([0.5000, 0.5000, 0.0000, 0.0000])]
 
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
 
-    def precision_single(is_correct: BoolTensor, n_gt_: int, k_: int) -> float:
-        k_ = min(k_, len(is_correct))
-        value = torch.cumsum(is_correct, dim=0)[k_ - 1] / min(n_gt_, k_)
-        return float(value)
+    def precision_single(is_correct: BoolTensor, n_gt: int, k_: int) -> float:
+        if n_gt == 0 and len(is_correct) == 0:
+            return 1.0
+        elif n_gt > 0 and len(is_correct) == 0:
+            return 0.0
+        else:
+            k_ = min(k_, len(is_correct))
+            value = torch.cumsum(is_correct, dim=0)[k_ - 1] / min(n_gt, k_)
+            return float(value)
 
     precision = []
     for k in top_k:
-        precision.append(FloatTensor([precision_single(gts, n_gt_, k) for gts, n_gt_ in zip(gt_tops, n_gt)]))
+        precision.append(FloatTensor([precision_single(gts, n_gt, k) for gts, n_gt in zip(gt_tops, n_gts)]))
 
     return precision
 
 
-def calc_map(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -337,6 +351,7 @@ def calc_map(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[Floa
     Args:
         gt_tops: Indicators that show if retrievied items are correct or not:
             ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
+        n_gts: Number of existing ground truth for every query.
         top_k: Values of ``k`` to calculate ``map@k``.
 
     Returns:
@@ -375,25 +390,32 @@ def calc_map(gt_tops: Sequence[BoolTensor], top_k: Tuple[int, ...]) -> List[Floa
         >>> gt_tops = [
         ...    BoolTensor([1, 0]),
         ...    BoolTensor([0, 1]),
-        ...    BoolTensor([0, 0, 0, 0])
+        ...    BoolTensor([0, 0, 0, 0]),
+        ...    BoolTensor([])
         ... ]
-        >>> calc_map(gt_tops, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([1.0000, 0.5000, 0.0000])]
+        >>> n_gts = [1, 1, 2, 0]
+        >>> calc_map(gt_tops, n_gts, top_k=(1, 2))
+        [tensor([1., 0., 0., 1.]), tensor([1.0000, 0.5000, 0.0000, 1.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
 
-    def map_single(is_correct: BoolTensor, k_: int) -> float:
-        k_ = min(k_, len(is_correct))
-        correct_preds = torch.cumsum(is_correct, dim=0).float()
-        positions = torch.arange(1, k_ + 1).to(correct_preds.device)
-        n_k = correct_preds[k_ - 1].clone()
-        n_k[n_k < 1] = torch.inf  # hack to avoid zero division
-        value = torch.sum((correct_preds[:k_] / positions) * is_correct[:k_], dim=0) / n_k
-        return float(value)
+    def map_single(is_correct: BoolTensor, n_gt: int, k_: int) -> float:
+        if n_gt == 0 and len(is_correct) == 0:
+            return 1.0
+        elif n_gt > 0 and len(is_correct) == 0:
+            return 0.0
+        else:
+            k_ = min(k_, len(is_correct))
+            correct_preds = torch.cumsum(is_correct, dim=0).float()
+            positions = torch.arange(1, k_ + 1).to(correct_preds.device)
+            n_k = correct_preds[k_ - 1].clone()
+            n_k[n_k < 1] = torch.inf  # hack to avoid zero division
+            value = torch.sum((correct_preds[:k_] / positions) * is_correct[:k_], dim=0) / n_k
+            return float(value)
 
     map_ = []
     for k in top_k:
-        map_.append(FloatTensor([map_single(is_correct, k) for is_correct in gt_tops]))
+        map_.append(FloatTensor([map_single(is_correct, n_gt, k) for is_correct, n_gt in zip(gt_tops, n_gts)]))
 
     return map_
 

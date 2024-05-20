@@ -213,7 +213,7 @@ def test_metrics(
     exact_test_case: TExactTestCase,
 ) -> None:
     _, _, _, _, metrics_expected, top_k, mask_gt, gt_tops = exact_test_case
-    kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": top_k}
+    kwargs = {"gt_tops": gt_tops, "n_gts": mask_gt.sum(dim=1), "top_k": top_k}
     kwargs = remove_unused_kwargs(kwargs, metric_function)
     metric_vals = metric_function(**kwargs)  # type: ignore
     for k, metric_val in zip(top_k, metric_vals):
@@ -233,7 +233,7 @@ def test_metrics_individual(
     top_k: int,
 ) -> None:
     _, _, _, _, metrics_expected, _, mask_gt, gt_tops = exact_test_case
-    kwargs = {"gt_tops": gt_tops, "n_gt": mask_gt.sum(dim=1), "top_k": (top_k,)}
+    kwargs = {"gt_tops": gt_tops, "n_gts": mask_gt.sum(dim=1), "top_k": (top_k,)}
     kwargs = remove_unused_kwargs(kwargs, metric_function)
     metric_val = metric_function(**kwargs)[0]  # type: ignore
     assert torch.all(
@@ -249,7 +249,7 @@ def test_metrics_check_params(
     with pytest.raises(ValueError):
         gt_tops = torch.ones((10, 5), dtype=torch.bool)
         n_gt = torch.ones(10)
-        kwargs = {"gt_tops": gt_tops, "n_gt": n_gt, "top_k": (top_k,)}
+        kwargs = {"gt_tops": gt_tops, "n_gts": n_gt, "top_k": (top_k,)}
         kwargs = remove_unused_kwargs(kwargs, metric_function)
         metric_function(**kwargs)  # type: ignore
 
