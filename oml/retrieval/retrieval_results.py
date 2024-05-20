@@ -54,15 +54,15 @@ class RetrievalResults:
             if any(len(x) == 0 for x in gt_ids):
                 raise RuntimeError("Every query must have at least one relevant gallery id.")
 
-        self.distances = distances
-        self.retrieved_ids = retrieved_ids
-        self.gt_ids = gt_ids
+        self.distances = tuple(distances)
+        self.retrieved_ids = tuple(retrieved_ids)
+        self.gt_ids = tuple(gt_ids)
 
     @property
     def n_retrieved_items(self) -> int:
         """
         Returns: Number of items retrieved for each query. If queries have different number of retrieved items,
-            returns the maximum of them.
+        returns the maximum of them.
 
         """
         return max(len(x) for x in self.retrieved_ids)
@@ -142,8 +142,10 @@ class RetrievalResults:
             raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")
         if not isinstance(dataset, IQueryGalleryDataset):
             raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {type(dataset)}.")
-        if len(dataset.get_query_ids()) != len(self.retrieved_ids):
-            raise RuntimeError("Number of queries in RetrievalResults and dataset must match.")
+
+        nq1, nq2 = len(self.retrieved_ids), len(dataset.get_query_ids())
+        if nq1 != nq2:
+            raise RuntimeError(f"Number of queries in RetrievalResults and Dataset must match: {nq1} != {nq2}")
 
         if verbose:
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")
@@ -151,7 +153,8 @@ class RetrievalResults:
         ii_query = dataset.get_query_ids()
         ii_gallery = dataset.get_gallery_ids()
 
-        n_galleries_to_show = min(n_galleries_to_show, max(len(self.retrieved_ids[iq]) for iq in query_ids))
+        max_presented_galleries = max(len(self.retrieved_ids[iq]) for iq in query_ids)
+        n_galleries_to_show = min(n_galleries_to_show, max_presented_galleries)
         n_gt_to_show = n_gt_to_show if (self.gt_ids is not None) else 0
 
         fig = plt.figure(figsize=(16, 16 / (n_galleries_to_show + n_gt_to_show + 1) * len(query_ids)))

@@ -51,11 +51,11 @@ class PairwiseReranker(IRetrievalPostprocessor):
         """
 
         Args:
-            rr: RetrievalResults object.
+            rr: ``RetrievalResults`` object.
             dataset: Dataset having query/gallery split.
 
         Returns:
-            After model is applied to the ``top_n`` retrieved items, the updated RetrievalResults are returned.
+            After re-ranking is applied to the ``top_n`` retrieved items, the updated ``RetrievalResults`` are returned.
             In other words, we permute the first ``top_n`` items, but the rest remains untouched.
 
         **Example 1** (for one query):
@@ -109,8 +109,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
         self, retrieved_ids: Sequence[LongTensor], distances: Sequence[FloatTensor], dataset: IQueryGalleryDataset
     ) -> Tuple[Sequence[FloatTensor], Sequence[LongTensor]]:
 
-        # let's make list of pairs of queries and top_n gallery items for which we need to recompute distances
-        # since queries may have different number of retrieved items, we also need bounds variable
+        # Let's make list of pairs of queries and top_n gallery items for which we need to recompute distances
+        # Queries have different number of retrieved items, so we track what pairs are relevant to what queries (bounds)
         pairs = []
         bounds = [0]
         for iq, ids_gallery in enumerate(retrieved_ids):
@@ -130,7 +130,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
             use_fp16=self.use_fp16,
         )
 
-        # now let's reshape flatten distances into the original structure of lists may be having different sizes
+        # Reshape flat dists into the original structure of sequences (having different sizes) relevant to each query
         distances_upd, retrieved_ids_upd = [], []
         for query_start, query_end, dist_orig, ri_orig in zip(bounds[:-1], bounds[1:], distances, retrieved_ids):
             dist_recomputed_q, ii_rerank = distances_recomputed[query_start:query_end].sort()
@@ -142,9 +142,8 @@ class PairwiseReranker(IRetrievalPostprocessor):
             ]
             retrieved_ids_upd += [concat([ri_orig[ii_rerank], ri_orig[self.top_n :]])]
 
-        assert len(retrieved_ids_upd) == len(retrieved_ids) == len(distances) == len(distances_upd)
-
         for iq in range(len(retrieved_ids)):
+            # Re-ranking cannot change the number of retrieved items. It may only change their order.
             assert len(retrieved_ids[iq]) == len(retrieved_ids_upd[iq])
             assert len(distances[iq]) == len(distances_upd[iq])
 

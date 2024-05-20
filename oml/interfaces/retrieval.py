@@ -11,7 +11,7 @@ class IRetrievalPostprocessor:
     @property
     def top_n(self) -> int:
         """
-        Returns: Number of top N retrieved items to process.
+        Returns: Number of first n items to process.
 
         """
         raise NotImplementedError()

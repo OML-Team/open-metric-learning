@@ -96,7 +96,7 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
     assert True
 
 
-def test_visualisation_when_retrieved_different_number_of_items() -> None:
+def test_visualisation_for_different_number_of_retrieved_items() -> None:
     datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
     # just some random RR with different shapes
     rr = RetrievalResults(
