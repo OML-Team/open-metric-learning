@@ -245,4 +245,4 @@ def test_all_requested_metrics_are_calculated(perfect_case) -> None:  # type: ig
 
     assert metrics.pop(f"{OVERALL_CATEGORIES_KEY}/fnmr@fmr/0.3") == 0
 
-    assert not metrics
+    assert not metrics, "There are unwilling extra keys."
