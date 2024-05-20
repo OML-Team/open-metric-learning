@@ -5,7 +5,7 @@ from torch import nn
 from tqdm import tqdm
 
 from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, SEQUENCE_COLUMN
-from oml.datasets.base import DatasetQueryGallery
+from oml.datasets.images import ImageQueryGalleryLabeledDataset
 from oml.metrics.embeddings import EmbeddingMetrics, TMetricsDict_ByLabels
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import compare_dicts_recursively, set_global_seed
@@ -15,7 +15,7 @@ def validation(df: pd.DataFrame) -> TMetricsDict_ByLabels:
     set_global_seed(42)
     extractor = nn.Flatten()
 
-    val_dataset = DatasetQueryGallery(df, dataset_root=MOCK_DATASET_PATH)
+    val_dataset = ImageQueryGalleryLabeledDataset(df, dataset_root=MOCK_DATASET_PATH)
 
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4, num_workers=0)
     calculator = EmbeddingMetrics(extra_keys=("paths",), sequence_key=val_dataset.sequence_key, cmc_top_k=(1,))

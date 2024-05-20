@@ -7,7 +7,7 @@ from pandas import DataFrame
 from torch import Tensor, nn
 
 from oml.const import PATHS_COLUMN, SPLIT_COLUMN
-from oml.datasets.list_dataset import ListDataset
+from oml.datasets.images import ImageBaseDataset
 from oml.inference.abstract import _inference
 from oml.interfaces.models import IExtractor
 from oml.transforms.images.utils import TTransforms
@@ -28,7 +28,7 @@ def inference_on_images(
     use_fp16: bool = False,
     accumulate_on_cpu: bool = True,
 ) -> Tensor:
-    dataset = ListDataset(paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
+    dataset = ImageBaseDataset(paths=paths, bboxes=None, transform=transform, f_imread=f_imread, cache_size=0)
     device = get_device(model)
 
     def _apply(model_: nn.Module, batch_: Dict[str, Any]) -> Tensor:

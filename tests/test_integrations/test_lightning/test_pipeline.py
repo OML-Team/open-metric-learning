@@ -1,3 +1,4 @@
+import sys
 import tempfile
 from functools import partial
 from typing import Any, Dict, List
@@ -27,9 +28,9 @@ class DummyRetrievalDataset(Dataset):
         self.labels = labels
         self.im_size = im_size
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, item: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
-        label = torch.tensor(self.labels[idx]).long()
+        label = torch.tensor(self.labels[item]).long()
         return {INPUT_TENSORS_KEY: input_tensors, LABELS_KEY: label, IS_QUERY_KEY: True, IS_GALLERY_KEY: True}
 
     def __len__(self) -> int:
@@ -92,6 +93,7 @@ def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> Metri
     return metric_callback
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="Does not run on macOS")
 @pytest.mark.parametrize(
     "samples_in_getitem, is_error_expected, pipeline",
     [
