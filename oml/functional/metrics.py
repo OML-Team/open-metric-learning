@@ -1,19 +1,21 @@
 from collections import defaultdict
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
 from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin
 
+from oml.const import OVERALL_CATEGORIES_KEY
 from oml.utils.misc import check_if_nonempty_positive_integers
 from oml.utils.misc_torch import PCA
 
-TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
+TMetricsDict = Dict[str, Any]
 
 
 def calc_retrieval_metrics(
     retrieved_ids: Sequence[LongTensor],
     gt_ids: Sequence[LongTensor],
+    query_categories: Optional[Union[LongTensor, np.ndarray]] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -27,6 +29,7 @@ def calc_retrieval_metrics(
             Every index is within the range ``(0, n_gallery - 1)``.
         gt_ids: Gallery indices relevant to every query with the size of ``n_query``.
             Every element is within the range ``(0, n_gallery - 1)``
+        query_categories: Categories of queries with the size of ``n_query`` to compute metrics for each category.
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
@@ -37,6 +40,7 @@ def calc_retrieval_metrics(
 
     """
     assert len(retrieved_ids) == len(gt_ids)
+    assert (query_categories is None) or (len(query_categories) == len(retrieved_ids))
 
     # let's mark every correctly retrieved item as True and vice versa
     gt_tops = tuple([isin(r, g).bool() for r, g in zip(retrieved_ids, gt_ids)])
@@ -55,6 +59,10 @@ def calc_retrieval_metrics(
     if map_top_k:
         map_ = calc_map(gt_tops, map_top_k)
         metrics["map"] = dict(zip(map_top_k, map_))
+
+    if query_categories is not None:
+        metrics_cat = {c: take_unreduced_metrics_by_mask(metrics, query_categories == c) for c in query_categories}
+        metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
     if reduce:
         metrics = reduce_metrics(metrics)
