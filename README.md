@@ -294,12 +294,12 @@ docker pull omlteam/oml:cpu
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.datasets import DatasetWithLabels
+from oml.losses import TripletLossWithMiner
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
 
 dataset_root = "mock_dataset/"
 df_train, _ = download_mock_dataset(dataset_root)
@@ -337,10 +337,10 @@ for batch in tqdm(train_loader):
 import torch
 from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.datasets import DatasetQueryGallery
+from oml.metrics import EmbeddingMetrics
 from oml.models import ViTExtractor
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils import download_mock_dataset
 
 dataset_root = "mock_dataset/"
 _, df_val = download_mock_dataset(dataset_root)
@@ -384,16 +384,16 @@ calculator.visualize()  # draw mistakes for all the available metrics
 import pytorch_lightning as pl
 import torch
 
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.extractor import ExtractorModule
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.datasets import DatasetQueryGallery, DatasetWithLabels
+from oml.lightning import ExtractorModule
+from oml.lightning import MetricValCallback
+from oml.losses import TripletLossWithMiner
+from oml.metrics import EmbeddingMetrics
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.lightning.pipelines.logging import (
+from oml.samplers import BalanceSampler
+from oml.utils import download_mock_dataset
+from oml.lightning import (
     ClearMLPipelineLogger,
     MLFlowPipelineLogger,
     NeptunePipelineLogger,
@@ -456,11 +456,11 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 import torch
 
 from oml.const import MOCK_DATASET_PATH
-from oml.inference.flat import inference_on_images
+from oml.inference import inference_on_images
 from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.utils.misc_torch import pairwise_dist
+from oml.registry import get_transforms_for_pretrained
+from oml.utils import download_mock_dataset
+from oml.utils import pairwise_dist
 
 _, df_val = download_mock_dataset(MOCK_DATASET_PATH)
 df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)
