@@ -18,7 +18,6 @@ from oml.functional.metrics import (
 from oml.functional.metrics import (
     calc_retrieval_metrics_on_full as calc_retrieval_metrics,
 )
-from oml.utils.misc import remove_unused_kwargs
 from oml.utils.misc_torch import take_2d
 from tests.test_oml.test_functional.test_metrics.test_outdated.synthetic import (
     generate_distance_matrix,
@@ -214,7 +213,6 @@ def test_metrics(
 ) -> None:
     _, _, _, _, metrics_expected, top_k, mask_gt, gt_tops = exact_test_case
     kwargs = {"gt_tops": gt_tops, "n_gts": mask_gt.sum(dim=1), "top_k": top_k}
-    kwargs = remove_unused_kwargs(kwargs, metric_function)
     metric_vals = metric_function(**kwargs)  # type: ignore
     for k, metric_val in zip(top_k, metric_vals):
         assert torch.all(
@@ -234,7 +232,6 @@ def test_metrics_individual(
 ) -> None:
     _, _, _, _, metrics_expected, _, mask_gt, gt_tops = exact_test_case
     kwargs = {"gt_tops": gt_tops, "n_gts": mask_gt.sum(dim=1), "top_k": (top_k,)}
-    kwargs = remove_unused_kwargs(kwargs, metric_function)
     metric_val = metric_function(**kwargs)[0]  # type: ignore
     assert torch.all(
         torch.isclose(metric_val, metrics_expected[metric_name][top_k], atol=1.0e-4)
@@ -250,7 +247,6 @@ def test_metrics_check_params(
         gt_tops = torch.ones((10, 5), dtype=torch.bool)
         n_gt = torch.ones(10)
         kwargs = {"gt_tops": gt_tops, "n_gts": n_gt, "top_k": (top_k,)}
-        kwargs = remove_unused_kwargs(kwargs, metric_function)
         metric_function(**kwargs)  # type: ignore
 
 
