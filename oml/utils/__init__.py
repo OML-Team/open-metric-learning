@@ -15,7 +15,6 @@ from oml.utils.misc_torch import (
     normalise,
     get_device,
     _check_is_sequence,
-    drop_duplicates_by_ids,
     temporary_setting_model_mode,
     OnlineCalc,
     AvgOnline,
