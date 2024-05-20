@@ -10,12 +10,13 @@ from oml.utils.misc import check_if_nonempty_positive_integers
 from oml.utils.misc_torch import PCA
 
 TMetricsDict = Dict[str, Any]
+TCategories = Union[LongTensor, np.ndarray]
 
 
 def calc_retrieval_metrics(
     retrieved_ids: Sequence[LongTensor],
     gt_ids: Sequence[LongTensor],
-    query_categories: Optional[Union[LongTensor, np.ndarray]] = None,
+    query_categories: Optional[TCategories] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -101,12 +102,17 @@ def calc_retrieval_metrics_on_full(
     return metrics
 
 
-def calc_topological_metrics(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> TMetricsDict:
+def calc_topological_metrics(
+    embeddings: Tensor,
+    pcf_variance: Tuple[float, ...],
+    categories: Optional[TCategories] = None,
+) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+        categories: Categories of embeddings to compute category wise metrics.
         pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                       of variance that needs to be explained is greater than the percentage specified
                       by ``pcf_variance``.
@@ -115,11 +121,17 @@ def calc_topological_metrics(embeddings: Tensor, pcf_variance: Tuple[float, ...]
         Metrics dictionary.
 
     """
-    metrics: TMetricsDict = dict()
+    assert (categories is None) or (len(categories) == len(embeddings))
+
+    metrics: TMetricsDict = defaultdict(dict)
 
     if pcf_variance:
         main_components = calc_pcf(embeddings, pcf_variance)
         metrics["pcf"] = dict(zip(pcf_variance, main_components))
+
+    if categories is not None:
+        metrics_cat = {c: calc_topological_metrics(embeddings[categories == c], pcf_variance) for c in categories}
+        metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
     return metrics
 
@@ -494,13 +506,10 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     return fnmr_at_fmr
 
 
-def calc_fnmr_at_fmr_from_matrices(
-    distance_matrix: FloatTensor, mask_gt: BoolTensor, fmr_vals: Tuple[float, ...]
-) -> TMetricsDict:
+def calc_fnmr_at_fmr_(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...]) -> TMetricsDict:
     metrics: TMetricsDict = dict()
 
     if fmr_vals:
-        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, mask_gt)
         fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
         metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
 
@@ -570,23 +579,6 @@ def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor
     return metric
 
 
-def extract_pos_neg_dists(distances: Tensor, mask_gt: Tensor) -> Tuple[Tensor, Tensor]:
-    """
-    Extract distances between relevant samples, and distances between non-relevant samples.
-
-    Args:
-        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
-        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
-
-    Returns:
-        pos_dist: Tensor of distances between relevant samples
-        neg_dist: Tensor of distances between non-relevant samples
-    """
-    pos_dist = distances[mask_gt]
-    neg_dist = distances[~mask_gt]
-    return pos_dist, neg_dist
-
-
 def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: str) -> None:
     """
     Check whether the ``vals`` are in the range ``[min_, max_]``. Throw the ValueError if not.
@@ -613,4 +605,5 @@ __all__ = [
     "calc_mask_to_ignore",
     "reduce_metrics",
     "take_unreduced_metrics_by_mask",
+    "calc_fnmr_at_fmr",
 ]

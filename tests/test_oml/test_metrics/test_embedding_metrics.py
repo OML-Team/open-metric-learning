@@ -8,11 +8,11 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from oml.const import OVERALL_CATEGORIES_KEY
+from oml.const import CATEGORIES_COLUMN, OVERALL_CATEGORIES_KEY
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.models.meta.siamese import LinearTrivialDistanceSiamese
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
-from oml.utils.misc import compare_dicts_recursively, one_hot
+from oml.utils.misc import compare_dicts_recursively, flatten_dict, one_hot
 from tests.test_integrations.utils import EmbeddingsQueryGalleryLabeledDataset
 
 FEAT_DIM = 8
@@ -213,3 +213,36 @@ def test_worst_k(case_for_finding_worst_queries) -> None:  # type: ignore
     calc.compute_metrics()
 
     assert set(calc.get_worst_queries_ids(f"{OVERALL_CATEGORIES_KEY}/cmc/1", 2)) == worst_query_ids
+
+
+def test_all_requested_metrics_are_calculated(perfect_case) -> None:  # type: ignore
+    dataset, _ = perfect_case
+
+    calc = EmbeddingMetrics(
+        dataset=dataset,
+        cmc_top_k=(1,),
+        precision_top_k=(2,),
+        map_top_k=(4, 500),
+        pcf_variance=(0.2, 0.1),
+        fmr_vals=(0.3,),
+        postprocessor=get_trivial_postprocessor(top_n=len(dataset)),
+    )
+
+    calc.setup()
+    for batch in DataLoader(dataset, batch_size=4, shuffle=False):
+        calc.update(embeddings=batch[dataset.input_tensors_key], indices=batch[dataset.index_key])
+
+    metrics = calc.compute_metrics()
+    metrics = flatten_dict(metrics)
+
+    for category_key in [OVERALL_CATEGORIES_KEY, *np.unique(dataset.extra_data[CATEGORIES_COLUMN])]:
+        assert metrics.pop(f"{category_key}/cmc/1") == 1
+        assert metrics.pop(f"{category_key}/precision/2") == 1
+        assert metrics.pop(f"{category_key}/map/4") == 1
+        assert metrics.pop(f"{category_key}/map/500") == 1
+        assert metrics.pop(f"{category_key}/pcf/0.2") is not None
+        assert metrics.pop(f"{category_key}/pcf/0.1") is not None
+
+    assert metrics.pop(f"{OVERALL_CATEGORIES_KEY}/fnmr@fmr/0.3") == 0
+
+    assert not metrics

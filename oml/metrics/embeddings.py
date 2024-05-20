@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from pprint import pprint
 from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
@@ -5,7 +6,7 @@ from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch import FloatTensor
+from torch import FloatTensor, LongTensor
 
 from oml.const import (
     CATEGORIES_COLUMN,
@@ -17,10 +18,10 @@ from oml.const import (
 from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
+    calc_fnmr_at_fmr_,
     calc_retrieval_metrics,
     calc_topological_metrics,
     reduce_metrics,
-    take_unreduced_metrics_by_mask,
 )
 from oml.interfaces.datasets import IQueryGalleryLabeledDataset, IVisualizableDataset
 from oml.interfaces.metrics import IMetricVisualisable, TIndices
@@ -34,6 +35,7 @@ TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 def calc_retrieval_metrics_rr(
     rr: RetrievalResults,
+    query_categories: Optional[Union[LongTensor, np.ndarray]] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
@@ -45,8 +47,26 @@ def calc_retrieval_metrics_rr(
         cmc_top_k=cmc_top_k,
         precision_top_k=precision_top_k,
         map_top_k=map_top_k,
+        query_categories=query_categories,
         reduce=reduce,
     )
+
+
+def calc_fnmr_at_fmr_rr(
+    rr: RetrievalResults,
+    fmr_vals: Tuple[float, ...] = (0.1,),
+) -> TMetricsDict:
+    pos_dist, neg_dist = [], []
+    for dist, gt_ids, retrieved_ids in zip(rr.distances, rr.gt_ids, rr.retrieved_ids):
+        mask_positive = torch.isin(retrieved_ids, gt_ids)
+
+        pos_dist.extend(dist[mask_positive].view(-1))
+        neg_dist.extend(dist[~mask_positive].view(-1))
+
+    pos_dist = torch.stack(pos_dist).float()
+    neg_dist = torch.stack(neg_dist).float()
+
+    return calc_fnmr_at_fmr_(pos_dist=pos_dist, neg_dist=neg_dist, fmr_vals=fmr_vals)
 
 
 class EmbeddingMetrics(IMetricVisualisable):
@@ -104,10 +124,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.pcf_variance = pcf_variance
         self.postprocessor = postprocessor
 
-        self.retrieval_results = None
+        self.retrieval_results: Optional[RetrievalResults] = None
 
-        self.metrics = None
-        self.metrics_unreduced = None
+        self.metrics: Optional[TMetricsDict] = None
+        self.metrics_unreduced: Optional[TMetricsDict] = None
 
         self.visualize_only_overall_category = visualize_only_overall_category
         self.return_only_overall_category = return_only_overall_category
@@ -117,6 +137,9 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self._acc_embeddings_key = "__embeddings"
         self.acc = Accumulator(keys_to_accumulate=(self._acc_embeddings_key,))
+
+        if fmr_vals:
+            warnings.warn("Note, computing FNMR@FMR may significantly decrease computation time and memory consuming!")
 
     def setup(self, num_samples: Optional[int] = None) -> None:  # type: ignore
         self.retrieval_results = None
@@ -141,7 +164,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.update(embeddings=data[EMBEDDINGS_KEY], indices=indices)
 
     def _compute_retrieval_results(self) -> None:
-        max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+        # note, fmr requires a lot of compute
+        fmr_vals = len(self.dataset.get_gallery_ids()) if self.fmr_vals else 1
+        max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k, fmr_vals])
         if self.postprocessor:
             max_k = max(max_k, self.postprocessor.top_n)
 
@@ -154,10 +179,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         if self.postprocessor:
             self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
 
-    def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
-        self.acc = self.acc.sync()  # if DDP gathering happens here
-
-        # todo 522: put back fnmr metric
+    def compute_metrics(self) -> TMetricsDict:  # type: ignore
+        self.acc = self.acc.sync()  # gathering data from devices happens here if DDP
 
         if not self.acc.is_storage_full():
             raise ValueError(
@@ -168,39 +191,37 @@ class EmbeddingMetrics(IMetricVisualisable):
 
         self._compute_retrieval_results()
 
-        metrics: TMetricsDict_ByLabels = dict()
+        args_r = {
+            "cmc_top_k": self.cmc_top_k,
+            "precision_top_k": self.precision_top_k,
+            "map_top_k": self.map_top_k,
+            "rr": self.retrieval_results,
+            "reduce": False,
+        }
 
-        # note, here we do micro averaging
-        metrics[self.overall_categories_key] = calc_retrieval_metrics_rr(
-            rr=self.retrieval_results,
-            cmc_top_k=self.cmc_top_k,
-            precision_top_k=self.precision_top_k,
-            map_top_k=self.map_top_k,
-            reduce=False,
-        )
-
-        embeddings = self.acc.storage[self._acc_embeddings_key]
-        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, self.pcf_variance))
+        args_t = {"embeddings": self.acc.storage[self._acc_embeddings_key], "pcf_variance": self.pcf_variance}
 
         if CATEGORIES_COLUMN in self.dataset.extra_data:
             categories = np.array(self.dataset.extra_data[CATEGORIES_COLUMN])
-            ids_query = self.dataset.get_query_ids()
-            query_categories = categories[ids_query]
+            query_categories = categories[self.dataset.get_query_ids()]
 
-            for category in np.unique(query_categories):
-                mask_query_sz = query_categories == category
-                metrics[category] = take_unreduced_metrics_by_mask(metrics[self.overall_categories_key], mask_query_sz)
+            metrics_r = calc_retrieval_metrics_rr(query_categories=query_categories, **args_r)  # type: ignore
+            metrics_t = calc_topological_metrics(categories=categories, **args_t)  # type: ignore
+            self.metrics_unreduced = {cat: {**metrics_r[cat], **metrics_t[cat]} for cat in metrics_r.keys()}
 
-                mask_dataset_sz = categories == category
-                metrics[category].update(calc_topological_metrics(embeddings[mask_dataset_sz], self.pcf_variance))
+        else:
+            metrics_r = calc_retrieval_metrics_rr(**args_r)  # type: ignore
+            metrics_t = calc_topological_metrics(**args_t)  # type: ignore
+            self.metrics_unreduced = {OVERALL_CATEGORIES_KEY: {**metrics_r, **metrics_t}}
 
-        self.metrics_unreduced = metrics  # type: ignore
-        self.metrics = reduce_metrics(metrics)  # type: ignore
+        self.metrics_unreduced[OVERALL_CATEGORIES_KEY].update(
+            calc_fnmr_at_fmr_rr(self.retrieval_results, self.fmr_vals)
+        )
+
+        self.metrics = reduce_metrics(deepcopy(self.metrics_unreduced))
 
         if self.return_only_overall_category:
-            metric_to_return = {
-                self.overall_categories_key: deepcopy(self.metrics[self.overall_categories_key])  # type: ignore
-            }
+            metric_to_return = {OVERALL_CATEGORIES_KEY: deepcopy(self.metrics[OVERALL_CATEGORIES_KEY])}
         else:
             metric_to_return = deepcopy(self.metrics)
 
@@ -208,7 +229,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             print("\nMetrics:")
             pprint(metric_to_return)
 
-        return metric_to_return  # type: ignore
+        return metric_to_return
 
     def ready_to_visualize(self) -> bool:
         return isinstance(self.dataset, IVisualizableDataset)
