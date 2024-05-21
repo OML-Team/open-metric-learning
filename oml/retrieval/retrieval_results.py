@@ -1,5 +1,5 @@
 from pprint import pformat
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -24,11 +24,13 @@ from oml.interfaces.datasets import (
 
 
 class RetrievalResults:
+    _max_elements_in_str_repr: int = 100
+
     def __init__(
         self,
         distances: Sequence[FloatTensor],
         retrieved_ids: Sequence[LongTensor],
-        gt_ids: Sequence[LongTensor] = None,
+        gt_ids: Optional[Sequence[LongTensor]] = None,
     ):
         """
         Args:
@@ -87,7 +89,7 @@ class RetrievalResults:
 
         if SEQUENCE_COLUMN in dataset.extra_data:
             sequence = pd.Series(dataset.extra_data[SEQUENCE_COLUMN])
-            sequence_ids = LongTensor(pd.factorize(sequence)[0])
+            sequence_ids = LongTensor(pd.factorize(sequence, sort=True)[0])
         else:
             sequence_ids = None
 
@@ -105,19 +107,19 @@ class RetrievalResults:
         return RetrievalResults(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
 
     def __str__(self) -> str:
-        max_el_to_show = 100
+        m = self._max_elements_in_str_repr
 
         txt = (
             f"You retrieved {self.n_retrieved_items} items.\n"
-            f"Distances to the retrieved items:\n{pformat(self.distances[:max_el_to_show])}.\n"
-            f"Ids of the retrieved gallery items:\n{pformat(self.retrieved_ids[:max_el_to_show])}.\n"
+            f"Distances to the retrieved items:\n{pformat(self.distances[:m])}.\n"
+            f"Ids of the retrieved gallery items:\n{pformat(self.retrieved_ids[:m])}.\n"
         )
 
         if self.gt_ids is None:
             txt += "Ground truths are unknown.\n"
         else:
             gt_ids_list = [x.tolist() for x in self.gt_ids]
-            txt += f"Ground truth gallery ids are:\n{pformat(gt_ids_list[:max_el_to_show])}.\n"
+            txt += f"Ground truth gallery ids are:\n{pformat(gt_ids_list[:m])}.\n"
 
         return txt
 
@@ -138,14 +140,17 @@ class RetrievalResults:
             verbose: Set ``True`` to allow prints.
 
         """
+        dataset_name = dataset.__class__.__name__
         if not isinstance(dataset, IVisualizableDataset):
-            raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")
+            raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {dataset_name}.")
         if not isinstance(dataset, IQueryGalleryDataset):
-            raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {type(dataset)}.")
+            raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {dataset_name}.")
 
         nq1, nq2 = len(self.retrieved_ids), len(dataset.get_query_ids())
         if nq1 != nq2:
-            raise RuntimeError(f"Number of queries in RetrievalResults and Dataset must match: {nq1} != {nq2}")
+            raise RuntimeError(
+                f"Number of queries in {self.__class__.__name__} and {dataset_name} " f"must match: {nq1} != {nq2}"
+            )
 
         if verbose:
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")
