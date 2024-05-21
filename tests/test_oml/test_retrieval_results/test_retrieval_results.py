@@ -142,3 +142,12 @@ def test_retrieval_results_creation() -> None:
             retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([1, 2, 1])],
             gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
         )
+
+    # we retrieved nothing, but it's not a error
+    RetrievalResults(
+        distances=[FloatTensor([])],
+        retrieved_ids=[LongTensor([])],
+        gt_ids=[LongTensor([1])],
+    )
+
+    assert True

@@ -96,7 +96,7 @@ class PairwiseReranker(IRetrievalPostprocessor):
         """
         assert len(dataset.get_query_ids()) == len(
             rr.retrieved_ids
-        ), "RetrievalResults and dataset must have the same number of queries."
+        ), f"{rr.__class__.__name__} and {dataset.__class__.__name__} must have the same number of queries."
 
         gt_ids = rr.gt_ids
         distances_upd, retrieved_ids_upd = self._process_raw(
