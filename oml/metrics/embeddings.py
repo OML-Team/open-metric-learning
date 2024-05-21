@@ -142,6 +142,8 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def _compute_retrieval_results(self) -> None:
         max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k])
+        if self.postprocessor:
+            max_k = max(max_k, self.postprocessor.top_n)
 
         self.retrieval_results = RetrievalResults.compute_from_embeddings(  # type: ignore
             embeddings=self.acc.storage[self._acc_embeddings_key],

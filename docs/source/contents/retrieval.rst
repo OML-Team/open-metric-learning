@@ -15,8 +15,8 @@ RetrievalResults
 
     .. automethod:: __init__
     .. automethod:: compute_from_embeddings
-    .. automethod:: n_retrieved_items
     .. automethod:: visualize
+    .. automethod:: n_retrieved_items
 
 PairwiseReranker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,5 +26,3 @@ PairwiseReranker
 
     .. automethod:: __init__
     .. automethod:: process
-    .. automethod:: process_raw
-

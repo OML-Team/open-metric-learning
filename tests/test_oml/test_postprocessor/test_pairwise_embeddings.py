@@ -1,3 +1,4 @@
+import random
 from functools import partial
 from random import randint
 from typing import Tuple
@@ -18,6 +19,7 @@ from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
     EmbeddingsQueryGalleryLabeledDataset,
 )
+from tests.utils import check_if_sequence_of_tensors_are_equal
 
 FEAT_SIZE = 8
 oh = partial(one_hot, dim=FEAT_SIZE)
@@ -36,7 +38,12 @@ def independent_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
 
     embeddings = normalise(torch.randn((sz, feat_dim))).float()
 
-    dataset = EmbeddingsQueryGalleryDataset(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+    dataset = EmbeddingsQueryGalleryDataset(
+        embeddings=embeddings,
+        is_query=is_query,
+        is_gallery=is_gallery,
+        sequence=torch.tensor([0, 1, 0, 0, 4, 5, 4]).long(),
+    )
 
     embeddings_inference = embeddings.clone()  # pretend it's our inference results
 
@@ -51,7 +58,10 @@ def shared_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
     embeddings = normalise(torch.randn((sz, feat_dim))).float()
 
     dataset = EmbeddingsQueryGalleryDataset(
-        embeddings=embeddings, is_query=torch.ones(sz).bool(), is_gallery=torch.ones(sz).bool()
+        embeddings=embeddings,
+        is_query=torch.ones(sz).bool(),
+        is_gallery=torch.ones(sz).bool(),
+        sequence=torch.tensor([0, 1, 0, 0, 4, 5, 4]).long(),
     )
 
     embeddings_inference = embeddings.clone()  # pretend it's our inference results
@@ -60,7 +70,7 @@ def shared_query_gallery_case() -> Tuple[IQueryGalleryDataset, Tensor]:
 
 
 @pytest.mark.long
-@pytest.mark.parametrize("top_n", [2, 5])
+@pytest.mark.parametrize("top_n", [2, 5, 100])
 @pytest.mark.parametrize("pairwise_distances_bias", [0, -5, +5])
 @pytest.mark.parametrize("fixture_name", ["independent_query_gallery_case", "shared_query_gallery_case"])
 def test_trivial_processing_does_not_change_distances_order(
@@ -75,12 +85,12 @@ def test_trivial_processing_does_not_change_distances_order(
 
     rr_upd = processor.process(rr, dataset=dataset)
 
-    assert (rr.retrieved_ids == rr_upd.retrieved_ids).all()
+    assert check_if_sequence_of_tensors_are_equal(rr.retrieved_ids, rr_upd.retrieved_ids)
 
     if pairwise_distances_bias == 0:
-        assert torch.allclose(rr.distances, rr_upd.distances)
+        assert check_if_sequence_of_tensors_are_equal(rr.distances, rr_upd.distances)
     else:
-        assert not torch.allclose(rr.distances, rr_upd.distances)
+        assert not check_if_sequence_of_tensors_are_equal(rr.distances, rr_upd.distances)
 
 
 def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
@@ -91,6 +101,7 @@ def perfect_case() -> Tuple[IQueryGalleryLabeledDataset, Tensor]:
         labels=torch.tensor([1, 2, 3, 1, 2, 1, 2, 3]).long(),
         is_query=torch.tensor([1, 1, 1, 1, 0, 0, 0, 0]).bool(),
         is_gallery=torch.tensor([0, 0, 0, 0, 1, 1, 1, 1]).bool(),
+        sequence=torch.tensor([0, 1, 2, 3, 0, 1, 0, 0]).long(),
     )
 
     embeddings_inference = embeddings.clone()
@@ -116,17 +127,17 @@ def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: f
         dataset, embeddings = perfect_case()
         rr = RetrievalResults.compute_from_embeddings(embeddings.float(), dataset, n_items_to_retrieve=100)
 
-        nq, ng = rr.distances.shape
+        nq = len(rr.distances)
 
-        # Let's randomly break the case
-        for _ in range(5):
-            i0, j0 = randint(0, nq - 1), randint(0, ng - 1)
-            i1, j1 = randint(0, nq - 1), randint(0, ng - 1)
-            rr.retrieved_ids[i0, j0] = rr.retrieved_ids[i1, j1]
+        # Let's randomly break the retrieved results for 2 queries
+        for _ in range(2):
+            iq = random.randint(0, nq - 1)
+            perm = torch.randperm(len(rr.retrieved_ids[iq]))
+            rr.retrieved_ids[iq][:] = rr.retrieved_ids[iq][perm]
 
         # As mentioned before, for this test the exact values of parameters don't matter
-        top_k = (randint(1, ng - 1),)
-        top_n = randint(2, 10)
+        top_k = (randint(1, 5),)
+        top_n = randint(2, 6)
 
         args = {"precision_top_k": top_k, "map_top_k": top_k, "cmc_top_k": top_k}
 
@@ -167,13 +178,11 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
 
     set_global_seed(42)
 
-    # let's get some random inputs
     dataset, embeddings = perfect_case()
-    embeddings = torch.randn_like(embeddings).float()
 
     top_n = min(top_n, embeddings.shape[1])
 
-    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset)
+    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=100)
 
     args = {
         "cmc_top_k": (top_n,),
@@ -191,6 +200,10 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
 
     assert metrics_before == metrics_after
 
-    # also check that we only re-ranked the first top_n items
-    assert (rr.retrieved_ids[:, :top_n] != rr_upd.retrieved_ids[:, :top_n]).any()
-    assert (rr.retrieved_ids[:, top_n:] == rr_upd.retrieved_ids[:, top_n:]).all()
+    top_ids = [r[:top_n] for r in rr.retrieved_ids]
+    top_ids_upd = [r[:top_n] for r in rr_upd.retrieved_ids]
+    assert not check_if_sequence_of_tensors_are_equal(top_ids, top_ids_upd)
+
+    last_ids = [r[top_n:] for r in rr.retrieved_ids]
+    last_ids_upd = [r[top_n:] for r in rr_upd.retrieved_ids]
+    assert check_if_sequence_of_tensors_are_equal(last_ids, last_ids_upd)

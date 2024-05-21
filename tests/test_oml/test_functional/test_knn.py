@@ -1,22 +1,26 @@
+import math
+from functools import partial
 from random import randint
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pytest
 import torch
 from torch import FloatTensor, LongTensor
 
 from oml.functional.knn import batched_knn
+from oml.utils.misc import one_hot
 from oml.utils.misc_torch import pairwise_dist
+from tests.utils import check_if_sequence_of_tensors_are_equal
 
 
 def straight_knn(
     embeddings: FloatTensor,
     ids_query: LongTensor,
     ids_gallery: LongTensor,
-    labels: Optional[LongTensor],
+    labels_gt: Optional[LongTensor],
     sequence_ids: Optional[LongTensor],
     top_n: int,
-) -> Tuple[FloatTensor, LongTensor, Optional[LongTensor]]:
+) -> Tuple[List[FloatTensor], List[LongTensor], Optional[List[LongTensor]]]:
     top_n = min(top_n, len(ids_gallery))
 
     mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
@@ -26,10 +30,16 @@ def straight_knn(
 
     distances_all = pairwise_dist(x1=embeddings[ids_query], x2=embeddings[ids_gallery], p=2)
     distances_all[mask_to_ignore] = float("inf")
-    distances, retrieved_ids = torch.topk(distances_all, k=top_n, largest=False, sorted=True)
+    distances_mat, retrieved_ids_mat = torch.topk(distances_all, k=top_n, largest=False, sorted=True)
 
-    if labels is not None:
-        mask_gt = labels[ids_query][..., None] == labels[ids_gallery][None, ...]
+    distances, retrieved_ids = [], []
+    for d, r in zip(distances_mat, retrieved_ids_mat):
+        mask_to_keep = ~d.isinf()
+        distances.append(d[mask_to_keep].view(-1))
+        retrieved_ids.append(r[mask_to_keep].view(-1))
+
+    if labels_gt is not None:
+        mask_gt = labels_gt[ids_query][..., None] == labels_gt[ids_gallery][None, ...]
         mask_gt[mask_to_ignore] = False
         gt_ids = [LongTensor(row.nonzero()).view(-1) for row in mask_gt]
     else:
@@ -83,7 +93,7 @@ def test_batched_knn(dataset_len: int, need_sequence: bool, need_gt: bool, separ
             ids_query=ids_query,
             ids_gallery=ids_gallery,
             top_n=top_n,
-            labels=labels,
+            labels_gt=labels,
             sequence_ids=sequence_ids,
         )
 
@@ -97,9 +107,43 @@ def test_batched_knn(dataset_len: int, need_sequence: bool, need_gt: bool, separ
             sequence_ids=sequence_ids,
         )
 
-        assert torch.allclose(distances, distances_)
-        assert (retrieved_ids == retrieved_ids_).all()
+        assert check_if_sequence_of_tensors_are_equal(distances, distances_)
+        assert check_if_sequence_of_tensors_are_equal(retrieved_ids, retrieved_ids_)
 
         if need_gt:
-            for (ii, ii_) in zip(gt_ids, gt_ids_):
-                assert (ii == ii_).all()
+            assert check_if_sequence_of_tensors_are_equal(gt_ids, gt_ids_)
+
+
+@pytest.mark.parametrize("knn_func", [batched_knn, straight_knn])
+def test_on_exact_case(knn_func):  # type: ignore
+    oh = partial(one_hot, dim=4)
+
+    embeddings = torch.stack([oh(0), oh(0), oh(0), oh(1), oh(1), oh(1)]).float()
+    labels_gt = torch.tensor([0, 0, 0, 1, 1, 1]).long()
+    sequence_id = torch.tensor([0, 1, 2, 3, 3, 4]).long()
+    ids_query = torch.tensor([0, 3]).long()
+    ids_gallery = torch.tensor([0, 1, 2, 3, 4, 5]).long()
+    top_n = 10
+
+    distances_expected = [
+        FloatTensor([0, 0, math.sqrt(2), math.sqrt(2), math.sqrt(2)]),
+        FloatTensor([0, math.sqrt(2), math.sqrt(2), math.sqrt(2)]),
+    ]
+
+    # todo: handle better sorting of the same distances because it may change with seed
+    retrieved_ids_expected = [LongTensor([1, 2, 3, 4, 5]), LongTensor([5, 1, 2, 0])]
+
+    gt_ids_expected = [LongTensor([1, 2]), LongTensor([5])]
+
+    distances, retrieved_ids, gt_ids = knn_func(
+        embeddings=embeddings,
+        labels_gt=labels_gt,
+        ids_query=ids_query,
+        ids_gallery=ids_gallery,
+        top_n=top_n,
+        sequence_ids=sequence_id,
+    )
+
+    assert check_if_sequence_of_tensors_are_equal(distances_expected, distances)
+    assert check_if_sequence_of_tensors_are_equal(retrieved_ids_expected, retrieved_ids_expected)
+    assert check_if_sequence_of_tensors_are_equal(gt_ids_expected, gt_ids_expected)

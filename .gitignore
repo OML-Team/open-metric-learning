@@ -17,6 +17,7 @@ tmp.ipynb
 *.hydra*
 *predictions.json*
 *ml-runs*
+*inference_cache.pth*
 
 # __________________________________
 

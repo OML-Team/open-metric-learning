@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-from torch import LongTensor, nn
+from torch import FloatTensor, LongTensor, nn
 
 from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, PATHS_COLUMN
 from oml.datasets.images import (
@@ -73,9 +73,11 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
         top_n = 2
         rr = RetrievalResults.compute_from_embeddings(embeddings=embeddings, dataset=dataset, n_items_to_retrieve=top_n)
 
-        assert rr.distances.shape == (n_query, top_n)
-        assert rr.retrieved_ids.shape == (n_query, top_n)
-        assert torch.allclose(rr.distances.clone().sort()[0], rr.distances)
+        assert len(rr.distances) == n_query
+
+        for dist in rr.distances:
+            assert (dist[:-1] <= dist[1:]).all()
+            assert len(dist) == top_n
 
         if with_gt_labels:
             assert rr.gt_ids is not None
@@ -94,10 +96,58 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
     assert True
 
 
+def test_visualisation_for_different_number_of_retrieved_items() -> None:
+    datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
+    # just some random RR with different shapes
+    rr = RetrievalResults(
+        distances=[FloatTensor([0.1, 0.2]), FloatTensor([0.3, 0.4, 0.5]), FloatTensor([0.1]), FloatTensor([0.5])],
+        retrieved_ids=[LongTensor([1, 0]), LongTensor([1, 2, 0]), LongTensor([2]), LongTensor([1])],
+        gt_ids=[LongTensor([0]), LongTensor([1]), LongTensor([1, 2]), LongTensor([0])],
+    )
+
+    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0])
+    fig.show()
+    plt.close(fig=fig)
+
+
 def test_retrieval_results_creation() -> None:
+    # there is a query with no gt
     with pytest.raises(RuntimeError):
         RetrievalResults(
-            distances=torch.randn((2, 3)).float(),
-            retrieved_ids=LongTensor([[1, 0, 2], [4, 0, 1]]),
+            distances=[torch.arange(3).float(), torch.arange(3).float()],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 0, 1])],
             gt_ids=[LongTensor([0, 1, 3]), []],
         )
+
+    # distances are not sorted
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[FloatTensor([0, 1, 0]), FloatTensor([0, 1, 0])],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 0, 1])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([2])],
+        )
+
+    # retrieved ids are not unique
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[torch.arange(3).float(), torch.arange(3).float()],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 4, 4])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
+        )
+
+    # retrieved ids and distances have different size
+    with pytest.raises(RuntimeError):
+        RetrievalResults(
+            distances=[torch.arange(3).float(), FloatTensor([0.5, 0.6])],
+            retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([1, 2, 1])],
+            gt_ids=[LongTensor([0, 1, 3]), LongTensor([1])],
+        )
+
+    # we retrieved nothing, but it's not a error
+    RetrievalResults(
+        distances=[FloatTensor([])],
+        retrieved_ids=[LongTensor([])],
+        gt_ids=[LongTensor([1])],
+    )
+
+    assert True

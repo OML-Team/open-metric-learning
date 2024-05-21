@@ -1,7 +1,9 @@
-from typing import List
+from pprint import pformat
+from typing import List, Optional, Sequence
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import torch
 from torch import FloatTensor, LongTensor
 
 from oml.const import (
@@ -22,36 +24,50 @@ from oml.interfaces.datasets import (
 
 
 class RetrievalResults:
+    _max_elements_in_str_repr: int = 100
+
     def __init__(
         self,
-        distances: FloatTensor,
-        retrieved_ids: LongTensor,
-        gt_ids: List[LongTensor] = None,
+        distances: Sequence[FloatTensor],
+        retrieved_ids: Sequence[LongTensor],
+        gt_ids: Optional[Sequence[LongTensor]] = None,
     ):
         """
         Args:
-            distances: Sorted distances to the first ``top_n`` gallery items with the shape of ``[n_query, top_n]``.
-            retrieved_ids: Top N gallery ids retrieved for every query with the shape of ``[n_query, top_n]``.
-                Every element is within the range ``(0, n_gallery - 1)``.
-            gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
-                have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
+            distances: Sorted distances from queries to the first gallery items with the size of ``n_query``.
+            retrieved_ids: First gallery indices retrieved for every query with the size of ``n_query``.
+                Every index is within the range ``(0, n_gallery - 1)``.
+            gt_ids: Gallery indices relevant to every query with the size of ``n_query``.
+                Every element is within the range ``(0, n_gallery - 1)``
 
         """
-        assert distances.shape == retrieved_ids.shape
-        assert distances.ndim == 2
+        for d, r in zip(distances, retrieved_ids):
+            if not (d[:-1] <= d[1:]).all():
+                raise RuntimeError("Distances must be sorted.")
+            if not len(torch.unique(r)) == len(r):
+                raise RuntimeError("Retrieved ids must be unique.")
+            if not len(d) == len(r):
+                raise RuntimeError("Number of distances and retrieved items must match.")
+            if (d.ndim != 1) or (r.ndim != 1):
+                raise RuntimeError("Distances and retrieved items must be 1-d tensors.")
 
         if gt_ids is not None:
-            assert distances.shape[0] == len(gt_ids)
+            assert len(distances) == len(gt_ids)
             if any(len(x) == 0 for x in gt_ids):
                 raise RuntimeError("Every query must have at least one relevant gallery id.")
 
-        self.distances = distances
-        self.retrieved_ids = retrieved_ids
-        self.gt_ids = gt_ids
+        self.distances = tuple(distances)
+        self.retrieved_ids = tuple(retrieved_ids)
+        self.gt_ids = tuple(gt_ids) if gt_ids is not None else None
 
     @property
     def n_retrieved_items(self) -> int:
-        return self.retrieved_ids.shape[1]
+        """
+        Returns: Number of items retrieved for each query. If queries have different number of retrieved items,
+        returns the maximum of them.
+
+        """
+        return max(len(x) for x in self.retrieved_ids)
 
     @classmethod
     def compute_from_embeddings(
@@ -64,14 +80,16 @@ class RetrievalResults:
         Args:
             embeddings: The result of inference with the shape of ``[dataset_len, emb_dim]``.
             dataset: Dataset having query/gallery split.
-            n_items_to_retrieve: Number of the closest gallery items to retrieve.
-                                 It may be clipped by gallery size if needed.
+            n_items_to_retrieve: Number of the closest gallery items to retrieve. It may be clipped by
+                gallery size if needed. Note, some queries may get less than this number of retrieved items if they
+                don't have enough gallery items available.
 
         """
         assert len(embeddings) == len(dataset), "Embeddings and dataset must have the same size."
 
         if SEQUENCE_COLUMN in dataset.extra_data:
-            sequence_ids = LongTensor(pd.factorize(dataset.extra_data[SEQUENCE_COLUMN])[0])
+            sequence = pd.Series(dataset.extra_data[SEQUENCE_COLUMN])
+            sequence_ids = LongTensor(pd.factorize(sequence, sort=True)[0])
         else:
             sequence_ids = None
 
@@ -89,17 +107,19 @@ class RetrievalResults:
         return RetrievalResults(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
 
     def __str__(self) -> str:
+        m = self._max_elements_in_str_repr
+
         txt = (
             f"You retrieved {self.n_retrieved_items} items.\n"
-            f"Distances to the retrieved items:\n{self.distances}.\n"
-            f"Ids of the retrieved gallery items:\n{self.retrieved_ids}.\n"
+            f"Distances to the retrieved items:\n{pformat(self.distances[:m])}.\n"
+            f"Ids of the retrieved gallery items:\n{pformat(self.retrieved_ids[:m])}.\n"
         )
 
         if self.gt_ids is None:
             txt += "Ground truths are unknown.\n"
         else:
             gt_ids_list = [x.tolist() for x in self.gt_ids]
-            txt += f"Ground truth gallery ids are:\n{gt_ids_list}.\n"
+            txt += f"Ground truth gallery ids are:\n{pformat(gt_ids_list[:m])}.\n"
 
         return txt
 
@@ -120,10 +140,17 @@ class RetrievalResults:
             verbose: Set ``True`` to allow prints.
 
         """
+        dataset_name = dataset.__class__.__name__
         if not isinstance(dataset, IVisualizableDataset):
-            raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {type(dataset)}.")
+            raise TypeError(f"Dataset has to support {IVisualizableDataset.__name__}. Got {dataset_name}.")
         if not isinstance(dataset, IQueryGalleryDataset):
-            raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {type(dataset)}.")
+            raise TypeError(f"Dataset has to support {IQueryGalleryDataset.__name__}. Got {dataset_name}.")
+
+        nq1, nq2 = len(self.retrieved_ids), len(dataset.get_query_ids())
+        if nq1 != nq2:
+            raise RuntimeError(
+                f"Number of queries in {self.__class__.__name__} and {dataset_name} " f"must match: {nq1} != {nq2}"
+            )
 
         if verbose:
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")
@@ -131,7 +158,8 @@ class RetrievalResults:
         ii_query = dataset.get_query_ids()
         ii_gallery = dataset.get_gallery_ids()
 
-        n_galleries_to_show = min(n_galleries_to_show, self.n_retrieved_items)
+        max_presented_galleries = max(len(self.retrieved_ids[iq]) for iq in query_ids)
+        n_galleries_to_show = min(n_galleries_to_show, max_presented_galleries)
         n_gt_to_show = n_gt_to_show if (self.gt_ids is not None) else 0
 
         fig = plt.figure(figsize=(16, 16 / (n_galleries_to_show + n_gt_to_show + 1) * len(query_ids)))
@@ -149,7 +177,7 @@ class RetrievalResults:
             plt.axis("off")
 
             # iterate over retrieved items
-            for j, ret_idx in enumerate(self.retrieved_ids[query_idx, :][:n_galleries_to_show]):
+            for j, ret_idx in enumerate(self.retrieved_ids[query_idx][:n_galleries_to_show]):
                 if self.gt_ids is not None:
                     color = GREEN if ret_idx in self.gt_ids[query_idx] else RED
                 else:
@@ -158,7 +186,7 @@ class RetrievalResults:
                 plt.subplot(n_rows, n_cols, i * (n_galleries_to_show + 1 + n_gt_to_show) + j + 2)
                 img = dataset.visualize(item=ii_gallery[ret_idx].item(), color=color)
 
-                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx, j].item(), 3)}")
+                plt.title(f"Gallery #{ret_idx} - {round(self.distances[query_idx][j].item(), 3)}")
                 plt.imshow(img)
                 plt.axis("off")
 
