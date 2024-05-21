@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import torch
 from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin
+from tqdm.auto import tqdm
 
 from oml.const import OVERALL_CATEGORIES_KEY
 from oml.utils.misc import check_if_nonempty_positive_integers
@@ -46,6 +47,8 @@ def calc_retrieval_metrics(
     # let's mark every correctly retrieved item as True and vice versa
     gt_tops = tuple([isin(r, g).bool() for r, g in zip(retrieved_ids, gt_ids)])
     n_gts = [len(ids) for ids in gt_ids]
+
+    print(len(gt_tops[0]), "xxx")
 
     metrics: TMetricsDict = defaultdict(dict)
 
@@ -258,7 +261,9 @@ def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
 
     cmc = []
     for k in top_k:
-        cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in zip(gt_tops, n_gts)]))
+        cmc.append(
+            FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc="Computing CMC")])
+        )
 
     return cmc
 
@@ -348,7 +353,11 @@ def calc_precision(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple
 
     precision = []
     for k in top_k:
-        precision.append(FloatTensor([precision_single(gts, n_gt, k) for gts, n_gt in zip(gt_tops, n_gts)]))
+        precision.append(
+            FloatTensor(
+                [precision_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc="Computing precision")]
+            )
+        )
 
     return precision
 
@@ -427,7 +436,14 @@ def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
 
     map_ = []
     for k in top_k:
-        map_.append(FloatTensor([map_single(is_correct, n_gt, k) for is_correct, n_gt in zip(gt_tops, n_gts)]))
+        map_.append(
+            FloatTensor(
+                [
+                    map_single(is_correct, n_gt, k)
+                    for is_correct, n_gt in tqdm(zip(gt_tops, n_gts), desc="Computing MAP")
+                ]
+            )
+        )
 
     return map_
 

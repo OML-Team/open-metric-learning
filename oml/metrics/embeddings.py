@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import FloatTensor, LongTensor
+from tqdm.auto import tqdm
 
 from oml.const import (
     CATEGORIES_COLUMN,
@@ -29,8 +30,6 @@ from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.misc import flatten_dict
-
-TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
 
 def calc_retrieval_metrics_rr(
@@ -57,7 +56,10 @@ def calc_fnmr_at_fmr_rr(
     fmr_vals: Tuple[float, ...] = (0.1,),
 ) -> TMetricsDict:
     pos_dist, neg_dist = [], []
-    for dist, gt_ids, retrieved_ids in zip(rr.distances, rr.gt_ids, rr.retrieved_ids):
+    for dist, gt_ids, retrieved_ids in tqdm(
+        zip(rr.distances, rr.gt_ids, rr.retrieved_ids),
+        desc="Computing FNMR@FMR: extracting positive and negative distances.",
+    ):
         mask_positive = torch.isin(retrieved_ids, gt_ids)
 
         pos_dist.extend(dist[mask_positive].view(-1))
@@ -280,4 +282,4 @@ class EmbeddingMetrics(IMetricVisualisable):
         return fig
 
 
-__all__ = ["TMetricsDict_ByLabels", "EmbeddingMetrics", "calc_retrieval_metrics_rr"]
+__all__ = ["EmbeddingMetrics", "calc_retrieval_metrics_rr", "calc_fnmr_at_fmr_rr"]
