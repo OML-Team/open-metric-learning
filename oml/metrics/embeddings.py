@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import FloatTensor, LongTensor
-from tqdm.auto import tqdm
 
 from oml.const import (
     CATEGORIES_COLUMN,
@@ -29,7 +28,7 @@ from oml.interfaces.metrics import IMetricVisualisable, TIndices
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.retrieval.retrieval_results import RetrievalResults
-from oml.utils.misc import flatten_dict
+from oml.utils.misc import flatten_dict, pad_array_right
 
 
 def calc_retrieval_metrics_rr(
@@ -55,18 +54,20 @@ def calc_fnmr_at_fmr_rr(
     rr: RetrievalResults,
     fmr_vals: Tuple[float, ...] = (0.1,),
 ) -> TMetricsDict:
-    pos_dist, neg_dist = [], []
-    for dist, gt_ids, retrieved_ids in tqdm(
-        zip(rr.distances, rr.gt_ids, rr.retrieved_ids),
-        desc="Computing FNMR@FMR: extracting positive and negative distances.",
-    ):
-        mask_positive = torch.isin(retrieved_ids, gt_ids)
 
-        pos_dist.extend(dist[mask_positive].view(-1))
-        neg_dist.extend(dist[~mask_positive].view(-1))
+    max_size = max(len(d) for d in rr.distances)
+    dist = np.stack([pad_array_right(np.array(d), max_size, val=-1) for d in rr.distances])
 
-    pos_dist = torch.stack(pos_dist).float()
-    neg_dist = torch.stack(neg_dist).float()
+    mask_gt = np.zeros(dist.shape, dtype=bool)
+    mask_not_padding = np.ones(dist.shape, dtype=bool)
+
+    for i, (ri, gt_id) in enumerate(zip(rr.retrieved_ids, rr.gt_ids)):
+        is_correct = torch.isin(ri, gt_id)
+        mask_gt[i, : len(is_correct)] = is_correct
+        mask_not_padding[i, len(ri) :] = False
+
+    pos_dist = dist[mask_gt & mask_not_padding].flatten()
+    neg_dist = dist[~mask_gt & mask_not_padding].flatten()
 
     return calc_fnmr_at_fmr_by_distances(pos_dist=pos_dist, neg_dist=neg_dist, fmr_vals=fmr_vals)
 

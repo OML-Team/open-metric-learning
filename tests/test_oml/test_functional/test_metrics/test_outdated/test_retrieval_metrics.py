@@ -1,8 +1,10 @@
 from collections import defaultdict
 from typing import Callable, List, Tuple
 
+import numpy as np
 import pytest
 import torch
+from torch import FloatTensor, LongTensor
 
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
@@ -18,6 +20,9 @@ from oml.functional.metrics import (
 from oml.functional.metrics import (
     calc_retrieval_metrics_on_full as calc_retrieval_metrics,
 )
+from oml.metrics import calc_fnmr_at_fmr_rr
+from oml.retrieval import RetrievalResults
+from oml.utils.misc import compare_dicts_recursively
 from oml.utils.misc_torch import take_2d
 from tests.test_oml.test_functional.test_metrics.test_outdated.synthetic import (
     generate_distance_matrix,
@@ -252,8 +257,8 @@ def test_metrics_check_params(
 
 def test_calc_fnmr_at_fmr() -> None:
     fmr_vals = (0.1, 0.5)
-    pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
-    neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
+    pos_dist = np.array([0, 0, 1, 1, 2, 2, 5, 5, 9, 9], dtype=np.float32)
+    neg_dist = np.array([3, 3, 4, 4, 6, 6, 7, 7, 8, 8], dtype=np.float32)
     fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
     fnmr_at_fmr_expected = torch.tensor([0.4, 0.2])
     # 10 percentile of negative distances is 3 and
@@ -267,9 +272,35 @@ def test_calc_fnmr_at_fmr() -> None:
     ), f"fnmr@fmr({fmr_vals}),  expected: {fnmr_at_fmr_expected}; evaluated: {fnmr_at_fmr}."
 
 
+def test_calc_fnmr_at_fmr_rr() -> None:
+    # it's the same test data as above, but presented in different format
+    dist = [
+        FloatTensor([0, 0, 1, 1, 2, 2, 5, 5, 7, 7, 8, 8, 9]),
+        FloatTensor([3, 3, 4, 4, 6, 6, 9]),
+    ]
+
+    # hint: correctly retrieved ids start with 1, others start with 2
+    retrieved_ids = [
+        LongTensor([10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 18]),
+        LongTensor([20, 21, 22, 23, 24, 25, 10]),
+    ]
+
+    gt_ids = [
+        LongTensor([10, 11, 12, 13, 14, 15, 16, 17, 18]),
+        LongTensor([10]),
+    ]
+
+    rr = RetrievalResults(dist, retrieved_ids, gt_ids)
+
+    fnmr_at_fmr = calc_fnmr_at_fmr_rr(rr, fmr_vals=(0.1, 0.5))
+    fnmr_at_fmr_expected = {"fnmr@fmr": {0.1: torch.tensor(0.4), 0.5: torch.tensor(0.2)}}
+
+    assert compare_dicts_recursively(fnmr_at_fmr, fnmr_at_fmr_expected)
+
+
 @pytest.mark.parametrize("fmr_vals", (tuple(), (0, -1), (101,)))
 def test_calc_fnmr_at_fmr_check_params(fmr_vals: Tuple[int, ...]) -> None:
     with pytest.raises(ValueError):
-        pos_dist = torch.zeros(10)
-        neg_dist = torch.ones(10)
+        pos_dist = np.zeros(10)
+        neg_dist = np.ones(10)
         calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)

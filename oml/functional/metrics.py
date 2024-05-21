@@ -441,7 +441,7 @@ def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
     return map_
 
 
-def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> Tensor:
+def calc_fnmr_at_fmr(pos_dist: np.ndarray, neg_dist: np.ndarray, fmr_vals: Tuple[float, ...] = (0.1,)) -> FloatTensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
@@ -510,13 +510,13 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
 
     """
     _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
-    thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
+    thresholds = np.quantile(neg_dist, fmr_vals)  # we use numpy because it can take bigger input
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
-    return fnmr_at_fmr
+    return FloatTensor(fnmr_at_fmr)
 
 
 def calc_fnmr_at_fmr_by_distances(
-    pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...]
+    pos_dist: np.ndarray, neg_dist: np.ndarray, fmr_vals: Tuple[float, ...]
 ) -> TMetricsDict:
     metrics: TMetricsDict = dict()
 

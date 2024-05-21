@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from oml.utils.misc import smart_sample
+from oml.utils.misc import pad_array_right, smart_sample
 
 
 @pytest.mark.long
@@ -28,3 +28,13 @@ def test_sample_not_enough_items() -> None:
         assert len(set(samples)) == size
         assert len(samples) == n_samples
         assert set(samples) == set(array)
+
+
+def test_pad_array_right() -> None:
+    arr = np.array([1.5, 2, 3])
+    sz = 5
+    val = -100.0
+    arr_pad_expected = np.array([1.5, 2, 3, val, val])
+    arr_pad = pad_array_right(arr, sz, val)
+
+    assert np.allclose(arr_pad_expected, arr_pad)

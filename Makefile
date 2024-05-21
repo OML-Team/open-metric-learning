@@ -122,6 +122,7 @@ clean:
 	find . -type d -name "ml-runs" -exec rm -r {} +
 	find . -type d -name "logs" -exec rm -r {} +
 	find . -type d -name ".ipynb_checkpoints" -exec rm -r {} +
+	find . -type d -name ".hydra" -exec rm -r {} +
 	find . -type f -name "*.log" -exec rm {} +
 	find . -type f -name "*predictions.json" -exec rm {} +
 	rm -rf docs/build

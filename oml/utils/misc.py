@@ -155,6 +155,13 @@ def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
     return True
 
 
+def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) -> np.ndarray:
+    assert required_len >= len(arr)
+    assert arr.ndim == 1
+
+    return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -165,4 +172,5 @@ __all__ = [
     "clip_max",
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
+    "pad_array_right",
 ]
