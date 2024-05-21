@@ -48,8 +48,6 @@ def calc_retrieval_metrics(
     gt_tops = tuple([isin(r, g).bool() for r, g in zip(retrieved_ids, gt_ids)])
     n_gts = [len(ids) for ids in gt_ids]
 
-    print(len(gt_tops[0]), "xxx")
-
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
