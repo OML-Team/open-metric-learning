@@ -503,8 +503,8 @@ def calc_fnmr_at_fmr(pos_dist: np.ndarray, neg_dist: np.ndarray, fmr_vals: Tuple
 
 
     Example:
-        >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
-        >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
+        >>> pos_dist = np.array([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
+        >>> neg_dist = np.array([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
         >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(0.1, 0.5))
         tensor([0.4000, 0.2000])
 
