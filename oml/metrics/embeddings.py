@@ -19,7 +19,7 @@ from oml.const import (
 from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
-    calc_fnmr_at_fmr_,
+    calc_fnmr_at_fmr_by_distances,
     calc_retrieval_metrics,
     calc_topological_metrics,
     reduce_metrics,
@@ -68,7 +68,7 @@ def calc_fnmr_at_fmr_rr(
     pos_dist = torch.stack(pos_dist).float()
     neg_dist = torch.stack(neg_dist).float()
 
-    return calc_fnmr_at_fmr_(pos_dist=pos_dist, neg_dist=neg_dist, fmr_vals=fmr_vals)
+    return calc_fnmr_at_fmr_by_distances(pos_dist=pos_dist, neg_dist=neg_dist, fmr_vals=fmr_vals)
 
 
 class EmbeddingMetrics(IMetricVisualisable):

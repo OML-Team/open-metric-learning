@@ -259,9 +259,7 @@ def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
 
     cmc = []
     for k in top_k:
-        cmc.append(
-            FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc="Computing CMC")])
-        )
+        cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc=f"CMC@{k}.")]))
 
     return cmc
 
@@ -353,7 +351,7 @@ def calc_precision(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple
     for k in top_k:
         precision.append(
             FloatTensor(
-                [precision_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc="Computing precision")]
+                [precision_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc=f"Precision@{k}.")]
             )
         )
 
@@ -436,10 +434,7 @@ def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
     for k in top_k:
         map_.append(
             FloatTensor(
-                [
-                    map_single(is_correct, n_gt, k)
-                    for is_correct, n_gt in tqdm(zip(gt_tops, n_gts), desc="Computing MAP")
-                ]
+                [map_single(is_correct, n_gt, k) for is_correct, n_gt in tqdm(zip(gt_tops, n_gts), desc=f"MAP@{k}.")]
             )
         )
 
@@ -520,7 +515,9 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     return fnmr_at_fmr
 
 
-def calc_fnmr_at_fmr_(pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...]) -> TMetricsDict:
+def calc_fnmr_at_fmr_by_distances(
+    pos_dist: FloatTensor, neg_dist: FloatTensor, fmr_vals: Tuple[float, ...]
+) -> TMetricsDict:
     metrics: TMetricsDict = dict()
 
     if fmr_vals:
