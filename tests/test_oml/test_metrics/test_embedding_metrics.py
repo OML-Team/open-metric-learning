@@ -224,7 +224,7 @@ def test_all_requested_metrics_are_calculated(perfect_case) -> None:  # type: ig
         precision_top_k=(2,),
         map_top_k=(4, 500),
         pcf_variance=(0.2, 0.1),
-        fmr_vals=(0.3,),
+        fmr_vals=(0.3, 0.5),
         postprocessor=get_trivial_postprocessor(top_n=len(dataset)),
     )
 
@@ -244,5 +244,6 @@ def test_all_requested_metrics_are_calculated(perfect_case) -> None:  # type: ig
         assert metrics.pop(f"{category_key}/pcf/0.1") is not None
 
     assert metrics.pop(f"{OVERALL_CATEGORIES_KEY}/fnmr@fmr/0.3") == 0
+    assert metrics.pop(f"{OVERALL_CATEGORIES_KEY}/fnmr@fmr/0.5") == 0
 
     assert not metrics, "There are unwilling extra keys."
