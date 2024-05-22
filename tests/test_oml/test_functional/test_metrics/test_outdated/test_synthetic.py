@@ -3,14 +3,14 @@ from typing import List, Tuple
 import pytest
 import torch
 
-from oml.functional.metrics import (
-    apply_mask_to_ignore,
-    calc_gt_mask,
-    calc_mask_to_ignore,
-)
 from tests.test_oml.test_functional.test_metrics.test_outdated.synthetic import (
     generate_distance_matrix,
     generate_retrieval_case,
+)
+from tests.test_oml.test_functional.test_metrics.test_outdated.utils import (
+    apply_mask_to_ignore,
+    calc_gt_mask,
+    calc_mask_to_ignore,
 )
 
 TCase = Tuple[List[List[int]], torch.Tensor, torch.Tensor, torch.Tensor]
