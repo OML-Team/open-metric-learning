@@ -15,12 +15,12 @@ def test_categories_in_metrics() -> None:
         "map_top_k": tuple(),
     }
 
-    # TEST WITH METRICS
+    # TEST WITHOUT CATEGORIES
     metrics_overall = {"cmc": {1: 1.0}, "precision": {3: (2 / 3 + 2 * 1 / 2) / 3, 5: (2 / 3 + 2 * 1 / 2) / 3}}
     metrics = calc_retrieval_metrics(query_categories=None, **args)  # type: ignore
     assert compare_dicts_recursively(metrics_overall, metrics)
 
-    # TEST WITHOUT METRICS
+    # TEST WITH CATEGORIES
     metrics = calc_retrieval_metrics(query_categories=np.array(["cat", "dog", "dog"]), **args)  # type: ignore
     metrics_expected = {
         "cat": {"cmc": {1: 1.0}, "precision": {3: 2 / 3, 5: 2 / 3}},
