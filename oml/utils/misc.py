@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
+from torch import Tensor
 
 from oml.const import TCfg
 
@@ -147,9 +148,18 @@ def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
             assert compare_dicts_recursively(
                 v, d2[k]
             ), f"The dictionaries differs at key {k}.\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
+        elif isinstance(v, Tensor):
+            assert torch.allclose(d2[k], v)
         else:
             assert d2[k] == v, f"Key name: {k}\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
     return True
+
+
+def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) -> np.ndarray:
+    assert required_len >= len(arr)
+    assert arr.ndim == 1
+
+    return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
 
 __all__ = [
@@ -162,4 +172,5 @@ __all__ = [
     "clip_max",
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
+    "pad_array_right",
 ]

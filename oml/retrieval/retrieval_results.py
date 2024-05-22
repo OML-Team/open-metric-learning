@@ -44,7 +44,7 @@ class RetrievalResults:
         for d, r in zip(distances, retrieved_ids):
             if not (d[:-1] <= d[1:]).all():
                 raise RuntimeError("Distances must be sorted.")
-            if not len(torch.unique(r)) == len(r):
+            if not len(torch.unique(r[:100])) == len(r[:100]):  # it's too expensive to check all the ids!
                 raise RuntimeError("Retrieved ids must be unique.")
             if not len(d) == len(r):
                 raise RuntimeError("Number of distances and retrieved items must match.")

@@ -2,6 +2,7 @@ from typing import Optional, Sequence, Tuple
 
 import torch
 from torch import BoolTensor, FloatTensor, LongTensor
+from tqdm.auto import tqdm
 
 from oml.const import BS_KNN
 from oml.utils.misc_torch import pairwise_dist
@@ -53,7 +54,7 @@ def batched_knn(
     gt_ids = []
 
     # we do batching over first (queries) dimension
-    for i in range(0, nq, bs):
+    for i in tqdm(range(0, nq, bs), desc="Finding nearest neighbors."):
         distances_b = pairwise_dist(x1=embeddings_query[i : i + bs, :], x2=embeddings_gallery, p=2)
         ids_query_b = ids_query[i : i + bs]
 
