@@ -48,12 +48,14 @@ bs_val: 2
 
 metric_args:
   cmc_top_k: [1, 5]
+  fmr_vals: [0.1, 0.3]
   return_only_overall_category: True
   visualize_only_overall_category: True
 
 log_images: True
 
-metric_for_checkpointing: OVERALL/cmc/1
+metric_for_checkpointing: OVERALL/fnmr@fmr/0.1
+mode_for_checkpointing: min
 
 max_epochs: 2
 valid_period: 1

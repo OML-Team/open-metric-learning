@@ -88,6 +88,8 @@ postprocessor:
     use_fp16: True
 
 metric_for_checkpointing: OVERALL/cmc/1
+mode_for_checkpointing: max
+
 log_images: False
 metric_args:
   cmc_top_k: [1, 5]

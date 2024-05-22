@@ -97,7 +97,7 @@ def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
     return ModelCheckpoint(
         dirpath=Path.cwd() / "checkpoints",
         monitor=cfg["metric_for_checkpointing"],
-        mode="max",
+        mode=cfg.get("mode_for_checkpointing", "max"),
         save_top_k=1,
         verbose=True,
         filename="best",
