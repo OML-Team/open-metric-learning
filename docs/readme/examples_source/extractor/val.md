@@ -30,7 +30,7 @@ rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_re
 metrics = calc_retrieval_metrics_rr(rr, query_categories, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
 
 print(rr, "\n", metrics)
-rr.visualize(query_ids=[2, 1], dataset=dataset)
+rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
 ```
 [comment]:vanilla-validation-end
 </p>
