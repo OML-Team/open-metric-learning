@@ -72,37 +72,6 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_retrieval_metrics_on_full(
-    distances: Tensor,
-    mask_gt: Tensor,
-    mask_to_ignore: Optional[Tensor] = None,
-    cmc_top_k: Tuple[int, ...] = (5,),
-    precision_top_k: Tuple[int, ...] = (5,),
-    map_top_k: Tuple[int, ...] = (5,),
-    reduce: bool = True,
-) -> TMetricsDict:
-    # todo 522: move to tests
-
-    if mask_to_ignore is not None:
-        distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
-
-    max_k_arg = max([*cmc_top_k, *precision_top_k, *map_top_k])
-    k = min(distances.shape[1], max_k_arg)
-    _, retrieved_ids = torch.topk(distances, largest=False, k=k)
-
-    gt_ids = [LongTensor(row.nonzero()).view(-1) for row in mask_gt]
-
-    metrics = calc_retrieval_metrics(
-        cmc_top_k=cmc_top_k,
-        precision_top_k=precision_top_k,
-        map_top_k=map_top_k,
-        reduce=reduce,
-        gt_ids=gt_ids,
-        retrieved_ids=retrieved_ids,
-    )
-    return metrics
-
-
 def calc_topological_metrics(
     embeddings: Tensor,
     pcf_variance: Tuple[float, ...],
@@ -163,53 +132,6 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
             output[k] = take_unreduced_metrics_by_mask(v, mask)  # type: ignore
 
     return output
-
-
-def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
-    # todo 522: move to tests
-    distances[mask_to_ignore] = float("inf")
-    mask_gt[mask_to_ignore] = False
-    return distances, mask_gt
-
-
-def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
-    # todo 522: move to tests
-    assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
-    assert len(labels) == len(is_query) == len(is_gallery)
-
-    query_mask = is_query == 1
-    gallery_mask = is_gallery == 1
-    query_labels = labels[query_mask]
-    gallery_labels = labels[gallery_mask]
-    gt_mask = query_labels[..., None] == gallery_labels[None, ...]
-
-    return gt_mask
-
-
-def calc_mask_to_ignore(
-    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
-) -> Tensor:
-    # todo 522: move to tests
-    assert is_query.ndim == is_gallery.ndim == 1
-    assert len(is_query) == len(is_gallery)
-
-    if sequence_ids is not None:
-        assert sequence_ids.ndim == 1
-        assert len(is_gallery) == len(sequence_ids)
-
-    ids_query = torch.nonzero(is_query).squeeze()
-    ids_gallery = torch.nonzero(is_gallery).squeeze()
-
-    # this mask excludes duplicates of queries from the gallery if any
-    mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
-
-    if sequence_ids is not None:
-        # this mask ignores gallery samples taken from the same sequence as a given query
-        mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
-        mask_to_ignore = np.logical_or(mask_to_ignore, mask_to_ignore_seq)  # numpy casts tensor to numpy array
-        mask_to_ignore = torch.tensor(mask_to_ignore, dtype=torch.bool)
-
-    return mask_to_ignore
 
 
 def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
@@ -609,11 +531,7 @@ def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: st
 __all__ = [
     "TMetricsDict",
     "calc_retrieval_metrics",
-    "calc_retrieval_metrics_on_full",
     "calc_topological_metrics",
-    "apply_mask_to_ignore",
-    "calc_gt_mask",
-    "calc_mask_to_ignore",
     "reduce_metrics",
     "take_unreduced_metrics_by_mask",
     "calc_fnmr_at_fmr",

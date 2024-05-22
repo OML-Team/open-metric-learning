@@ -9,16 +9,10 @@ from torch import FloatTensor, LongTensor
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import (
     TMetricsDict,
-    apply_mask_to_ignore,
     calc_cmc,
     calc_fnmr_at_fmr,
-    calc_gt_mask,
     calc_map,
-    calc_mask_to_ignore,
     calc_precision,
-)
-from oml.functional.metrics import (
-    calc_retrieval_metrics_on_full as calc_retrieval_metrics,
 )
 from oml.metrics import calc_fnmr_at_fmr_rr
 from oml.retrieval import RetrievalResults
@@ -27,6 +21,14 @@ from oml.utils.misc_torch import take_2d
 from tests.test_oml.test_functional.test_metrics.test_outdated.synthetic import (
     generate_distance_matrix,
     generate_retrieval_case,
+)
+from tests.test_oml.test_functional.test_metrics.test_outdated.utils import (
+    apply_mask_to_ignore,
+    calc_gt_mask,
+    calc_mask_to_ignore,
+)
+from tests.test_oml.test_functional.test_metrics.test_outdated.utils import (
+    calc_retrieval_metrics_on_matrices as calc_retrieval_metrics,
 )
 
 TPositions = List[List[int]]
