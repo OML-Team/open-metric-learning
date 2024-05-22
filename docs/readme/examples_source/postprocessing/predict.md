@@ -16,7 +16,7 @@ from oml.retrieval import RetrievalResults
 _, df_test = download_mock_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
 
-extractor = ViTExtractor.from_pretrained("vits16_dino")
+extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
 transforms, _ = get_transforms_for_pretrained("vits16_dino")
 
 dataset = ImageQueryGalleryDataset(df_test, transform=transforms)
@@ -32,6 +32,7 @@ rr_upd = postprocessor.process(rr, dataset=dataset)
 
 # You may see the first 3 positions have changed, but the rest remain the same:
 print(rr, "\n", rr_upd)
+
 ```
 [comment]:postprocessor-pred-end
 </p>

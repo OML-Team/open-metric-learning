@@ -344,22 +344,21 @@ from oml.retrieval import RetrievalResults
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.registry.transforms import get_transforms_for_pretrained
 
-extractor = ViTExtractor.from_pretrained("vits16_dino")
+extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 _, df_val = download_mock_dataset(global_paths=True, df_name="df_with_category.csv")
 dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
+embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
+
+rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
 
 # you can optionally provide categories to have category wise metrics
 query_categories = np.array(dataset.extra_data["category"])[dataset.get_query_ids()]
-
-embeddings = inference(extractor, dataset, batch_size=4)
-
-rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
 metrics = calc_retrieval_metrics_rr(rr, query_categories, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
-
 print(rr, "\n", metrics)
-rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
+
 ```
 [comment]:vanilla-validation-end
 </p>
@@ -455,17 +454,16 @@ from oml.retrieval.retrieval_results import RetrievalResults
 _, df_test = download_mock_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
 
-extractor = ViTExtractor.from_pretrained("vits16_dino")
+extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
 dataset = ImageQueryGalleryDataset(df_test, transform=transform)
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
-retrieval_results = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr.visualize(query_ids=[0, 1], dataset=dataset, show=True)
 
-retrieval_results.visualize(query_ids=[0, 1], dataset=dataset, show=True)
-
-print(retrieval_results)  # you get the ids of retrieved items and the corresponding distances
+print(rr)  # you get the ids of retrieved items and the corresponding distances
 
 ```
 [comment]:usage-retrieval-end
@@ -539,7 +537,7 @@ from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
 from oml.models import ViTExtractor
 from oml.registry.transforms import get_transforms_for_pretrained
 
-model = ViTExtractor.from_pretrained("vits16_dino")
+model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").eval()
 transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
 
 img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
