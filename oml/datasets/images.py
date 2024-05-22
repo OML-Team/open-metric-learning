@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import albumentations as albu
 import numpy as np
 import pandas as pd
-import torch
 import torchvision
 from torch import BoolTensor, FloatTensor, LongTensor
 
@@ -38,7 +37,7 @@ from oml.interfaces.datasets import (
 from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, get_img_with_bbox
+from oml.utils.images.images import TImReader, draw_bbox, imread_pillow
 
 
 def parse_bboxes(df: pd.DataFrame) -> Optional[TBBoxes]:
@@ -162,8 +161,9 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         return len(self._paths)
 
     def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
-        bbox = torch.tensor(self._bboxes[item]) if (self._bboxes is not None) else torch.tensor([torch.nan] * 4)
-        image = get_img_with_bbox(im_path=self._paths[item], bbox=bbox, color=color)
+        img = np.array(imread_pillow(self.read_bytes(self._paths[item])))
+        bbox = self._bboxes[item] if (self._bboxes is not None) else None
+        image = draw_bbox(im=img, bbox=bbox, color=color)
 
         return image
 

@@ -9,8 +9,8 @@ import torch
 from torch.nn import BCEWithLogitsLoss
 from torch.utils.data import DataLoader
 
-from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset, ImageBaseDataset
-from oml.inference import inference
+from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
+from oml.inference import inference_cached
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners.pairs import PairsMiner
 from oml.models import ConcatSiamese, ViTExtractor
@@ -21,15 +21,15 @@ from oml.transforms.images.torchvision import get_augs_torch
 from oml.retrieval import RetrievalResults, PairwiseReranker
 
 # In these example we will train a pairwise model as a re-ranker for ViT
-extractor = ViTExtractor.from_pretrained("vits16_dino")
+extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
 transforms, _ = get_transforms_for_pretrained("vits16_dino")
 df_train, df_val = download_mock_dataset(global_paths=True)
 
 # STEP 0: SAVE VIT EMBEDDINGS
 # - training ones are needed for hard negative sampling when training pairwise model
 # - validation ones are needed to construct the original prediction (which we will re-rank)
-embeddings_train = inference(extractor, ImageBaseDataset(df_train["path"].tolist(), transform=transforms), batch_size=4, num_workers=0)
-embeddings_valid = inference(extractor, ImageBaseDataset(df_val["path"].tolist(), transform=transforms), batch_size=4, num_workers=0)
+embeddings_train = inference_cached(extractor, ImageLabeledDataset(df_train, transform=transforms), batch_size=4, num_workers=0)
+embeddings_valid = inference_cached(extractor, ImageLabeledDataset(df_val, transform=transforms), batch_size=4, num_workers=0)
 
 # STEP 1: TRAIN PAIRWISE MODEL
 train_dataset = ImageLabeledDataset(df_train, transform=get_augs_torch(224), extra_data={"embeddings": embeddings_train})
@@ -50,15 +50,20 @@ for batch in train_loader:
     optimizer.zero_grad()
 
 # STEP 2: VALIDATE RE-RANKING MODEL (DOES IT IMPROVE METRICS?)
-val_dataset = ImageQueryGalleryLabeledDataset(df=df_val, transform=transforms, extra_data={"embeddings": embeddings_valid})
+val_dataset = ImageQueryGalleryLabeledDataset(df=df_val, transform=transforms)
 rr = RetrievalResults.compute_from_embeddings(embeddings_valid, val_dataset, n_items_to_retrieve=5)
 
-reranker = PairwiseReranker(top_n=5, pairwise_model=pairwise_model, num_workers=0, batch_size=4)
+reranker = PairwiseReranker(top_n=3, pairwise_model=pairwise_model, num_workers=0, batch_size=4)
 rr_upd = reranker.process(rr, dataset=val_dataset)
 
-metrics = calc_retrieval_metrics_rr(rr, precision_top_k=(5,))
-metrics_upd = calc_retrieval_metrics_rr(rr_upd, precision_top_k=(5,))
-print(metrics, "\n", metrics_upd)
+# STEP 3: comparison
+rr.visualize(query_ids=[0, 1], dataset=val_dataset, show=True)
+rr_upd.visualize(query_ids=[0, 1], dataset=val_dataset, show=True)
+
+metrics = calc_retrieval_metrics_rr(rr, precision_top_k=(3, 5))
+metrics_upd = calc_retrieval_metrics_rr(rr_upd, precision_top_k=(3, 5))
+print(f"Before postprocessing:\n{metrics}")
+print(f"After postprocessing:\n{metrics_upd}")
 
 ```
 [comment]:postprocessor-end

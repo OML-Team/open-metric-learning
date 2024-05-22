@@ -71,6 +71,7 @@ metric_args:
 log_images: True
 
 metric_for_checkpointing: OVERALL/precision/5
+mode_for_checkpointing: max
 
 max_epochs: 2
 valid_period: 1

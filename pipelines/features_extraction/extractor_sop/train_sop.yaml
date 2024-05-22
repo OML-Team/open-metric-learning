@@ -50,6 +50,7 @@ metric_args:
 log_images: False
 
 metric_for_checkpointing: OVERALL/cmc/1
+mode_for_checkpointing: max
 
 extractor:
   name: vit

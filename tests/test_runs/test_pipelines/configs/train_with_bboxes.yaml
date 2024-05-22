@@ -74,6 +74,7 @@ logger:
     project: "test_project"
 
 metric_for_checkpointing: OVERALL/cmc/5
+mode_for_checkpointing: max
 
 max_epochs: 2
 valid_period: 2

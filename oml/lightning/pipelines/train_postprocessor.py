@@ -13,6 +13,7 @@ from oml.const import EMBEDDINGS_KEY, TCfg
 from oml.datasets.base import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
 from oml.datasets.images import get_retrieval_images_datasets
 from oml.inference import inference, inference_cached
+from oml.interfaces.datasets import ILabeledDataset, IQueryGalleryLabeledDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.pairwise_postprocessing import (
@@ -54,7 +55,9 @@ def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
     return md5sum
 
 
-def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
+def get_loaders_with_embeddings(
+    cfg: TCfg,
+) -> Tuple[DataLoader, DataLoader, ILabeledDataset, IQueryGalleryLabeledDataset]:
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
@@ -106,7 +109,7 @@ def get_loaders_with_embeddings(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
         dataset=valid_dataset, batch_size=cfg["batch_size_inference"], num_workers=cfg["num_workers"], shuffle=False
     )
 
-    return loader_train, loader_val
+    return loader_train, loader_val, train_dataset, valid_dataset
 
 
 def postprocessor_training_pipeline(cfg: DictConfig) -> None:
@@ -129,7 +132,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     trainer_engine_params = parse_engine_params_from_config(cfg)
     is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
-    loader_train, loader_val = get_loaders_with_embeddings(cfg)
+    loader_train, loader_val, dataset_train, dataset_val = get_loaders_with_embeddings(cfg)
 
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
     assert isinstance(postprocessor, PairwiseReranker), f"We only support {PairwiseReranker.__name__} at the moment."
@@ -152,20 +155,15 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
         pairs_miner=pairs_miner,
         criterion=criterion,
         optimizer=optimizer,
-        input_tensors_key=loader_train.dataset.input_tensors_key,
-        labels_key=loader_train.dataset.labels_key,
+        input_tensors_key=dataset_train.input_tensors_key,
+        labels_key=dataset_train.labels_key,
         embeddings_key=EMBEDDINGS_KEY,
         freeze_n_epochs=cfg.get("freeze_n_epochs", 0),
         **module_kwargs,
     )
 
-    metrics_calc = EmbeddingMetrics(
-        dataset=loader_val.dataset,
-        postprocessor=postprocessor,
-        **cfg.get("metric_args", {}),
-    )
-
-    metrics_clb = MetricValCallback(metric=metrics_calc, log_images=cfg.get("log_images", True))
+    metric = EmbeddingMetrics(dataset=dataset_val, postprocessor=postprocessor, **cfg.get("metric_args", {}))
+    metrics_clb = MetricValCallback(metric=metric, log_images=cfg.get("log_images", True))
 
     trainer = pl.Trainer(
         max_epochs=cfg["max_epochs"],

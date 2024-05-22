@@ -130,6 +130,7 @@ class RetrievalResults:
         n_galleries_to_show: int = 5,
         n_gt_to_show: int = N_GT_SHOW_EMBEDDING_METRICS,
         verbose: bool = False,
+        show: bool = False,
     ) -> plt.Figure:
         """
         Args:
@@ -138,6 +139,7 @@ class RetrievalResults:
             n_galleries_to_show: Number of closest gallery items to show.
             n_gt_to_show: Number of ground truth gallery items to show for reference (if available).
             verbose: Set ``True`` to allow prints.
+            show: Set ``True`` to instantly visualise the resulted figure.
 
         """
         dataset_name = dataset.__class__.__name__
@@ -203,6 +205,10 @@ class RetrievalResults:
                     plt.axis("off")
 
         fig.tight_layout()
+
+        if show:
+            fig.show()
+
         return fig
 
 
