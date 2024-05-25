@@ -16,7 +16,7 @@ from pytorch_metric_learning import losses, distances, reducers, miners
 df_train, _ = download_mock_dataset(global_paths=True)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
+optimizer = torch.optim.Adam(extractor.parameters(), lr=1e-4)
 
 train_dataset = ImageLabeledDataset(df_train)
 

@@ -34,7 +34,7 @@ embeddings_valid = inference_cached(extractor, ImageLabeledDataset(df_val, trans
 # STEP 1: TRAIN PAIRWISE MODEL
 train_dataset = ImageLabeledDataset(df_train, transform=get_augs_torch(224), extra_data={"embeddings": embeddings_train})
 pairwise_model = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])
-optimizer = torch.optim.SGD(pairwise_model.parameters(), lr=1e-6)
+optimizer = torch.optim.Adam(pairwise_model.parameters(), lr=1e-4)
 miner = PairsMiner(hard_mining=True)
 criterion = BCEWithLogitsLoss()
 
