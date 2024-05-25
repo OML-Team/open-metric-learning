@@ -186,7 +186,7 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         labels_key: str = LABELS_KEY,
         index_key: str = INDEX_KEY,
     ):
-        assert (x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
+        assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
         self.labels_key = labels_key
         self.df = df
 

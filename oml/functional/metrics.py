@@ -134,7 +134,9 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
     return output
 
 
-def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_cmc(
+    gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...], verbose: bool = False
+) -> List[FloatTensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
@@ -147,6 +149,7 @@ def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
             ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
         n_gts: Number of existing ground truths for every query.
         top_k: Values of ``k`` to calculate ``cmc@k``.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
         List of ``cmc@k`` tensors computed for every query.
@@ -181,12 +184,15 @@ def calc_cmc(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
 
     cmc = []
     for k in top_k:
-        cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc=f"CMC@{k}.")]))
+        items = tqdm(zip(gt_tops, n_gts), desc=f"CMC@{k}.", total=len(gt_tops)) if verbose else zip(gt_tops, n_gts)
+        cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in items]))
 
     return cmc
 
 
-def calc_precision(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_precision(
+    gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...], verbose: bool = False
+) -> List[FloatTensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -199,6 +205,7 @@ def calc_precision(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple
             ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
         n_gts: Number of existing ground truth for every query.
         top_k: Values of ``k`` to calculate ``precision@k``.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
         List of ``precision@k`` tensors computed for every query.
@@ -271,16 +278,15 @@ def calc_precision(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple
 
     precision = []
     for k in top_k:
-        precision.append(
-            FloatTensor(
-                [precision_single(gts, n_gt, k) for gts, n_gt in tqdm(zip(gt_tops, n_gts), desc=f"Precision@{k}.")]
-            )
-        )
+        items = tqdm(zip(gt_tops, n_gts), desc=f"Precision@{k}.", total=len(n_gts)) if verbose else zip(gt_tops, n_gts)
+        precision.append(FloatTensor([precision_single(gts, n_gt, k) for gts, n_gt in items]))
 
     return precision
 
 
-def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...]) -> List[FloatTensor]:
+def calc_map(
+    gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...], verbose: bool = False
+) -> List[FloatTensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -292,6 +298,7 @@ def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
             ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
         n_gts: Number of existing ground truth for every query.
         top_k: Values of ``k`` to calculate ``map@k``.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
         List of ``map@k`` tensors computed for every query.
@@ -354,11 +361,8 @@ def calc_map(gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, 
 
     map_ = []
     for k in top_k:
-        map_.append(
-            FloatTensor(
-                [map_single(is_correct, n_gt, k) for is_correct, n_gt in tqdm(zip(gt_tops, n_gts), desc=f"MAP@{k}.")]
-            )
-        )
+        items = tqdm(zip(gt_tops, n_gts), total=len(gt_tops), desc=f"MAP@{k}.") if verbose else zip(gt_tops, n_gts)
+        map_.append(FloatTensor([map_single(is_correct, n_gt, k) for is_correct, n_gt in items]))
 
     return map_
 

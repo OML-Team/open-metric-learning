@@ -75,6 +75,7 @@ class RetrievalResults:
         embeddings: FloatTensor,
         dataset: IQueryGalleryDataset,
         n_items_to_retrieve: int = 100,
+        verbose: bool = False,
     ) -> "RetrievalResults":
         """
         Args:
@@ -83,6 +84,7 @@ class RetrievalResults:
             n_items_to_retrieve: Number of the closest gallery items to retrieve. It may be clipped by
                 gallery size if needed. Note, some queries may get less than this number of retrieved items if they
                 don't have enough gallery items available.
+            verbose: Set ``True`` to see progress bar.
 
         """
         assert len(embeddings) == len(dataset), "Embeddings and dataset must have the same size."
@@ -102,6 +104,7 @@ class RetrievalResults:
             labels_gt=labels_gt,
             sequence_ids=sequence_ids,
             top_n=n_items_to_retrieve,
+            verbose=verbose,
         )
 
         return RetrievalResults(distances=distances, retrieved_ids=retrieved_ids, gt_ids=gt_ids)
