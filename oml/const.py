@@ -71,6 +71,7 @@ TBBoxes = Sequence[Optional[TBBox]]
 CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 
 # Required dataset format:
+TEXTS_COLUMN = "text"
 LABELS_COLUMN = "label"
 PATHS_COLUMN = "path"
 SPLIT_COLUMN = "split"
