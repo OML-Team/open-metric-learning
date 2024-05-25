@@ -16,6 +16,7 @@ def batched_knn(
     sequence_ids: Optional[LongTensor] = None,
     labels_gt: Optional[LongTensor] = None,
     bs: int = BS_KNN,
+    verbose: bool = False,
 ) -> Tuple[Sequence[FloatTensor], Sequence[LongTensor], Optional[Sequence[LongTensor]]]:
     """
 
@@ -28,6 +29,7 @@ def batched_knn(
         sequence_ids: Sequence identifiers with the size of ``L`` (if known).
         labels_gt: Ground truth labels of every element with the size of ``L`` (if known).
         bs: Batch size for computing distances to avoid OOM errors when processing the whole matrix at once.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
         distances: Sorted distances from queries to the first gallery items with the size of ``Q``.
@@ -54,7 +56,8 @@ def batched_knn(
     gt_ids = []
 
     # we do batching over first (queries) dimension
-    for i in tqdm(range(0, nq, bs), desc="Finding nearest neighbors."):
+    items = tqdm(range(0, nq, bs), desc="Finding nearest neighbors.") if verbose else range(0, nq, bs)
+    for i in items:
         distances_b = pairwise_dist(x1=embeddings_query[i : i + bs, :], x2=embeddings_gallery, p=2)
         ids_query_b = ids_query[i : i + bs]
 

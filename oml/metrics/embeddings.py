@@ -177,6 +177,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             embeddings=self.acc.storage[self._acc_embeddings_key],
             dataset=self.dataset,
             n_items_to_retrieve=max_k,
+            verbose=True,
         )
 
         if self.postprocessor:
