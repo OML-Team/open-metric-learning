@@ -38,3 +38,56 @@ universities who have used OML in their theses.
 
 
 <div align="left">
+
+
+### OML 3.0 has been released!
+<details>
+<summary>Details</summary>
+<p>
+
+The update focuses on two components:
+
+* We introduced the `RetrievalResults` (`RR`) class — a container to store gallery items retrieved for given queries.
+`RR` provides a unified way to visualize predictions and compute metrics (if ground truths are known).
+It also simplifies post-processing, where an `RR` object is taken as input and another `RR_upd` is produced as output.
+With these two objects, you can compare them visually or compute and compare metrics.
+Moreover, you can easily create a chain of such post-processors.
+  * `RR` optimizes memory consumption using batching: in other words, it doesn't store full matrix of query-gallery distances.
+    (It doesn't make search approximate, it remains exact).
+
+* We made `Model` and `Dataset` the only classes responsible for processing modality-specific logic.
+`Model` is responsible for interpreting its input dimensions: `BxCxHxW` for images or `BxLxD` for sequences like texts.
+`Dataset` is responsible for preparing an item: it may use `Transforms` for images or `Tokenizer` for texts.
+Functions computing metrics, `RetrievalResults`, `PairwiseReranker`, and other classes and functions are unified
+to work with any modality.
+  * We added `IVisualizableDataset` interface requiring `.visaulize()` method for a single item. If implemented,
+   `RetrievalResults` is able to show the layout of search results.
+
+#### Migration from OML 2.* [Python API]:
+
+Note, the easiest way to catch up with changes is to re-read the examples!
+
+* The recommended way of validation is to use `RetrievalResults` and functions like `calc_retrieval_metrics_rr`,
+`calc_fnmr_at_fmr_rr`, and others. `EmbeddingMetrics` is kept for use with PyTorch Lightning and inside Pipelines.
+Note, the signatures of `EmbeddingMetrics` methods have been slightly changed.
+
+* Since modality-specific logic is confined to `Dataset`, it doesn't output `PATHS_KEY`, `X1_KEY`, `X2_KEY`, `Y1_KEY`, and `Y2_KEY` anymore.
+Keys which are not modality specific like `LABELS_KEY`, `IS_GALLERY`, `IS_QUERY_KEY`, `CATEGORIES_KEY` are still in use.
+
+* `inference_on_images` is now `inference` and works with any modality.
+
+* Slightly changed interfaces of `Datasets.`
+
+* Removed: `IMetricDDP`, `EmbeddingMetricsDDP`, `calc_distance_matrix`, and other internal objects that shouldn't affect you.
+
+#### Migration from OML 2.* [Pipelines]:
+
+* [Feature extraction](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction):
+No changes, except for adding an optional argument — `mode_for_checkpointing = (min | max)`.
+
+* [Pairwise-postprocessing pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing):
+Slightly changed the name and arguments of the `postprocessor` sub config — `pairwise_images` is now `pairwise_reranker`
+and doesn't need transforms.
+
+</p>
+</details>
