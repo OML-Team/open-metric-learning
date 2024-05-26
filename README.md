@@ -589,28 +589,30 @@ I also want to thank NewYorker, since the part of functionality was developed (a
         table {
             width: 100%;
             table-layout: fixed;
+            border-collapse: collapse;
         }
         th, td {
             width: 50%;
             vertical-align: top;
+            padding: 5px;
         }
-        sub {
-            display: block;
-            overflow: auto;
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-<table>
+<table border="1">
 <tr>
 <th>Images</th>
 <th>Texts</th>
 </tr>
 <tr>
 <td>
-<sub>
+<pre>
 
-```python
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
@@ -641,14 +643,12 @@ for batch in tqdm(train_loader):
     optimizer.zero_grad()
 
     print(criterion.last_logs)
-```
 
-</sub>
+</pre>
 </td>
 <td>
-<sub>
+<pre>
 
-```python
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
@@ -679,9 +679,8 @@ for batch in tqdm(train_loader):
     optimizer.zero_grad()
 
     print(criterion.last_logs)
-```
 
-</sub>
+</pre>
 </td>
 </tr>
 </table>
