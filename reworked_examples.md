@@ -1,12 +1,13 @@
+```python
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModel, AutoTokenizer
 
 from oml.datasets import TextLabeledDataset
-from oml.models.texts import HFWrapper
 from oml.losses.triplet import TripletLossWithMiner
 from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.models.texts import HFWrapper
 from oml.samplers.balance import BalanceSampler
 from oml.utils import get_mock_texts_dataset
 
@@ -28,7 +29,6 @@ for batch in tqdm(train_loader):
     optimizer.zero_grad()
 
     print(criterion.last_logs)
-
 
 # ===================================================
 
@@ -62,3 +62,4 @@ for batch in tqdm(train_loader):
     optimizer.zero_grad()
 
     print(criterion.last_logs)
+```

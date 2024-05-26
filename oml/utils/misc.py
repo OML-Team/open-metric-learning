@@ -2,15 +2,14 @@ import inspect
 import os
 import random
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
-from oml.const import TColor
-from PIL import Image, ImageDraw, ImageFont
-from PIL import Image, ImageDraw, ImageFont
+
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
+from PIL import Image, ImageDraw, ImageFont
 from torch import Tensor
 
-from oml.const import TCfg
+from oml.const import TCfg, TColor
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -57,7 +56,7 @@ def one_hot(i: int, dim: int) -> torch.Tensor:
 
 
 def flatten_dict(
-        d: Dict[str, Any], parent_key: str = "", sep: str = "/", ignored_keys: Iterable[str] = ()
+    d: Dict[str, Any], parent_key: str = "", sep: str = "/", ignored_keys: Iterable[str] = ()
 ) -> Dict[str, Any]:
     items = []  # type: ignore
     for k, v in d.items():
@@ -101,8 +100,8 @@ def smart_sample(array: List[Any], k: int) -> List[Any]:
     array_size = len(array)
     if array_size < k:
         sampled = (
-                np.random.choice(array, size=array_size, replace=False).tolist()
-                + np.random.choice(array, size=k - array_size, replace=True).tolist()
+            np.random.choice(array, size=array_size, replace=False).tolist()
+            + np.random.choice(array, size=k - array_size, replace=True).tolist()
         )
     else:
         sampled = np.random.choice(array, size=k, replace=False).tolist()
@@ -164,37 +163,38 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
     return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
 
-def text_to_image(text: str, color: TColor) -> np.ndarray:
+def visualise_text(text: str, color: TColor) -> np.ndarray:
     im_size = 256
-    image = Image.new('RGB', (im_size, im_size), color=(255, 255, 255))
+    img = Image.new("RGB", (im_size, im_size), "white")
+    draw = ImageDraw.Draw(img)
 
-    # split text into chunks with respect to the image width
-    draw = ImageDraw.Draw(image)
     font = ImageFont.load_default()
-    lines = []
-    words = text.split()
-    line = []
-    for word in words:
-        test_line = ' '.join(line + [word])
-        if draw.textsize(test_line, font=font)[0] <= im_size:
-            line.append(word)
-        else:
-            lines.append(' '.join(line))
-            line = [word]
-    lines.append(' '.join(line))
 
-    # put text
-    x_start, y_start = 10, 10
-    y_text = y_start
-    for line in lines:
-        draw.text((x_start, y_text), line, font=font, fill=(0, 0, 0))
-        y_text += draw.textsize(line, font=font)[1]
+    # Calculate the position for the text
+    margin = 10
+    max_width = im_size - 2 * margin
+    text_lines = []
 
-    # draw bbox
-    bbox = [(0, 0), (im_size, im_size)]
-    draw.rectangle(bbox, outline=color, width=4)
+    # Split the text into lines that fit within the max_width
+    for line in text.split("\n"):
+        words = line.split()
+        current_line = []  # type: ignore
+        while words:
+            while words and draw.textlength(" ".join(current_line + [words[0]]), font=font) <= max_width:
+                current_line.append(words.pop(0))
+            text_lines.append(" ".join(current_line))
+            current_line = []
 
-    return np.array(image)
+    y = margin
+    for line in text_lines:
+        draw.text((margin, y), line, fill="black", font=font)
+        y += draw.textbbox((0, 0), line, font=font)[3] + 2
+
+    frame_size = 5
+    for i in range(frame_size):
+        draw.rectangle((i, i, im_size - i - 1, im_size - i - 1), outline=color)
+
+    return np.array(img)
 
 
 __all__ = [
@@ -208,5 +208,5 @@ __all__ = [
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
     "pad_array_right",
-    "text_to_image"
+    "visualise_text",
 ]

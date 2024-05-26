@@ -2,20 +2,28 @@ from pathlib import Path
 from typing import Tuple, Union
 
 import gdown
-import numpy as np
 import pandas as pd
 
-from oml.const import MOCK_DATASET_MD5, MOCK_DATASET_PATH, MOCK_DATASET_URL_GDRIVE, TEXTS_COLUMN, LABELS_COLUMN, \
-    CATEGORIES_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN
+from oml.const import (
+    CATEGORIES_COLUMN,
+    IS_GALLERY_COLUMN,
+    IS_QUERY_COLUMN,
+    LABELS_COLUMN,
+    MOCK_DATASET_MD5,
+    MOCK_DATASET_PATH,
+    MOCK_DATASET_URL_GDRIVE,
+    SPLIT_COLUMN,
+    TEXTS_COLUMN,
+)
 from oml.utils.io import check_exists_and_validate_md5
 from oml.utils.remote_storage import download_folder_from_remote_storage
 
 
 def get_mock_images_dataset(
-        dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
-        check_md5: bool = True,
-        df_name: str = "df.csv",
-        global_paths: bool = False,
+    dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
+    check_md5: bool = True,
+    df_name: str = "df.csv",
+    global_paths: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to download mock dataset which is already prepared in the required format.
@@ -60,18 +68,15 @@ def get_mock_images_dataset(
 
 
 def download_mock_dataset(
-        dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
-        check_md5: bool = True,
-        df_name: str = "df.csv",
-        global_paths: bool = False,
+    dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
+    check_md5: bool = True,
+    df_name: str = "df.csv",
+    global_paths: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # for back compatibility
 
     return get_mock_images_dataset(
-        dataset_root=dataset_root,
-        check_md5=check_md5,
-        df_name=df_name,
-        global_paths=global_paths
+        dataset_root=dataset_root, check_md5=check_md5, df_name=df_name, global_paths=global_paths
     )
 
 
@@ -80,7 +85,7 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         "Luxura King Bed: Plush headboard and durable frame for ultimate comfort.",
         "EcoSleep Twin Bed: Sustainable materials for eco-conscious consumers.",
         "DreamRest Queen Bed: Ergonomic design for restful sleep.",
-        "ClassicWood Full Bed: Sturdy wood construction with a sleek finish."
+        "ClassicWood Full Bed: Sturdy wood construction with a sleek finish.",
     ]
 
     table = [
@@ -89,21 +94,21 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         "Minimalist Work Desk: Sleek, modern workspace.",
         "ArtisanCraft End Table: Handcrafted accent piece.",
         "Vintage Bistro Table: Classic design for cozy corners.",
-        "Compact Folding Table: Versatile and easy to store."
+        "Compact Folding Table: Versatile and easy to store.",
     ]
 
     tv = [
-        "UltraHD Smart TV 55\": Stunning visuals and smart features.",
-        "Compact LED TV 32\": Crisp picture in a space-saving design.",
-        "Curved 4K TV 65\": Panoramic viewing with brilliant colors.",
-        "BudgetFriendly LCD TV 40\": Clear picture and essential features."
+        'UltraHD Smart TV 55": Stunning visuals and smart features.',
+        'Compact LED TV 32": Crisp picture in a space-saving design.',
+        'Curved 4K TV 65": Panoramic viewing with brilliant colors.',
+        'BudgetFriendly LCD TV 40": Clear picture and essential features.',
     ]
 
     chair = [
         "ErgoComfort Office Chair: Maximum comfort and support.",
         "ClassicWood Dining Chair: Timeless design with sturdy construction.",
         "RelaxLounge Recliner: Adjustable settings and plush cushioning.",
-        "ModernAccent Chair: Contemporary style with vibrant color options."
+        "ModernAccent Chair: Contemporary style with vibrant color options.",
     ]
 
     phone = [
@@ -112,7 +117,7 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         "Pixel 5: Pure Android experience with excellent camera.",
         "OnePlus 8T: High performance at a competitive price.",
         "Moto G Power: Long battery life for extended use.",
-        "Sony Xperia 5: Superior camera and display quality."
+        "Sony Xperia 5: Superior camera and display quality.",
     ]
 
     audio = [
@@ -121,32 +126,27 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         "StudioOverEar Headphones: Exceptional audio clarity.",
         "BudgetFriendly Wired Headphones: Good sound at an affordable price.",
         "Gaming Headset Pro: Surround sound for gaming.",
-        "TravelNoiseCancelling Earbuds: Compact with excellent noise cancellation."
+        "TravelNoiseCancelling Earbuds: Compact with excellent noise cancellation.",
     ]
     texts = [*bed, *table, *tv, *chair, *phone, *audio]
 
-    labels = ([0] * len(bed) +
-              [1] * len(table) +
-              [2] * len(tv) +
-              [3] * len(chair) +
-              [4] * len(phone) +
-              [5] * len(audio))
+    labels = [0] * len(bed) + [1] * len(table) + [2] * len(tv) + [3] * len(chair) + [4] * len(phone) + [5] * len(audio)
 
-    categories = (["furniture"] * len(bed) +
-                  ["furniture"] * len(table) +
-                  ["electronic"] * len(tv) +
-                  ["furniture"] * len(chair) +
-                  ["electronic"] * len(phone) +
-                  ["electronic"] * len(audio))
+    categories = (
+        ["furniture"] * len(bed)
+        + ["furniture"] * len(table)
+        + ["electronic"] * len(tv)
+        + ["furniture"] * len(chair)
+        + ["electronic"] * len(phone)
+        + ["electronic"] * len(audio)
+    )
 
-    split = (["train"] * len(bed) +
-             ["train"] * len(table) +
-             ["train"] * len(tv) +
-             ["validation"] * len(chair) +
-             ["validation"] * len(phone) +
-             ["validation"] * len(audio))
+    n_train = len(bed) + len(table) + len(tv)
+    n_val = len(chair) + len(phone) + len(audio)
 
-    is_query = [None] * (len(bed) + len(table) + len(tv)) + [True] * (len(chair) + len(phone) + len(audio))
+    split = ["train"] * n_train + ["validation"] * n_val
+    is_query = [None] * n_train + [True] * n_val  # type: ignore
+
     is_gallery = is_query
 
     data = {
@@ -155,7 +155,7 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         CATEGORIES_COLUMN: categories,
         SPLIT_COLUMN: split,
         IS_QUERY_COLUMN: is_query,
-        IS_GALLERY_COLUMN: is_gallery
+        IS_GALLERY_COLUMN: is_gallery,
     }
 
     df = pd.DataFrame(data)

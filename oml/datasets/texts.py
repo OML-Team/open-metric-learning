@@ -1,40 +1,43 @@
-from typing import Any, Dict, Optional, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from torch import BoolTensor, LongTensor
 
 from oml.const import (
+    BLACK,
+    CATEGORIES_COLUMN,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
     LABELS_COLUMN,
     LABELS_KEY,
+    SEQUENCE_COLUMN,
     TEXTS_COLUMN,
-    TColor, CATEGORIES_COLUMN, SEQUENCE_COLUMN, BLACK,
+    TColor,
 )
 from oml.interfaces.datasets import (
+    IBaseDataset,
     ILabeledDataset,
     IQueryGalleryDataset,
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
-    IBaseDataset
 )
-from oml.utils.misc import text_to_image
+from oml.utils.misc import visualise_text
 
 THuggingFaceTokenizer = Any
 
 
 class TextBaseDataset(IBaseDataset, IVisualizableDataset):
     def __init__(
-            self,
-            texts: List[str],
-            tokenizer: THuggingFaceTokenizer,
-            max_length: int = 128,
-            extra_data: Optional[Dict[str, Any]] = None,
-            input_tensors_key: str = INPUT_TENSORS_KEY,
-            index_key: str = INDEX_KEY,
+        self,
+        texts: List[str],
+        tokenizer: THuggingFaceTokenizer,
+        max_length: int = 128,
+        extra_data: Optional[Dict[str, Any]] = None,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        index_key: str = INDEX_KEY,
     ):
         if extra_data is not None:
             assert all(
@@ -64,10 +67,7 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
             add_special_tokens=True,
         )
 
-        data = {
-            self.input_tensors_key: encoded_text.input_ids.squeeze(),
-            self.index_key: item
-        }
+        data = {self.input_tensors_key: encoded_text.input_ids.squeeze(), self.index_key: item}
 
         for key, record in self.extra_data.items():
             if key in data:
@@ -78,7 +78,7 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
         return data
 
     def visualize(self, item: int, color: TColor) -> np.ndarray:
-        img = text_to_image(text=self._texts[item], color=color)
+        img = visualise_text(text=self._texts[item], color=color)
         return img
 
 
@@ -89,14 +89,14 @@ class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
     """
 
     def __init__(
-            self,
-            df: pd.DataFrame,
-            tokenizer: THuggingFaceTokenizer,
-            max_length: int = 128,
-            extra_data: Optional[Dict[str, Any]] = None,
-            input_tensors_key: str = INPUT_TENSORS_KEY,
-            labels_key: str = LABELS_KEY,
-            index_key: str = INDEX_KEY,
+        self,
+        df: pd.DataFrame,
+        tokenizer: THuggingFaceTokenizer,
+        max_length: int = 128,
+        extra_data: Optional[Dict[str, Any]] = None,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        labels_key: str = LABELS_KEY,
+        index_key: str = INDEX_KEY,
     ):
         assert all(x in df.columns for x in (TEXTS_COLUMN, LABELS_COLUMN))
         self.labels_key = labels_key
@@ -116,7 +116,7 @@ class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
             max_length=max_length,
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
-            index_key=index_key
+            index_key=index_key,
         )
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
@@ -146,14 +146,14 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
     """
 
     def __init__(
-            self,
-            df: pd.DataFrame,
-            tokenizer: THuggingFaceTokenizer,
-            max_length: int = 128,
-            extra_data: Optional[Dict[str, Any]] = None,
-            labels_key: str = LABELS_KEY,
-            input_tensors_key: str = INPUT_TENSORS_KEY,
-            index_key: str = INDEX_KEY,
+        self,
+        df: pd.DataFrame,
+        tokenizer: THuggingFaceTokenizer,
+        max_length: int = 128,
+        extra_data: Optional[Dict[str, Any]] = None,
+        labels_key: str = LABELS_KEY,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        index_key: str = INDEX_KEY,
     ):
         assert all(x in df.columns for x in (TEXTS_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN))
 
@@ -165,7 +165,7 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
             labels_key=labels_key,
-            index_key=index_key
+            index_key=index_key,
         )
 
     def get_query_ids(self) -> LongTensor:
@@ -182,13 +182,13 @@ class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     """
 
     def __init__(
-            self,
-            df: pd.DataFrame,
-            tokenizer: THuggingFaceTokenizer,
-            max_length: int = 128,
-            extra_data: Optional[Dict[str, Any]] = None,
-            input_tensors_key: str = INPUT_TENSORS_KEY,
-            index_key: str = INDEX_KEY,
+        self,
+        df: pd.DataFrame,
+        tokenizer: THuggingFaceTokenizer,
+        max_length: int = 128,
+        extra_data: Optional[Dict[str, Any]] = None,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        index_key: str = INDEX_KEY,
     ):
         assert all(x in df.columns for x in (TEXTS_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN))
 
@@ -204,7 +204,7 @@ class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
             tokenizer=tokenizer,
             input_tensors_key=input_tensors_key,
             labels_key=LABELS_COLUMN,
-            index_key=index_key
+            index_key=index_key,
         )
 
         self.extra_data = self.__dataset.extra_data

@@ -1,6 +1,6 @@
 from typing import Any
 
-from torch import FloatTensor
+from torch import FloatTensor, Tensor
 
 from oml.interfaces.models import IExtractor
 
@@ -19,7 +19,7 @@ class HFWrapper(IExtractor):
         self.model = model
         self._feat_dim = feat_dim
 
-    def forward(self, x) -> FloatTensor:
+    def forward(self, x: Tensor) -> FloatTensor:
         hf_output = self.model(x)
         embedding = hf_output["last_hidden_state"][:, 0, :]
         return embedding
