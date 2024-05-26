@@ -582,6 +582,25 @@ I would like to thank people who continue working on this pipeline when it becam
 
 I also want to thank NewYorker, since the part of functionality was developed (and used) by its computer vision team led by me.
 
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        th, td {
+            width: 50%;
+            vertical-align: top;
+        }
+        sub {
+            display: block;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
 <table>
 <tr>
 <th>Images</th>
@@ -621,10 +640,11 @@ for batch in tqdm(train_loader):
     optimizer.step()
     optimizer.zero_grad()
 
-    print(criterion.last_logs
+    print(criterion.last_logs)
 ```
 
 </sub>
+</td>
 <td>
 <sub>
 
@@ -665,3 +685,5 @@ for batch in tqdm(train_loader):
 </td>
 </tr>
 </table>
+</body>
+</html>
