@@ -46,7 +46,6 @@ build_readme:
 	# Acknowledgments
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
 	cat docs/readme/acknowledgments.md >> ${README_FILE}
-	cat test.md >> ${README_FILE}  # todo 522
 
 # ====================================== TESTS ======================================
 
