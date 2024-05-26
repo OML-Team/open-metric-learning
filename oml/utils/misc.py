@@ -2,7 +2,9 @@ import inspect
 import os
 import random
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
-
+from oml.const import TColor
+from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -55,7 +57,7 @@ def one_hot(i: int, dim: int) -> torch.Tensor:
 
 
 def flatten_dict(
-    d: Dict[str, Any], parent_key: str = "", sep: str = "/", ignored_keys: Iterable[str] = ()
+        d: Dict[str, Any], parent_key: str = "", sep: str = "/", ignored_keys: Iterable[str] = ()
 ) -> Dict[str, Any]:
     items = []  # type: ignore
     for k, v in d.items():
@@ -99,8 +101,8 @@ def smart_sample(array: List[Any], k: int) -> List[Any]:
     array_size = len(array)
     if array_size < k:
         sampled = (
-            np.random.choice(array, size=array_size, replace=False).tolist()
-            + np.random.choice(array, size=k - array_size, replace=True).tolist()
+                np.random.choice(array, size=array_size, replace=False).tolist()
+                + np.random.choice(array, size=k - array_size, replace=True).tolist()
         )
     else:
         sampled = np.random.choice(array, size=k, replace=False).tolist()
@@ -162,6 +164,39 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
     return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
 
+def text_to_image(text: str, color: TColor) -> np.ndarray:
+    im_size = 256
+    image = Image.new('RGB', (im_size, im_size), color=(255, 255, 255))
+
+    # split text into chunks with respect to the image width
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+    lines = []
+    words = text.split()
+    line = []
+    for word in words:
+        test_line = ' '.join(line + [word])
+        if draw.textsize(test_line, font=font)[0] <= im_size:
+            line.append(word)
+        else:
+            lines.append(' '.join(line))
+            line = [word]
+    lines.append(' '.join(line))
+
+    # put text
+    x_start, y_start = 10, 10
+    y_text = y_start
+    for line in lines:
+        draw.text((x_start, y_text), line, font=font, fill=(0, 0, 0))
+        y_text += draw.textsize(line, font=font)[1]
+
+    # draw bbox
+    bbox = [(0, 0), (im_size, im_size)]
+    draw.rectangle(bbox, outline=color, width=4)
+
+    return np.array(image)
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -173,4 +208,5 @@ __all__ = [
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
     "pad_array_right",
+    "text_to_image"
 ]

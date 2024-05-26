@@ -46,24 +46,21 @@ build_readme:
 	# Acknowledgments
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
 	cat docs/readme/acknowledgments.md >> ${README_FILE}
+	cat test.md >> ${README_FILE}  # todo 522
 
 # ====================================== TESTS ======================================
-
-.PHONY: download_mock_dataset
-download_mock_dataset:
-	python3 oml/utils/download_mock_dataset.py
 
 .PHONY: wandb_login
 wandb_login:
 	export WANDB_API_KEY=$(WANDB_API_KEY); wandb login
 
 .PHONY: run_all_tests
-run_all_tests: download_mock_dataset wandb_login
+run_all_tests: wandb_login
 	export PYTORCH_ENABLE_MPS_FALLBACK=1; export PYTHONPATH=.; pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 
 .PHONY: run_short_tests
-run_short_tests: download_mock_dataset
+run_short_tests:
 	export PYTORCH_ENABLE_MPS_FALLBACK=1; export PYTHONPATH=.; pytest --disable-warnings -sv -m "not long and not needs_optional_dependency" tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 
