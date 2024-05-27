@@ -25,6 +25,7 @@ class HFWrapper(IExtractor):
         embedding = hf_output["last_hidden_state"][:, 0, :]
         return embedding
 
+    @property
     def feat_dim(self) -> int:
         return self._feat_dim
 
