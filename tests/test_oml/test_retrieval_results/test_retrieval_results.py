@@ -85,12 +85,10 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
         error_expected = not isinstance(dataset, IVisualizableDataset)
         if error_expected:
             with pytest.raises(TypeError):
-                fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3)
-                fig.show()
+                fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
                 plt.close(fig=fig)
         else:
-            fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3)
-            fig.show()
+            fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
             plt.close(fig=fig)
 
     assert True
@@ -105,8 +103,7 @@ def test_visualisation_for_different_number_of_retrieved_items() -> None:
         gt_ids=[LongTensor([0]), LongTensor([1]), LongTensor([1, 2]), LongTensor([0])],
     )
 
-    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0])
-    fig.show()
+    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
     plt.close(fig=fig)
 
 

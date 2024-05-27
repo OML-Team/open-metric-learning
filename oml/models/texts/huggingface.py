@@ -4,7 +4,9 @@ from torch import FloatTensor
 
 from oml.interfaces.models import IExtractor
 
+# We don't use actual types programmatically in order not to bring optional dependency here
 THuggingFaceModel = Any
+THuggingFaceBatchEncoding = Any
 
 
 class HFWrapper(IExtractor):
@@ -18,7 +20,7 @@ class HFWrapper(IExtractor):
         self.model = model
         self._feat_dim = feat_dim
 
-    def forward(self, x) -> FloatTensor:  # type: ignore
+    def forward(self, x: THuggingFaceBatchEncoding) -> FloatTensor:  # type: ignore
         hf_output = self.model(x["input_ids"], attention_mask=x["attention_mask"])
         embedding = hf_output["last_hidden_state"][:, 0, :]
         return embedding

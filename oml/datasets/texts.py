@@ -31,6 +31,11 @@ THuggingFaceTokenizer = Any
 
 
 class TextBaseDataset(IBaseDataset, IVisualizableDataset):
+    """
+    The base class that handles text specific logic.
+
+    """
+
     def __init__(
         self,
         texts: List[str],
@@ -89,6 +94,7 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
 class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
     """
     The dataset of texts having their ground truth labels.
+
     """
 
     def __init__(
@@ -144,6 +150,7 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
     The annotated dataset of texts having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
     (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
+
     """
 
     def __init__(
@@ -179,6 +186,7 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
 class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     """
     The NOT annotated dataset of texts having `query`/`gallery` split.
+
     """
 
     def __init__(

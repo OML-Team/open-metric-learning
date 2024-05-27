@@ -81,6 +81,11 @@ def download_mock_dataset(
 
 
 def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Mock texts dataset useful for prototyping pipelines and understanding dataset structure.
+
+    """
+
     bed = [
         "Luxura King Bed: Plush headboard and durable frame for ultimate comfort.",
         "EcoSleep Twin Bed: Sustainable materials for eco-conscious consumers.",

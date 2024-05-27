@@ -3,6 +3,7 @@ import torch
 from torch import LongTensor
 
 from oml.const import (
+    BLACK,
     CATEGORIES_COLUMN,
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
@@ -20,7 +21,12 @@ from oml.datasets import (
     TextQueryGalleryDataset,
     TextQueryGalleryLabeledDataset,
 )
-from oml.interfaces.datasets import IBaseDataset, ILabeledDataset, IQueryGalleryDataset
+from oml.interfaces.datasets import (
+    IBaseDataset,
+    ILabeledDataset,
+    IQueryGalleryDataset,
+    IVisualizableDataset,
+)
 from oml.utils import get_mock_images_dataset, get_mock_texts_dataset
 
 
@@ -73,6 +79,11 @@ def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> N
         assert df[IS_GALLERY_COLUMN].iloc[int(ig)]
 
 
+def check_visaulization(dataset_v: IVisualizableDataset) -> None:
+    _ = dataset_v.visualize(item=0, color=BLACK)
+    assert True
+
+
 def test_text_datasets() -> None:
     df_train, df_val = get_mock_texts_dataset()
     tokenizer = ASCITokenizer()
@@ -88,16 +99,19 @@ def test_text_datasets() -> None:
     # Labeled
     dataset_l = TextLabeledDataset(df_train, tokenizer=tokenizer)
     check_base(dataset_l)
+    check_visaulization(dataset_l)
     check_labeled(dataset_l, df_train)
 
     # Query Gallery
     dataset_qg = TextQueryGalleryDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qg)
+    check_visaulization(dataset_qg)
     check_query_gallery(dataset_qg, df_val)
 
     # Query Gallery Labeled
     dataset_qgl = TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qgl)
+    check_visaulization(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)
 
