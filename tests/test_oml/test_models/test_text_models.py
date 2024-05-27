@@ -3,6 +3,7 @@ import os
 import pytest
 import torch
 from torch.utils.data import default_collate
+from transformers import AutoModel, AutoTokenizer
 
 from oml.datasets import TextLabeledDataset
 from oml.models.texts import HFWrapper
@@ -15,8 +16,6 @@ from oml.utils import get_mock_texts_dataset
     "model_name, feat_dim", [("bert-base-uncased", 768), ("roberta-base", 768), ("distilbert-base-uncased", 768)]
 )
 def test_padding_doesnt_affect_outputs(model_name: str, feat_dim: int) -> None:
-    from transformers import AutoModel, AutoTokenizer
-
     df_train, _ = get_mock_texts_dataset()
     extractor = HFWrapper(AutoModel.from_pretrained(model_name), feat_dim).eval()
     tokenizer = AutoTokenizer.from_pretrained(model_name)
