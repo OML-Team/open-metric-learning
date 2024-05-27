@@ -1,6 +1,6 @@
 from typing import Any
 
-from torch import FloatTensor, Tensor
+from torch import FloatTensor
 
 from oml.interfaces.models import IExtractor
 
@@ -11,7 +11,6 @@ class HFWrapper(IExtractor):
     """
     This is a wrapper for models from HuggingFace (transformers) library.
     Please, double check `forward` method to learn how we extrac features.
-
     """
 
     def __init__(self, model: THuggingFaceModel, feat_dim: int):
@@ -19,8 +18,8 @@ class HFWrapper(IExtractor):
         self.model = model
         self._feat_dim = feat_dim
 
-    def forward(self, x: Tensor) -> FloatTensor:
-        hf_output = self.model(x)
+    def forward(self, x) -> FloatTensor:  # type: ignore
+        hf_output = self.model(x["input_ids"], attention_mask=x["attention_mask"])
         embedding = hf_output["last_hidden_state"][:, 0, :]
         return embedding
 

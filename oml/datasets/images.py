@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -193,10 +194,10 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         extra_data = extra_data or dict()
 
         if CATEGORIES_COLUMN in df.columns:
-            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN]
+            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].copy()
 
         if SEQUENCE_COLUMN in df.columns:
-            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN]
+            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
 
         super().__init__(
             paths=self.df[PATHS_COLUMN].tolist(),
@@ -290,9 +291,9 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         input_tensors_key: str = INPUT_TENSORS_KEY,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
-        self.df = df.copy()
 
         # instead of implementing the whole logic let's just re-use QGL dataset, but with dropped labels
+        df = deepcopy(df)
         df[LABELS_COLUMN] = "fake_label"
 
         self.__dataset = ImageQueryGalleryLabeledDataset(

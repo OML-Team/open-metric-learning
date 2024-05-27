@@ -128,18 +128,25 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         "Gaming Headset Pro: Surround sound for gaming.",
         "TravelNoiseCancelling Earbuds: Compact with excellent noise cancellation.",
     ]
-    texts = [*bed, *table, *tv, *chair, *phone, *audio]
+    texts = [*bed, *table, *tv, *chair, *phone, *audio]  # train  # val
 
-    labels = [0] * len(bed) + [1] * len(table) + [2] * len(tv) + [3] * len(chair) + [4] * len(phone) + [5] * len(audio)
+    labels = (
+        [0] * len(bed)
+        + [1] * len(table)
+        + [2] * len(tv)
+        + [3] * len(chair)  # train
+        + [4] * len(phone)
+        + [5] * len(audio)
+    )  # val
 
     categories = (
         ["furniture"] * len(bed)
         + ["furniture"] * len(table)
         + ["electronic"] * len(tv)
-        + ["furniture"] * len(chair)
+        + ["furniture"] * len(chair)  # train
         + ["electronic"] * len(phone)
         + ["electronic"] * len(audio)
-    )
+    )  # val
 
     n_train = len(bed) + len(table) + len(tv)
     n_val = len(chair) + len(phone) + len(audio)

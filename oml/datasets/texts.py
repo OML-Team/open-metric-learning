@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
@@ -67,7 +68,10 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
             add_special_tokens=True,
         )
 
-        data = {self.input_tensors_key: encoded_text.input_ids.squeeze(), self.index_key: item}
+        encoded_text["input_ids"] = encoded_text["input_ids"].squeeze()
+        encoded_text["attention_mask"] = encoded_text["attention_mask"].squeeze()
+
+        data = {self.input_tensors_key: encoded_text, self.index_key: item}
 
         for key, record in self.extra_data.items():
             if key in data:
@@ -85,7 +89,6 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
 class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
     """
     The dataset of texts having their ground truth labels.
-
     """
 
     def __init__(
@@ -105,10 +108,10 @@ class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
         extra_data = extra_data or dict()
 
         if CATEGORIES_COLUMN in df.columns:
-            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN]
+            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].copy()
 
         if SEQUENCE_COLUMN in df.columns:
-            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN]
+            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
 
         super().__init__(
             texts=df[TEXTS_COLUMN],
@@ -139,10 +142,8 @@ class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
 class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDataset):
     """
     The annotated dataset of texts having `query`/`gallery` split.
-
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
     (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
-
     """
 
     def __init__(
@@ -178,7 +179,6 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
 class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     """
     The NOT annotated dataset of texts having `query`/`gallery` split.
-
     """
 
     def __init__(
@@ -192,9 +192,8 @@ class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     ):
         assert all(x in df.columns for x in (TEXTS_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN))
 
-        self.df = df.copy()
-
         # instead of implementing the whole logic let's just re-use QGL dataset, but with dropped labels
+        df = deepcopy(df)
         df[LABELS_COLUMN] = "fake_label"
 
         self.__dataset = TextQueryGalleryLabeledDataset(
