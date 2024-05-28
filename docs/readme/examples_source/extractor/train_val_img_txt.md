@@ -32,8 +32,6 @@ val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 optimizer = Adam(model.parameters(), lr=1e-4)
 criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
-
-
 def training():
     for batch in DataLoader(train, batch_sampler=sampler):
         embeddings = model(batch["input_tensors"])
@@ -57,10 +55,7 @@ validation()
 ```
 [comment]:train-val-img-end
 
-<div align="center">
-<img src="https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg" width="400px">
-
-[![Open In Colab](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
+<img src="https://i.ibb.co/MVxBf80/retrieval-img.png" width="400px">
 
 </td>
 <td style="border: 1px solid black; padding: 0;">
@@ -116,11 +111,11 @@ validation()
 ```
 [comment]:train-val-txt-end
 
-<div align="center">
-<img src="https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg" width="400px">
-
-[![Open In Colab](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
+<img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" width="400px">
 
 </td>
 </tr>
 </table>
+
+[![Open IMAGES example in Colab](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
+[![Open TEXTS example In Colab](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
