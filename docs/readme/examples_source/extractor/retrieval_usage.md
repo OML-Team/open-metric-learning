@@ -3,7 +3,6 @@
 <p>
 
 [comment]:usage-retrieval-start
-
 ```python
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference

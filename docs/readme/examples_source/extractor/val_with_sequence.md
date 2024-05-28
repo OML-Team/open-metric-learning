@@ -33,7 +33,6 @@ To use this functionality you only need to provide `sequence` column in your dat
 <p>
 
 [comment]:val-with-sequence-start
-
 ```python
 
 from oml.inference import inference

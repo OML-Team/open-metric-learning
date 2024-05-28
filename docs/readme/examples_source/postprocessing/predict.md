@@ -3,7 +3,6 @@
 <p>
 
 [comment]:postprocessor-pred-start
-
 ```python
 
 from oml.datasets import ImageQueryGalleryDataset

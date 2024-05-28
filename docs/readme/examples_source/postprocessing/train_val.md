@@ -3,7 +3,6 @@
 <p>
 
 [comment]:postprocessor-start
-
 ```python
 
 import torch
