@@ -50,5 +50,3 @@ trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 [comment]:lightning-ddp-end
 </p>
 </details>
-
-*Colab: there is no Colab link since it provides only single-GPU machines.*

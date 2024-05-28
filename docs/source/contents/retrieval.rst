@@ -14,7 +14,7 @@ RetrievalResults
     :show-inheritance:
 
     .. automethod:: __init__
-    .. automethod:: compute_from_embeddings
+    .. automethod:: from_embeddings
     .. automethod:: visualize
     .. automethod:: n_retrieved_items
 
