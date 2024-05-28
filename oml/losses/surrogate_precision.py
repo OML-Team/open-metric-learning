@@ -74,3 +74,6 @@ class SurrogatePrecision(torch.nn.Module):
         )
 
         return loss
+
+
+__all__ = ["SurrogatePrecision"]

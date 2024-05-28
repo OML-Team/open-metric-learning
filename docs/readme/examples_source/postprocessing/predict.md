@@ -3,6 +3,7 @@
 <p>
 
 [comment]:postprocessor-pred-start
+
 ```python
 
 from oml.datasets import ImageQueryGalleryDataset
@@ -23,7 +24,7 @@ dataset = ImageQueryGalleryDataset(df_test, transform=transforms)
 
 # 1. Let's get top 5 galleries closest to every query...
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
-rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
 
 # 2. ... and let's re-rank first 3 of them
 siamese = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])  # Note! Replace it with your trained postprocessor

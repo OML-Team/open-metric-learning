@@ -6,7 +6,7 @@ from oml.registry.models import EXTRACTORS_REGISTRY, PAIRWISE_MODELS_REGISTRY
 from oml.registry.optimizers import OPTIMIZERS_REGISTRY
 from oml.registry.samplers import SAMPLERS_REGISTRY
 from oml.registry.schedulers import SCHEDULERS_REGISTRY
-from oml.registry.transforms import TRANSFORMS_REGISTRY
+from oml.registry.transforms import TRANSFORMS_REGISTRY, get_transforms_for_pretrained
 
 
 def show_registry() -> None:

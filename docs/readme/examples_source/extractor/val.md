@@ -3,6 +3,7 @@
 <p>
 
 [comment]:vanilla-validation-start
+
 ```python
 
 import numpy as np
@@ -22,7 +23,7 @@ _, df_val = download_mock_dataset(global_paths=True, df_name="df_with_category.c
 dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
-rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
 rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
 
 # you can optionally provide categories to have category wise metrics

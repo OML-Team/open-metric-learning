@@ -137,3 +137,6 @@ class MinerWithBank(ITripletsMiner):
             logs.update({"negatives_from_bank": negatives_from_bank, "negatives_from_batch": negatives_from_batch})
 
         return logs.get_dict_with_results()
+
+
+__all__ = ["MinerWithBank"]

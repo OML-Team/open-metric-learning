@@ -60,8 +60,8 @@ class DummyModule(ModuleDDP):
         self.training_step_outputs: List[Any] = []
         self.validation_step_outputs: List[Any] = []
 
-        self.len_train = len(loaders_train.dataset)
-        self.len_val = len(loaders_val.dataset)
+        self.len_train = len(loaders_train.val)
+        self.len_val = len(loaders_val.val)
 
     def validation_step(self, batch: Dict[str, Any], batch_idx: int, dataloader_idx: int = 0) -> Dict[str, Any]:
         if batch_idx == 0:

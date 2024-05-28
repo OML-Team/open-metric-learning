@@ -117,7 +117,7 @@ def test_lightning(num_dataloaders: int, num_workers: int) -> None:
     ]
     callbacks = [
         create_retrieval_callback(
-            dataset=val_dataloaders[k].dataset,
+            dataset=val_dataloaders[k].val,
             loader_idx=k,
         )
         for k in range(num_dataloaders)

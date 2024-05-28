@@ -70,18 +70,18 @@ class RetrievalResults:
         return max(len(x) for x in self.retrieved_ids)
 
     @classmethod
-    def compute_from_embeddings(
+    def from_embeddings(
         cls,
         embeddings: FloatTensor,
         dataset: IQueryGalleryDataset,
-        n_items_to_retrieve: int = 100,
+        n_items: int = 100,
         verbose: bool = False,
     ) -> "RetrievalResults":
         """
         Args:
             embeddings: The result of inference with the shape of ``[dataset_len, emb_dim]``.
             dataset: Dataset having query/gallery split.
-            n_items_to_retrieve: Number of the closest gallery items to retrieve. It may be clipped by
+            n_items: Number of the closest gallery items to retrieve. It may be clipped by
                 gallery size if needed. Note, some queries may get less than this number of retrieved items if they
                 don't have enough gallery items available.
             verbose: Set ``True`` to see progress bar.
@@ -103,7 +103,7 @@ class RetrievalResults:
             ids_gallery=dataset.get_gallery_ids(),
             labels_gt=labels_gt,
             sequence_ids=sequence_ids,
-            top_n=n_items_to_retrieve,
+            top_n=n_items,
             verbose=verbose,
         )
 

@@ -71,7 +71,7 @@ def test_retrieval_results_om_images(with_gt_labels, data_getter) -> None:  # ty
         embeddings = inference(model=model, dataset=dataset, num_workers=0, batch_size=4).float()
 
         top_n = 2
-        rr = RetrievalResults.compute_from_embeddings(embeddings=embeddings, dataset=dataset, n_items_to_retrieve=top_n)
+        rr = RetrievalResults.from_embeddings(embeddings=embeddings, dataset=dataset, n_items=top_n)
 
         assert len(rr.distances) == n_query
 
