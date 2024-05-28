@@ -12,9 +12,7 @@ Here are more details regarding dataset
 `Schemas, explanations and tips <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training>`_
 illustrating the code below.
 
-.. mdinclude:: ../../../docs/readme/examples_source/extractor/train.md
-
-.. mdinclude:: ../../../docs/readme/examples_source/extractor/val.md
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_img_txt.md
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage.md
 

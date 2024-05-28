@@ -9,12 +9,12 @@
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference
 from oml.models import ConcatSiamese, ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-from oml.retrieval.postprocessors.pairwise import PairwiseReranker
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.registry import get_transforms_for_pretrained
+from oml.retrieval import PairwiseReranker
+from oml.utils import get_mock_images_dataset
 from oml.retrieval import RetrievalResults
 
-_, df_test = download_mock_dataset(global_paths=True)
+_, df_test = get_mock_images_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
 
 extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")

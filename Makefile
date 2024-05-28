@@ -27,8 +27,7 @@ build_readme:
 	cat docs/readme/installation.md >> ${README_FILE}
 	# Python examples
 	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/train.md >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/val.md >> ${README_FILE}
+	cat docs/readme/examples_source/extractor/train_val_img_txt.md >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/train_val_pl.md >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
 	cat docs/readme/examples.md >> ${README_FILE}

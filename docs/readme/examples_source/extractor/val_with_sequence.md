@@ -40,12 +40,12 @@ from oml.inference import inference
 from oml.datasets import ImageQueryGalleryLabeledDataset
 from oml.models import ViTExtractor
 from oml.retrieval import RetrievalResults
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils import get_mock_images_dataset
 from oml.metrics import calc_retrieval_metrics_rr
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).to("cpu")
 
-_, df_val = download_mock_dataset(global_paths=True, df_name="df_with_sequence.csv")  # <- sequence info is in the file
+_, df_val = get_mock_images_dataset(global_paths=True, df_name="df_with_sequence.csv")  # <- sequence info is in the file
 dataset = ImageQueryGalleryLabeledDataset(df_val)
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 

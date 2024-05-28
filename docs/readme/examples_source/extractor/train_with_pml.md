@@ -3,20 +3,20 @@
 <p>
 
 ```python
-import torch
-from tqdm import tqdm
+from torch.optim import Adam
+from torch.utils.data import DataLoader
 
 from oml.datasets import ImageLabeledDataset
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_images_dataset
 
-from pytorch_metric_learning import losses, distances, reducers, miners
+from pytorch_metric_learning import losses
 
-df_train, _ = download_mock_dataset(global_paths=True)
+df_train, _ = get_mock_images_dataset(global_paths=True)
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.Adam(extractor.parameters(), lr=1e-4)
+optimizer = Adam(extractor.parameters(), lr=1e-4)
 
 train_dataset = ImageLabeledDataset(df_train)
 
@@ -25,9 +25,9 @@ train_dataset = ImageLabeledDataset(df_train)
 criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(), embedding_size=extractor.feat_dim)  # for classification-like losses
 
 sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
+train_loader = DataLoader(train_dataset, batch_sampler=sampler)
 
-for batch in tqdm(train_loader):
+for batch in train_loader:
     embeddings = extractor(batch["input_tensors"])
     loss = criterion(embeddings, batch["labels"])
     loss.backward()
@@ -37,5 +37,3 @@ for batch in tqdm(train_loader):
 
 </p>
 </details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1m66v1qhCyAUciEcXsJlIJtjF6nz6ZLI7?usp=sharing)

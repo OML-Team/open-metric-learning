@@ -7,27 +7,28 @@
 ```python
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from torch.optim import SGD
+from torch.optim import Adam
 
 from oml.datasets import ImageQueryGalleryLabeledDataset, ImageLabeledDataset
 from oml.lightning.modules.extractor import ExtractorModuleDDP
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.losses import TripletLossWithMiner
+from oml.metrics import EmbeddingMetrics
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_images_dataset
 from pytorch_lightning.strategies import DDPStrategy
+from oml.transforms.images.torchvision import get_augs_torch
 
-df_train, df_val = download_mock_dataset(global_paths=True)
+df_train, df_val = get_mock_images_dataset(global_paths=True)
 
 # model
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
-optimizer = SGD(extractor.parameters(), lr=1e-6)
-train_dataset = ImageLabeledDataset(df_train)
+optimizer = Adam(extractor.parameters(), lr=1e-6)
+train_dataset = ImageLabeledDataset(df_train, transform=get_augs_torch(im_size=224))
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)

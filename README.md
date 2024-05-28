@@ -338,87 +338,110 @@ docker pull omlteam/oml:cpu
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
-<details>
-<summary>Training</summary>
-<p>
-
-[comment]:vanilla-train-start
+[comment]:train-val-img-start
 ```python
-import torch
-from tqdm import tqdm
+from torch.optim import Adam
+from torch.utils.data import DataLoader
 
-from oml.datasets import ImageLabeledDataset
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-
-df_train, _ = download_mock_dataset(global_paths=True)
-
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.Adam(extractor.parameters(), lr=1e-4)
-
-train_dataset = ImageLabeledDataset(df_train)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner(), need_logs=True)
-sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
-
-for batch in tqdm(train_loader):
-    embeddings = extractor(batch["input_tensors"])
-    loss = criterion(embeddings, batch["labels"])
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-
-    # info for logging: positive/negative distances, number of active triplets
-    print(criterion.last_logs)
-
-```
-[comment]:vanilla-train-end
-</p>
-</details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing)
-<details>
-<summary>Validation</summary>
-<p>
-
-[comment]:vanilla-validation-start
-
-```python
-
-import numpy as np
-
-from oml.datasets import ImageQueryGalleryLabeledDataset
+from oml import datasets as d
 from oml.inference import inference
+from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
+from oml.registry import get_transforms_for_pretrained
 from oml.retrieval import RetrievalResults
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.registry.transforms import get_transforms_for_pretrained
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_images_dataset
 
-extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
+model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").train()
 transform, _ = get_transforms_for_pretrained("vits16_dino")
 
-_, df_val = download_mock_dataset(global_paths=True, df_name="df_with_category.csv")
-dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
-embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
+df_train, df_val = get_mock_images_dataset(global_paths=True)
+train = d.ImageLabeledDataset(df_train, transform=transform)
+val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 
-rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
-rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
+optimizer = Adam(model.parameters(), lr=1e-4)
+criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
-# you can optionally provide categories to have category wise metrics
-query_categories = np.array(dataset.extra_data["category"])[dataset.get_query_ids()]
-metrics = calc_retrieval_metrics_rr(rr, query_categories, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
-print(rr, "\n", metrics)
+
+def training():
+    for batch in DataLoader(train, batch_sampler=sampler):
+        embeddings = model(batch["input_tensors"])
+        loss = criterion(embeddings, batch["labels"])
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(criterion.last_logs)
+
+
+def validation():
+    embeddings = inference(model, val, batch_size=4, num_workers=0)
+    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+
+
+training()
+validation()
 
 ```
-[comment]:vanilla-validation-end
-</p>
-</details>
+[comment]:train-val-img-end
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1O2o3k8I8jN5hRin3dKnAS3WsgG04tmIT?usp=sharing)
+TODO COLAB
+
+[comment]:train-val-txt-start
+```python
+from torch.optim import Adam
+from torch.utils.data import DataLoader
+from transformers import AutoModel, AutoTokenizer
+
+from oml import datasets as d
+from oml.inference import inference
+from oml.losses import TripletLossWithMiner
+from oml.metrics import calc_retrieval_metrics_rr
+from oml.miners import AllTripletsMiner
+from oml.models import HFWrapper
+from oml.retrieval import RetrievalResults
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_texts_dataset
+
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = HFWrapper(AutoModel.from_pretrained("bert-base-uncased"), 768).to("cpu").train()
+
+df_train, df_val = get_mock_texts_dataset()
+train = d.TextLabeledDataset(df_train, tokenizer=tokenizer)
+val = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
+
+optimizer = Adam(model.parameters(), lr=1e-4)
+criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
+
+
+def training():
+    for batch in DataLoader(train, batch_sampler=sampler):
+        embeddings = model(batch["input_tensors"])
+        loss = criterion(embeddings, batch["labels"])
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(criterion.last_logs)
+
+
+def validation():
+    embeddings = inference(model, val, batch_size=4, num_workers=0)
+    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+
+
+training()
+validation()
+```
+[comment]:train-val-txt-end
+
+TODO COLAB
 <details>
 <summary>Training + Validation [Lightning and logging]</summary>
 <p>
@@ -427,32 +450,26 @@ print(rr, "\n", metrics)
 ```python
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from torch.optim import SGD
+from torch.optim import Adam
 
 from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
+from oml.losses import TripletLossWithMiner
+from oml.metrics import EmbeddingMetrics
+from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.lightning.pipelines.logging import (
-    ClearMLPipelineLogger,
-    MLFlowPipelineLogger,
-    NeptunePipelineLogger,
-    TensorBoardPipelineLogger,
-    WandBPipelineLogger,
-)
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_images_dataset
+from oml.lightning.pipelines import logging
 
-df_train, df_val = download_mock_dataset(global_paths=True)
+df_train, df_val = get_mock_images_dataset(global_paths=True)
 
 # model
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 
 # train
-optimizer = SGD(extractor.parameters(), lr=1e-6)
+optimizer = Adam(extractor.parameters(), lr=1e-6)
 train_dataset = ImageLabeledDataset(df_train)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
@@ -464,21 +481,21 @@ val_loader = DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
 
 # 1) Logging with Tensorboard
-logger = TensorBoardPipelineLogger(".")
+logger = logging.TensorBoardPipelineLogger(".")
 
 # 2) Logging with Neptune
-# logger = NeptunePipelineLogger(api_key="", project="", log_model_checkpoints=False)
+# logger = logging.NeptunePipelineLogger(api_key="", project="", log_model_checkpoints=False)
 
 # 3) Logging with Weights and Biases
 # import os
 # os.environ["WANDB_API_KEY"] = ""
-# logger = WandBPipelineLogger(project="test_project", log_model=False)
+# logger = logging.WandBPipelineLogger(project="test_project", log_model=False)
 
 # 4) Logging with MLFlow locally
-# logger = MLFlowPipelineLogger(experiment_name="exp", tracking_uri="file:./ml-runs")
+# logger = logging.MLFlowPipelineLogger(experiment_name="exp", tracking_uri="file:./ml-runs")
 
 # 5) Logging with ClearML
-# logger = ClearMLPipelineLogger(project_name="exp", task_name="test")
+# logger = logging.ClearMLPipelineLogger(project_name="exp", task_name="test")
 
 # run
 pl_model = ExtractorModule(extractor, criterion, optimizer)
@@ -489,8 +506,6 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 [comment]:lightning-end
 </p>
 </details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1bVUgdBGWvQgCkba2YtaIRVlUQUz7Q60Z?usp=share_link)
 <details>
 <summary>Using a trained model for retrieval</summary>
 <p>
@@ -501,11 +516,11 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference
 from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.retrieval.retrieval_results import RetrievalResults
+from oml.registry import get_transforms_for_pretrained
+from oml.utils import get_mock_images_dataset
+from oml.retrieval import RetrievalResults
 
-_, df_test = download_mock_dataset(global_paths=True)
+_, df_test = get_mock_images_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
 
 extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
@@ -523,8 +538,6 @@ print(rr)  # you get the ids of retrieved items and the corresponding distances
 [comment]:usage-retrieval-end
 </p>
 </details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 
 [MORE EXAMPLES](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html)
 
@@ -589,7 +602,7 @@ because the version of train/val split and usage of bounding boxes may differ.*
 ```python
 from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
 from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
+from oml.registry import get_transforms_for_pretrained
 
 model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").eval()
 transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
