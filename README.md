@@ -372,8 +372,6 @@ val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 optimizer = Adam(model.parameters(), lr=1e-4)
 criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
-
-
 def training():
     for batch in DataLoader(train, batch_sampler=sampler):
         embeddings = model(batch["input_tensors"])
@@ -397,34 +395,33 @@ validation()
 ```
 [comment]:train-val-img-end
 
-<div align="center">
-<img src="https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg" width="400px">
+<img src="https://i.ibb.co/MVxBf80/retrieval-img.png" width="400px">
 
 </td>
 <td style="border: 1px solid black; padding: 0;">
 
-[comment]:train-val-img-start
+[comment]:train-val-txt-start
 ```python
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from transformers import AutoModel, AutoTokenizer
 
 from oml import datasets as d
 from oml.inference import inference
 from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
+from oml.models import HFWrapper
 from oml.retrieval import RetrievalResults
 from oml.samplers import BalanceSampler
-from oml.utils import get_mock_images_dataset
+from oml.utils import get_mock_texts_dataset
 
-model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").train()
-transform, _ = get_transforms_for_pretrained("vits16_dino")
+model = HFWrapper(AutoModel.from_pretrained("bert-base-uncased"), 768).to("cpu").train()
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
-df_train, df_val = get_mock_images_dataset(global_paths=True)
-train = d.ImageLabeledDataset(df_train, transform=transform)
-val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
+df_train, df_val = get_mock_texts_dataset()
+train = d.TextLabeledDataset(df_train, tokenizer=tokenizer)
+val = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
 
 optimizer = Adam(model.parameters(), lr=1e-4)
 criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
@@ -452,14 +449,16 @@ training()
 validation()
 
 ```
-[comment]:train-val-img-end
+[comment]:train-val-txt-end
 
-<div align="center">
-<img src="https://i.ibb.co/wsmD5r4/photo-2022-06-06-17-40-52.jpg" width="400px">
+<img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" width="400px">
 
 </td>
 </tr>
 </table>
+
+[![Open IMAGES example in Colab](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
+[![Open TEXTS example In Colab](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
 <details>
 <summary>Training + Validation [Lightning and logging]</summary>
 <p>
@@ -529,7 +528,6 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 <p>
 
 [comment]:usage-retrieval-start
-
 ```python
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference
