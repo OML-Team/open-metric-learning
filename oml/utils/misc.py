@@ -3,13 +3,13 @@ import os
 import random
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
-from PIL import Image, ImageDraw, ImageFont
 from torch import Tensor
 
-from oml.const import TCfg, TColor
+from oml.const import BLACK, TCfg, TColor
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -163,38 +163,28 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
     return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
 
-def visualise_text(text: str, color: TColor) -> np.ndarray:
-    im_size = 256
-    img = Image.new("RGB", (im_size, im_size), "white")
-    draw = ImageDraw.Draw(img)
+def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
+    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
+    ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=12)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
 
-    font = ImageFont.load_default()
+    fig.canvas.draw()
+    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    plt.close(fig)
 
-    # Calculate the position for the text
-    margin = 10
-    max_width = im_size - 2 * margin
-    text_lines = []
+    image = np.resize(image, (256, 256, 3))
 
-    # Split the text into lines that fit within the max_width
-    for line in text.split("\n"):
-        words = line.split()
-        current_line = []  # type: ignore
-        while words:
-            while words and draw.textlength(" ".join(current_line + [words[0]]), font=font) <= max_width:
-                current_line.append(words.pop(0))
-            text_lines.append(" ".join(current_line))
-            current_line = []
+    if draw_bbox:
+        frame_thickness = 5
+        image[:frame_thickness, :, :] = color  # Top frame
+        image[-frame_thickness:, :, :] = color  # Bottom frame
+        image[:, :frame_thickness, :] = color  # Left frame
+        image[:, -frame_thickness:, :] = color  # Right frame
 
-    y = margin
-    for line in text_lines:
-        draw.text((margin, y), line, fill="black", font=font)
-        y += draw.textbbox((0, 0), line, font=font)[3] + 2
-
-    frame_size = 5
-    for i in range(frame_size):
-        draw.rectangle((i, i, im_size - i - 1, im_size - i - 1), outline=color)
-
-    return np.array(img)
+    return image
 
 
 __all__ = [
