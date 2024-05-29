@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Union
 
@@ -27,7 +28,17 @@ from oml.interfaces.datasets import (
 )
 from oml.utils.misc import visualise_text
 
-THuggingFaceTokenizer = Any
+TTokenizer = Any
+
+
+def check_tokenizer_type(tokenizer):  # type: ignore
+    try:
+        import transformers as t
+
+        if not isinstance(tokenizer, (t.PreTrainedTokenizer, t.PreTrainedTokenizerFast)):
+            warnings.warn(f"Unexpected tokenizer type: {type(tokenizer)}.")
+    except ImportError:
+        pass
 
 
 class TextBaseDataset(IBaseDataset, IVisualizableDataset):
@@ -39,7 +50,7 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
     def __init__(
         self,
         texts: List[str],
-        tokenizer: THuggingFaceTokenizer,
+        tokenizer: TTokenizer,
         max_length: int = 128,
         extra_data: Optional[Dict[str, Any]] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
@@ -52,6 +63,8 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
             self.extra_data = extra_data
         else:
             self.extra_data = {}
+
+        check_tokenizer_type(tokenizer)
 
         self._texts = texts
         self._tokenizer = tokenizer
@@ -100,7 +113,7 @@ class TextLabeledDataset(TextBaseDataset, ILabeledDataset):
     def __init__(
         self,
         df: pd.DataFrame,
-        tokenizer: THuggingFaceTokenizer,
+        tokenizer: TTokenizer,
         max_length: int = 128,
         extra_data: Optional[Dict[str, Any]] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
@@ -156,7 +169,7 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
     def __init__(
         self,
         df: pd.DataFrame,
-        tokenizer: THuggingFaceTokenizer,
+        tokenizer: TTokenizer,
         max_length: int = 128,
         extra_data: Optional[Dict[str, Any]] = None,
         labels_key: str = LABELS_KEY,
@@ -192,7 +205,7 @@ class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     def __init__(
         self,
         df: pd.DataFrame,
-        tokenizer: THuggingFaceTokenizer,
+        tokenizer: TTokenizer,
         max_length: int = 128,
         extra_data: Optional[Dict[str, Any]] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,

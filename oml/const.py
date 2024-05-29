@@ -71,18 +71,20 @@ TBBoxes = Sequence[Optional[TBBox]]
 CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 
 # Required dataset format:
-TEXTS_COLUMN = "text"
 LABELS_COLUMN = "label"
-PATHS_COLUMN = "path"
 SPLIT_COLUMN = "split"
 IS_QUERY_COLUMN = "is_query"
 IS_GALLERY_COLUMN = "is_gallery"
 CATEGORIES_COLUMN = "category"
+SEQUENCE_COLUMN = "sequence"
+# text specific columns:
+TEXTS_COLUMN = "text"
+# image specific columns:
+PATHS_COLUMN = "path"
 X1_COLUMN = "x_1"
 X2_COLUMN = "x_2"
 Y1_COLUMN = "y_1"
 Y2_COLUMN = "y_2"
-SEQUENCE_COLUMN = "sequence"
 
 OBLIGATORY_COLUMNS = [LABELS_COLUMN, PATHS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
 BBOXES_COLUMNS = [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]
