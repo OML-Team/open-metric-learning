@@ -344,7 +344,7 @@ docker pull omlteam/oml:cpu
         <th style="border: 1px solid black; padding: 0;">TEXTS</th>
     </tr>
     <tr>
-        <td rowspan="2" style="border: 1px solid black; padding: 0;">
+        <td rowspan="3" style="border: 1px solid black; padding: 0;">
 
 [comment]:train-val-img-start
 ```python
@@ -395,6 +395,8 @@ training()
 validation()
 ```
 [comment]:train-val-img-end
+
+<br>
 
 <img src="https://i.ibb.co/MVxBf80/retrieval-img.png" width="800px">
 
@@ -454,6 +456,8 @@ training()
 validation()
 ```
 [comment]:train-val-txt-end
+
+<br>
 
 <img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" width="800">
 
