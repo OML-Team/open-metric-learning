@@ -372,6 +372,8 @@ val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 optimizer = Adam(model.parameters(), lr=1e-4)
 criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
+
+
 def training():
     for batch in DataLoader(train, batch_sampler=sampler):
         embeddings = model(batch["input_tensors"])
@@ -391,11 +393,10 @@ def validation():
 
 training()
 validation()
-
 ```
 [comment]:train-val-img-end
 
-<img src="https://i.ibb.co/MVxBf80/retrieval-img.png" width="400px">
+<img src="https://i.ibb.co/MVxBf80/retrieval-img.png" width="800px">
 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
@@ -451,11 +452,10 @@ def validation():
 
 training()
 validation()
-
 ```
 [comment]:train-val-txt-end
 
-<img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" width="400px">
+<img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" width="800">
 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)

@@ -53,7 +53,6 @@ def validation():
 
 training()
 validation()
-
 ```
 [comment]:train-val-img-end
 
@@ -113,7 +112,6 @@ def validation():
 
 training()
 validation()
-
 ```
 [comment]:train-val-txt-end
 
