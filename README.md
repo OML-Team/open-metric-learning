@@ -459,6 +459,14 @@ validation()
 
 <td style="border: 1px solid black; padding: 0;">
 
+```python
+{'active_tri': 0.125, 'pos_dist': 82.5, 'neg_dist': 100.5}  # batch 1
+{'active_tri': 0.0, 'pos_dist': 36.3, 'neg_dist': 56.9}     # batch 2
+
+{'cmc': {1: 0.75}, 'precision': {5: 0.75}, 'map': {3: 0.8}}
+
+```
+
 <img src="https://i.ibb.co/MVxBf80/retrieval-img.png" height="200px">
 
 <br>
@@ -469,6 +477,14 @@ validation()
 </td>
 
 <td style="border: 1px solid black; padding: 0;">
+
+```python
+{'active_tri': 0.0, 'pos_dist': 8.5, 'neg_dist': 11.0}  # batch 1
+{'active_tri': 0.25, 'pos_dist': 8.9, 'neg_dist': 9.8}  # batch 2
+
+{'cmc': {1: 0.8}, 'precision': {5: 0.7}, 'map': {3: 0.9}}
+
+```
 
 <img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" height="200px">
 
