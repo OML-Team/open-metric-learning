@@ -4,4 +4,4 @@ neptune>=1.0.0, <1.10.1
 wandb>=0.15.4
 mlflow>=2.0.0
 clearml>=1.5.0
-
+transformers>=4.0

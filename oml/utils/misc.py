@@ -3,12 +3,13 @@ import os
 import random
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torch import Tensor
 
-from oml.const import TCfg
+from oml.const import BLACK, TCfg, TColor
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -162,6 +163,30 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
     return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
 
+def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
+    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
+    ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=12)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    fig.canvas.draw()
+    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    plt.close(fig)
+
+    image = np.resize(image, (256, 256, 3))
+
+    if draw_bbox:
+        frame_thickness = 5
+        image[:frame_thickness, :, :] = color  # Top frame
+        image[-frame_thickness:, :, :] = color  # Bottom frame
+        image[:, :frame_thickness, :] = color  # Left frame
+        image[:, -frame_thickness:, :] = color  # Right frame
+
+    return image
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -173,4 +198,5 @@ __all__ = [
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
     "pad_array_right",
+    "visualise_text",
 ]
