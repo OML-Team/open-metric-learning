@@ -452,7 +452,6 @@ validation()
 ```
 [comment]:train-val-txt-end
 
-
 </td>
 </tr>
 
@@ -462,6 +461,9 @@ validation()
 
 <img src="https://i.ibb.co/MVxBf80/retrieval-img.png" height="200px">
 
+<br>
+<br>
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
 
 </td>
@@ -469,6 +471,9 @@ validation()
 <td style="border: 1px solid black; padding: 0;">
 
 <img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" height="200px">
+
+<br>
+<br>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
 
