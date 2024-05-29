@@ -338,6 +338,8 @@ docker pull omlteam/oml:cpu
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
+<div style="overflow-x: auto;">
+
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
 
 <tr>
@@ -451,12 +453,9 @@ training()
 validation()
 ```
 [comment]:train-val-txt-end
-
 </td>
 </tr>
-
 <tr>
-
 <td style="border: 1px solid black; padding: 0;">
 
 ```python
@@ -498,6 +497,9 @@ validation()
 </tr>
 
 </table>
+
+</div>
+
 <details>
 <summary>Training + Validation [Lightning and logging]</summary>
 <p>

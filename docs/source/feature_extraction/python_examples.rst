@@ -43,5 +43,3 @@ we recommend you to pick `distances.LpDistance(p=2)`.
 Handling sequences of photos
 ############################
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/val_with_sequence.md
-ㅤ
-ㅤ
