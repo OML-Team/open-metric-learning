@@ -9,7 +9,7 @@ from oml.utils import get_mock_texts_dataset
 
 @pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize(
-    "model_name, feat_dim", [("bert-base-uncased", 768), ("roberta-base", 768), ("distilbert-base-uncased", 768)]
+    "model_name, feat_dim", [("roberta-base", 768), ("bert-base-uncased", 768), ("distilbert-base-uncased", 768)]
 )
 def test_padding_doesnt_affect_outputs(model_name: str, feat_dim: int) -> None:
     from transformers import AutoConfig, AutoModel, AutoTokenizer
