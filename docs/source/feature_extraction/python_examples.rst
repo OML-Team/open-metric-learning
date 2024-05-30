@@ -18,7 +18,20 @@ illustrating the code below.
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_pl.md
 
+.. __________________ EXAMPLE: Lightning DDP __________________
+
+.. raw:: html
+
+    <details>
+    <summary>Training + Validation [Lightning DDP]</summary>
+    <p>
+
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_pl_ddp.md
+
+.. raw:: html
+
+    </p>
+    </details>
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_2loaders_val.md
 
