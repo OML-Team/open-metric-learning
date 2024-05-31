@@ -1,5 +1,7 @@
 ## Library features
 
+[comment]: todo 522: add to rst
+
 <table>
   <tr>
     <td>
