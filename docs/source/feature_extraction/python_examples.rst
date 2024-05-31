@@ -117,7 +117,7 @@ To use content from PyTorch Metric Learning (PML) with our Pipelines just follow
 `tutorial <https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc>`_
 of adding custom loss.
 
-Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
+**Note!** During the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
 we recommend you to pick `distances.LpDistance(p=2)`.
 
 Handling sequences of photos

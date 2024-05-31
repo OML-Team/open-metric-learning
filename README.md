@@ -500,64 +500,6 @@ validation()
 
 </div>
 
-[comment]:lightning-start
-```python
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
-from torch.optim import Adam
-
-from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
-from oml.lightning.modules.extractor import ExtractorModule
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses import TripletLossWithMiner
-from oml.metrics import EmbeddingMetrics
-from oml.miners import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers import BalanceSampler
-from oml.utils import get_mock_images_dataset
-from oml.lightning.pipelines import logging
-
-df_train, df_val = get_mock_images_dataset(global_paths=True)
-
-# model
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
-
-# train
-optimizer = Adam(extractor.parameters(), lr=1e-6)
-train_dataset = ImageLabeledDataset(df_train)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
-
-# val
-val_dataset = ImageQueryGalleryLabeledDataset(df_val)
-val_loader = DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
-
-# 1) Logging with Tensorboard
-logger = logging.TensorBoardPipelineLogger(".")
-
-# 2) Logging with Neptune
-# logger = logging.NeptunePipelineLogger(api_key="", project="", log_model_checkpoints=False)
-
-# 3) Logging with Weights and Biases
-# import os
-# os.environ["WANDB_API_KEY"] = ""
-# logger = logging.WandBPipelineLogger(project="test_project", log_model=False)
-
-# 4) Logging with MLFlow locally
-# logger = logging.MLFlowPipelineLogger(experiment_name="exp", tracking_uri="file:./ml-runs")
-
-# 5) Logging with ClearML
-# logger = logging.ClearMLPipelineLogger(project_name="exp", task_name="test")
-
-# run
-pl_model = ExtractorModule(extractor, criterion, optimizer)
-trainer = pl.Trainer(max_epochs=3, callbacks=[metric_callback], num_sanity_val_steps=0, logger=logger)
-trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-
-```
-[comment]:lightning-end
 [comment]:usage-retrieval-start
 ```python
 from oml.datasets import ImageQueryGalleryDataset
@@ -583,9 +525,45 @@ print(rr)  # you get the ids of retrieved items and the corresponding distances
 
 ```
 [comment]:usage-retrieval-end
+## Library features
 
-[MORE EXAMPLES](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html)
+<table>
+  <tr>
+    <td>
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> Losses</a> |
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html"> Miners</a>
+    </td>
+    <td>
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> Samplers</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction">Using configs</a></td>
+    <td><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html">Models Zoo</a></td>
+  </tr>
+  <tr>
+    <td><a href="todo_522">Post-processing</a></td>
+    <td>
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Re-ranking by model</a> |
+    <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing">Paper</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl.md">Logging</a></td>
+    <td><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a></td>
+  </tr>
+  <tr>
+    <td><a href="todo">Handling categories</a></td>
+    <td><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html">Misc metrics</a></td>
+  </tr>
+  <tr>
+    <td><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a></td>
+    <td><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl_ddp.md">Lightning DDP</a></td>
+  </tr>
+</table>
 
+
+todo 522: move
 [**Illustrations, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
 
 ## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
@@ -598,6 +576,53 @@ See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipel
 * Retrieval re-ranking [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing)
 
 ## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
+
+### How to use text models?
+
+<details>
+<summary>See example</summary>
+<p>
+
+```python
+print("todo 522: example with HFWrapper")
+# todo: tests
+```
+</p>
+</details>
+
+### How to use image models?
+
+<details>
+<summary>See example</summary>
+<p>
+
+[comment]:zoo-start
+```python
+from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
+from oml.models import ViTExtractor
+from oml.registry import get_transforms_for_pretrained
+
+model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").eval()
+transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
+
+img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
+img_tensor = transforms(img)
+# img_tensor = transforms(image=img)["image"]  # for transforms from Albumentations
+
+features = model(img_tensor.unsqueeze(0))
+
+# Check other available models:
+print(list(ViTExtractor.pretrained_models.keys()))
+
+# Load checkpoint saved on a disk:
+model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
+```
+[comment]:zoo-end
+
+</p>
+</details>
+
+### Image models
 
 Models, trained by us.
 The metrics below are for **224 x 224** images:
@@ -638,33 +663,8 @@ The metrics below are for 224 x 224 images:
 |    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`     |          0.493           |       0.267        |    0.264     |  0.149   |
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")`  |          0.515           |       0.284        |    0.455     |  0.247   |
 
-**The metrics may be different from the ones reported by papers,
+*The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
-
-### How to use models from Zoo?
-
-[comment]:zoo-start
-```python
-from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
-from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
-
-model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").eval()
-transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
-
-img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
-img_tensor = transforms(img)
-# img_tensor = transforms(image=img)["image"]  # for transforms from Albumentations
-
-features = model(img_tensor.unsqueeze(0))
-
-# Check other available models:
-print(list(ViTExtractor.pretrained_models.keys()))
-
-# Load checkpoint saved on a disk:
-model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
-```
-[comment]:zoo-end
 
 ## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
 
