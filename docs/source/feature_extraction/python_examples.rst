@@ -14,13 +14,68 @@ illustrating the code below.
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_img_txt.md
 
+.. Example =============================================================
+.. raw:: html
+
+    <br>
+    <details>
+    <summary>Using a trained model for retrieval</summary>
+    <p>
+
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage.md
+
+.. raw:: html
+
+    </p>
+    </details>
+    <br>
+
+Usage with PyTorch Lightning
+########################################
+
+.. Example =============================================================
+.. raw:: html
+
+    <details>
+    <summary>PyTorch Lightning</summary>
+    <p>
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_pl.md
 
+.. raw:: html
+
+    </p>
+    </details>
+
+.. Example =============================================================
+.. raw:: html
+
+    <details>
+    <summary>PyTorch Lightning: DDP</summary>
+    <p>
+
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_pl_ddp.md
 
+.. raw:: html
+
+    </p>
+    </details>
+
+.. Example =============================================================
+.. raw:: html
+
+    <details>
+    <summary>PyTorch Lightning: Deal with 2 validation loaders</summary>
+    <p>
+
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_2loaders_val.md
+
+.. raw:: html
+
+    </p>
+    </details>
+
+    <br>
 
 Usage with PyTorch Metric Learning
 ########################################
@@ -29,11 +84,36 @@ You can easily access a lot of content from
 `PyTorch Metric Learning <https://github.com/KevinMusgrave/pytorch-metric-learning>`_.
 The examples below are different from the basic ones only in a few lines of code:
 
+.. Example =============================================================
+.. raw:: html
+
+    <details>
+    <summary>Losses from PyTorch Metric Learning</summary>
+    <p>
+
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_with_pml.md
+
+.. raw:: html
+
+    </p>
+    </details>
+
+.. Example =============================================================
+.. raw:: html
+
+    <details>
+    <summary>Losses from PyTorch Metric Learning: advanced</summary>
+    <p>
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_with_pml_advanced.md
 
-To use content from PyTorch Metric Learning with our Pipelines just follow the standard
+.. raw:: html
+
+    </p>
+    </details>
+    <br>
+
+To use content from PyTorch Metric Learning (PML) with our Pipelines just follow the standard
 `tutorial <https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc>`_
 of adding custom loss.
 

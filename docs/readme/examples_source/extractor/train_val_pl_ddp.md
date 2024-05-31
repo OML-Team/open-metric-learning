@@ -1,8 +1,3 @@
-
-<details>
-<summary>Training + Validation [Lightning Distributed]</summary>
-<p>
-
 [comment]:lightning-ddp-start
 ```python
 import pytorch_lightning as pl
@@ -48,5 +43,3 @@ trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_s
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```
 [comment]:lightning-ddp-end
-</p>
-</details>

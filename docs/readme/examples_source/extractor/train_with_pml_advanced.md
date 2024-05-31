@@ -1,7 +1,3 @@
-<details>
-<summary>Training with distance, reducer, miner and loss from PML</summary>
-<p>
-
 ```python
 from torch.utils.data import DataLoader
 from torch.optim import Adam
@@ -36,6 +32,3 @@ for batch in train_loader:
     optimizer.step()
     optimizer.zero_grad()
 ```
-
-</p>
-</details>

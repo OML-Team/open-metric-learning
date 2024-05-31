@@ -1,7 +1,3 @@
-<details>
-<summary>Validation with 2 loaders</summary>
-<p>
-
 [comment]:lightning-2loaders-start
 ```python
 import pytorch_lightning as pl
@@ -43,7 +39,3 @@ print(metric_callback_1.metric.retrieval_results)
 print(metric_callback_2.metric.retrieval_results)
 ```
 [comment]:lightning-2loaders-end
-</p>
-</details>
-
-<p></p>

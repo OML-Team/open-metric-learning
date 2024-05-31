@@ -1,7 +1,3 @@
-<details>
-<summary>Training + Validation [Lightning and logging]</summary>
-<p>
-
 [comment]:lightning-start
 ```python
 import pytorch_lightning as pl
@@ -60,5 +56,3 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 
 ```
 [comment]:lightning-end
-</p>
-</details>

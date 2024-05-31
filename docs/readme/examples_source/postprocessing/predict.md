@@ -1,7 +1,3 @@
-<details>
-<summary>Postprocessor: Predict</summary>
-<p>
-
 [comment]:postprocessor-pred-start
 ```python
 
@@ -35,5 +31,3 @@ print(rr, "\n", rr_upd)
 
 ```
 [comment]:postprocessor-pred-end
-</p>
-</details>

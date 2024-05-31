@@ -1,7 +1,3 @@
-<details>
-<summary>Postprocessor: Training + Validation</summary>
-<p>
-
 [comment]:postprocessor-start
 ```python
 
@@ -67,5 +63,3 @@ print(f"After postprocessing:\n{metrics_upd}")
 
 ```
 [comment]:postprocessor-end
-</p>
-</details>
