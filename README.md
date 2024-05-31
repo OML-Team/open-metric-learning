@@ -527,6 +527,8 @@ print(rr)  # you get the ids of retrieved items and the corresponding distances
 [comment]:usage-retrieval-end
 ## Library features
 
+[comment]: todo 522: add to rst
+
 <table>
   <tr>
     <td>
