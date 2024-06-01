@@ -30,10 +30,12 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("extractor/train_val_img_txt.md", "[comment]:train-val-txt-start\n", "[comment]:train-val-txt-end\n"),
         ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
         ("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
+        ("extractor/handling_categories.md", "[comment]:categories-start\n", "[comment]:categories-end\n"),
         ("extractor/val_with_sequence.md", "[comment]:val-with-sequence-start\n", "[comment]:val-with-sequence-end\n"),
         ("postprocessing/predict.md", "[comment]:postprocessor-pred-start\n", "[comment]:postprocessor-pred-end\n"),
         ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
-        ("zoo/models_usage.md", "[comment]:zoo-start\n", "[comment]:zoo-end\n"),
+        ("zoo/models_usage.md", "[comment]:zoo-image-start\n", "[comment]:zoo-image-end\n"),
+        ("zoo/models_usage.md", "[comment]:zoo-text-start\n", "[comment]:zoo-text-end\n"),
     ],
 )  # fmt: skip
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:

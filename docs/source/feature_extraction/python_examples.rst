@@ -120,6 +120,11 @@ of adding custom loss.
 **Note!** During the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
 we recommend you to pick `distances.LpDistance(p=2)`.
 
+Handling categories
+############################
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/handling categories.md
+
+
 Handling sequences of photos
 ############################
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/val_with_sequence.md

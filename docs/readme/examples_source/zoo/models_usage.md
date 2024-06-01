@@ -1,29 +1,48 @@
 ### How to use text models?
 
+Here is a lightweight integration with [HuggingFace Transformers](https://github.com/huggingface/transformers) models.
+You can replace it with other arbitrary models inherited from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
+
+Note, we don't have our own text models zoo at the moment.
+
 <details>
 <summary>See example</summary>
 <p>
 
+[comment]:zoo-text-start
 ```python
-print("todo 522: example with HFWrapper")
-# todo: tests
+from transformers import AutoModel, AutoTokenizer
+
+from oml.models import HFWrapper
+
+model = AutoModel.from_pretrained('bert-base-uncased').eval()
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+extractor = HFWrapper(model=model, feat_dim=768)
+
+inp = tokenizer(text="Hello world", return_tensors="pt", add_special_tokens=True)
+embeddings = extractor(inp)
 ```
+[comment]:zoo-text-end
+
 </p>
 </details>
 
 ### How to use image models?
 
+You can use an image model from our Zoo or
+use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
+
 <details>
 <summary>See example</summary>
 <p>
 
-[comment]:zoo-start
+[comment]:zoo-image-start
 ```python
 from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
 from oml.models import ViTExtractor
 from oml.registry import get_transforms_for_pretrained
 
-model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").eval()
+model = ViTExtractor.from_pretrained("vits16_dino").eval()
 transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
 
 img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
@@ -38,7 +57,7 @@ print(list(ViTExtractor.pretrained_models.keys()))
 # Load checkpoint saved on a disk:
 model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
 ```
-[comment]:zoo-end
+[comment]:zoo-image-end
 
 </p>
 </details>
