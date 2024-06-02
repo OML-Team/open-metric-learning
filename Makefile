@@ -30,7 +30,7 @@ build_readme:
 	cat docs/readme/examples_source/extractor/train_val_img_txt.md >> ${README_FILE}
 	# Library features
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
-	cat docs/readme/libary_features.md >> ${README_FILE}
+	cat docs/readme/library_features.md >> ${README_FILE}
 	# Pipelines
 	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
 	cat docs/readme/pipelines.md >> ${README_FILE}
