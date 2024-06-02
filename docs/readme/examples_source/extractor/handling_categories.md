@@ -7,12 +7,14 @@ Information about categories can be used in two ways in OML.
 **First**, for training.
 * Category balanced sampling may help to deal with category imbalance.
 * For contrastive losses, limiting the number of categories in batches also helps to mine harder negative
-samples (another table is harder positive example than another sofa).
-Without such samples there is no guarantee that we get batch full of tables.
+  samples (another table is harder positive example than another sofa).
+  Without such samples there is no guarantee that we get batch full of tables.
 
 **Second**, for validation.
-* Having categories allows to obtain fine-grained metrics and recognize over-
-and under-performing subsets of the dataset.
+* Having categories allows to obtain fine-grained metrics and recognize over- and under- performing subsets of the dataset.
+
+<details>
+<summary><b>SEE EXAMPLE</b></summary>
 
 [comment]: categories-start
 ```python
@@ -74,3 +76,8 @@ validation()
 
 ```
 [comment]: categories-end
+
+</details>
+<br>
+
+

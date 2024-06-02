@@ -116,9 +116,9 @@ validation()
 </td>
 </tr>
 <tr>
-<td style="border: 1px solid black; padding: 0;">
+<td style="border: 1px solid black; padding: 10px;">
 
-<details>
+<details style="padding-bottom: 10px">
 <summary>Output</summary>
 
 ```python
@@ -137,9 +137,9 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 0;">
+<td style="border: 1px solid black; padding: 10px;">
 
-<details>
+<details style="padding-bottom: 10px">
 <summary>Output</summary>
 
 ```python

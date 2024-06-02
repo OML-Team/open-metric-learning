@@ -354,7 +354,7 @@ docker pull omlteam/oml:cpu
   <tr>
     <td style="text-align: center;"><a href="todo_522">Post-processing</a></td>
     <td style="text-align: center;">
-    <a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Post=processing by NN</a> |
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Post-processing by NN</a> |
     <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing">Paper</a>
     </td>
   </tr>
@@ -492,9 +492,9 @@ validation()
 </td>
 </tr>
 <tr>
-<td style="border: 1px solid black; padding: 0;">
+<td style="border: 1px solid black; padding: 10px;">
 
-<details>
+<details style="padding-bottom: 10px">
 <summary>Output</summary>
 
 ```python
@@ -513,9 +513,9 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 0;">
+<td style="border: 1px solid black; padding: 10px;">
 
-<details>
+<details style="padding-bottom: 10px">
 <summary>Output</summary>
 
 ```python

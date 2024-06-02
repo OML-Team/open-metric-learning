@@ -28,6 +28,9 @@ On the figure below we show how provided sequence labels affect metrics calculat
 To use this functionality you only need to provide `sequence` column in your dataframe
 (containing **strings** or **integers**) and pass `sequence_key` to `EmbeddingMetrics()`:
 
+<details>
+<summary><b>SEE EXAMPLE</b></summary>
+
 [comment]:val-with-sequence-start
 ```python
 
@@ -52,3 +55,8 @@ print(rr, "\n", metrics)
 
 ```
 [comment]:val-with-sequence-end
+
+</details>
+<br>
+
+
