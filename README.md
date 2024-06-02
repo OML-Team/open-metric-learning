@@ -541,6 +541,11 @@ validation()
 </div>
 
 
+## Inference time example
+
+Here is an example of using pretrained model for retrieval on unlabeled data.
+The code below works for both texts and images.
+
 [comment]:usage-retrieval-start
 ```python
 from oml.datasets import ImageQueryGalleryDataset
