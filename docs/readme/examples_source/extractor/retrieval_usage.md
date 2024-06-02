@@ -1,6 +1,6 @@
-## Inference time example
+### Using pre-trained on un-labeled data
 
-Here is an example of using pretrained model for retrieval on unlabeled data.
+Here is an inference time example (prediction on test).
 The code below works for both texts and images.
 
 [comment]:usage-retrieval-start
