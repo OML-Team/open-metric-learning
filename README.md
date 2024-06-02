@@ -541,9 +541,9 @@ validation()
 </div>
 
 
-## Inference time example
+### Using pre-trained on un-labeled data
 
-Here is an example of using pretrained model for retrieval on unlabeled data.
+Here is an inference time example (prediction on test).
 The code below works for both texts and images.
 
 [comment]:usage-retrieval-start
@@ -590,7 +590,7 @@ You can replace it with other arbitrary models inherited from [IExtractor](https
 
 Note, we don't have our own text models zoo at the moment.
 
-<details>
+<details style="padding-bottom: 10px">
 <summary>See example</summary>
 <p>
 
@@ -611,14 +611,13 @@ embeddings = extractor(inp)
 
 </p>
 </details>
-<br>
 
 ### How to use image models?
 
 You can use an image model from our Zoo or
 use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
 
-<details>
+<details style="padding-bottom: 10px">
 <summary>See example</summary>
 <p>
 
@@ -647,7 +646,6 @@ model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", norm
 
 </p>
 </details>
-<br>
 
 ### Image models
 
