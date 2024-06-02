@@ -118,6 +118,9 @@ validation()
 <tr>
 <td style="border: 1px solid black; padding: 0;">
 
+<details>
+<summary>Output</summary>
+
 ```python
 {'active_tri': 0.125, 'pos_dist': 82.5, 'neg_dist': 100.5}  # batch 1
 {'active_tri': 0.0, 'pos_dist': 36.3, 'neg_dist': 56.9}     # batch 2
@@ -128,14 +131,16 @@ validation()
 
 <img src="https://i.ibb.co/MVxBf80/retrieval-img.png" height="200px">
 
-<br>
-<br>
+</details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
 
 </td>
 
 <td style="border: 1px solid black; padding: 0;">
+
+<details>
+<summary>Output</summary>
 
 ```python
 {'active_tri': 0.0, 'pos_dist': 8.5, 'neg_dist': 11.0}  # batch 1
@@ -145,10 +150,9 @@ validation()
 
 ```
 
-<img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" height="200px">
+<img src="https://i.ibb.co/HqfXdYd/text-retrieval.png" height="200px">
 
-<br>
-<br>
+</details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
 
@@ -159,3 +163,5 @@ validation()
 </table>
 
 </div>
+
+

@@ -165,7 +165,7 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
 
 def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
     fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
-    ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=12)
+    ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=20)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")

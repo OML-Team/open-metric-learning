@@ -335,6 +335,42 @@ You can also pull the prepared image from DockerHub...
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
+## Library features
+
+<table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
+  <tr>
+    <td style="text-align: center;">
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> Losses</a> |
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html"> Miners</a>
+    </td>
+    <td style="text-align: center;">
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> Samplers</a>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction">Using configs</a></td>
+    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo">Models Zoo</a></td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="todo_522">Post-processing</a></td>
+    <td style="text-align: center;">
+    <a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Post=processing by NN</a> |
+    <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing">Paper</a>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl.md">Logging</a></td>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a></td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="todo">Handling categories</a></td>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html">Misc metrics</a></td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a></td>
+    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl_ddp.md">Lightning DDP</a></td>
+  </tr>
+</table>
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
@@ -458,6 +494,9 @@ validation()
 <tr>
 <td style="border: 1px solid black; padding: 0;">
 
+<details>
+<summary>Output</summary>
+
 ```python
 {'active_tri': 0.125, 'pos_dist': 82.5, 'neg_dist': 100.5}  # batch 1
 {'active_tri': 0.0, 'pos_dist': 36.3, 'neg_dist': 56.9}     # batch 2
@@ -468,14 +507,16 @@ validation()
 
 <img src="https://i.ibb.co/MVxBf80/retrieval-img.png" height="200px">
 
-<br>
-<br>
+</details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
 
 </td>
 
 <td style="border: 1px solid black; padding: 0;">
+
+<details>
+<summary>Output</summary>
 
 ```python
 {'active_tri': 0.0, 'pos_dist': 8.5, 'neg_dist': 11.0}  # batch 1
@@ -485,10 +526,9 @@ validation()
 
 ```
 
-<img src="https://i.ibb.co/Vq81ZV1/retrieval-txt.png" height="200px">
+<img src="https://i.ibb.co/HqfXdYd/text-retrieval.png" height="200px">
 
-<br>
-<br>
+</details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
 
@@ -499,6 +539,8 @@ validation()
 </table>
 
 </div>
+
+
 [comment]:usage-retrieval-start
 ```python
 from oml.datasets import ImageQueryGalleryDataset
@@ -524,42 +566,6 @@ print(rr)  # you get the ids of retrieved items and the corresponding distances
 
 ```
 [comment]:usage-retrieval-end
-## Library features
-
-<table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
-  <tr>
-    <td style="text-align: center;">
-    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> Losses</a> |
-    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html"> Miners</a>
-    </td>
-    <td style="text-align: center;">
-    <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> Samplers</a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction">Using configs</a></td>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo">Models Zoo</a></td>
-  </tr>
-  <tr>
-    <td style="text-align: center;"><a href="todo_522">Post-processing</a></td>
-    <td style="text-align: center;">
-    <a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Re-ranking by model</a> |
-    <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing">Paper</a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl.md">Logging</a></td>
-    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a></td>
-  </tr>
-  <tr>
-    <td style="text-align: center;"><a href="todo">Handling categories</a></td>
-    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html">Misc metrics</a></td>
-  </tr>
-  <tr>
-    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a></td>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl_ddp.md">Lightning DDP</a></td>
-  </tr>
-</table>
 
 ## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 

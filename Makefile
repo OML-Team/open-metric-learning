@@ -25,12 +25,12 @@ build_readme:
 	# Installation
 	echo "\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
+	# Library features
+	cat docs/readme/library_features.md >> ${README_FILE}
 	# Python examples
 	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/train_val_img_txt.md >> ${README_FILE}
-	# Library features
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
-	cat docs/readme/library_features.md >> ${README_FILE}
 	# Pipelines
 	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
 	cat docs/readme/pipelines.md >> ${README_FILE}
