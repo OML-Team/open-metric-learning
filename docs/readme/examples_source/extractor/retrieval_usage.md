@@ -24,7 +24,8 @@ embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
 rr.visualize(query_ids=[0, 1], dataset=dataset, show=True)
 
-print(rr)  # you get the ids of retrieved items and the corresponding distances
+# you get the ids of retrieved items and the corresponding distances
+print(rr)
 
 ```
 [comment]:usage-retrieval-end

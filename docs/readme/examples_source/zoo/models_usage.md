@@ -5,8 +5,8 @@ You can replace it with other arbitrary models inherited from [IExtractor](https
 
 Note, we don't have our own text models zoo at the moment.
 
-<details style="padding-bottom: 10px">
-<summary>See example</summary>
+<details style="padding-bottom: 15px">
+<summary><b>See example</b></summary>
 <p>
 
 [comment]:zoo-text-start
@@ -32,8 +32,8 @@ embeddings = extractor(inp)
 You can use an image model from our Zoo or
 use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
 
-<details style="padding-bottom: 10px">
-<summary>See example</summary>
+<details style="padding-bottom: 15px">
+<summary><b>See example</b></summary>
 <p>
 
 [comment]:zoo-image-start
