@@ -122,7 +122,7 @@ we recommend you to pick `distances.LpDistance(p=2)`.
 
 Handling categories
 ############################
-.. mdinclude:: ../../../docs/readme/examples_source/extractor/handling categories.md
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/handling_categories.md
 
 
 Handling sequences of photos

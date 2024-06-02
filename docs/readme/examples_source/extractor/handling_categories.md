@@ -1,4 +1,18 @@
-TODO
+`Category` is something that hierarchically unites a group of labels.
+For example, we have 5 different catalog items of tables with the `label`s like `table1`, `table2`, `table2`
+and their `category` is `tables`.
+
+Information about categories can be used in two ways in OML.
+
+**First**, for training.
+* Category balanced sampling may help to deal with category imbalance.
+* For contrastive losses, limiting the number of categories in batches also helps to mine harder negative
+samples (another table is harder positive example than another sofa).
+Without such samples there is no guarantee that we get batch full of tables.
+
+**Second**, for validation.
+* Having categories allows to obtain fine-grained metrics and recognize over-
+and under-performing subsets of the dataset.
 
 [comment]: categories-start
 ```python
@@ -16,7 +30,7 @@ from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.registry import get_transforms_for_pretrained
 from oml.retrieval import RetrievalResults
-from oml.samplers import DistinctCategoryBalanceSampler
+from oml.samplers import DistinctCategoryBalanceSampler, CategoryBalanceSampler
 from oml.utils import get_mock_images_dataset
 
 model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").train()
@@ -30,7 +44,7 @@ optimizer = Adam(model.parameters(), lr=1e-4)
 criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 
 # >>>>> You can use one of category aware samplers
-args = {"n_categories": 1, "n_labels": 2, "n_instances": 2, "label2category": train.get_label2category(), "labels": train.get_labels()}
+args = {"n_categories": 2, "n_labels": 2, "n_instances": 2, "label2category": train.get_label2category(), "labels": train.get_labels()}
 sampler = DistinctCategoryBalanceSampler(epoch_size=5, **args)
 # sampler = CategoryBalanceSampler(resample_labels=False, weight_categories=True, **args)  # a bit different sampling
 

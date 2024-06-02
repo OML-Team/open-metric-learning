@@ -26,6 +26,7 @@ embeddings = extractor(inp)
 
 </p>
 </details>
+<br>
 
 ### How to use image models?
 
@@ -61,6 +62,7 @@ model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", norm
 
 </p>
 </details>
+<br>
 
 ### Image models
 

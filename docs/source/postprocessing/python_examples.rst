@@ -1,10 +1,9 @@
 Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
-to check the examples above first).
+You can boost retrieval accuracy of your vector search by adding a pairwise model as re-ranker.
 In the example below we train a siamese model to re-rank top retrieval outputs of the original model
-by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
+by performing inference on pairs ``(query_i, output_j)`` where ``j=1..top_n``.
 
 .. Example =============================================================
 .. raw:: html
