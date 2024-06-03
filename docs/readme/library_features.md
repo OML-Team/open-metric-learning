@@ -73,7 +73,8 @@ transforms, _ = get_transforms_for_pretrained("vits16_dino")
 </tr>
 
 <tr>
-<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing">Post-processing</a>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing"><b>Post-processing</b></a>
 
 ```python
 emb = inference(extractor, dataset)
@@ -133,7 +134,7 @@ criterion(pred, gts)
 </tr>
 
 <tr>
-<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-categories">Handling categories</a>
+<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-categories"><b>Categories support</b></a>
 
 ```python
 # train
@@ -145,7 +146,7 @@ m.calc_retrieval_metrics_rr(rr, query_categories)
 ```
 
 </td>
-<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html">Misc metrics</a>
+<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html"><b>Misc metrics</b></a>
 
 ```python
 embeddigs = inference(model, dataset)
@@ -164,7 +165,7 @@ m.calc_topological_metrics(embeddings, pcf_variance=(0.5,))
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a><br>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning"><b>Lightning</b></a><br>
 
 ```python
 import pytorch_lightning as pl
@@ -179,7 +180,7 @@ trainer.fit(module, train_loader, val_loader)
 
 </td>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning DDP</a><br>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning"><b>Lightning DDP</b></a><br>
 
 ```python
 clb = MetricValCallback(EmbeddingMetrics(val))
