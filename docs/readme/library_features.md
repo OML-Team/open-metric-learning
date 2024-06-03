@@ -81,7 +81,6 @@ rr = RetrievalResults.from_embeddings(embeddings, dataset)
 
 postprocessor = SmartThresholding()  # todo
 rr_upd = postprocessor.process(rr, dataset=dataset)
-
 ```
 
 </td>
@@ -101,7 +100,6 @@ rr = RetrievalResults.from_embeddings(embeddings, dataset)
 siamese = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])
 postprocessor = PairwiseReranker(top_n=3, pairwise_model=siamese)
 rr_upd = postprocessor.process(rr, dataset=dataset)
-
 ```
 
 </td>
@@ -172,7 +170,6 @@ m.calc_fnmr_at_fmr_rr(rr, fmr_vals=(0.1,))
 m.calc_retrieval_metrics_rr(
     rr, cmc_top_k=(3,5), precision_top_k=(5,), map_top_k=(5,)
 )
-
 ```
 
 </td>
