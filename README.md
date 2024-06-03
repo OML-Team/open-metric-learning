@@ -434,6 +434,10 @@ rr_upd = postprocessor.process(rr, dataset)
 
 </td>
 </tr>
+
+<tr>
+</tr>
+
 <tr>
 <td style="text-align: left;">
 <a href="https://open-metric-learning.readthedocs.io/en/latest/oml/logging.html#">Logging</a><br>
@@ -460,6 +464,10 @@ criterion(pred, gts)
 
 </td>
 </tr>
+
+<tr>
+</tr>
+
 <tr>
 <td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-categories">Handling categories</a>
 
@@ -486,6 +494,10 @@ m.calc_topological_metrics(embeddings, pcf_variance=(0.5,))
 
 </td>
 </tr>
+
+<tr>
+</tr>
+
 <tr>
 <td style="text-align: left;">
 <a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a><br>
