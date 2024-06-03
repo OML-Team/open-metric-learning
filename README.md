@@ -550,25 +550,15 @@ trainer.fit(module)
 <tr>
 </tr>
 
-[//]: # (<tr>)
-
-[//]: # (    <th style="border: 1px solid black; padding: 0;">IMAGES</th>)
-
-[//]: # (    <th style="border: 1px solid black; padding: 0;">TEXTS</th>)
-
-[//]: # (</tr>)
-
 <tr>
-    <tb>IMAGES</tb>
-    <tb>TEXTS</tb>
+    <th style="text-align: left; padding: 0;">IMAGES</th>
+    <th style="text-align: left; padding: 0;">TEXTS</th>
 </tr>
 
 <tr>
 </tr>
 
 <tr>
-
-[//]: # (<td style="border: 1px solid black; padding: 0;">)
 
 <td>
 
@@ -623,8 +613,6 @@ validation()
 [comment]:train-val-img-end
 
 </td>
-
-[//]: # (<td style="border: 1px solid black; padding: 0;">)
 
 <td>
 
@@ -685,7 +673,6 @@ validation()
 
 <tr>
 
-[//]: # (<td style="border: 1px solid black; padding: 10px;">)
 <td>
 
 <details style="padding-bottom: 10px">
@@ -706,8 +693,6 @@ validation()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
 
 </td>
-
-[//]: # (<td style="border: 1px solid black; padding: 10px;">)
 
 <td>
 
