@@ -1,6 +1,10 @@
 ## OML features
 
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
+
+<tr>
+</tr>
+
 <tr>
 <td style="text-align: left;">
 <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> Losses</a> |
@@ -61,6 +65,10 @@ transforms, reader = get_transforms_for_pretrained("vits16_dino")
 
 </td>
 </tr>
+
+<tr>
+</tr>
+
 <tr>
 <td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing">Post-processing</a>
 
