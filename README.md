@@ -339,6 +339,8 @@ docker pull omlteam/oml:cpu
 
 ## OML features
 
+<div style="overflow-x: auto;">
+
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
 
 <tr>
@@ -537,6 +539,7 @@ trainer.fit(module)
 
 </table>
 
+</div>
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
@@ -547,16 +550,27 @@ trainer.fit(module)
 <tr>
 </tr>
 
+[//]: # (<tr>)
+
+[//]: # (    <th style="border: 1px solid black; padding: 0;">IMAGES</th>)
+
+[//]: # (    <th style="border: 1px solid black; padding: 0;">TEXTS</th>)
+
+[//]: # (</tr>)
+
 <tr>
-    <th style="border: 1px solid black; padding: 0;">IMAGES</th>
-    <th style="border: 1px solid black; padding: 0;">TEXTS</th>
+    <tb>IMAGES</tb>
+    <tb>TEXTS</tb>
 </tr>
 
 <tr>
 </tr>
 
 <tr>
-    <td style="border: 1px solid black; padding: 0;">
+
+[//]: # (<td style="border: 1px solid black; padding: 0;">)
+
+<td>
 
 [comment]:train-val-img-start
 ```python
@@ -610,7 +624,9 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 0;">
+[//]: # (<td style="border: 1px solid black; padding: 0;">)
+
+<td>
 
 [comment]:train-val-txt-start
 ```python
@@ -668,7 +684,9 @@ validation()
 </tr>
 
 <tr>
-<td style="border: 1px solid black; padding: 10px;">
+
+[//]: # (<td style="border: 1px solid black; padding: 10px;">)
+<td>
 
 <details style="padding-bottom: 10px">
 <summary>Output</summary>
@@ -689,7 +707,9 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 10px;">
+[//]: # (<td style="border: 1px solid black; padding: 10px;">)
+
+<td>
 
 <details style="padding-bottom: 10px">
 <summary>Output</summary>

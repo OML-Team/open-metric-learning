@@ -5,16 +5,27 @@
 <tr>
 </tr>
 
+[//]: # (<tr>)
+
+[//]: # (    <th style="border: 1px solid black; padding: 0;">IMAGES</th>)
+
+[//]: # (    <th style="border: 1px solid black; padding: 0;">TEXTS</th>)
+
+[//]: # (</tr>)
+
 <tr>
-    <th style="border: 1px solid black; padding: 0;">IMAGES</th>
-    <th style="border: 1px solid black; padding: 0;">TEXTS</th>
+    <tb>IMAGES</tb>
+    <tb>TEXTS</tb>
 </tr>
 
 <tr>
 </tr>
 
 <tr>
-    <td style="border: 1px solid black; padding: 0;">
+
+[//]: # (<td style="border: 1px solid black; padding: 0;">)
+
+<td>
 
 [comment]:train-val-img-start
 ```python
@@ -68,7 +79,9 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 0;">
+[//]: # (<td style="border: 1px solid black; padding: 0;">)
+
+<td>
 
 [comment]:train-val-txt-start
 ```python
@@ -126,7 +139,9 @@ validation()
 </tr>
 
 <tr>
-<td style="border: 1px solid black; padding: 10px;">
+
+[//]: # (<td style="border: 1px solid black; padding: 10px;">)
+<td>
 
 <details style="padding-bottom: 10px">
 <summary>Output</summary>
@@ -147,7 +162,9 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 10px;">
+[//]: # (<td style="border: 1px solid black; padding: 10px;">)
+
+<td>
 
 <details style="padding-bottom: 10px">
 <summary>Output</summary>

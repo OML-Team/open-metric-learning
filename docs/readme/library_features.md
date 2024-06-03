@@ -1,5 +1,7 @@
 ## OML features
 
+<div style="overflow-x: auto;">
+
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
 
 <tr>
@@ -198,3 +200,4 @@ trainer.fit(module)
 
 </table>
 
+</div>
