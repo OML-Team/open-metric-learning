@@ -346,8 +346,8 @@ docker pull omlteam/oml:cpu
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> Losses</a> |
-<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html"> Miners</a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> <b>Losses</b></a> |
+<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html"> <b>Miners</b></a>
 
 ```python
 miner = AllTripletsMiner()
@@ -361,7 +361,7 @@ criterion = SurrogatePrecision()
 
 </td>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> Samplers</a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> <b>Samplers</b></a>
 
 ```python
 labels = train.get_labels()
@@ -381,7 +381,7 @@ sampler = DistinctCategoryBalanceSampler(labels, l2c)
 
 <tr>
 <td style="text-align: left;">
-<a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/">Using configs</a>
+<a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/"><b>Configs support</b></a>
 
 ```yaml
 max_epochs: 10
@@ -394,7 +394,7 @@ sampler:
 
 </td>
 <td style="text-align: left;">
-<a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo">Models Zoo</a>
+<a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
 
 ```python
 model_hf = AutoModel.from_pretrained("roberta-base")
@@ -424,8 +424,8 @@ rr_upd = postprocessor.process(rr, dataset)
 
 </td>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Post-processing by NN</a> |
-<a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing">Paper</a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html"><b>Post-processing by NN</b></a> |
+<a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing"><b>Paper</b></a>
 
 ```python
 embeddings = inference(extractor, dataset)
@@ -443,7 +443,7 @@ rr_upd = postprocessor.process(rr, dataset)
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/oml/logging.html#">Logging</a><br>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/oml/logging.html#"><b>Logging</b></a><br>
 
 ```python
 logger = TensorBoardPipelineLogger()
@@ -455,7 +455,7 @@ logger = ClearMLPipelineLogger()
 
 </td>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a><br>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning"><b>PML</b></a><br>
 
 ```python
 from pytorch_metric_learning import losses
