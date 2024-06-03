@@ -3,6 +3,9 @@
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
 
 <tr>
+</tr>
+
+<tr>
     <th style="border: 1px solid black; padding: 0;">IMAGES</th>
     <th style="border: 1px solid black; padding: 0;">TEXTS</th>
 </tr>
@@ -115,6 +118,10 @@ validation()
 [comment]:train-val-txt-end
 </td>
 </tr>
+
+<tr>
+</tr>
+
 <tr>
 <td style="border: 1px solid black; padding: 10px;">
 
