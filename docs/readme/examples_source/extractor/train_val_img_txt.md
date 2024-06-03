@@ -176,5 +176,7 @@ validation()
 
 </div>
 
+<br>
+
 [Extra illustrations, explanations and tips](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
 for the code above.
