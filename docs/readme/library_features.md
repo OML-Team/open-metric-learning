@@ -28,10 +28,10 @@ criterion = SurrogatePrecision()
 labels = train.get_labels()
 l2c = train.get_label2category()
 
+
 sampler = BalanceSampler(labels)
 sampler = CategoryBalanceSampler(labels, l2c)
 sampler = DistinctCategoryBalanceSampler(labels, l2c)
-
 ```
 
 </td>
