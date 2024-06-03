@@ -26,9 +26,14 @@ criterion = SurrogatePrecision()
 <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> Samplers</a>
 
 ```python
+
+
 sampler = BalanceSampler()
 sampler = CategoryBalanceSampler()
 sampler = DistinctCategoryBalanceSampler()
+
+
+
 ```
 
 </td>
@@ -56,11 +61,13 @@ max_epochs: 10
 <a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo">Models Zoo</a>
 
 ```python
+
 txt_model = HFWrapper(AutoModel.from_pretrained("roberta-base"))
 tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 
 img_model = ViTExtractor.from_pretrained("vits16_dino")
 transforms, reader = get_transforms_for_pretrained("vits16_dino")
+
 ```
 
 </td>
@@ -169,6 +176,7 @@ module = ExtractorModule(model, criterion, optimizer)
 
 trainer = pl.Trainer(max_epochs=3, callbacks=[clb])
 trainer.fit(module, train_loader, val_loader)
+
 ```
 
 </td>
