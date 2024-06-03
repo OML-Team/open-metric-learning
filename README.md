@@ -368,6 +368,10 @@ sampler = DistinctCategoryBalanceSampler()
 
 </td>
 </tr>
+
+<tr>
+</tr>
+
 <tr>
 <td style="text-align: left;">
 <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/">Using configs</a>
@@ -400,11 +404,11 @@ transforms, reader = get_transforms_for_pretrained("vits16_dino")
 <td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing">Post-processing</a>
 
 ```python
-embeddings = inference(extractor, dataset)
-rr = RetrievalResults.from_embeddings(embeddings, dataset)
+emb = inference(extractor, dataset)
+rr = RetrievalResults.from_embeddings(emb, dataset)
 # todo
 postprocessor = SmartThresholding()
-rr_upd = postprocessor.process(rr, dataset=dataset)
+rr_upd = postprocessor.process(rr, dataset)
 ```
 
 </td>
@@ -453,7 +457,7 @@ criterion(pred, gts)
 
 ```python
 # train
-loader = DataLoader(batch_sampler=CategoryBalanceSampler())
+loader = DataLoader(CategoryBalanceSampler())
 
 # validation
 rr = RetrievalResults.from_embeddings()
@@ -479,11 +483,11 @@ m.calc_topological_metrics(embeddings, pcf_variance=(0.5,))
 <a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a><br>
 
 ```python
-clb = MetricValCallback(EmbeddingMetrics(val_dataset))
-pl_model = ExtractorModule(extractor, criterion, optimizer)
+clb = MetricValCallback(EmbeddingMetrics(dataset))
+module = ExtractorModule(model, criterion, optimizer)
 
 trainer = pl.Trainer(max_epochs=3, callbacks=[clb])
-trainer.fit(pl_model, train_loader, val_loader)
+trainer.fit(module, train_loader, val_loader)
 ```
 
 </td>
@@ -492,15 +496,16 @@ trainer.fit(pl_model, train_loader, val_loader)
 
 ```python
 clb = MetricValCallback(metric=EmbeddingMetrics(val_dataset))
-pl_model = ExtractorModuleDDP(extractor, criterion, optimizer, train_loader, val_loader)
+module = ExtractorModuleDDP(model, criterion, optimizer, train_loader, val_loader)
 
 ddp_args = {"devices": 2, "strategy": DDPStrategy(), "use_distributed_sampler": False}
 trainer = pl.Trainer(max_epochs=3, callbacks=[clb], **ddp_args)
-trainer.fit(pl_model)
+trainer.fit(module)
 ```
 
 </td>
 </tr>
+
 </table>
 
 
