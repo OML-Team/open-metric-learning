@@ -41,7 +41,6 @@ sampler:
     n_instances: 2
 
 max_epochs: 10
-...
 ```
 
 </td>
@@ -141,8 +140,6 @@ m.calc_topological_metrics(embeddings, pcf_variance=(0.5,))
 <a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a><br>
 
 ```python
-import pytorch_lightning as pl
-
 clb = MetricValCallback(EmbeddingMetrics(val_dataset))
 pl_model = ExtractorModule(extractor, criterion, optimizer)
 
@@ -155,15 +152,11 @@ trainer.fit(pl_model, train_loader, val_loader)
 <a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning DDP</a><br>
 
 ```python
-import pytorch_lightning as pl
-
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(val_dataset))
-pl_model = ExtractorModuleDDP(
-    extractor, criterion, optimizer, train_loader, val_loader
-)
+clb = MetricValCallback(metric=EmbeddingMetrics(val_dataset))
+pl_model = ExtractorModuleDDP(extractor, criterion, optimizer, train_loader, val_loader)
 
 ddp_args = {"devices": 2, "strategy": DDPStrategy(), "use_distributed_sampler": False}
-trainer = pl.Trainer(max_epochs=3, callbacks=[metric_callback], **ddp_args)
+trainer = pl.Trainer(max_epochs=3, callbacks=[clb], **ddp_args)
 trainer.fit(pl_model)
 ```
 
