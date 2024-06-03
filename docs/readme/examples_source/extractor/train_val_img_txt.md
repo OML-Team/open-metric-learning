@@ -6,8 +6,8 @@
 </tr>
 
 <tr>
-    <th style="text-align: left; padding: 0;">IMAGES</th>
-    <th style="text-align: left; padding: 0;">TEXTS</th>
+    <td style="text-align: left; padding: 0;"><b>IMAGES</b></td>
+    <td style="text-align: left; padding: 0;"><b>TEXTS</b></td>
 </tr>
 
 <tr>
