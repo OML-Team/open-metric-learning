@@ -361,8 +361,14 @@ docker pull omlteam/oml:cpu
     </td>
   </tr>
   <tr>
-    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Logging</a></td>
-    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a></td>
+    <td style="text-align: center;">
+        <a href="https://open-metric-learning.readthedocs.io/en/latest/oml/logging.html#">Logging</a><br>
+        <img src="https://i.ibb.co/grHDh4C/logging.png" height="200">
+    </td>
+    <td style="text-align: center;">
+        <a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a><br>
+        <img src="https://i.ibb.co/3dVkkHV/PML.png" height="200">
+    </td>
   </tr>
   <tr>
     <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-categories">Handling categories</a></td>
@@ -373,6 +379,7 @@ docker pull omlteam/oml:cpu
     <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning DDP</a></td>
   </tr>
 </table>
+
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
