@@ -1,12 +1,14 @@
-OML is available in PyPI:
-
 ```shell
 pip install -U open-metric-learning
 ```
 
-You can also pull the prepared image from DockerHub...
+<details><summary>DockerHub</summary>
 
 ```shell
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
+
+</details>
+
+

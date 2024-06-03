@@ -1,5 +1,5 @@
 <details>
-<summary><b>FAQ</b></summary>
+<summary>FAQ</summary>
 
 <details>
 <summary>Why do I need OML?</summary>

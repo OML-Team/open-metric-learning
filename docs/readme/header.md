@@ -46,7 +46,7 @@ universities who have used OML in their theses.
 
 The update focuses on several components:
 
-* We added "official" text support and the corresponding python examples. (Note, text support in Pipelines is not supported yet.)
+* We added "official" texts support and the corresponding Python examples. (Note, texts support in Pipelines is not supported yet.)
 
 * We introduced the `RetrievalResults` (`RR`) class — a container to store gallery items retrieved for given queries.
 `RR` provides a unified way to visualize predictions and compute metrics (if ground truths are known).

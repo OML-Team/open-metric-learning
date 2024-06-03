@@ -46,7 +46,7 @@ universities who have used OML in their theses.
 
 The update focuses on several components:
 
-* We added "official" text support and the corresponding python examples. (Note, text support in Pipelines is not supported yet.)
+* We added "official" texts support and the corresponding Python examples. (Note, texts support in Pipelines is not supported yet.)
 
 * We introduced the `RetrievalResults` (`RR`) class — a container to store gallery items retrieved for given queries.
 `RR` provides a unified way to visualize predictions and compute metrics (if ground truths are known).
@@ -99,7 +99,7 @@ and doesn't need transforms.
 ## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
 <details>
-<summary><b>FAQ</b></summary>
+<summary>FAQ</summary>
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -298,15 +298,15 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </details>
 
 
-[**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
+[DOCUMENTATION](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
-**TUTORIAL TO START WITH:**
+TUTORIAL TO START WITH:
 [English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
 [Russian](https://habr.com/ru/company/ods/blog/695380/) |
 [Chinese](https://zhuanlan.zhihu.com/p/683102241)
 
 <details>
-<summary>More</summary>
+<summary>MORE</summary>
 
 * The
 [DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
@@ -323,18 +323,20 @@ for our paper
 
 ## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
-OML is available in PyPI:
-
 ```shell
 pip install -U open-metric-learning
 ```
 
-You can also pull the prepared image from DockerHub...
+<details><summary>DockerHub</summary>
 
 ```shell
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
+
+</details>
+
+
 ## OML features
 
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
@@ -540,7 +542,8 @@ validation()
 
 </div>
 
-
+[Extra illustrations, explanations and tips](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
+for the code above.
 
 ### Using pre-trained model for retrieval
 

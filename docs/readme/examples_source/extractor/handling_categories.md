@@ -1,12 +1,12 @@
 `Category` is something that hierarchically unites a group of labels.
-For example, we have 5 different catalog items of tables with the `label`s like `table1`, `table2`, `table2`
+For example, we have 3 different catalog items of tables with the `label`s like `table1`, `table2`, `table3`
 and their `category` is `tables`.
 
 **Categories in training:**
 * Category balanced sampling may help to deal with category imbalance.
-* For contrastive losses, limiting the number of categories in batches also helps to mine harder negative
+* For contrastive losses, limiting the number of categories in batches may help to mine harder negative
   samples (another table is harder positive example than another sofa).
-  Without such samples there is no guarantee that we get batch full of tables.
+  Without such samples there is no guarantee that we get enough tables in the batch.
 
 **Categories in validation:**
 * Having categories allows to obtain fine-grained metrics and recognize over- and under- performing subsets of the dataset.
