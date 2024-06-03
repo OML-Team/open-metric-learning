@@ -29,7 +29,7 @@ To use this functionality you only need to provide `sequence` column in your dat
 (containing **strings** or **integers**) and pass `sequence_key` to `EmbeddingMetrics()`:
 
 <details>
-<summary><b>SEE EXAMPLE</b></summary>
+<summary><b>See example</b></summary>
 
 [comment]:val-with-sequence-start
 ```python

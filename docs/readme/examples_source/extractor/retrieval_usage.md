@@ -1,7 +1,9 @@
-### Using pre-trained on un-labeled data
-
-Here is an inference time example (prediction on test).
+Here is an inference time example (in other words, retrieval on test set).
 The code below works for both texts and images.
+
+<details>
+<summary><b>See example</b></summary>
+<p>
 
 [comment]:usage-retrieval-start
 ```python
@@ -29,3 +31,7 @@ print(rr)
 
 ```
 [comment]:usage-retrieval-end
+
+</details>
+
+

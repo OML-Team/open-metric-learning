@@ -62,7 +62,7 @@ model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", norm
 </p>
 </details>
 
-### Image models
+### Image models zoo
 
 Models, trained by us.
 The metrics below are for **224 x 224** images:

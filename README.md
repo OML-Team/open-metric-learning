@@ -40,50 +40,54 @@ universities who have used OML in their theses.
 <div align="left">
 
 
-### OML 3.0 has been released!
 <details>
-<summary>Details</summary>
+<summary><b>OML 3.0 has been released!</b></summary>
 <p>
 
-The update focuses on two components:
+The update focuses on several components:
+
+* We added "official" text support and the corresponding python examples. (Note, text support in Pipelines is not supported yet.)
 
 * We introduced the `RetrievalResults` (`RR`) class — a container to store gallery items retrieved for given queries.
 `RR` provides a unified way to visualize predictions and compute metrics (if ground truths are known).
 It also simplifies post-processing, where an `RR` object is taken as input and another `RR_upd` is produced as output.
-With these two objects, you can compare them visually or compute and compare metrics.
+Having these two objects allows comparison retrieval results visually or by metrics.
 Moreover, you can easily create a chain of such post-processors.
-  * `RR` optimizes memory consumption using batching: in other words, it doesn't store full matrix of query-gallery distances.
-    (It doesn't make search approximate, it remains exact).
+  * `RR` is memory optimized because of using batching: in other words, it doesn't store full matrix of query-gallery distances.
+    (It doesn't make search approximate though).
 
 * We made `Model` and `Dataset` the only classes responsible for processing modality-specific logic.
-`Model` is responsible for interpreting its input dimensions: `BxCxHxW` for images or `BxLxD` for sequences like texts.
+`Model` is responsible for interpreting its input dimensions: for example, `BxCxHxW` for images or `BxLxD` for sequences like texts.
 `Dataset` is responsible for preparing an item: it may use `Transforms` for images or `Tokenizer` for texts.
-Functions computing metrics, `RetrievalResults`, `PairwiseReranker`, and other classes and functions are unified
+Functions computing metrics like `calc_retrieval_metrics_rr`, `RetrievalResults`, `PairwiseReranker`, and other classes and functions are unified
 to work with any modality.
-  * We added `IVisualizableDataset` interface requiring `.visaulize()` method for a single item. If implemented,
-   `RetrievalResults` is able to show the layout of search results.
+  * We added `IVisualizableDataset` having method `.visaulize()` that shows a single item. If implemented,
+   `RetrievalResults` is able to show the layout of retrieved results.
 
 #### Migration from OML 2.* [Python API]:
 
-Note, the easiest way to catch up with changes is to re-read the examples!
+The easiest way to catch up with changes is to re-read the examples!
 
 * The recommended way of validation is to use `RetrievalResults` and functions like `calc_retrieval_metrics_rr`,
-`calc_fnmr_at_fmr_rr`, and others. `EmbeddingMetrics` is kept for use with PyTorch Lightning and inside Pipelines.
-Note, the signatures of `EmbeddingMetrics` methods have been slightly changed.
+`calc_fnmr_at_fmr_rr`, and others. The `EmbeddingMetrics` class is kept for use with PyTorch Lightning and inside Pipelines.
+Note, the signatures of `EmbeddingMetrics` methods have been slightly changed, see Lightning examples for that.
 
 * Since modality-specific logic is confined to `Dataset`, it doesn't output `PATHS_KEY`, `X1_KEY`, `X2_KEY`, `Y1_KEY`, and `Y2_KEY` anymore.
-Keys which are not modality specific like `LABELS_KEY`, `IS_GALLERY`, `IS_QUERY_KEY`, `CATEGORIES_KEY` are still in use.
+Keys which are not modality-specific like `LABELS_KEY`, `IS_GALLERY`, `IS_QUERY_KEY`, `CATEGORIES_KEY` are still in use.
 
 * `inference_on_images` is now `inference` and works with any modality.
 
-* Slightly changed interfaces of `Datasets.`
+* Slightly changed interfaces of `Datasets.` For example, we have `IQueryGalleryDataset` and `IQueryGalleryLabeledDataset` interfaces.
+  The first has to be used for inference, the second one for validation. Also added `IVisualizableDataset` interface.
 
-* Removed: `IMetricDDP`, `EmbeddingMetricsDDP`, `calc_distance_matrix`, and other internal objects that shouldn't affect you.
+* Removed some internals like `IMetricDDP`, `EmbeddingMetricsDDP`, `calc_distance_matrix`, `calc_gt_mask`, `calc_mask_to_ignore`,
+  `apply_mask_to_ignore`. These changes shouldn't affect you. Also removed code related to a pipeline with precomputed triplets.
 
 #### Migration from OML 2.* [Pipelines]:
 
 * [Feature extraction](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction):
-No changes, except for adding an optional argument — `mode_for_checkpointing = (min | max)`.
+No changes, except for adding an optional argument — `mode_for_checkpointing = (min | max)`. It may be useful
+to switch between *the lower, the better* and *the greater, the better* type of metrics.
 
 * [Pairwise-postprocessing pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing):
 Slightly changed the name and arguments of the `postprocessor` sub config — `pairwise_images` is now `pairwise_reranker`
@@ -93,6 +97,9 @@ and doesn't need transforms.
 </details>
 
 ## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
+
+<details open>
+<summary>FAQ</summary>
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -280,7 +287,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 Yes. To run the experiment with [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
-`.csv` table with 5 predefined columns).
+`.csv` table with a few predefined columns).
 That's it!
 
 Probably we already have a suitable pre-trained model for your domain
@@ -288,28 +295,21 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
-<details>
-<summary>Can OML process texts, sounds and other modalities?</summary>
-<p>
-
-You can adapt OML to make it work not only with images.
-Just open one of the examples and replace `Dataset` remaining the rest of the pipeline the same or almost the same.
-There is several people who successfully used OML for texts in their real-world projects.
-
-Unfortunately, we don't have ready-to-use tutorials for this kind of usage at the moment.
-
-</p>
 </details>
 
+<br>
 ## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
-* [**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
-* **TUTORIAL TO START WITH:**
+[**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
+
+**TUTORIAL TO START WITH:**
 [English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
 [Russian](https://habr.com/ru/company/ods/blog/695380/) |
 [Chinese](https://zhuanlan.zhihu.com/p/683102241)
 
----
+<details>
+<summary>See more</summary>
+
 * The
 [DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
 for our paper
@@ -320,6 +320,8 @@ for our paper
 
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
+
+</details>
 
 ## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
@@ -335,7 +337,7 @@ You can also pull the prepared image from DockerHub...
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
-## Library features
+## OML features
 
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
   <tr>
@@ -348,27 +350,27 @@ docker pull omlteam/oml:cpu
     </td>
   </tr>
   <tr>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction">Using configs</a></td>
+    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/">Using configs</a></td>
     <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo">Models Zoo</a></td>
   </tr>
   <tr>
-    <td style="text-align: center;"><a href="todo_522">Post-processing</a></td>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing">Post-processing</a></td>
     <td style="text-align: center;">
     <a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html">Post-processing by NN</a> |
     <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing">Paper</a>
     </td>
   </tr>
   <tr>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl.md">Logging</a></td>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Logging</a></td>
     <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning">PyTorch Metric Learning</a></td>
   </tr>
   <tr>
-    <td style="text-align: center;"><a href="todo">Handling categories</a></td>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-categories">Handling categories</a></td>
     <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html">Misc metrics</a></td>
   </tr>
   <tr>
     <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning</a></td>
-    <td style="text-align: center;"><a href="https://github.com/OML-Team/open-metric-learning/blob/main/docs/readme/examples_source/extractor/train_val_pl_ddp.md">Lightning DDP</a></td>
+    <td style="text-align: center;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning">Lightning DDP</a></td>
   </tr>
 </table>
 
@@ -541,10 +543,15 @@ validation()
 </div>
 
 
-### Using pre-trained on un-labeled data
 
-Here is an inference time example (prediction on test).
+### Using pre-trained model for retrieval
+
+Here is an inference time example (in other words, retrieval on test set).
 The code below works for both texts and images.
+
+<details>
+<summary><b>See example</b></summary>
+<p>
 
 [comment]:usage-retrieval-start
 ```python
@@ -572,6 +579,10 @@ print(rr)
 
 ```
 [comment]:usage-retrieval-end
+
+</details>
+
+
 
 ## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 
@@ -648,7 +659,7 @@ model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", norm
 </p>
 </details>
 
-### Image models
+### Image models zoo
 
 Models, trained by us.
 The metrics below are for **224 x 224** images:

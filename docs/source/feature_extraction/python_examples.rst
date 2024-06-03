@@ -9,25 +9,22 @@ on a tiny dataset of
 Here are more details regarding dataset
 `format <https://open-metric-learning.readthedocs.io/en/latest/oml/data.html>`_.
 
-`Schemas, explanations and tips <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training>`_
+`SCHEMAS, EXPLANATIONS & TIPS <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training>`_
 illustrating the code below.
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_img_txt.md
 
-.. Example =============================================================
 .. raw:: html
 
     <br>
-    <details>
-    <summary>Using a trained model for retrieval</summary>
-    <p>
+
+Using pre-trained model for retrieval
+########################################
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage.md
 
 .. raw:: html
 
-    </p>
-    </details>
     <br>
 
 Usage with PyTorch Lightning

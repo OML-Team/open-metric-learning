@@ -2,19 +2,17 @@
 For example, we have 5 different catalog items of tables with the `label`s like `table1`, `table2`, `table2`
 and their `category` is `tables`.
 
-Information about categories can be used in two ways in OML.
-
-**First**, for training.
+**Categories in training:**
 * Category balanced sampling may help to deal with category imbalance.
 * For contrastive losses, limiting the number of categories in batches also helps to mine harder negative
   samples (another table is harder positive example than another sofa).
   Without such samples there is no guarantee that we get batch full of tables.
 
-**Second**, for validation.
+**Categories in validation:**
 * Having categories allows to obtain fine-grained metrics and recognize over- and under- performing subsets of the dataset.
 
 <details>
-<summary><b>SEE EXAMPLE</b></summary>
+<summary><b>See example</b></summary>
 
 [comment]: categories-start
 ```python
