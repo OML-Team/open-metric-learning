@@ -1,4 +1,4 @@
-Algo
+Algorithmic
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implementation plans:

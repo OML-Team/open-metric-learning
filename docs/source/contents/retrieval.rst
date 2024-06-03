@@ -1,4 +1,4 @@
-Retrieval Post-Processing
+Retrieval
 =============================
 
 .. toctree::
@@ -26,3 +26,4 @@ PairwiseReranker
 
     .. automethod:: __init__
     .. automethod:: process
+    .. automethod:: top_n

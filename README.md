@@ -96,10 +96,10 @@ and doesn't need transforms.
 </p>
 </details>
 
-## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
+## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
-<details open>
-<summary>FAQ</summary>
+<details>
+<summary><b>FAQ</b></summary>
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -297,8 +297,6 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 
 </details>
 
-<br>
-## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
 [**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
@@ -308,7 +306,7 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 [Chinese](https://zhuanlan.zhihu.com/p/683102241)
 
 <details>
-<summary>See more</summary>
+<summary>More</summary>
 
 * The
 [DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)

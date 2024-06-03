@@ -6,7 +6,7 @@
 [Chinese](https://zhuanlan.zhihu.com/p/683102241)
 
 <details>
-<summary>See more</summary>
+<summary>More</summary>
 
 * The
 [DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)

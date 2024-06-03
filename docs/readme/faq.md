@@ -1,5 +1,5 @@
-<details open>
-<summary>FAQ</summary>
+<details>
+<summary><b>FAQ</b></summary>
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -197,4 +197,4 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 
 </details>
 
-<br>
+

@@ -16,11 +16,9 @@ build_readme:
 	touch ${README_FILE}
 	# Header
 	cat docs/readme/header.md >> ${README_FILE}
-	# FAQ
-	echo "\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n" >> ${README_FILE}
-	cat docs/readme/faq.md >> ${README_FILE}
 	# Documentation
 	echo "\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n" >> ${README_FILE}
+	cat docs/readme/faq.md >> ${README_FILE}
 	cat docs/readme/documentation.md >> ${README_FILE}
 	# Installation
 	echo "\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n" >> ${README_FILE}
