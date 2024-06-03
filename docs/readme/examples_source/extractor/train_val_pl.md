@@ -7,15 +7,14 @@ from torch.optim import Adam
 from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
 from oml.lightning.modules.extractor import ExtractorModule
 from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses import TripletLossWithMiner
+from oml.losses import ArcFaceLoss
 from oml.metrics import EmbeddingMetrics
-from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_images_dataset
 from oml.lightning.pipelines import logging
 
-df_train, df_val = get_mock_images_dataset(global_paths=True)
+df_train, df_val = get_mock_images_dataset(global_paths=True, df_name="df_with_category.csv")
 
 # model
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
@@ -23,7 +22,7 @@ extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
 # train
 optimizer = Adam(extractor.parameters(), lr=1e-6)
 train_dataset = ImageLabeledDataset(df_train)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
+criterion = ArcFaceLoss(in_features=extractor.feat_dim, num_classes=df_train["label"].nunique())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 

@@ -1,3 +1,7 @@
+```bash
+pip install pytorch-metric-learning
+```
+
 ```python
 from torch.utils.data import DataLoader
 from torch.optim import Adam

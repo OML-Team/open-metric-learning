@@ -13,8 +13,13 @@ and their `category` is `tables`.
 
 <details>
 <summary><b>See example</b></summary>
+<br>
 
-[comment]: categories-start
+```bash
+pip install transformers
+```
+
+[comment]:categories-start
 ```python
 from pprint import pprint
 
@@ -27,18 +32,19 @@ from oml.inference import inference
 from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
+from oml.models import HFWrapper
 from oml.retrieval import RetrievalResults
 from oml.samplers import DistinctCategoryBalanceSampler, CategoryBalanceSampler
-from oml.utils import get_mock_images_dataset
+from oml.utils import get_mock_texts_dataset
 
-model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").train()
-transform, _ = get_transforms_for_pretrained("vits16_dino")
+from transformers import AutoModel, AutoTokenizer
 
-df_train, df_val = get_mock_images_dataset(df_name="df_with_category.csv", global_paths=True)
-train = d.ImageLabeledDataset(df_train, transform=transform)
-val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
+model = HFWrapper(AutoModel.from_pretrained("bert-base-uncased"), 768).to("cpu").train()
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+df_train, df_val = get_mock_texts_dataset()
+train = d.TextLabeledDataset(df_train, tokenizer=tokenizer)
+val = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
 
 optimizer = Adam(model.parameters(), lr=1e-4)
 criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
@@ -73,7 +79,7 @@ training()
 validation()
 
 ```
-[comment]: categories-end
+[comment]:categories-end
 
 </details>
 <br>
