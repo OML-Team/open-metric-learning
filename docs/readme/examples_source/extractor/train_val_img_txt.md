@@ -3,12 +3,19 @@
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
 
 <tr>
-    <th style="border: 1px solid black; padding: 0;">IMAGES</th>
-    <th style="border: 1px solid black; padding: 0;">TEXTS</th>
 </tr>
 
 <tr>
-    <td style="border: 1px solid black; padding: 0;">
+    <td style="text-align: left; padding: 0;"><b>IMAGES</b></td>
+    <td style="text-align: left; padding: 0;"><b>TEXTS</b></td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+
+<td>
 
 [comment]:train-val-img-start
 ```python
@@ -62,7 +69,7 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 0;">
+<td>
 
 [comment]:train-val-txt-start
 ```python
@@ -115,8 +122,13 @@ validation()
 [comment]:train-val-txt-end
 </td>
 </tr>
+
 <tr>
-<td style="border: 1px solid black; padding: 10px;">
+</tr>
+
+<tr>
+
+<td>
 
 <details style="padding-bottom: 10px">
 <summary>Output</summary>
@@ -137,7 +149,7 @@ validation()
 
 </td>
 
-<td style="border: 1px solid black; padding: 10px;">
+<td>
 
 <details style="padding-bottom: 10px">
 <summary>Output</summary>
@@ -163,6 +175,8 @@ validation()
 </table>
 
 </div>
+
+<br>
 
 [Extra illustrations, explanations and tips](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
 for the code above.

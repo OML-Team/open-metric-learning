@@ -9,8 +9,8 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 
 from oml import datasets as d
-from oml.lightning.modules.extractor import ExtractorModuleDDP
-from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning import ExtractorModuleDDP
+from oml.lightning import MetricValCallback
 from oml.losses import TripletLossWithMiner
 from oml.metrics import EmbeddingMetrics
 from oml.miners import AllTripletsMiner

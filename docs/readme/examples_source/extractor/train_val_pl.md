@@ -5,14 +5,14 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 
 from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
-from oml.lightning.modules.extractor import ExtractorModule
-from oml.lightning.callbacks.metric import MetricValCallback
+from oml.lightning import ExtractorModule
+from oml.lightning import MetricValCallback
 from oml.losses import ArcFaceLoss
 from oml.metrics import EmbeddingMetrics
 from oml.models import ViTExtractor
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_images_dataset
-from oml.lightning.pipelines import logging
+from oml.lightning import logging
 
 df_train, df_val = get_mock_images_dataset(global_paths=True, df_name="df_with_category.csv")
 
