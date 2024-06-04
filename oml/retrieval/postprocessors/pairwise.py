@@ -45,6 +45,10 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
     @property
     def top_n(self) -> int:
+        """
+        Returns:
+            Number of gallery items closest to each query to process.
+        """
         return self._top_n
 
     def process(self, rr: RetrievalResults, dataset: IQueryGalleryDataset) -> RetrievalResults:  # type: ignore

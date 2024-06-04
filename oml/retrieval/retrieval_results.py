@@ -1,5 +1,5 @@
 from pprint import pformat
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -56,15 +56,42 @@ class RetrievalResults:
             if any(len(x) == 0 for x in gt_ids):
                 raise RuntimeError("Every query must have at least one relevant gallery id.")
 
-        self.distances = tuple(distances)
-        self.retrieved_ids = tuple(retrieved_ids)
-        self.gt_ids = tuple(gt_ids) if gt_ids is not None else None
+        self._distances = tuple(distances)
+        self._retrieved_ids = tuple(retrieved_ids)
+        self._gt_ids = tuple(gt_ids) if gt_ids is not None else None
+
+    @property
+    def distances(self) -> Tuple[FloatTensor, ...]:
+        """
+        Returns:
+            Sorted distances from queries to the first gallery items with the size of ``n_query``.
+        """
+        return self._distances
+
+    @property
+    def retrieved_ids(self) -> Tuple[LongTensor, ...]:
+        """
+        Returns:
+            First gallery indices retrieved for every query with the size of ``n_query``.
+            Every index is within the range ``(0, n_gallery - 1)``.
+        """
+        return self._retrieved_ids
+
+    @property
+    def gt_ids(self) -> Optional[Tuple[LongTensor, ...]]:
+        """
+        Returns:
+            Gallery indices relevant to every query with the size of ``n_query``.
+            Every element is within the range ``(0, n_gallery - 1)``
+        """
+        return self._gt_ids
 
     @property
     def n_retrieved_items(self) -> int:
         """
-        Returns: Number of items retrieved for each query. If queries have different number of retrieved items,
-        returns the maximum of them.
+        Returns:
+            Number of items retrieved for each query. If queries have different number of retrieved items,
+            returns the maximum of them.
 
         """
         return max(len(x) for x in self.retrieved_ids)

@@ -29,10 +29,4 @@ Check out the
 `examples <https://drive.google.com/drive/folders/12QmUbDrKk7UaYGHreQdz5_nPfXG3klNc?usp=sharing>`_
 of dataframes. You can also use helper to check if your dataset is in the right format:
 
-.. code-block:: python
-
-    import pandas as pd
-    from oml.utils.dataframe_format import check_retrieval_dataframe_format
-
-    check_retrieval_dataframe_format(df=pd.read_csv("/path/to/table.csv"), dataset_root="/path/to/dataset/root/")
-
+.. mdinclude:: ../../../docs/readme/examples_source/retrieval_format.md
