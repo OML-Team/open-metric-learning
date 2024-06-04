@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 from torch import Tensor, no_grad
@@ -27,7 +27,7 @@ class MinerWithBank(ITripletsMiner):
         Args:
             bank_size_in_batches: Size of the bank.
             miner: Miner, for now we only support ``NHardTripletsMiner``
-            need_logs: Set ``True`` if you want to track logs.
+            need_logs: Set ``True`` to store some information to track in ``self.last_logs`` property.
 
         """
 
@@ -46,7 +46,7 @@ class MinerWithBank(ITripletsMiner):
         self.ptr = 0
 
         self.need_logs = need_logs
-        self.last_logs: Dict[str, float] = {}
+        self._last_logs: Dict[str, float] = {}
 
     @no_grad()
     def __allocate_if_needed(self, features: Tensor, labels: Tensor) -> None:
@@ -103,7 +103,7 @@ class MinerWithBank(ITripletsMiner):
         )
 
         if self.need_logs:
-            self.last_logs = self._prepare_logs(
+            self._last_logs = self._prepare_logs(
                 ids_a=ids_a, ids_p=ids_p, ids_n=ids_n, ignore_anchor_mask=ignore_anchor_mask
             )
 
@@ -137,6 +137,14 @@ class MinerWithBank(ITripletsMiner):
             logs.update({"negatives_from_bank": negatives_from_bank, "negatives_from_batch": negatives_from_batch})
 
         return logs.get_dict_with_results()
+
+    @property
+    def last_logs(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dictionary containing useful statistic calculated for the last batch.
+        """
+        return self._last_logs
 
 
 __all__ = ["MinerWithBank"]

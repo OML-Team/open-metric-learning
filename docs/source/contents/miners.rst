@@ -60,3 +60,4 @@ MinerWithBank
 
     .. automethod:: __init__
     .. automethod:: sample
+    .. autoproperty:: last_logs

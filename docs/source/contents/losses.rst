@@ -15,6 +15,8 @@ TripletLoss
 
     .. automethod:: __init__
     .. automethod:: forward
+    .. autoproperty:: last_logs
+
 
 TripletLossPlain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,6 +26,7 @@ TripletLossPlain
 
     .. automethod:: __init__
     .. automethod:: forward
+    .. autoproperty:: last_logs
 
 TripletLossWithMiner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,6 +36,7 @@ TripletLossWithMiner
 
     .. automethod:: __init__
     .. automethod:: forward
+    .. autoproperty:: last_logs
 
 SurrogatePrecision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,6 +54,7 @@ ArcFaceLoss
     :show-inheritance:
 
     .. automethod:: __init__
+    .. autoproperty:: last_logs
 
 ArcFaceLossWithMLP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,6 +63,7 @@ ArcFaceLossWithMLP
     :show-inheritance:
 
     .. automethod:: __init__
+    .. autoproperty:: last_logs
 
 label_smoothing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
