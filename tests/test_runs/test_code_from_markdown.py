@@ -36,6 +36,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
         ("zoo/models_usage.md", "[comment]:zoo-image-start\n", "[comment]:zoo-image-end\n"),
         pytest.param("zoo/models_usage.md", "[comment]:zoo-text-start\n", "[comment]:zoo-text-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
+        ("retrieval_format.md", "[comment]:dataset-start\n", "[comment]:dataset-end\n")
     ],
 )  # fmt: skip
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:
