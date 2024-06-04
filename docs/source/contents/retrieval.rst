@@ -16,7 +16,10 @@ RetrievalResults
     .. automethod:: __init__
     .. automethod:: from_embeddings
     .. automethod:: visualize
-    .. automethod:: n_retrieved_items
+    .. autoproperty:: n_retrieved_items
+    .. autoproperty:: distances
+    .. autoproperty:: retrieved_ids
+    .. autoproperty:: gt_ids
 
 PairwiseReranker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,4 +29,4 @@ PairwiseReranker
 
     .. automethod:: __init__
     .. automethod:: process
-    .. automethod:: top_n
+    .. autoproperty:: top_n
