@@ -109,6 +109,14 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         'BudgetFriendly LCD TV 40": Clear picture and essential features.',
     ]
 
+    potato = [
+        "Yukon Gold Potato: Creamy and golden, perfect for roasting and mashing.",
+        "Russet Potato: Classic and versatile, ideal for baking and frying.",
+        "Red Potato: Smooth and firm, great for boiling and salads.",
+        "Fingerling Potato: Rich and nutty, perfect for roasting or grilling.",
+        "Purple Potato: Vibrant and sweet, adds color to any dish.",
+    ]
+
     chair = [
         "ErgoComfort Office Chair: Maximum comfort and support.",
         "ClassicWood Dining Chair: Timeless design with sturdy construction.",
@@ -133,27 +141,29 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         "Gaming Headset Pro: Surround sound for gaming.",
         "TravelNoiseCancelling Earbuds: Compact with excellent noise cancellation.",
     ]
-    texts = [*bed, *table, *tv, *chair, *phone, *audio]  # train  # val
+    texts = [*bed, *table, *tv, *potato, *chair, *phone, *audio]
 
     labels = (
         [0] * len(bed)
         + [1] * len(table)
         + [2] * len(tv)
-        + [3] * len(chair)  # train
-        + [4] * len(phone)
-        + [5] * len(audio)
-    )  # val
+        + [3] * len(potato)
+        + [4] * len(chair)
+        + [5] * len(phone)
+        + [6] * len(audio)
+    )
 
     categories = (
         ["furniture"] * len(bed)
         + ["furniture"] * len(table)
         + ["electronic"] * len(tv)
-        + ["furniture"] * len(chair)  # train
+        + ["food"] * len(potato)
+        + ["furniture"] * len(chair)
         + ["electronic"] * len(phone)
         + ["electronic"] * len(audio)
-    )  # val
+    )
 
-    n_train = len(bed) + len(table) + len(tv)
+    n_train = len(bed) + len(table) + len(tv) + len(potato)
     n_val = len(chair) + len(phone) + len(audio)
 
     split = ["train"] * n_train + ["validation"] * n_val

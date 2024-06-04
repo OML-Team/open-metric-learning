@@ -1,6 +1,6 @@
 ## Before you start
 * Read our [FAQ](https://github.com/OML-Team/open-metric-learning#faq).
-* Check out [python examples](https://github.com/OML-Team/open-metric-learning#get-started-using-python)
+* Check out [python examples](https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#examples)
   and [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines).
 
 ## Choosing a task

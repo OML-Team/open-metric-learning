@@ -1,14 +1,14 @@
 DDP
 =============================
 
+Note, that this is an advanced section for developers or curious users.
+Normally, you don't even need to know about the existence of the classes and functions below.
+
 .. toctree::
    :titlesonly:
 
 .. contents::
    :local:
-
-Note, that this is an advanced section for developers or curious users.
-Normally, you don't even need to know about the existence of the classes and functions below.
 
 ModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

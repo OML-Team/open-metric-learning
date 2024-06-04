@@ -16,29 +16,26 @@ build_readme:
 	touch ${README_FILE}
 	# Header
 	cat docs/readme/header.md >> ${README_FILE}
-	# FAQ
-	echo "\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n" >> ${README_FILE}
-	cat docs/readme/faq.md >> ${README_FILE}
 	# Documentation
 	echo "\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n" >> ${README_FILE}
+	cat docs/readme/faq.md >> ${README_FILE}
 	cat docs/readme/documentation.md >> ${README_FILE}
 	# Installation
 	echo "\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
-	# Python examples
+	# OML features
+	cat docs/readme/library_features.md >> ${README_FILE}
+	# Python examples: image + texts, train + val
 	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/train.md >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/val.md >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/train_val_pl.md >> ${README_FILE}
+	cat docs/readme/examples_source/extractor/train_val_img_txt.md >> ${README_FILE}
+	# Retrieval usage
+	echo "\n### Using pre-trained model for retrieval\n" >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
-	cat docs/readme/examples.md >> ${README_FILE}
 	# Pipelines
 	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
 	cat docs/readme/pipelines.md >> ${README_FILE}
 	# Zoo
 	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)\n" >>${README_FILE}
-	cat docs/readme/zoo.md >> ${README_FILE}
-	echo "\n### How to use models from Zoo?\n" >> ${README_FILE}
 	cat docs/readme/examples_source/zoo/models_usage.md >> ${README_FILE}
 	# Contributing
 	echo "\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n" >> ${README_FILE}

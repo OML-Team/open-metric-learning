@@ -7,21 +7,6 @@ Metrics
 .. contents::
    :local:
 
-EmbeddingMetrics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.metrics.embeddings.EmbeddingMetrics
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: setup
-    .. automethod:: update
-    .. automethod:: compute_metrics
-    .. automethod:: get_plot_for_queries
-    .. automethod:: get_worst_queries_ids
-    .. automethod:: get_plot_for_worst_queries
-    .. automethod:: visualize
-
 calc_retrieval_metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.functional.metrics.calc_retrieval_metrics
@@ -57,3 +42,18 @@ calc_topological_metrics
 calc_pcf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.functional.metrics.calc_pcf
+
+EmbeddingMetrics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.metrics.embeddings.EmbeddingMetrics
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: setup
+    .. automethod:: update
+    .. automethod:: compute_metrics
+    .. automethod:: get_plot_for_queries
+    .. automethod:: get_worst_queries_ids
+    .. automethod:: get_plot_for_worst_queries
+    .. automethod:: visualize

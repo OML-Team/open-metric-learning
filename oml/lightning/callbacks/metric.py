@@ -81,7 +81,7 @@ class MetricValCallback(Callback):
 
             self.metric.update_data(data=outputs, indices=outputs[INDEX_KEY])  # type: ignore
 
-            self._collected_samples += len(outputs[list(outputs.keys())[0]])
+            self._collected_samples += len(outputs[INDEX_KEY])
             if self._collected_samples > self._expected_samples:
                 self._raise_computation_error()
 

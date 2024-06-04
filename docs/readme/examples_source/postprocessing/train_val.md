@@ -1,7 +1,3 @@
-<details>
-<summary>Postprocessor: Training + Validation</summary>
-<p>
-
 [comment]:postprocessor-start
 ```python
 
@@ -12,18 +8,18 @@ from torch.utils.data import DataLoader
 from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
 from oml.inference import inference_cached
 from oml.metrics import calc_retrieval_metrics_rr
-from oml.miners.pairs import PairsMiner
+from oml.miners import PairsMiner
 from oml.models import ConcatSiamese, ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.registry import get_transforms_for_pretrained
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_images_dataset
 from oml.transforms.images.torchvision import get_augs_torch
 from oml.retrieval import RetrievalResults, PairwiseReranker
 
 # In these example we will train a pairwise model as a re-ranker for ViT
 extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
 transforms, _ = get_transforms_for_pretrained("vits16_dino")
-df_train, df_val = download_mock_dataset(global_paths=True)
+df_train, df_val = get_mock_images_dataset(global_paths=True)
 
 # STEP 0: SAVE VIT EMBEDDINGS
 # - training ones are needed for hard negative sampling when training pairwise model
@@ -51,7 +47,7 @@ for batch in train_loader:
 
 # STEP 2: VALIDATE RE-RANKING MODEL (DOES IT IMPROVE METRICS?)
 val_dataset = ImageQueryGalleryLabeledDataset(df=df_val, transform=transforms)
-rr = RetrievalResults.compute_from_embeddings(embeddings_valid, val_dataset, n_items_to_retrieve=5)
+rr = RetrievalResults.from_embeddings(embeddings_valid, val_dataset, n_items=5)
 
 reranker = PairwiseReranker(top_n=3, pairwise_model=pairwise_model, num_workers=0, batch_size=4)
 rr_upd = reranker.process(rr, dataset=val_dataset)
@@ -67,7 +63,3 @@ print(f"After postprocessing:\n{metrics_upd}")
 
 ```
 [comment]:postprocessor-end
-</p>
-</details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1LBmusxwo8dPqWznmK627GNMzeDVdjMwv?usp=sharing)

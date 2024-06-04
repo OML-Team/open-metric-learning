@@ -24,16 +24,18 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
 @pytest.mark.parametrize(
     "fname,start_indicator,end_indicator",
     [
-        ("extractor/train.md", "[comment]:vanilla-train-start\n", "[comment]:vanilla-train-end\n"),
-        ("extractor/val.md", "[comment]:vanilla-validation-start\n", "[comment]:vanilla-validation-end\n"),
-        ("extractor/val_with_sequence.md", "[comment]:val-with-sequence-start\n", "[comment]:val-with-sequence-end\n"),
-        ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
-        ("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n"),
-        ("extractor/train_2loaders_val.md", "[comment]:lightning-2loaders-start\n", "[comment]:lightning-2loaders-end\n"), # noqa
         ("extractor/retrieval_usage.md", "[comment]:usage-retrieval-start\n", "[comment]:usage-retrieval-end\n"),
-        ("zoo/models_usage.md", "[comment]:zoo-start\n", "[comment]:zoo-end\n"),
-        ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
+        ("extractor/train_2loaders_val.md", "[comment]:lightning-2loaders-start\n", "[comment]:lightning-2loaders-end\n"),  # noqa
+        ("extractor/train_val_img_txt.md", "[comment]:train-val-img-start\n", "[comment]:train-val-img-end\n"),
+        pytest.param("extractor/train_val_img_txt.md", "[comment]:train-val-txt-start\n", "[comment]:train-val-txt-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
+        ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
+        pytest.param("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
+        ("extractor/handling_categories.md", "[comment]:categories-start\n", "[comment]:categories-end\n"),
+        ("extractor/val_with_sequence.md", "[comment]:val-with-sequence-start\n", "[comment]:val-with-sequence-end\n"),
         ("postprocessing/predict.md", "[comment]:postprocessor-pred-start\n", "[comment]:postprocessor-pred-end\n"),
+        ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
+        ("zoo/models_usage.md", "[comment]:zoo-image-start\n", "[comment]:zoo-image-end\n"),
+        pytest.param("zoo/models_usage.md", "[comment]:zoo-text-start\n", "[comment]:zoo-text-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
     ],
 )  # fmt: skip
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:

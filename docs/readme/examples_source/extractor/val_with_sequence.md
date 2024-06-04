@@ -29,8 +29,7 @@ To use this functionality you only need to provide `sequence` column in your dat
 (containing **strings** or **integers**) and pass `sequence_key` to `EmbeddingMetrics()`:
 
 <details>
-<summary>Validation + handling sequences</summary>
-<p>
+<summary><b>See example</b></summary>
 
 [comment]:val-with-sequence-start
 ```python
@@ -39,16 +38,16 @@ from oml.inference import inference
 from oml.datasets import ImageQueryGalleryLabeledDataset
 from oml.models import ViTExtractor
 from oml.retrieval import RetrievalResults
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils import get_mock_images_dataset
 from oml.metrics import calc_retrieval_metrics_rr
 
 extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).to("cpu")
 
-_, df_val = download_mock_dataset(global_paths=True, df_name="df_with_sequence.csv")  # <- sequence info is in the file
+_, df_val = get_mock_images_dataset(global_paths=True, df_name="df_with_sequence.csv")  # <- sequence info is in the file
 dataset = ImageQueryGalleryLabeledDataset(df_val)
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
-rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
 rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
 
 metrics = calc_retrieval_metrics_rr(rr, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
@@ -56,5 +55,8 @@ print(rr, "\n", metrics)
 
 ```
 [comment]:val-with-sequence-end
-</p>
+
 </details>
+<br>
+
+

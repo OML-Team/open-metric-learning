@@ -24,7 +24,7 @@ def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[R
 
     embeddings = inference(model, dataset, batch_size=4)
 
-    rr = RetrievalResults.compute_from_embeddings(embeddings.float(), dataset=dataset, n_items_to_retrieve=100)
+    rr = RetrievalResults.from_embeddings(embeddings.float(), dataset=dataset, n_items=100)
 
     return rr, dataset
 

@@ -143,3 +143,6 @@ class ArcFaceLossWithMLP(nn.Module):
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.arcface(self.mlp(x), y)
+
+
+__all__ = ["ArcFaceLoss", "ArcFaceLossWithMLP"]

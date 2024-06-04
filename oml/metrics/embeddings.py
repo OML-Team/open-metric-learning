@@ -173,10 +173,10 @@ class EmbeddingMetrics(IMetricVisualisable):
         if self.postprocessor:
             max_k = max(max_k, self.postprocessor.top_n)
 
-        self.retrieval_results = RetrievalResults.compute_from_embeddings(  # type: ignore
+        self.retrieval_results = RetrievalResults.from_embeddings(  # type: ignore
             embeddings=self.acc.storage[self._acc_embeddings_key],
             dataset=self.dataset,
-            n_items_to_retrieve=max_k,
+            n_items=max_k,
             verbose=True,
         )
 

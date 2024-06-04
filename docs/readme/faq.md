@@ -1,4 +1,7 @@
 <details>
+<summary>FAQ</summary>
+
+<details>
 <summary>Why do I need OML?</summary>
 <p>
 
@@ -184,7 +187,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 Yes. To run the experiment with [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
-`.csv` table with 5 predefined columns).
+`.csv` table with a few predefined columns).
 That's it!
 
 Probably we already have a suitable pre-trained model for your domain
@@ -192,15 +195,6 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
-<details>
-<summary>Can OML process texts, sounds and other modalities?</summary>
-<p>
-
-You can adapt OML to make it work not only with images.
-Just open one of the examples and replace `Dataset` remaining the rest of the pipeline the same or almost the same.
-There is several people who successfully used OML for texts in their real-world projects.
-
-Unfortunately, we don't have ready-to-use tutorials for this kind of usage at the moment.
-
-</p>
 </details>
+
+

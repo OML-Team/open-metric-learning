@@ -39,7 +39,67 @@ universities who have used OML in their theses.
 
 <div align="left">
 
-## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
+
+<details>
+<summary><b>OML 3.0 has been released!</b></summary>
+<p>
+
+The update focuses on several components:
+
+* We added "official" texts support and the corresponding Python examples. (Note, texts support in Pipelines is not supported yet.)
+
+* We introduced the `RetrievalResults` (`RR`) class — a container to store gallery items retrieved for given queries.
+`RR` provides a unified way to visualize predictions and compute metrics (if ground truths are known).
+It also simplifies post-processing, where an `RR` object is taken as input and another `RR_upd` is produced as output.
+Having these two objects allows comparison retrieval results visually or by metrics.
+Moreover, you can easily create a chain of such post-processors.
+  * `RR` is memory optimized because of using batching: in other words, it doesn't store full matrix of query-gallery distances.
+    (It doesn't make search approximate though).
+
+* We made `Model` and `Dataset` the only classes responsible for processing modality-specific logic.
+`Model` is responsible for interpreting its input dimensions: for example, `BxCxHxW` for images or `BxLxD` for sequences like texts.
+`Dataset` is responsible for preparing an item: it may use `Transforms` for images or `Tokenizer` for texts.
+Functions computing metrics like `calc_retrieval_metrics_rr`, `RetrievalResults`, `PairwiseReranker`, and other classes and functions are unified
+to work with any modality.
+  * We added `IVisualizableDataset` having method `.visaulize()` that shows a single item. If implemented,
+   `RetrievalResults` is able to show the layout of retrieved results.
+
+#### Migration from OML 2.* [Python API]:
+
+The easiest way to catch up with changes is to re-read the examples!
+
+* The recommended way of validation is to use `RetrievalResults` and functions like `calc_retrieval_metrics_rr`,
+`calc_fnmr_at_fmr_rr`, and others. The `EmbeddingMetrics` class is kept for use with PyTorch Lightning and inside Pipelines.
+Note, the signatures of `EmbeddingMetrics` methods have been slightly changed, see Lightning examples for that.
+
+* Since modality-specific logic is confined to `Dataset`, it doesn't output `PATHS_KEY`, `X1_KEY`, `X2_KEY`, `Y1_KEY`, and `Y2_KEY` anymore.
+Keys which are not modality-specific like `LABELS_KEY`, `IS_GALLERY`, `IS_QUERY_KEY`, `CATEGORIES_KEY` are still in use.
+
+* `inference_on_images` is now `inference` and works with any modality.
+
+* Slightly changed interfaces of `Datasets.` For example, we have `IQueryGalleryDataset` and `IQueryGalleryLabeledDataset` interfaces.
+  The first has to be used for inference, the second one for validation. Also added `IVisualizableDataset` interface.
+
+* Removed some internals like `IMetricDDP`, `EmbeddingMetricsDDP`, `calc_distance_matrix`, `calc_gt_mask`, `calc_mask_to_ignore`,
+  `apply_mask_to_ignore`. These changes shouldn't affect you. Also removed code related to a pipeline with precomputed triplets.
+
+#### Migration from OML 2.* [Pipelines]:
+
+* [Feature extraction](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction):
+No changes, except for adding an optional argument — `mode_for_checkpointing = (min | max)`. It may be useful
+to switch between *the lower, the better* and *the greater, the better* type of metrics.
+
+* [Pairwise-postprocessing pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing):
+Slightly changed the name and arguments of the `postprocessor` sub config — `pairwise_images` is now `pairwise_reranker`
+and doesn't need transforms.
+
+</p>
+</details>
+
+## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
+
+<details>
+<summary>FAQ</summary>
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -227,7 +287,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 Yes. To run the experiment with [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
-`.csv` table with 5 predefined columns).
+`.csv` table with a few predefined columns).
 That's it!
 
 Probably we already have a suitable pre-trained model for your domain
@@ -235,28 +295,19 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
-<details>
-<summary>Can OML process texts, sounds and other modalities?</summary>
-<p>
-
-You can adapt OML to make it work not only with images.
-Just open one of the examples and replace `Dataset` remaining the rest of the pipeline the same or almost the same.
-There is several people who successfully used OML for texts in their real-world projects.
-
-Unfortunately, we don't have ready-to-use tutorials for this kind of usage at the moment.
-
-</p>
 </details>
 
-## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
-* [**DOCUMENTATION**](https://open-metric-learning.readthedocs.io/en/latest/index.html)
-* **TUTORIAL TO START WITH:**
+[DOCUMENTATION](https://open-metric-learning.readthedocs.io/en/latest/index.html)
+
+TUTORIAL TO START WITH:
 [English](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
 [Russian](https://habr.com/ru/company/ods/blog/695380/) |
 [Chinese](https://zhuanlan.zhihu.com/p/683102241)
 
----
+<details>
+<summary>MORE</summary>
+
 * The
 [DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
 for our paper
@@ -268,177 +319,420 @@ for our paper
 * The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
 [Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
 
-## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
+</details>
 
-OML is available in PyPI:
+## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
 ```shell
 pip install -U open-metric-learning
 ```
 
-You can also pull the prepared image from DockerHub...
+<details><summary>DockerHub</summary>
 
 ```shell
 docker pull omlteam/oml:gpu
 docker pull omlteam/oml:cpu
 ```
 
-## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
-
-<details>
-<summary>Training</summary>
-<p>
-
-[comment]:vanilla-train-start
-```python
-import torch
-from tqdm import tqdm
-
-from oml.datasets import ImageLabeledDataset
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-
-df_train, _ = download_mock_dataset(global_paths=True)
-
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.Adam(extractor.parameters(), lr=1e-4)
-
-train_dataset = ImageLabeledDataset(df_train)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner(), need_logs=True)
-sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
-
-for batch in tqdm(train_loader):
-    embeddings = extractor(batch["input_tensors"])
-    loss = criterion(embeddings, batch["labels"])
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-
-    # info for logging: positive/negative distances, number of active triplets
-    print(criterion.last_logs)
-
-```
-[comment]:vanilla-train-end
-</p>
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing)
-<details>
-<summary>Validation</summary>
-<p>
 
-[comment]:vanilla-validation-start
+## OML features
+
+<div style="overflow-x: auto;">
+
+<table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
+
+<tr>
+</tr>
+
+<tr>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> <b>Losses</b></a> |
+<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/miners.html"> <b>Miners</b></a>
+
 ```python
-
-import numpy as np
-
-from oml.datasets import ImageQueryGalleryLabeledDataset
-from oml.inference import inference
-from oml.metrics import calc_retrieval_metrics_rr
-from oml.models import ViTExtractor
-from oml.retrieval import RetrievalResults
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.registry.transforms import get_transforms_for_pretrained
-
-extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
-transform, _ = get_transforms_for_pretrained("vits16_dino")
-
-_, df_val = download_mock_dataset(global_paths=True, df_name="df_with_category.csv")
-dataset = ImageQueryGalleryLabeledDataset(df_val, transform=transform)
-embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
-
-rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
-rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
-
-# you can optionally provide categories to have category wise metrics
-query_categories = np.array(dataset.extra_data["category"])[dataset.get_query_ids()]
-metrics = calc_retrieval_metrics_rr(rr, query_categories, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
-print(rr, "\n", metrics)
-
+miner = AllTripletsMiner()
+miner = NHardTripletsMiner()
+miner = MinerWithBank()
+...
+criterion = TripletLossWithMiner(0.1, miner)
+criterion = ArcFaceLoss()
+criterion = SurrogatePrecision()
 ```
-[comment]:vanilla-validation-end
-</p>
-</details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1O2o3k8I8jN5hRin3dKnAS3WsgG04tmIT?usp=sharing)
-<details>
-<summary>Training + Validation [Lightning and logging]</summary>
-<p>
+</td>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/contents/samplers.html"> <b>Samplers</b></a>
 
-[comment]:lightning-start
+```python
+labels = train.get_labels()
+l2c = train.get_label2category()
+
+
+sampler = BalanceSampler(labels)
+sampler = CategoryBalanceSampler(labels, l2c)
+sampler = DistinctCategoryBalanceSampler(labels, l2c)
+```
+
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td style="text-align: left;">
+<a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/"><b>Configs support</b></a>
+
+```yaml
+max_epochs: 10
+sampler:
+  name: balance
+  args:
+    n_labels: 2
+    n_instances: 2
+```
+
+</td>
+<td style="text-align: left;">
+<a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
+
+```python
+model_hf = AutoModel.from_pretrained("roberta-base")
+tokenizer = AutoTokenizer.from_pretrained("roberta-base")
+extractor_txt = HFWrapper(model_hf)
+
+extractor_img = ViTExtractor.from_pretrained("vits16_dino")
+transforms, _ = get_transforms_for_pretrained("vits16_dino")
+```
+
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing"><b>Post-processing</b></a>
+
+```python
+emb = inference(extractor, dataset)
+rr = RetrievalResults.from_embeddings(emb, dataset)
+# todo
+postprocessor = SmartThresholding()
+rr_upd = postprocessor.process(rr, dataset)
+```
+
+</td>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html"><b>Post-processing by NN</b></a> |
+<a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing"><b>Paper</b></a>
+
+```python
+embeddings = inference(extractor, dataset)
+rr = RetrievalResults.from_embeddings(embeddings, dataset)
+
+postprocessor = PairwiseReranker(ConcatSiamese(), top_n=3)
+rr_upd = postprocessor.process(rr, dataset)
+```
+
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/oml/logging.html#"><b>Logging</b></a><br>
+
+```python
+logger = TensorBoardPipelineLogger()
+logger = NeptunePipelineLogger()
+logger = WandBPipelineLogger()
+logger = MLFlowPipelineLogger()
+logger = ClearMLPipelineLogger()
+```
+
+</td>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning"><b>PML</b></a><br>
+
+```python
+from pytorch_metric_learning import losses
+
+criterion = losses.TripletMarginLoss(0.2, "all")
+pred = ViTExtractor()(data)
+criterion(pred, gts)
+```
+
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#handling-categories"><b>Categories support</b></a>
+
+```python
+# train
+loader = DataLoader(CategoryBalanceSampler())
+
+# validation
+rr = RetrievalResults.from_embeddings()
+m.calc_retrieval_metrics_rr(rr, query_categories)
+```
+
+</td>
+<td style="text-align: left;"><a href="https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html"><b>Misc metrics</b></a>
+
+```python
+embeddigs = inference(model, dataset)
+rr = RetrievalResults.from_embeddings(embeddings, dataset)
+
+m.calc_retrieval_metrics_rr(rr, precision_top_k=(5,))
+m.calc_fnmr_at_fmr_rr(rr, fmr_vals=(0.1,))
+m.calc_topological_metrics(embeddings, pcf_variance=(0.5,))
+```
+
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning"><b>Lightning</b></a><br>
+
 ```python
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader
-from torch.optim import SGD
 
-from oml.datasets import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
-from oml.lightning.modules.extractor import ExtractorModule
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.lightning.pipelines.logging import (
-    ClearMLPipelineLogger,
-    MLFlowPipelineLogger,
-    NeptunePipelineLogger,
-    TensorBoardPipelineLogger,
-    WandBPipelineLogger,
+model = ViTExtractor.from_pretrained("vits16_dino")
+clb = MetricValCallback(EmbeddingMetrics(dataset))
+module = ExtractorModule(model, criterion, optimizer)
+
+trainer = pl.Trainer(max_epochs=3, callbacks=[clb])
+trainer.fit(module, train_loader, val_loader)
+```
+
+</td>
+<td style="text-align: left;">
+<a href="https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning"><b>Lightning DDP</b></a><br>
+
+```python
+clb = MetricValCallback(EmbeddingMetrics(val))
+module = ExtractorModuleDDP(
+    model, criterion, optimizer, train, val
 )
 
-df_train, df_val = download_mock_dataset(global_paths=True)
+ddp = {"devices": 2, "strategy": DDPStrategy()}
+trainer = pl.Trainer(max_epochs=3, callbacks=[clb], **ddp)
+trainer.fit(module)
+```
 
-# model
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
+</td>
+</tr>
 
-# train
-optimizer = SGD(extractor.parameters(), lr=1e-6)
-train_dataset = ImageLabeledDataset(df_train)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
+</table>
 
-# val
-val_dataset = ImageQueryGalleryLabeledDataset(df_val)
-val_loader = DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
+</div>
 
-# 1) Logging with Tensorboard
-logger = TensorBoardPipelineLogger(".")
+## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
-# 2) Logging with Neptune
-# logger = NeptunePipelineLogger(api_key="", project="", log_model_checkpoints=False)
+<div style="overflow-x: auto;">
 
-# 3) Logging with Weights and Biases
-# import os
-# os.environ["WANDB_API_KEY"] = ""
-# logger = WandBPipelineLogger(project="test_project", log_model=False)
+<table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
 
-# 4) Logging with MLFlow locally
-# logger = MLFlowPipelineLogger(experiment_name="exp", tracking_uri="file:./ml-runs")
+<tr>
+</tr>
 
-# 5) Logging with ClearML
-# logger = ClearMLPipelineLogger(project_name="exp", task_name="test")
+<tr>
+    <td style="text-align: left; padding: 0;"><b>IMAGES</b></td>
+    <td style="text-align: left; padding: 0;"><b>TEXTS</b></td>
+</tr>
 
-# run
-pl_model = ExtractorModule(extractor, criterion, optimizer)
-trainer = pl.Trainer(max_epochs=3, callbacks=[metric_callback], num_sanity_val_steps=0, logger=logger)
-trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+<tr>
+</tr>
+
+<tr>
+
+<td>
+
+[comment]:train-val-img-start
+```python
+from torch.optim import Adam
+from torch.utils.data import DataLoader
+
+from oml import datasets as d
+from oml.inference import inference
+from oml.losses import TripletLossWithMiner
+from oml.metrics import calc_retrieval_metrics_rr
+from oml.miners import AllTripletsMiner
+from oml.models import ViTExtractor
+from oml.registry import get_transforms_for_pretrained
+from oml.retrieval import RetrievalResults
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_images_dataset
+
+model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").train()
+transform, _ = get_transforms_for_pretrained("vits16_dino")
+
+df_train, df_val = get_mock_images_dataset(global_paths=True)
+train = d.ImageLabeledDataset(df_train, transform=transform)
+val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
+
+optimizer = Adam(model.parameters(), lr=1e-4)
+criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
+
+
+def training():
+    for batch in DataLoader(train, batch_sampler=sampler):
+        embeddings = model(batch["input_tensors"])
+        loss = criterion(embeddings, batch["labels"])
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(criterion.last_logs)
+
+
+def validation():
+    embeddings = inference(model, val, batch_size=4, num_workers=0)
+    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+
+
+training()
+validation()
+```
+[comment]:train-val-img-end
+
+</td>
+
+<td>
+
+[comment]:train-val-txt-start
+```python
+from torch.optim import Adam
+from torch.utils.data import DataLoader
+from transformers import AutoModel, AutoTokenizer
+
+from oml import datasets as d
+from oml.inference import inference
+from oml.losses import TripletLossWithMiner
+from oml.metrics import calc_retrieval_metrics_rr
+from oml.miners import AllTripletsMiner
+from oml.models import HFWrapper
+from oml.retrieval import RetrievalResults
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_texts_dataset
+
+model = HFWrapper(AutoModel.from_pretrained("bert-base-uncased"), 768).to("cpu").train()
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+df_train, df_val = get_mock_texts_dataset()
+train = d.TextLabeledDataset(df_train, tokenizer=tokenizer)
+val = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
+
+optimizer = Adam(model.parameters(), lr=1e-4)
+criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
+
+
+def training():
+    for batch in DataLoader(train, batch_sampler=sampler):
+        embeddings = model(batch["input_tensors"])
+        loss = criterion(embeddings, batch["labels"])
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(criterion.last_logs)
+
+
+def validation():
+    embeddings = inference(model, val, batch_size=4, num_workers=0)
+    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+
+
+training()
+validation()
+```
+[comment]:train-val-txt-end
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+
+<td>
+
+<details style="padding-bottom: 10px">
+<summary>Output</summary>
+
+```python
+{'active_tri': 0.125, 'pos_dist': 82.5, 'neg_dist': 100.5}  # batch 1
+{'active_tri': 0.0, 'pos_dist': 36.3, 'neg_dist': 56.9}     # batch 2
+
+{'cmc': {1: 0.75}, 'precision': {5: 0.75}, 'map': {3: 0.8}}
 
 ```
-[comment]:lightning-end
-</p>
+
+<img src="https://i.ibb.co/MVxBf80/retrieval-img.png" height="200px">
+
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1bVUgdBGWvQgCkba2YtaIRVlUQUz7Q60Z?usp=share_link)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Fr4HhDOqmjx1hCFS30G3MlYjeqBW5vDg?usp=sharing)
+
+</td>
+
+<td>
+
+<details style="padding-bottom: 10px">
+<summary>Output</summary>
+
+```python
+{'active_tri': 0.0, 'pos_dist': 8.5, 'neg_dist': 11.0}  # batch 1
+{'active_tri': 0.25, 'pos_dist': 8.9, 'neg_dist': 9.8}  # batch 2
+
+{'cmc': {1: 0.8}, 'precision': {5: 0.7}, 'map': {3: 0.9}}
+
+```
+
+<img src="https://i.ibb.co/HqfXdYd/text-retrieval.png" height="200px">
+
+</details>
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19o2Ox2VXZoOWOOXIns7mcs0aHJZgJWeO?usp=sharing)
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<br>
+
+[Extra illustrations, explanations and tips](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
+for the code above.
+
+### Using pre-trained model for retrieval
+
+Here is an inference time example (in other words, retrieval on test set).
+The code below works for both texts and images.
+
 <details>
-<summary>Using a trained model for retrieval</summary>
+<summary><b>See example</b></summary>
 <p>
 
 [comment]:usage-retrieval-start
@@ -446,12 +740,11 @@ trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference
 from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-from oml.utils.download_mock_dataset import download_mock_dataset
-from oml.retrieval.retrieval_results import RetrievalResults
+from oml.registry import get_transforms_for_pretrained
+from oml.utils import get_mock_images_dataset
+from oml.retrieval import RetrievalResults
 
-
-_, df_test = download_mock_dataset(global_paths=True)
+_, df_test = get_mock_images_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
 
 extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
@@ -460,21 +753,18 @@ transform, _ = get_transforms_for_pretrained("vits16_dino")
 dataset = ImageQueryGalleryDataset(df_test, transform=transform)
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
-rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=5)
+rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
 rr.visualize(query_ids=[0, 1], dataset=dataset, show=True)
 
-print(rr)  # you get the ids of retrieved items and the corresponding distances
+# you get the ids of retrieved items and the corresponding distances
+print(rr)
 
 ```
 [comment]:usage-retrieval-end
-</p>
+
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 
-[MORE EXAMPLES](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html)
-
-[**Illustrations, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
 
 ## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 
@@ -486,6 +776,72 @@ See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipel
 * Retrieval re-ranking [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing)
 
 ## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
+
+### How to use text models?
+
+Here is a lightweight integration with [HuggingFace Transformers](https://github.com/huggingface/transformers) models.
+You can replace it with other arbitrary models inherited from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
+
+Note, we don't have our own text models zoo at the moment.
+
+<details style="padding-bottom: 15px">
+<summary><b>See example</b></summary>
+<p>
+
+[comment]:zoo-text-start
+```python
+from transformers import AutoModel, AutoTokenizer
+
+from oml.models import HFWrapper
+
+model = AutoModel.from_pretrained('bert-base-uncased').eval()
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+extractor = HFWrapper(model=model, feat_dim=768)
+
+inp = tokenizer(text="Hello world", return_tensors="pt", add_special_tokens=True)
+embeddings = extractor(inp)
+```
+[comment]:zoo-text-end
+
+</p>
+</details>
+
+### How to use image models?
+
+You can use an image model from our Zoo or
+use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
+
+<details style="padding-bottom: 15px">
+<summary><b>See example</b></summary>
+<p>
+
+[comment]:zoo-image-start
+```python
+from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
+from oml.models import ViTExtractor
+from oml.registry import get_transforms_for_pretrained
+
+model = ViTExtractor.from_pretrained("vits16_dino").eval()
+transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
+
+img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
+img_tensor = transforms(img)
+# img_tensor = transforms(image=img)["image"]  # for transforms from Albumentations
+
+features = model(img_tensor.unsqueeze(0))
+
+# Check other available models:
+print(list(ViTExtractor.pretrained_models.keys()))
+
+# Load checkpoint saved on a disk:
+model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
+```
+[comment]:zoo-image-end
+
+</p>
+</details>
+
+### Image models zoo
 
 Models, trained by us.
 The metrics below are for **224 x 224** images:
@@ -526,33 +882,8 @@ The metrics below are for 224 x 224 images:
 |    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`     |          0.493           |       0.267        |    0.264     |  0.149   |
 | `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")`  |          0.515           |       0.284        |    0.455     |  0.247   |
 
-**The metrics may be different from the ones reported by papers,
+*The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
-
-### How to use models from Zoo?
-
-[comment]:zoo-start
-```python
-from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
-from oml.models import ViTExtractor
-from oml.registry.transforms import get_transforms_for_pretrained
-
-model = ViTExtractor.from_pretrained("vits16_dino").to("cpu").eval()
-transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
-
-img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
-img_tensor = transforms(img)
-# img_tensor = transforms(image=img)["image"]  # for transforms from Albumentations
-
-features = model(img_tensor.unsqueeze(0))
-
-# Check other available models:
-print(list(ViTExtractor.pretrained_models.keys()))
-
-# Load checkpoint saved on a disk:
-model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
-```
-[comment]:zoo-end
 
 ## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
 

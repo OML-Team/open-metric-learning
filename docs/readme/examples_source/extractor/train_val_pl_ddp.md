@@ -1,39 +1,41 @@
-
-<details>
-<summary>Training + Validation [Lightning Distributed]</summary>
-<p>
+```bash
+pip install transformers
+```
 
 [comment]:lightning-ddp-start
 ```python
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from torch.optim import SGD
+from torch.optim import Adam
 
-from oml.datasets import ImageQueryGalleryLabeledDataset, ImageLabeledDataset
-from oml.lightning.modules.extractor import ExtractorModuleDDP
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml import datasets as d
+from oml.lightning import ExtractorModuleDDP
+from oml.lightning import MetricValCallback
+from oml.losses import TripletLossWithMiner
+from oml.metrics import EmbeddingMetrics
+from oml.miners import AllTripletsMiner
+from oml.models import HFWrapper
+from oml.samplers import BalanceSampler
+from oml.utils import get_mock_texts_dataset
 from pytorch_lightning.strategies import DDPStrategy
 
-df_train, df_val = download_mock_dataset(global_paths=True)
+from transformers import AutoModel, AutoTokenizer
+
+df_train, df_val = get_mock_texts_dataset()
 
 # model
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
+extractor = HFWrapper(AutoModel.from_pretrained("bert-base-uncased"), 768)
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 # train
-optimizer = SGD(extractor.parameters(), lr=1e-6)
-train_dataset = ImageLabeledDataset(df_train)
+optimizer = Adam(extractor.parameters(), lr=1e-6)
+train_dataset = d.TextLabeledDataset(df_train, tokenizer=tokenizer)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
 batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
 train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 
 # val
-val_dataset = ImageQueryGalleryLabeledDataset(df_val)
+val_dataset = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
 val_loader = DataLoader(val_dataset, batch_size=4)
 metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset))
 
@@ -47,7 +49,3 @@ trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_s
 trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
 ```
 [comment]:lightning-ddp-end
-</p>
-</details>
-
-*Colab: there is no Colab link since it provides only single-GPU machines.*

@@ -78,7 +78,7 @@ def test_trivial_processing_does_not_change_distances_order(
 ) -> None:
     dataset, embeddings = request.getfixturevalue(fixture_name)
 
-    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=150)
+    rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=150)
 
     model = LinearTrivialDistanceSiamese(embeddings.shape[-1], output_bias=pairwise_distances_bias, identity_init=True)
     processor = PairwiseReranker(pairwise_model=model, top_n=top_n, num_workers=0, batch_size=64)
@@ -125,7 +125,7 @@ def test_trivial_processing_fixes_broken_perfect_case(pairwise_distances_bias: f
     for _ in range(n_repetitions):
 
         dataset, embeddings = perfect_case()
-        rr = RetrievalResults.compute_from_embeddings(embeddings.float(), dataset, n_items_to_retrieve=100)
+        rr = RetrievalResults.from_embeddings(embeddings.float(), dataset, n_items=100)
 
         nq = len(rr.distances)
 
@@ -182,7 +182,7 @@ def test_processing_not_changing_non_sensitive_metrics(top_n: int) -> None:
 
     top_n = min(top_n, embeddings.shape[1])
 
-    rr = RetrievalResults.compute_from_embeddings(embeddings, dataset, n_items_to_retrieve=100)
+    rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=100)
 
     args = {
         "cmc_top_k": (top_n,),
