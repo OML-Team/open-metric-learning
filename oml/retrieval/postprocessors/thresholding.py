@@ -2,24 +2,20 @@ from copy import deepcopy
 
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.retrieval import RetrievalResults
+from oml.utils.misc_torch import AvgOnline
 
 
 class ConstantThresholding(IRetrievalPostprocessor):
     def __init__(self, th: float):
+        """
+        Args:
+            th: Distance threshold to limit the `RetrievalResults`.
+        """
         self.th = th
 
     def process(self, rr: RetrievalResults) -> RetrievalResults:  # type: ignore
-        """
-        Args:
-            rr: An instance of `RetrievalResults`.
-
-        Returns:
-            An updated instance of `RetrievalResults` where retrieved items having
-            distance greater than `self.th` have been filtered out.
-
-        """
         distances_upd = []
-        retrieved_ids_upd = []
+        rids_upd = []
 
         for dists, rids in zip(rr.distances, rr.retrieved_ids):
             mask = dists < self.th
@@ -27,19 +23,48 @@ class ConstantThresholding(IRetrievalPostprocessor):
             rids = rids[mask]
 
             distances_upd.append(dists)
-            retrieved_ids_upd.append(rids)
+            rids_upd.append(rids)
 
-        rr = RetrievalResults(distances=distances_upd, retrieved_ids=retrieved_ids_upd, gt_ids=deepcopy(rr.gt_ids))
+        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=rids_upd, gt_ids=deepcopy(rr.gt_ids))
 
-        return rr
+        return rr_upd
 
 
 class AdaptiveThresholding(IRetrievalPostprocessor):
-    def __init__(self, th: float):
-        self.th = th
+    def __init__(self, n_std: float):
+        """
+        This postprocessor cuts `RetrievalResults` after the big gap in consecutive distances presented.
+        The big gap is determined as a gap greater than `n_std * avg_gap`.
+
+        Args:
+            n_std: the smaller value, the less `RetrievalResults` will be remained.
+
+        """
+        self.n_std = n_std
 
     def process(self, rr: RetrievalResults) -> RetrievalResults:  # type: ignore
-        return rr
+        avg_diff = AvgOnline()
+        for dists in rr.distances:
+            avg_diff.update(dists[1:] - dists[:-1])
+
+        distances_upd = []
+        rids_upd = []
+
+        for dists, rids in zip(rr.distances, rr.retrieved_ids):
+            diffs = dists[1:] - dists[:-1]
+            mask_gaps = diffs > self.n_std * avg_diff.result
+
+            if mask_gaps.sum() == 0:
+                distances_upd.append(dists)
+                rids_upd.append(rids)
+            else:
+                i_th = mask_gaps.nonzero()[0]
+                distances_upd.append(dists[: i_th + 1])
+                rids_upd.append(rids[: i_th + 1])
+
+        rr_upd = RetrievalResults(distances=distances_upd, retrieved_ids=rids_upd, gt_ids=deepcopy(rr.gt_ids))
+
+        return rr_upd
 
 
 __all__ = ["AdaptiveThresholding", "ConstantThresholding"]
