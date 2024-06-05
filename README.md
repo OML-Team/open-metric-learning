@@ -415,13 +415,13 @@ transforms, _ = get_transforms_for_pretrained("vits16_dino")
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing"><b>Post-processing</b></a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/algo_examples.html"><b>Post-processing</b></a>
 
 ```python
 emb = inference(extractor, dataset)
 rr = RetrievalResults.from_embeddings(emb, dataset)
-# todo
-postprocessor = SmartThresholding()
+
+postprocessor = AdaptiveThresholding()
 rr_upd = postprocessor.process(rr, dataset)
 ```
 
@@ -574,7 +574,7 @@ from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.registry import get_transforms_for_pretrained
-from oml.retrieval import RetrievalResults
+from oml.retrieval import RetrievalResults, AdaptiveThresholding
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_images_dataset
 
@@ -603,6 +603,7 @@ def training():
 def validation():
     embeddings = inference(model, val, batch_size=4, num_workers=0)
     rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr = AdaptiveThresholding(n_std=2).process(rr)
     rr.visualize(query_ids=[2, 1], dataset=val, show=True)
     print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
@@ -628,7 +629,7 @@ from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
 from oml.models import HFWrapper
-from oml.retrieval import RetrievalResults
+from oml.retrieval import RetrievalResults, AdaptiveThresholding
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_texts_dataset
 
@@ -657,6 +658,7 @@ def training():
 def validation():
     embeddings = inference(model, val, batch_size=4, num_workers=0)
     rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr = AdaptiveThresholding(n_std=2).process(rr)
     rr.visualize(query_ids=[2, 1], dataset=val, show=True)
     print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
@@ -742,7 +744,7 @@ from oml.inference import inference
 from oml.models import ViTExtractor
 from oml.registry import get_transforms_for_pretrained
 from oml.utils import get_mock_images_dataset
-from oml.retrieval import RetrievalResults
+from oml.retrieval import RetrievalResults, AdaptiveThresholding
 
 _, df_test = get_mock_images_dataset(global_paths=True)
 del df_test["label"]  # we don't need gt labels for doing predictions
@@ -754,11 +756,11 @@ dataset = ImageQueryGalleryDataset(df_test, transform=transform)
 embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
 rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
+rr = AdaptiveThresholding(n_std=3.5).process(rr)
 rr.visualize(query_ids=[0, 1], dataset=dataset, show=True)
 
 # you get the ids of retrieved items and the corresponding distances
 print(rr)
-
 ```
 [comment]:usage-retrieval-end
 

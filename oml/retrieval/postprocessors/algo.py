@@ -36,7 +36,7 @@ class ConstantThresholding(IRetrievalPostprocessor):
 class AdaptiveThresholding(IRetrievalPostprocessor):
     def __init__(self, n_std: float):
         """
-        This postprocessor cuts `RetrievalResults` after the big gap in consecutive distances presented.
+        This postprocessor cuts `RetrievalResults` if a big gap in consecutive distances has been found.
         The big gap is defined as a gap greater than `n_std * avg_gap`.
 
         Args:
