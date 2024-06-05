@@ -13,4 +13,5 @@ Algorithmic postprocessing
 .. toctree::
    :maxdepth: 1
 
-   algo
+   algo_examples
+

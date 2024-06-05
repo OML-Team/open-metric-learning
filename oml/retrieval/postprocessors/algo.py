@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from oml.interfaces.retrieval import IRetrievalPostprocessor
-from oml.retrieval import RetrievalResults
+from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.misc_torch import AvgOnline
 
 
@@ -14,6 +14,9 @@ class ConstantThresholding(IRetrievalPostprocessor):
         self.th = th
 
     def process(self, rr: RetrievalResults) -> RetrievalResults:  # type: ignore
+        if rr.is_empty():
+            return rr.deepcopy()
+
         distances_upd = []
         rids_upd = []
 
@@ -43,6 +46,9 @@ class AdaptiveThresholding(IRetrievalPostprocessor):
         self.n_std = n_std
 
     def process(self, rr: RetrievalResults) -> RetrievalResults:  # type: ignore
+        if rr.is_empty():
+            return rr.deepcopy()
+
         avg_diff = AvgOnline()
         for dists in rr.distances:
             avg_diff.update(dists[1:] - dists[:-1])

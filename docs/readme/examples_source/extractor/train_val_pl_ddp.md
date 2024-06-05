@@ -17,6 +17,7 @@ from oml.miners import AllTripletsMiner
 from oml.models import HFWrapper
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_texts_dataset
+from oml.retrieval import AdaptiveThresholding
 from pytorch_lightning.strategies import DDPStrategy
 
 from transformers import AutoModel, AutoTokenizer
@@ -37,7 +38,7 @@ train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 # val
 val_dataset = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
 val_loader = DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset))
+metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset, postprocessor=AdaptiveThresholding(n_std=3)))
 
 # run
 pl_model = ExtractorModuleDDP(extractor=extractor, criterion=criterion, optimizer=optimizer,

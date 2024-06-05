@@ -1,4 +1,4 @@
-Retrieval
+Retrieval & Post-processing
 =============================
 
 .. toctree::
@@ -16,6 +16,8 @@ RetrievalResults
     .. automethod:: __init__
     .. automethod:: from_embeddings
     .. automethod:: visualize
+    .. automethod:: is_empty
+    .. automethod:: deepcopy
     .. autoproperty:: n_retrieved_items
     .. autoproperty:: distances
     .. autoproperty:: retrieved_ids
@@ -30,3 +32,21 @@ PairwiseReranker
     .. automethod:: __init__
     .. automethod:: process
     .. autoproperty:: top_n
+
+ConstantThresholding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.retrieval.postprocessors.algo.ConstantThresholding
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: process
+
+AdaptiveThresholding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.retrieval.postprocessors.algo.AdaptiveThresholding
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: process

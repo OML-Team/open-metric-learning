@@ -13,11 +13,12 @@ from oml.models import ViTExtractor
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_images_dataset
 from oml.lightning import logging
+from oml.retrieval import ConstantThresholding
 
 df_train, df_val = get_mock_images_dataset(global_paths=True, df_name="df_with_category.csv")
 
 # model
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=True)
 
 # train
 optimizer = Adam(extractor.parameters(), lr=1e-6)
@@ -29,7 +30,10 @@ train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
 # val
 val_dataset = ImageQueryGalleryLabeledDataset(df_val)
 val_loader = DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics(dataset=val_dataset), log_images=True)
+metric_callback = MetricValCallback(
+    metric=EmbeddingMetrics(dataset=val_dataset, postprocessor=ConstantThresholding(0.8)),
+    log_images=True
+)
 
 # 1) Logging with Tensorboard
 logger = logging.TensorBoardPipelineLogger(".")

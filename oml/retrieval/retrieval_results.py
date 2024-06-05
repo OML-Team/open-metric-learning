@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pprint import pformat
 from typing import List, Optional, Sequence, Tuple
 
@@ -96,6 +97,14 @@ class RetrievalResults:
         """
         return max(len(x) for x in self.retrieved_ids)
 
+    def is_empty(self) -> bool:
+        return all(len(rids) == 0 for rids in self.retrieved_ids)
+
+    def deepcopy(self) -> "RetrievalResults":
+        return RetrievalResults(
+            retrieved_ids=deepcopy(self.retrieved_ids), distances=deepcopy(self.distances), gt_ids=deepcopy(self.gt_ids)
+        )
+
     @classmethod
     def from_embeddings(
         cls,
@@ -140,7 +149,7 @@ class RetrievalResults:
         m = self._max_elements_in_str_repr
 
         txt = (
-            f"You retrieved {self.n_retrieved_items} items.\n"
+            f"Maximum number of retrieved items: {self.n_retrieved_items}.\n"
             f"Distances to the retrieved items:\n{pformat(self.distances[:m])}.\n"
             f"Ids of the retrieved gallery items:\n{pformat(self.retrieved_ids[:m])}.\n"
         )

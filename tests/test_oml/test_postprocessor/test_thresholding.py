@@ -1,9 +1,6 @@
 from torch import FloatTensor, LongTensor
 
-from oml.retrieval.postprocessors.thresholding import (
-    AdaptiveThresholding,
-    ConstantThresholding,
-)
+from oml.retrieval.postprocessors.algo import AdaptiveThresholding, ConstantThresholding
 from oml.retrieval.retrieval_results import RetrievalResults
 from tests.utils import check_if_sequence_of_tensors_are_equal
 
