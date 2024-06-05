@@ -8,14 +8,6 @@ class IRetrievalPostprocessor:
 
     """
 
-    @property
-    def top_n(self) -> int:
-        """
-        Returns: Number of first n items to process.
-
-        """
-        raise NotImplementedError()
-
     @abstractmethod
     def process(self, *args, **kwargs) -> Any:  # type: ignore
         raise NotImplementedError()

@@ -1,0 +1,44 @@
+accelerator: cpu
+devices: 2
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_category.csv
+
+transforms_val:
+  name: norm_resize_torch
+  args:
+    im_size: 32
+
+logs_root: logs
+
+num_workers: 0
+
+bs_val: 3
+
+postprocessor:
+  name: adaptive_thresholding
+  args:
+    n_std: 3
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [1, 5]
+  return_only_overall_category: False
+  visualize_only_overall_category: True
+
+extractor:
+  name: resnet
+  args:
+    arch: resnet50_projector
+    gem_p: null
+    remove_fc: True
+    normalise_features: False
+    weights: null
+
+hydra:
+  run:
+    dir: ${logs_root}
+  job:
+    chdir: True

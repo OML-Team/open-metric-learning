@@ -34,6 +34,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("extractor/val_with_sequence.md", "[comment]:val-with-sequence-start\n", "[comment]:val-with-sequence-end\n"),
         ("postprocessing/predict.md", "[comment]:postprocessor-pred-start\n", "[comment]:postprocessor-pred-end\n"),
         ("postprocessing/train_val.md", "[comment]:postprocessor-start\n", "[comment]:postprocessor-end\n"),
+        ("postprocessing/algo.md", "[comment]:algo-pp-start\n", "[comment]:algo-pp-end\n"),
         ("zoo/models_usage.md", "[comment]:zoo-image-start\n", "[comment]:zoo-image-end\n"),
         pytest.param("zoo/models_usage.md", "[comment]:zoo-text-start\n", "[comment]:zoo-text-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
         ("retrieval_format.md", "[comment]:dataset-start\n", "[comment]:dataset-end\n")

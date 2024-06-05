@@ -76,13 +76,13 @@ transforms, _ = get_transforms_for_pretrained("vits16_dino")
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/postprocessing_home.html#algorithmic-postprocessing"><b>Post-processing</b></a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/algo_examples.html"><b>Post-processing</b></a>
 
 ```python
 emb = inference(extractor, dataset)
 rr = RetrievalResults.from_embeddings(emb, dataset)
-# todo
-postprocessor = SmartThresholding()
+
+postprocessor = AdaptiveThresholding()
 rr_upd = postprocessor.process(rr, dataset)
 ```
 

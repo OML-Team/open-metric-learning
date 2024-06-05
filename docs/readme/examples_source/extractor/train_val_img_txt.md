@@ -29,7 +29,7 @@ from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
 from oml.registry import get_transforms_for_pretrained
-from oml.retrieval import RetrievalResults
+from oml.retrieval import RetrievalResults, AdaptiveThresholding
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_images_dataset
 
@@ -58,6 +58,7 @@ def training():
 def validation():
     embeddings = inference(model, val, batch_size=4, num_workers=0)
     rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr = AdaptiveThresholding(n_std=2).process(rr)
     rr.visualize(query_ids=[2, 1], dataset=val, show=True)
     print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
@@ -83,7 +84,7 @@ from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
 from oml.models import HFWrapper
-from oml.retrieval import RetrievalResults
+from oml.retrieval import RetrievalResults, AdaptiveThresholding
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_texts_dataset
 
@@ -112,6 +113,7 @@ def training():
 def validation():
     embeddings = inference(model, val, batch_size=4, num_workers=0)
     rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+    rr = AdaptiveThresholding(n_std=2).process(rr)
     rr.visualize(query_ids=[2, 1], dataset=val, show=True)
     print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 

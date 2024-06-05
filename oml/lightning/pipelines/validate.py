@@ -65,7 +65,8 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
     postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
 
     # Note! We add the link to our extractor to a Lightning's Module, so it can recognize it and manipulate its devices
-    if postprocessor is not None:
+    # todo: refactor it later after we have more examples of postprocessors
+    if (postprocessor is not None) and hasattr(postprocessor, "model"):
         pl_model.model_link_ = postprocessor.model  # type: ignore
 
     metrics_calc = EmbeddingMetrics(
