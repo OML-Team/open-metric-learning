@@ -4,10 +4,16 @@ from oml.const import TCfg
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.registry.models import get_pairwise_model_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
+from oml.retrieval.postprocessors.thresholding import (
+    AdaptiveThresholding,
+    ConstantThresholding,
+)
 from oml.utils.misc import dictconfig_to_dict
 
 POSTPROCESSORS_REGISTRY = {
     "pairwise_reranker": PairwiseReranker,
+    "constant_thresholding": ConstantThresholding,
+    "adaptive_thresholding": AdaptiveThresholding,
 }
 
 

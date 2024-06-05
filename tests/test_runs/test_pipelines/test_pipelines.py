@@ -94,3 +94,8 @@ def test_train_postprocessor(accelerator: str, devices: int) -> None:
 @pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
 def test_predict(accelerator: str, devices: int) -> None:
     run("predict.py", accelerator, devices)
+
+
+@pytest.mark.parametrize("accelerator, devices", accelerator_devices_pairs())
+def test_validate2(accelerator: str, devices: int) -> None:
+    run("validate2.py", accelerator, devices)

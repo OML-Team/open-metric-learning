@@ -28,7 +28,7 @@ from oml.interfaces.metrics import IMetricVisualisable, TIndices
 from oml.interfaces.retrieval import IRetrievalPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.retrieval.retrieval_results import RetrievalResults
-from oml.utils.misc import flatten_dict, pad_array_right
+from oml.utils.misc import flatten_dict, pad_array_right, remove_unused_kwargs
 
 
 def calc_retrieval_metrics_rr(
@@ -171,7 +171,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         fmr_vals = len(self.dataset.get_gallery_ids()) if self.fmr_vals else 1
         max_k = max([*self.cmc_top_k, *self.precision_top_k, *self.map_top_k, fmr_vals])
         if self.postprocessor:
-            max_k = max(max_k, self.postprocessor.top_n)
+            # todo: refactor how we deal with postprocessors after we have more examples
+            top_n = getattr(self.postprocessor, "top_n", len(self.dataset.get_gallery_ids()))
+            max_k = max(max_k, top_n)
 
         self.retrieval_results = RetrievalResults.from_embeddings(  # type: ignore
             embeddings=self.acc.storage[self._acc_embeddings_key],
@@ -181,7 +183,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         )
 
         if self.postprocessor:
-            self.retrieval_results = self.postprocessor.process(self.retrieval_results, self.dataset)
+            args = {"rr": self.retrieval_results, "dataset": self.dataset}
+            args = remove_unused_kwargs(args, self.postprocessor.process)
+            self.retrieval_results = self.postprocessor.process(**args)
 
     def compute_metrics(self) -> TMetricsDict:  # type: ignore
         self.acc = self.acc.sync()  # gathering data from devices happens here if DDP

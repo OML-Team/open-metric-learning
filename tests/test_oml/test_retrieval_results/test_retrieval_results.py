@@ -98,11 +98,19 @@ def test_visualisation_for_different_number_of_retrieved_items() -> None:
     datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
     # just some random RR with different shapes
     rr = RetrievalResults(
-        distances=[FloatTensor([0.1, 0.2]), FloatTensor([0.3, 0.4, 0.5]), FloatTensor([0.1]), FloatTensor([0.5])],
-        retrieved_ids=[LongTensor([1, 0]), LongTensor([1, 2, 0]), LongTensor([2]), LongTensor([1])],
+        distances=[FloatTensor([0.1, 0.2]), FloatTensor([0.3, 0.4, 0.5]), FloatTensor([0.1]), FloatTensor([])],
+        retrieved_ids=[LongTensor([1, 0]), LongTensor([1, 2, 0]), LongTensor([2]), LongTensor([])],
         gt_ids=[LongTensor([0]), LongTensor([1]), LongTensor([1, 2]), LongTensor([0])],
     )
+    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
+    plt.close(fig=fig)
 
+    # empty RR
+    rr = RetrievalResults(
+        distances=[FloatTensor([])] * 4,
+        retrieved_ids=[LongTensor([])] * 4,
+        gt_ids=[LongTensor([0, 2])] * 4,
+    )
     fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
     plt.close(fig=fig)
 
