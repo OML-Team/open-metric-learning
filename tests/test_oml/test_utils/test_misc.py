@@ -1,3 +1,4 @@
+import matplotlib
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
@@ -49,6 +50,9 @@ def check_image_has_content(image: np.ndarray) -> bool:
 
 
 def test_visualise_text() -> None:
+    current_backend = matplotlib.get_backend()
+    matplotlib.use("Agg")
+
     img = visualise_text(text="Hello world", color=RED, draw_bbox=False)
     plt.imshow(img)
     plt.show()
@@ -65,3 +69,5 @@ def test_visualise_text() -> None:
     plt.imshow(img)
     plt.show()
     assert check_image_has_content(img)
+
+    matplotlib.use(current_backend)

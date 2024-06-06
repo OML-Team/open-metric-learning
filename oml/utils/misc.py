@@ -171,8 +171,9 @@ def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> 
     ax.axis("off")
 
     fig.canvas.draw()
+    width, height = fig.canvas.get_width_height()
     image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    image = image.reshape(height, width, 3)
     plt.close(fig)
 
     image = np.resize(image, (256, 256, 3))
