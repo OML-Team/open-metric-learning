@@ -2,7 +2,7 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: data/DeepFashion_InShop/
+dataset_root: /home/lexibender/data/DeepFashion_InShop/
 dataframe_name: df.csv
 
 bs_val: 128
@@ -25,12 +25,14 @@ extractor:
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
-  cmc_top_k: [1, 5]
-  map_top_k: [5]
-  precision_top_k: [5]
-  pcf_variance: [0.5, 0.9, 0.99]
-  return_only_overall_category: True
+  cmc_top_k: [1,]
+  map_top_k: []
+  precision_top_k: []
+  pcf_variance: []
+  return_only_overall_category: False
   visualize_only_overall_category: True
+
+log_images: False
 
 hydra:
   searchpath:

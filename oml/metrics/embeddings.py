@@ -38,6 +38,7 @@ def calc_retrieval_metrics_rr(
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
+    verbose: bool = True,
 ) -> TMetricsDict:
     return calc_retrieval_metrics(
         retrieved_ids=rr.retrieved_ids,
@@ -47,6 +48,7 @@ def calc_retrieval_metrics_rr(
         map_top_k=map_top_k,
         query_categories=query_categories,
         reduce=reduce,
+        verbose=verbose,
     )
 
 
@@ -179,7 +181,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             embeddings=self.acc.storage[self._acc_embeddings_key],
             dataset=self.dataset,
             n_items=max_k,
-            verbose=True,
+            verbose=self.verbose,
         )
 
         if self.postprocessor:
@@ -205,6 +207,7 @@ class EmbeddingMetrics(IMetricVisualisable):
             "map_top_k": self.map_top_k,
             "rr": self.retrieval_results,
             "reduce": False,
+            "verbose": self.verbose,
         }
 
         args_t = {"embeddings": self.acc.storage[self._acc_embeddings_key], "pcf_variance": self.pcf_variance}

@@ -22,6 +22,7 @@ def calc_retrieval_metrics(
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
+    verbose: bool = True,
 ) -> TMetricsDict:
     """
     Function to count different retrieval metrics.
@@ -36,6 +37,7 @@ def calc_retrieval_metrics(
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
         reduce: If ``False`` return metrics for each query without averaging
+        verbose: Set ``True`` to make the function verbose.
 
     Returns:
         Metrics dictionary.
@@ -51,15 +53,15 @@ def calc_retrieval_metrics(
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
-        cmc = calc_cmc(gt_tops, n_gts, cmc_top_k)
+        cmc = calc_cmc(gt_tops, n_gts, cmc_top_k, verbose=verbose)
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
-        precision = calc_precision(gt_tops, n_gts, precision_top_k)
+        precision = calc_precision(gt_tops, n_gts, precision_top_k, verbose=verbose)
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map_ = calc_map(gt_tops, n_gts, map_top_k)
+        map_ = calc_map(gt_tops, n_gts, map_top_k, verbose=verbose)
         metrics["map"] = dict(zip(map_top_k, map_))
 
     if query_categories is not None:
@@ -95,11 +97,12 @@ def calc_topological_metrics(
 
     metrics: TMetricsDict = defaultdict(dict)
 
+    # TODO FIX LOGIC
     if pcf_variance:
         main_components = calc_pcf(embeddings, pcf_variance)
         metrics["pcf"] = dict(zip(pcf_variance, main_components))
 
-    if categories is not None:
+    if pcf_variance and (categories is not None):
         metrics_cat = {c: calc_topological_metrics(embeddings[categories == c], pcf_variance) for c in categories}
         metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
