@@ -8,7 +8,6 @@ on:
       - completed
     branches:
       - main
-      - oml_3.0_release  # todo 522
     workflow_dispatch:
 
 jobs:

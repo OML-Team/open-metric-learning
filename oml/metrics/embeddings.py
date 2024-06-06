@@ -40,6 +40,22 @@ def calc_retrieval_metrics_rr(
     reduce: bool = True,
     verbose: bool = True,
 ) -> TMetricsDict:
+    """
+    Function to compute different retrieval metrics.
+
+    Args:
+        rr: An instance of `RetrievalResults`.
+        query_categories: Categories of queries with the size of ``n_query`` to compute metrics for each category.
+        cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
+        precision_top_k: Values of ``k`` to calculate ``precision@k``
+        map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
+        reduce: If ``False`` return metrics for each query without averaging
+        verbose: Set ``True`` to make the function verbose.
+
+    Returns:
+        Metrics dictionary.
+
+    """
     return calc_retrieval_metrics(
         retrieved_ids=rr.retrieved_ids,
         gt_ids=rr.gt_ids,
@@ -56,6 +72,16 @@ def calc_fnmr_at_fmr_rr(
     rr: RetrievalResults,
     fmr_vals: Tuple[float, ...] = (0.1,),
 ) -> TMetricsDict:
+    """
+    For more details see `calc_fnmr_at_fmr` docs.
+
+    Args:
+        rr: An instance of `RetrievalResults`.:
+        fmr_vals: Values of `FMR` to calculate `FNMR` at.
+
+    Returns:
+        Metrics dictionary.
+    """
 
     max_size = max(len(d) for d in rr.distances)
     dist = np.stack([pad_array_right(np.array(d), max_size, val=-1) for d in rr.distances])

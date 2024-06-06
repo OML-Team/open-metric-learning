@@ -25,7 +25,7 @@ def calc_retrieval_metrics(
     verbose: bool = True,
 ) -> TMetricsDict:
     """
-    Function to count different retrieval metrics.
+    Function to compute different retrieval metrics.
 
     Args:
         retrieved_ids: First gallery indices retrieved for every query with the size of ``n_query``.
@@ -75,9 +75,7 @@ def calc_retrieval_metrics(
 
 
 def calc_topological_metrics(
-    embeddings: Tensor,
-    pcf_variance: Tuple[float, ...],
-    categories: Optional[TCategories] = None,
+    embeddings: Tensor, pcf_variance: Tuple[float, ...], categories: Optional[TCategories] = None, verbose: bool = False
 ) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
@@ -88,6 +86,7 @@ def calc_topological_metrics(
         pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                       of variance that needs to be explained is greater than the percentage specified
                       by ``pcf_variance``.
+        verbose: Set ``True`` to see a progress bar.
 
     Returns:
         Metrics dictionary.
@@ -97,13 +96,16 @@ def calc_topological_metrics(
 
     metrics: TMetricsDict = defaultdict(dict)
 
-    # TODO FIX LOGIC
     if pcf_variance:
         main_components = calc_pcf(embeddings, pcf_variance)
         metrics["pcf"] = dict(zip(pcf_variance, main_components))
 
     if pcf_variance and (categories is not None):
-        metrics_cat = {c: calc_topological_metrics(embeddings[categories == c], pcf_variance) for c in categories}
+        categories_unq = np.unique(categories)
+        data = tqdm(categories_unq, desc="Topologic metrics on different categories") if verbose else categories_unq
+        metrics_cat = {
+            c: calc_topological_metrics(embeddings[categories == c], pcf_variance, categories=None) for c in data
+        }
         metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
     return metrics
@@ -187,7 +189,7 @@ def calc_cmc(
 
     cmc = []
     for k in top_k:
-        items = tqdm(zip(gt_tops, n_gts), desc=f"CMC@{k}.", total=len(gt_tops)) if verbose else zip(gt_tops, n_gts)
+        items = tqdm(zip(gt_tops, n_gts), desc=f"CMC@{k}", total=len(gt_tops)) if verbose else zip(gt_tops, n_gts)
         cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in items]))
 
     return cmc
@@ -281,7 +283,7 @@ def calc_precision(
 
     precision = []
     for k in top_k:
-        items = tqdm(zip(gt_tops, n_gts), desc=f"Precision@{k}.", total=len(n_gts)) if verbose else zip(gt_tops, n_gts)
+        items = tqdm(zip(gt_tops, n_gts), desc=f"Precision@{k}", total=len(n_gts)) if verbose else zip(gt_tops, n_gts)
         precision.append(FloatTensor([precision_single(gts, n_gt, k) for gts, n_gt in items]))
 
     return precision
@@ -364,7 +366,7 @@ def calc_map(
 
     map_ = []
     for k in top_k:
-        items = tqdm(zip(gt_tops, n_gts), total=len(gt_tops), desc=f"MAP@{k}.") if verbose else zip(gt_tops, n_gts)
+        items = tqdm(zip(gt_tops, n_gts), total=len(gt_tops), desc=f"MAP@{k}") if verbose else zip(gt_tops, n_gts)
         map_.append(FloatTensor([map_single(is_correct, n_gt, k) for is_correct, n_gt in items]))
 
     return map_
