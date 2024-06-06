@@ -147,6 +147,23 @@ def get_device(model: torch.nn.Module) -> str:
     return str(next(model.parameters()).device)
 
 
+def is_sorted_tensor(x: Tensor) -> bool:
+    """
+    Here is the robust checker if a tensor is sorted or not which handles case
+    where some elements of the tensors are close to each other than computational tolerance.
+
+    If we cannot distinguish elements in the tensor we assume it's sorted by default.
+    """
+    assert x.ndim == 1
+    if len(x) == 1:
+        return True
+
+    diffs = x[1:] - x[:-1]
+    diffs[torch.abs(diffs) < 10 * torch.finfo(x.dtype).eps] = 0
+
+    return (diffs >= 0).all()
+
+
 def _check_is_sequence(val: Any) -> bool:
     try:
         len(val)
@@ -499,4 +516,5 @@ __all__ = [
     "PCA",
     "unique_by_ids",
     "normalise",
+    "is_sorted_tensor",
 ]

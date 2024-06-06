@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 import pytest
 import torch
+from torch import FloatTensor
 
 from oml.utils.misc_torch import (
     PCA,
@@ -10,6 +11,7 @@ from oml.utils.misc_torch import (
     assign_2d,
     cat_two_sorted_tensors_and_keep_it_sorted,
     elementwise_dist,
+    is_sorted_tensor,
     take_2d,
     unique_by_ids,
 )
@@ -286,3 +288,20 @@ def test_pca_components_orthogonality() -> None:
     assert torch.all(
         torch.isclose(torch.matmul(pca.components, pca.components.T), torch.eye(embeddings.shape[1]), atol=1.0e-6)
     )
+
+
+def test_is_sorted_tensor() -> None:
+    x = FloatTensor([0, 1e-50, 2e-50, 3e-50, 1, 2])
+    assert is_sorted_tensor(x)
+
+    x = FloatTensor([0, 3e-50, 2e-50, 1e-50, 1, 2])
+    assert is_sorted_tensor(x)
+
+    x = FloatTensor([2, 3e-50, 2e-50, 1e-50, 0, 1])
+    assert not is_sorted_tensor(x)
+
+    x = FloatTensor([3e-50, 2e-50, 1e-50])
+    assert is_sorted_tensor(x)
+
+    x = FloatTensor([1e-50, 2e-50, 3e-50])
+    assert is_sorted_tensor(x)

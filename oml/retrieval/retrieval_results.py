@@ -22,6 +22,7 @@ from oml.interfaces.datasets import (
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
+from oml.utils.misc_torch import is_sorted_tensor
 
 
 class RetrievalResults:
@@ -43,8 +44,8 @@ class RetrievalResults:
 
         """
         for d, r in zip(distances, retrieved_ids):
-            if not (d[:-1] <= d[1:]).all():
-                raise RuntimeError("Distances must be sorted.")
+            if not is_sorted_tensor(d):
+                raise RuntimeError(f"Distances must be sorted: {d}.")
             if not len(torch.unique(r[:100])) == len(r[:100]):  # it's too expensive to check all the ids!
                 raise RuntimeError("Retrieved ids must be unique.")
             if not len(d) == len(r):
