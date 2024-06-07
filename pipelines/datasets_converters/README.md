@@ -2,7 +2,7 @@
 
 We've prepared 4 popular benchmarks used by researchers to evaluate metric learning models
 (see [metric learning leaderboard](https://paperswithcode.com/task/metric-learning))
-in OML's [format](https://open-metric-learning.readthedocs.io/en/latest/contents/datasets.html).
+in OML's [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 
 Two steps are required:
 1. Download an original dataset.

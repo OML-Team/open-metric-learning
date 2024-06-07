@@ -57,7 +57,7 @@ sampler:
 
 </td>
 <td style="text-align: left;">
-<a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
+<a href="https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
 
 ```python
 model_hf = AutoModel.from_pretrained("roberta-base")
@@ -76,7 +76,7 @@ transforms, _ = get_transforms_for_pretrained("vits16_dino")
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/algo_examples.html"><b>Post-processing</b></a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/algo_examples.html"><b>Post-processing</b></a>
 
 ```python
 emb = inference(extractor, dataset)

@@ -4,7 +4,7 @@ Logging & Visualization
 Logging in `Pipelines <https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html>`_
 ===========================================================================================================
 
-There are several loggers integrated with Pipelines. You can also `use your custom logger <file:///Users/alex/Projects/open-metric-learning/docs/build/html/feature_extraction/pipelines.html#customization>`_.
+There are several loggers integrated with Pipelines. You can also `use your custom logger <https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#customization>`_.
 
 
 * `Tensorboard <https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.loggers.tensorboard.html#module-lightning.pytorch.loggers.tensorboard>`_ — is active by default if there is no ``logger`` in config.
@@ -160,7 +160,7 @@ Just take a look at:
 
 * `RetrievalResults.visualize()  <https://open-metric-learning.readthedocs.io/en/latest/contents/retrieval.html#oml.retrieval.retrieval_results.RetrievalResults.visualize>`_
 
-* `ViTExtractor.draw_attention() <https://open-metric-learning.readthedocs.io/en/latest/contents/models.html#oml.models.vit.vit.ViTExtractor.draw_attention>`_
+* `ViTExtractor.draw_attention() <https://open-metric-learning.readthedocs.io/en/latest/contents/models.html#oml.models.vit_dino.extractor.ViTExtractor.draw_attention>`_
 
-* `ResnetExtractor.draw_gradcam() <https://open-metric-learning.readthedocs.io/en/latest/contents/models.html#oml.models.resnet.ResnetExtractor.draw_gradcam>`_
+* `ResnetExtractor.draw_gradcam() <https://open-metric-learning.readthedocs.io/en/latest/contents/models.html#oml.models.resnet.extractor.ResnetExtractor.draw_gradcam>`_
 

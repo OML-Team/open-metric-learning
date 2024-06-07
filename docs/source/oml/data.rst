@@ -3,9 +3,11 @@ Dataset format
 
 To reuse as much from OML as possible, you need to prepare a `.csv` file in the required format.
 It's not obligatory, especially if you implement your own Dataset, but the format is required in case
-of usage built-in datasets or Pipelines. You can check out the
-`tiny dataset <https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4>`_
-as an example.
+of usage built-in datasets or Pipelines. You can check out the mock
+`images <https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4>`_
+or
+`texts <https://github.com/OML-Team/open-metric-learning/blob/main/oml/utils/download_mock_dataset.py#L83>`_
+datasets.
 
 **Required columns:**
 
