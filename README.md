@@ -137,7 +137,7 @@ Well, it makes sense as a starting point. But there are several possible drawbac
 
 [PML](https://github.com/KevinMusgrave/pytorch-metric-learning) is the popular library for Metric Learning,
 and it includes a rich collection of losses, miners, distances, and reducers; that is why we provide straightforward
-[examples](https://github.com/OML-Team/open-metric-learning#usage-with-pytorch-metric-learning) of using them with OML.
+[examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-metric-learning) of using them with OML.
 Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
 That is how OML differs from PML:
 
@@ -158,7 +158,7 @@ That is how OML differs from PML:
 * OML is integrated with [PyTorch Lightning](https://www.pytorchlightning.ai/), so, we can use the power of its
   [Trainer](https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html).
   This is especially helpful when we work with DDP, so, you compare our
-  [DDP example](https://open-metric-learning.readthedocs.io/en/latest/examples/python.html)
+  [DDP example](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#usage-with-pytorch-lightning)
   and the
   [PMLs one](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb).
   By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
@@ -396,7 +396,7 @@ sampler:
 
 </td>
 <td style="text-align: left;">
-<a href="https://github.com/OML-Team/open-metric-learning/tree/docs?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
+<a href="https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
 
 ```python
 model_hf = AutoModel.from_pretrained("roberta-base")
@@ -415,7 +415,7 @@ transforms, _ = get_transforms_for_pretrained("vits16_dino")
 
 <tr>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing/algo_examples.html"><b>Post-processing</b></a>
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/algo_examples.html"><b>Post-processing</b></a>
 
 ```python
 emb = inference(extractor, dataset)

@@ -1,6 +1,8 @@
 Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+Also see: `Retrieval & post-processing <https://open-metric-learning.readthedocs.io/en/latest/contents/retrieval.html>`_.
+
 You can boost retrieval accuracy of your vector search by adding a pairwise model as re-ranker.
 In the example below we train a siamese model to re-rank top retrieval outputs of the original model
 by performing inference on pairs ``(query_i, output_j)`` where ``j=1..top_n``.

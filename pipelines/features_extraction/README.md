@@ -59,7 +59,7 @@ That is why mining is happening inside the forward pass, see
 Validation part consists of the following steps:
 1. Accumulating all the embeddings in [EmbeddingMetrics](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#embeddingmetrics).
 2. Calculating distances between queries and galleries.
-3. [Optional] Applying some specific retrieval postprocessing [techniques](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html) like re-ranking.
+3. [Optional] Applying some specific retrieval postprocessing [techniques](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing_home.html) like re-ranking.
 4. Calculating retrieval metrics like
    [CMC@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-cmc),
    [Precision@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-precision),
@@ -80,7 +80,7 @@ Note, to speed up inference you can easily turn on multi GPU setup in the corres
 
 Pipelines are built around blocks like model, criterion, optimizer and so on.
 Some of them can be replaced by existing entities from OML or by your custom implementations, see the customisation
-[instruction](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html#how-to-use-my-own-implementation-of-loss-model-etc).
+[instruction](https://open-metric-learning.readthedocs.io/en/latest/oml/pipelines_general.html#how-to-use-my-own-implementation-of-loss-extractor-etc).
 
 In feature extraction pipelines you can customize:
 

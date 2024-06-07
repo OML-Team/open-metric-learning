@@ -9,6 +9,10 @@ OML is a PyTorch-based framework to train and validate the models producing high
 
 .. mdinclude:: ../../docs/readme/library_features.md
 
+.. raw:: html
+
+    <br>
+
 .. toctree::
    :caption: OML
    :maxdepth: 1

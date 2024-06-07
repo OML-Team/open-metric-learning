@@ -3,7 +3,7 @@ Datasets
 
 .. raw:: html
 
-    <b>Check dataframe <a href="https://open-metric-learning.readthedocs.io/en/latest/contents/losses.html"> format</a>
+    <b>Check dataframe <a href="https://open-metric-learning.readthedocs.io/en/latest/oml/data.html"> format</a>
     for the datasets below.</b>
 
     <br>
