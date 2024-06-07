@@ -1,34 +1,14 @@
 DDP
 =============================
 
+Note, that this is an advanced section for developers or curious users.
+Normally, you don't even need to know about the existence of the classes and functions below.
+
 .. toctree::
    :titlesonly:
 
 .. contents::
    :local:
-
-Note, that this is an advanced section for developers or curious users.
-Normally, you don't even need to know about the existence of the classes and functions below.
-
-IMetricDDP
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.metrics.IMetricDDP
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: sync
-
-EmbeddingMetricsDDP
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.metrics.embeddings.EmbeddingMetricsDDP
-    :undoc-members:
-    :show-inheritance:
-
-    .. automethod:: __init__
-    .. automethod:: setup
-    .. automethod:: update_data
-    .. automethod:: compute_metrics
-    .. automethod:: sync
 
 ModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,9 +26,9 @@ ExtractorModuleDDP
 
     .. automethod:: __init__
 
-MetricValCallbackDDP
+PairwiseModuleDDP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.lightning.callbacks.metric.MetricValCallbackDDP
+.. autoclass:: oml.lightning.modules.pairwise_postprocessing.PairwiseModuleDDP
     :undoc-members:
     :show-inheritance:
 

@@ -19,8 +19,8 @@ def eye_case() -> Tuple[torch.Tensor, TMetricsDict]:
 
 def test_calc_topological_metrics(eye_case: Tuple[torch.Tensor, TMetricsDict]) -> None:
     embeddings, metrics_expected = eye_case
-    args = {"pcf_variance": tuple(metrics_expected["pcf"].keys())}
-    metrics_evaluated = calc_topological_metrics(embeddings, **args)
+    args = {"pcf_variance": tuple(metrics_expected["pcf"].keys()), "verbose": False}
+    metrics_evaluated = calc_topological_metrics(embeddings, **args)  # type: ignore
     compare_dicts_recursively(metrics_evaluated, metrics_expected)
 
 

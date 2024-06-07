@@ -26,7 +26,7 @@ extractor:
     weights: ${extractor_weights}
 
 postprocessor:
-  name: pairwise_images
+  name: pairwise_reranker
   args:
     top_n: 5
     pairwise_model:
@@ -42,11 +42,6 @@ postprocessor:
             normalise_features: False
             use_multi_scale: False
             weights: null
-    transforms:
-      name: norm_resize_hypvit_torch
-      args:
-        im_size: 224
-        crop_size: 224
     num_workers: ${num_workers}
     batch_size: ${bs_val}
     verbose: True

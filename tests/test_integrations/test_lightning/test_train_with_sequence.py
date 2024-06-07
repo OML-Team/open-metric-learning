@@ -6,25 +6,26 @@ from tqdm import tqdm
 
 from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, SEQUENCE_COLUMN
 from oml.datasets.images import ImageQueryGalleryLabeledDataset
-from oml.metrics.embeddings import EmbeddingMetrics, TMetricsDict_ByLabels
+from oml.functional.metrics import TMetricsDict
+from oml.metrics.embeddings import EmbeddingMetrics
 from oml.utils.download_mock_dataset import download_mock_dataset
 from oml.utils.misc import compare_dicts_recursively, set_global_seed
 
 
-def validation(df: pd.DataFrame) -> TMetricsDict_ByLabels:
+def validation(df: pd.DataFrame) -> TMetricsDict:
     set_global_seed(42)
     extractor = nn.Flatten()
 
     val_dataset = ImageQueryGalleryLabeledDataset(df, dataset_root=MOCK_DATASET_PATH)
 
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4, num_workers=0)
-    calculator = EmbeddingMetrics(extra_keys=("paths",), sequence_key=val_dataset.sequence_key, cmc_top_k=(1,))
-    calculator.setup(num_samples=len(val_dataset))
+    calculator = EmbeddingMetrics(dataset=val_dataset, cmc_top_k=(1,))
+    calculator.setup()
 
     with torch.no_grad():
         for batch in tqdm(val_loader):
-            batch["embeddings"] = extractor(batch["input_tensors"])
-            calculator.update_data(batch)
+            embeddings = extractor(batch[val_dataset.input_tensors_key])
+            calculator.update(embeddings=embeddings, indices=batch[val_dataset.index_key])
 
     metrics = calculator.compute_metrics()
 

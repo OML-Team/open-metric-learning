@@ -2,7 +2,6 @@ import torch
 from torch import Tensor
 
 from oml.functional.losses import surrogate_precision
-from oml.functional.metrics import calc_gt_mask
 from oml.utils.misc_torch import pairwise_dist
 
 
@@ -62,12 +61,8 @@ class SurrogatePrecision(torch.nn.Module):
         """
         assert len(features) == len(labels)
 
-        bs = len(features)
-        is_query = torch.ones(bs).bool().to(features.device)
-        is_gallery = torch.ones(bs).bool().to(features.device)
-
-        distances = pairwise_dist(x1=features[is_query], x2=features[is_gallery])
-        mask_gt = calc_gt_mask(is_query=is_query, is_gallery=is_gallery, labels=labels)
+        distances = pairwise_dist(x1=features, x2=features)
+        mask_gt = labels[..., None] == labels[None, ...]
 
         loss = 1 - surrogate_precision(
             distances=distances,
@@ -79,3 +74,6 @@ class SurrogatePrecision(torch.nn.Module):
         )
 
         return loss
+
+
+__all__ = ["SurrogatePrecision"]

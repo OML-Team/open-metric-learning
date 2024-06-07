@@ -16,29 +16,26 @@ build_readme:
 	touch ${README_FILE}
 	# Header
 	cat docs/readme/header.md >> ${README_FILE}
-	# FAQ
-	echo "\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n" >> ${README_FILE}
-	cat docs/readme/faq.md >> ${README_FILE}
 	# Documentation
 	echo "\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n" >> ${README_FILE}
+	cat docs/readme/faq.md >> ${README_FILE}
 	cat docs/readme/documentation.md >> ${README_FILE}
 	# Installation
 	echo "\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
-	# Python examples
+	# OML features
+	cat docs/readme/library_features.md >> ${README_FILE}
+	# Python examples: image + texts, train + val
 	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/train.md >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/val.md >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/train_val_pl.md >> ${README_FILE}
+	cat docs/readme/examples_source/extractor/train_val_img_txt.md >> ${README_FILE}
+	# Retrieval usage
+	echo "\n### Using pre-trained model for retrieval\n" >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
-	cat docs/readme/examples.md >> ${README_FILE}
 	# Pipelines
 	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
 	cat docs/readme/pipelines.md >> ${README_FILE}
 	# Zoo
 	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)\n" >>${README_FILE}
-	cat docs/readme/zoo.md >> ${README_FILE}
-	echo "\n### How to use models from Zoo?\n" >> ${README_FILE}
 	cat docs/readme/examples_source/zoo/models_usage.md >> ${README_FILE}
 	# Contributing
 	echo "\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n" >> ${README_FILE}
@@ -49,23 +46,18 @@ build_readme:
 
 # ====================================== TESTS ======================================
 
-.PHONY: download_mock_dataset
-download_mock_dataset:
-	python3 oml/utils/download_mock_dataset.py
-
 .PHONY: wandb_login
 wandb_login:
 	export WANDB_API_KEY=$(WANDB_API_KEY); wandb login
 
 .PHONY: run_all_tests
-run_all_tests: download_mock_dataset wandb_login
-	export PYTORCH_ENABLE_MPS_FALLBACK=1; pytest --disable-warnings -sv tests
+run_all_tests: wandb_login
+	export PYTORCH_ENABLE_MPS_FALLBACK=1; export PYTHONPATH=.; pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
 .PHONY: run_short_tests
-run_short_tests: download_mock_dataset
-	export PYTORCH_ENABLE_MPS_FALLBACK=1; pytest --disable-warnings -sv -m "not long and not needs_optional_dependency" tests
+run_short_tests:
+	export PYTORCH_ENABLE_MPS_FALLBACK=1; export PYTHONPATH=.; pytest --disable-warnings -sv -m "not long and not needs_optional_dependency" tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 
 .PHONY: test_converters
@@ -119,6 +111,14 @@ pip_install_actual_oml:
 .PHONY: clean
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
+	find . -type d -name "lightning_logs" -exec rm -r {} +
+	find . -type d -name "ml-runs" -exec rm -r {} +
+	find . -type d -name "logs" -exec rm -r {} +
+	find . -type d -name ".ipynb_checkpoints" -exec rm -r {} +
+	find . -type d -name ".hydra" -exec rm -r {} +
+	find . -type d -name "*outputs*" -exec rm -r {} +
+	find . -type f -name "*inference_cache.pth*" -exec rm {} +
 	find . -type f -name "*.log" -exec rm {} +
-	find . -type f -name "*.predictions.json" -exec rm {} +
+	find . -type f -name "*predictions.json" -exec rm {} +
 	rm -rf docs/build
+	rm -rf outputs/

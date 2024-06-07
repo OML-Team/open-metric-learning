@@ -1,65 +1,72 @@
-import warnings
 from collections import defaultdict
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
-from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin, stack, tensor
+from torch import BoolTensor, FloatTensor, LongTensor, Tensor, isin
+from tqdm.auto import tqdm
 
-from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import PCA, pairwise_dist
+from oml.const import OVERALL_CATEGORIES_KEY
+from oml.utils.misc import check_if_nonempty_positive_integers
+from oml.utils.misc_torch import PCA
 
-TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
+TMetricsDict = Dict[str, Any]
+TCategories = Union[LongTensor, np.ndarray]
 
 
 def calc_retrieval_metrics(
-    retrieved_ids: LongTensor,
-    gt_ids: List[LongTensor],
+    retrieved_ids: Sequence[LongTensor],
+    gt_ids: Sequence[LongTensor],
+    query_categories: Optional[TCategories] = None,
     cmc_top_k: Tuple[int, ...] = (5,),
     precision_top_k: Tuple[int, ...] = (5,),
     map_top_k: Tuple[int, ...] = (5,),
     reduce: bool = True,
+    verbose: bool = True,
 ) -> TMetricsDict:
     """
-    Function to count different retrieval metrics.
+    Function to compute different retrieval metrics.
 
     Args:
-        retrieved_ids: Top N gallery ids retrieved for every query with the shape of ``[n_query, top_n]``.
-            Every element is within the range ``(0, n_gallery - 1)``.
-        gt_ids: Gallery ids relevant to every query, list of ``n_query`` elements where every element may
-            have an arbitrary length. Every element is within the range ``(0, n_gallery - 1)``
+        retrieved_ids: First gallery indices retrieved for every query with the size of ``n_query``.
+            Every index is within the range ``(0, n_gallery - 1)``.
+        gt_ids: Gallery indices relevant to every query with the size of ``n_query``.
+            Every element is within the range ``(0, n_gallery - 1)``
+        query_categories: Categories of queries with the size of ``n_query`` to compute metrics for each category.
         cmc_top_k: Values of ``k`` to calculate ``cmc@k`` (`Cumulative Matching Characteristic`)
         precision_top_k: Values of ``k`` to calculate ``precision@k``
         map_top_k: Values of ``k`` to calculate ``map@k`` (`Mean Average Precision`)
         reduce: If ``False`` return metrics for each query without averaging
+        verbose: Set ``True`` to make the function verbose.
 
     Returns:
         Metrics dictionary.
 
     """
-    # todo 522: clipping
-
-    assert retrieved_ids.ndim == 2, "Retrieved ids must be a tensor with the shape of [n_query, top_n]."
-    assert len(retrieved_ids) == len(gt_ids), "Numbers of queries have be the same."
-    n_queries = len(retrieved_ids)
+    assert len(retrieved_ids) == len(gt_ids)
+    assert (query_categories is None) or (len(query_categories) == len(retrieved_ids))
 
     # let's mark every correctly retrieved item as True and vice versa
-    gt_tops = stack([isin(retrieved_ids[i], gt_ids[i]) for i in range(n_queries)]).bool()
-    n_gts = tensor([len(ids) for ids in gt_ids]).long()
+    gt_tops = tuple([isin(r, g).bool() for r, g in zip(retrieved_ids, gt_ids)])
+    n_gts = [len(ids) for ids in gt_ids]
 
     metrics: TMetricsDict = defaultdict(dict)
 
     if cmc_top_k:
-        cmc = calc_cmc(gt_tops, cmc_top_k)
+        cmc = calc_cmc(gt_tops, n_gts, cmc_top_k, verbose=verbose)
         metrics["cmc"] = dict(zip(cmc_top_k, cmc))
 
     if precision_top_k:
-        precision = calc_precision(gt_tops, n_gts, precision_top_k)
+        precision = calc_precision(gt_tops, n_gts, precision_top_k, verbose=verbose)
         metrics["precision"] = dict(zip(precision_top_k, precision))
 
     if map_top_k:
-        map = calc_map(gt_tops, n_gts, map_top_k)
-        metrics["map"] = dict(zip(map_top_k, map))
+        map_ = calc_map(gt_tops, n_gts, map_top_k, verbose=verbose)
+        metrics["map"] = dict(zip(map_top_k, map_))
+
+    if query_categories is not None:
+        metrics_cat = {c: take_unreduced_metrics_by_mask(metrics, query_categories == c) for c in query_categories}
+        metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
     if reduce:
         metrics = reduce_metrics(metrics)
@@ -67,55 +74,39 @@ def calc_retrieval_metrics(
     return metrics
 
 
-def calc_retrieval_metrics_on_full(
-    distances: Tensor,
-    mask_gt: Tensor,
-    mask_to_ignore: Optional[Tensor] = None,
-    cmc_top_k: Tuple[int, ...] = (5,),
-    precision_top_k: Tuple[int, ...] = (5,),
-    map_top_k: Tuple[int, ...] = (5,),
-    reduce: bool = True,
+def calc_topological_metrics(
+    embeddings: Tensor, pcf_variance: Tuple[float, ...], categories: Optional[TCategories] = None, verbose: bool = False
 ) -> TMetricsDict:
-    # todo 522: get rid of this tmp function or at least move to the tests
-    if mask_to_ignore is not None:
-        distances, mask_gt = apply_mask_to_ignore(distances=distances, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore)
-
-    max_k_arg = max([*cmc_top_k, *precision_top_k, *map_top_k])
-    k = min(distances.shape[1], max_k_arg)
-    _, retrieved_ids = torch.topk(distances, largest=False, k=k)
-
-    gt_ids = [LongTensor(row.nonzero()).view(-1) for row in mask_gt]
-
-    metrics = calc_retrieval_metrics(
-        cmc_top_k=cmc_top_k,
-        precision_top_k=precision_top_k,
-        map_top_k=map_top_k,
-        reduce=reduce,
-        gt_ids=gt_ids,
-        retrieved_ids=retrieved_ids,
-    )
-    return metrics
-
-
-def calc_topological_metrics(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> TMetricsDict:
     """
     Function to evaluate different topological metrics.
 
     Args:
         embeddings: Embeddings matrix with the shape of ``[n_embeddings, embeddings_dim]``.
+        categories: Categories of embeddings to compute category wise metrics.
         pcf_variance: Values in range [0, 1]. Find the number of components such that the amount
                       of variance that needs to be explained is greater than the percentage specified
                       by ``pcf_variance``.
+        verbose: Set ``True`` to see a progress bar.
 
     Returns:
         Metrics dictionary.
 
     """
-    metrics: TMetricsDict = dict()
+    assert (categories is None) or (len(categories) == len(embeddings))
+
+    metrics: TMetricsDict = defaultdict(dict)
 
     if pcf_variance:
         main_components = calc_pcf(embeddings, pcf_variance)
         metrics["pcf"] = dict(zip(pcf_variance, main_components))
+
+    if pcf_variance and (categories is not None):
+        categories_unq = np.unique(categories)
+        data = tqdm(categories_unq, desc="Topologic metrics on different categories") if verbose else categories_unq
+        metrics_cat = {
+            c: calc_topological_metrics(embeddings[categories == c], pcf_variance, categories=None) for c in data
+        }
+        metrics = {OVERALL_CATEGORIES_KEY: metrics, **metrics_cat}
 
     return metrics
 
@@ -148,65 +139,9 @@ def take_unreduced_metrics_by_mask(metrics: TMetricsDict, mask: BoolTensor) -> T
     return output
 
 
-def apply_mask_to_ignore(distances: Tensor, mask_gt: Tensor, mask_to_ignore: Tensor) -> Tuple[Tensor, Tensor]:
-    distances[mask_to_ignore] = float("inf")
-    mask_gt[mask_to_ignore] = False
-    return distances, mask_gt
-
-
-def calc_gt_mask(labels: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
-    assert labels.ndim == is_query.ndim == is_gallery.ndim == 1
-    assert len(labels) == len(is_query) == len(is_gallery)
-
-    query_mask = is_query == 1
-    gallery_mask = is_gallery == 1
-    query_labels = labels[query_mask]
-    gallery_labels = labels[gallery_mask]
-    gt_mask = query_labels[..., None] == gallery_labels[None, ...]
-
-    return gt_mask
-
-
-def calc_mask_to_ignore(
-    is_query: Tensor, is_gallery: Tensor, sequence_ids: Optional[Union[Tensor, np.ndarray]] = None
-) -> Tensor:
-    assert is_query.ndim == is_gallery.ndim == 1
-    assert len(is_query) == len(is_gallery)
-
-    if sequence_ids is not None:
-        assert sequence_ids.ndim == 1
-        assert len(is_gallery) == len(sequence_ids)
-
-    ids_query = torch.nonzero(is_query).squeeze()
-    ids_gallery = torch.nonzero(is_gallery).squeeze()
-
-    # this mask excludes duplicates of queries from the gallery if any
-    mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
-
-    if sequence_ids is not None:
-        # this mask ignores gallery samples taken from the same sequence as a given query
-        mask_to_ignore_seq = sequence_ids[is_query][..., None] == sequence_ids[is_gallery][None, ...]
-        mask_to_ignore = np.logical_or(mask_to_ignore, mask_to_ignore_seq)  # numpy casts tensor to numpy array
-        mask_to_ignore = torch.tensor(mask_to_ignore, dtype=torch.bool)
-
-    return mask_to_ignore
-
-
-def calc_distance_matrix(embeddings: Tensor, is_query: Tensor, is_gallery: Tensor) -> Tensor:
-    assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
-    assert embeddings.shape[0] == len(is_query) == len(is_gallery)
-
-    query_mask = is_query == 1
-    gallery_mask = is_gallery == 1
-    query_embeddings = embeddings[query_mask]
-    gallery_embeddings = embeddings[gallery_mask]
-
-    distance_matrix = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
-
-    return distance_matrix
-
-
-def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_cmc(
+    gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...], verbose: bool = False
+) -> List[FloatTensor]:
     """
     Function to compute Cumulative Matching Characteristics (CMC) at cutoffs ``top_k``.
 
@@ -215,13 +150,14 @@ def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     The final ``cmc@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
-                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
-                 with the smallest distances to the corresponding queries.
+        gt_tops: Indicators that show if retrievied items are correct or not:
+            ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
+        n_gts: Number of existing ground truths for every query.
         top_k: Values of ``k`` to calculate ``cmc@k``.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
-        List of ``cmc@k`` tensors.
+        List of ``cmc@k`` tensors computed for every query.
 
     .. math::
         \\textrm{cmc}@k = \\begin{cases}
@@ -230,23 +166,38 @@ def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
         \\end{cases}
 
     Example:
-        >>> gt_tops = torch.tensor([
-        ...                         [1, 0],
-        ...                         [0, 1],
-        ...                         [0, 0]
-        ... ], dtype=torch.bool)
-        >>> calc_cmc(gt_tops, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([1., 1., 0.])]
+        >>> gt_tops = [
+        ...     BoolTensor([1, 0]),
+        ...     BoolTensor([0, 1, 1]),
+        ...     BoolTensor([0, 0]),
+        ...     BoolTensor([])
+        ... ]
+        >>> n_gts = [2, 2, 1, 0]
+        >>> calc_cmc(gt_tops, n_gts, top_k=(1, 2))
+        [tensor([1., 0., 0., 1.]), tensor([1., 1., 0., 1.])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+
+    def cmc_single(is_correct: BoolTensor, n_gt: int, k_: int) -> float:
+        if n_gt == 0 and len(is_correct) == 0:
+            return 1.0
+        elif n_gt > 0 and len(is_correct) == 0:
+            return 0.0
+        else:
+            value = float(is_correct[:k_].any())
+            return value
+
     cmc = []
     for k in top_k:
-        cmc.append(torch.any(gt_tops[:, :k], dim=1).float())
+        items = tqdm(zip(gt_tops, n_gts), desc=f"CMC@{k}", total=len(gt_tops)) if verbose else zip(gt_tops, n_gts)
+        cmc.append(FloatTensor([cmc_single(gts, n_gt, k) for gts, n_gt in items]))
+
     return cmc
 
 
-def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_precision(
+    gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...], verbose: bool = False
+) -> List[FloatTensor]:
     """
     Function to compute Precision at cutoffs ``top_k``.
 
@@ -255,15 +206,14 @@ def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> Lis
     The final ``precision@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
-                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
-                 with the smallest distances to the corresponding queries.
-        n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
-              to ``i``-th query.
+        gt_tops: Indicators that show if retrievied items are correct or not:
+            ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
+        n_gts: Number of existing ground truth for every query.
         top_k: Values of ``k`` to calculate ``precision@k``.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
-        List of ``precision@k`` tensors.
+        List of ``precision@k`` tensors computed for every query.
 
     Given a list :math:`g=[g_1, \\ldots, g_k]` of ground truth top :math:`k` closest elements from the gallery to
     a given query (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query and 0 otherwise),
@@ -307,26 +257,41 @@ def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> Lis
             https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Precision_at_k
 
     Example:
-        >>> gt_tops = torch.tensor([
-        ...                         [1, 0],
-        ...                         [0, 1],
-        ...                         [0, 0]
-        ... ], dtype=torch.bool)
-        >>> n_gt = torch.tensor([2, 3, 5])
-        >>> calc_precision(gt_tops, n_gt, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([0.5000, 0.5000, 0.0000])]
+
+        >>> gt_tops = [
+        ...     BoolTensor([1, 0]),
+        ...     BoolTensor([0, 1, 1]),
+        ...     BoolTensor([0, 0]),
+        ...     BoolTensor([])
+        ... ]
+        >>> n_gts = [2, 3, 5, 2]
+        >>> calc_precision(gt_tops, n_gts, top_k=(1, 2))
+        [tensor([1., 0., 0., 0.]), tensor([0.5000, 0.5000, 0.0000, 0.0000])]
+
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
+
+    def precision_single(is_correct: BoolTensor, n_gt: int, k_: int) -> float:
+        if n_gt == 0 and len(is_correct) == 0:
+            return 1.0
+        elif n_gt > 0 and len(is_correct) == 0:
+            return 0.0
+        else:
+            k_ = min(k_, len(is_correct))
+            value = torch.cumsum(is_correct, dim=0)[k_ - 1] / min(n_gt, k_)
+            return float(value)
+
     precision = []
-    correct_preds = torch.cumsum(gt_tops.float(), dim=1)
     for k in top_k:
-        _n_gt = torch.min(n_gt, torch.tensor(k).unsqueeze(0))
-        precision.append(correct_preds[:, k - 1] / _n_gt)
+        items = tqdm(zip(gt_tops, n_gts), desc=f"Precision@{k}", total=len(n_gts)) if verbose else zip(gt_tops, n_gts)
+        precision.append(FloatTensor([precision_single(gts, n_gt, k) for gts, n_gt in items]))
+
     return precision
 
 
-def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
+def calc_map(
+    gt_tops: Sequence[BoolTensor], n_gts: List[int], top_k: Tuple[int, ...], verbose: bool = False
+) -> List[FloatTensor]:
     """
     Function to compute Mean Average Precision (MAP) at cutoffs ``top_k``.
 
@@ -334,15 +299,14 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
     The final ``map@k`` could be obtained by averaging the results calculated for each query.
 
     Args:
-        gt_tops: Matrix where the ``(i, j)`` element indicates if ``j``-th gallery sample is related to
-                 ``i``-th query or not. Obtained from the full ground truth matrix by taking ``max(top_k)`` elements
-                 with the smallest distances to the corresponding queries.
-        n_gt: Array where the ``i``-th element is the total number of elements in the gallery relevant
-              to ``i``-th query.
+        gt_tops: Indicators that show if retrievied items are correct or not:
+            ``gt_tops[i][j]`` is ``True`` if ``j``-th gallery item is related to the ``i``-th query item.
+        n_gts: Number of existing ground truth for every query.
         top_k: Values of ``k`` to calculate ``map@k``.
+        verbose: Set ``True`` to see progress bar.
 
     Returns:
-        List of ``map@k`` tensors.
+        List of ``map@k`` tensors computed for every query.
 
     Given a list :math:`g=[g_1, \\ldots, g_k]` of ground truth top :math:`k` closest elements from the gallery to
     a given query (:math:`g_i` is 1 if :math:`i`-th element from the gallery is relevant to the query and 0 otherwise),
@@ -374,28 +338,41 @@ def calc_map(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tens
         https://sdsawtelle.github.io/blog/output/mean-average-precision-MAP-for-recommender-systems.html
 
     Example:
-        >>> gt_tops = torch.tensor([
-        ...                         [1, 0],
-        ...                         [0, 1],
-        ...                         [0, 0]
-        ... ], dtype=torch.bool)
-        >>> n_gt = torch.tensor([2, 3, 5])
-        >>> calc_map(gt_tops, n_gt, top_k=(1, 2))
-        [tensor([1., 0., 0.]), tensor([1.0000, 0.5000, 0.0000])]
+        >>> gt_tops = [
+        ...    BoolTensor([1, 0]),
+        ...    BoolTensor([0, 1]),
+        ...    BoolTensor([0, 0, 0, 0]),
+        ...    BoolTensor([])
+        ... ]
+        >>> n_gts = [1, 1, 2, 0]
+        >>> calc_map(gt_tops, n_gts, top_k=(1, 2))
+        [tensor([1., 0., 0., 1.]), tensor([1.0000, 0.5000, 0.0000, 1.0000])]
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
-    top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
-    map = []
-    correct_preds = torch.cumsum(gt_tops.float(), dim=1)
+
+    def map_single(is_correct: BoolTensor, n_gt: int, k_: int) -> float:
+        if n_gt == 0 and len(is_correct) == 0:
+            return 1.0
+        elif n_gt > 0 and len(is_correct) == 0:
+            return 0.0
+        else:
+            k_ = min(k_, len(is_correct))
+            correct_preds = torch.cumsum(is_correct, dim=0).float()
+            positions = torch.arange(1, k_ + 1).to(correct_preds.device)
+            n_k = correct_preds[k_ - 1].clone()
+            n_k[n_k < 1] = torch.inf  # hack to avoid zero division
+            value = torch.sum((correct_preds[:k_] / positions) * is_correct[:k_], dim=0) / n_k
+            return float(value)
+
+    map_ = []
     for k in top_k:
-        positions = torch.arange(1, k + 1).unsqueeze(0).to(correct_preds.device)
-        n_k = correct_preds[:, k - 1].clone()
-        n_k[n_k < 1] = torch.inf  # hack to avoid zero division
-        map.append(torch.sum((correct_preds[:, :k] / positions) * gt_tops[:, :k], dim=1) / n_k)
-    return map
+        items = tqdm(zip(gt_tops, n_gts), total=len(gt_tops), desc=f"MAP@{k}") if verbose else zip(gt_tops, n_gts)
+        map_.append(FloatTensor([map_single(is_correct, n_gt, k) for is_correct, n_gt in items]))
+
+    return map_
 
 
-def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, ...] = (0.1,)) -> Tensor:
+def calc_fnmr_at_fmr(pos_dist: np.ndarray, neg_dist: np.ndarray, fmr_vals: Tuple[float, ...] = (0.1,)) -> FloatTensor:
     """
     Function to compute False Non Match Rate (FNMR) value when False Match Rate (FMR) value
     is equal to ``fmr_vals``.
@@ -457,25 +434,24 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
 
 
     Example:
-        >>> pos_dist = torch.tensor([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
-        >>> neg_dist = torch.tensor([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
+        >>> pos_dist = np.array([0, 0, 1, 1, 2, 2, 5, 5, 9, 9])
+        >>> neg_dist = np.array([3, 3, 4, 4, 6, 6, 7, 7, 8, 8])
         >>> calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals=(0.1, 0.5))
         tensor([0.4000, 0.2000])
 
     """
     _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
-    thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
+    thresholds = np.quantile(neg_dist, fmr_vals)  # we use numpy because it can take bigger input
     fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
-    return fnmr_at_fmr
+    return FloatTensor(fnmr_at_fmr)
 
 
-def calc_fnmr_at_fmr_from_matrices(
-    distance_matrix: FloatTensor, mask_gt: BoolTensor, fmr_vals: Tuple[float, ...]
+def calc_fnmr_at_fmr_by_distances(
+    pos_dist: np.ndarray, neg_dist: np.ndarray, fmr_vals: Tuple[float, ...]
 ) -> TMetricsDict:
     metrics: TMetricsDict = dict()
 
     if fmr_vals:
-        pos_dist, neg_dist = extract_pos_neg_dists(distance_matrix, mask_gt)
         fnmr_at_fmr = calc_fnmr_at_fmr(pos_dist, neg_dist, fmr_vals)
         metrics["fnmr@fmr"] = dict(zip(fmr_vals, fnmr_at_fmr))
 
@@ -545,42 +521,6 @@ def calc_pcf(embeddings: Tensor, pcf_variance: Tuple[float, ...]) -> List[Tensor
     return metric
 
 
-def extract_pos_neg_dists(distances: Tensor, mask_gt: Tensor) -> Tuple[Tensor, Tensor]:
-    """
-    Extract distances between relevant samples, and distances between non-relevant samples.
-
-    Args:
-        distances: Distance matrix with the shape of ``[query_size, gallery_size]``
-        mask_gt: ``(i,j)`` element indicates if for i-th query j-th gallery is the correct prediction
-
-    Returns:
-        pos_dist: Tensor of distances between relevant samples
-        neg_dist: Tensor of distances between non-relevant samples
-    """
-    pos_dist = distances[mask_gt]
-    neg_dist = distances[~mask_gt]
-    return pos_dist, neg_dist
-
-
-def _clip_max_with_warning(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
-    """
-    Clip ``arr`` by upper bound ``max_el`` and raise warning if required.
-
-    Args:
-        arr: Array to check and clip.
-        max_el: The upper limit.
-
-    Returns:
-        Clipped value of ``arr``.
-    """
-    if any(a > max_el for a in arr):
-        warnings.warn(
-            f"The desired value of top_k can't be larger than {max_el}, but got {arr}. "
-            f"The values of top_k will be clipped to {max_el}."
-        )
-    return clip_max(arr, max_el)
-
-
 def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: str) -> None:
     """
     Check whether the ``vals`` are in the range ``[min_, max_]``. Throw the ValueError if not.
@@ -600,12 +540,8 @@ def _check_if_in_range(vals: Sequence[float], min_: float, max_: float, name: st
 __all__ = [
     "TMetricsDict",
     "calc_retrieval_metrics",
-    "calc_retrieval_metrics_on_full",
     "calc_topological_metrics",
-    "apply_mask_to_ignore",
-    "calc_gt_mask",
-    "calc_mask_to_ignore",
-    "calc_distance_matrix",
     "reduce_metrics",
     "take_unreduced_metrics_by_mask",
+    "calc_fnmr_at_fmr",
 ]

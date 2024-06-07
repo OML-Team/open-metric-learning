@@ -57,6 +57,37 @@ def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     return x
 
 
+def cat_two_sorted_tensors_and_keep_it_sorted(x1: Tensor, x2: Tensor, eps: float = 1e-6) -> Tensor:
+    """
+    Args:
+        x1: Sorted tensor with the shape of ``[N, M]``
+        x2: Sorted tensor with the shape of ``[N, P]``
+        eps: Eps to have a gap between the last x1 and the first x2
+
+    Returns:
+        Concatenation of two sorted tensors.
+        The first tensor may be rescaled if needed to keep the order sorted.
+
+    """
+    assert eps >= 0
+
+    if not x1.numel():
+        return x2
+
+    if not x2.numel():
+        return x1
+
+    assert x1.shape[0] == x2.shape[0], (x1.shape[0], x2.shape[0])
+
+    scale = (x2[:, 0] / x1[:, -1]).view(-1, 1).type_as(x1)
+    need_scaling = x1[:, -1] > x2[:, 0]
+    x1[need_scaling] = x1[need_scaling] * scale[need_scaling] - eps
+
+    x = torch.concatenate([x1, x2], dim=1).float()
+
+    return x
+
+
 def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     """
     Args:
@@ -114,6 +145,23 @@ def normalise(x: Tensor, p: int = 2) -> Tensor:
 
 def get_device(model: torch.nn.Module) -> str:
     return str(next(model.parameters()).device)
+
+
+def is_sorted_tensor(x: Tensor) -> bool:
+    """
+    Here is the robust checker if a tensor is sorted or not which handles case
+    where some elements of the tensors are close to each other than computational tolerance.
+
+    If we cannot distinguish elements in the tensor we assume it's sorted by default.
+    """
+    assert x.ndim == 1
+    if len(x) == 1:
+        return True
+
+    diffs = x[1:] - x[:-1]
+    diffs[torch.abs(diffs) < 10 * torch.finfo(x.dtype).eps] = 0
+
+    return (diffs >= 0).all()
 
 
 def _check_is_sequence(val: Any) -> bool:
@@ -455,6 +503,7 @@ class PCA:
 
 __all__ = [
     "elementwise_dist",
+    "cat_two_sorted_tensors_and_keep_it_sorted",
     "pairwise_dist",
     "OnlineCalc",
     "AvgOnline",
@@ -467,4 +516,5 @@ __all__ = [
     "PCA",
     "unique_by_ids",
     "normalise",
+    "is_sorted_tensor",
 ]

@@ -52,11 +52,21 @@ ITripletLossWithMiner
 
     .. automethod:: forward
 
+IIndexedDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IIndexedDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __getitem__
+
 IBaseDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.datasets.IBaseDataset
     :undoc-members:
     :show-inheritance:
+
+    .. automethod:: __getitem__
 
 ILabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,6 +76,7 @@ ILabeledDataset
 
     .. automethod:: __getitem__
     .. automethod:: get_labels
+    .. automethod:: get_label2category
 
 IQueryGalleryDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,10 +96,11 @@ IQueryGalleryLabeledDataset
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
     .. automethod:: get_labels
+    .. automethod:: get_label2category
 
-IPairsDataset
+IPairDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: oml.interfaces.datasets.IPairsDataset
+.. autoclass:: oml.interfaces.datasets.IPairDataset
     :undoc-members:
     :show-inheritance:
 
@@ -138,3 +150,11 @@ IPipelineLogger
 
     .. automethod:: log_figure
     .. automethod:: log_pipeline_info
+
+IRetrievalPostprocessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.retrieval.IRetrievalPostprocessor
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: process

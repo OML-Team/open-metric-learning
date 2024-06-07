@@ -15,6 +15,7 @@ from oml.const import (
     OBLIGATORY_COLUMNS,
     PATHS_COLUMN,
     SPLIT_COLUMN,
+    TEXTS_COLUMN,
     X1_COLUMN,
     X2_COLUMN,
     Y1_COLUMN,
@@ -39,6 +40,7 @@ def check_retrieval_dataframe_format(
         df = pd.read_csv(df, sep=sep, index_col=None)
 
     assert all(x in df.columns for x in OBLIGATORY_COLUMNS), df.columns
+    assert (PATHS_COLUMN in df.columns) or (TEXTS_COLUMN in df.columns)
 
     assert set(df[SPLIT_COLUMN]).issubset({"train", "validation"}), set(df[SPLIT_COLUMN])
 
@@ -67,12 +69,13 @@ def check_retrieval_dataframe_format(
     labels_gallery = set(df[LABELS_COLUMN][df[IS_GALLERY_COLUMN] == True])  # noqa
     assert labels_query.intersection(labels_gallery) == labels_query
 
-    if dataset_root is None:
-        dataset_root = Path("")
+    if PATHS_COLUMN in df.columns:
+        if dataset_root is None:
+            dataset_root = Path("")
 
-    all_paths = df[PATHS_COLUMN].apply(lambda x: (dataset_root / x)).to_list()
-    non_existing_paths = list(filter(lambda x: not x.exists(), all_paths))
-    assert not non_existing_paths, f"Following paths do not exist: {non_existing_paths}"
+        all_paths = df[PATHS_COLUMN].apply(lambda x: (dataset_root / x)).to_list()
+        non_existing_paths = list(filter(lambda x: not x.exists(), all_paths))
+        assert not non_existing_paths, f"Following paths do not exist: {non_existing_paths}"
 
     # check bboxes if exist
     if set(BBOXES_COLUMNS).intersection(set(list(df.columns))):
@@ -98,6 +101,10 @@ def check_retrieval_dataframe_format(
         assert not n_bad_y1_y2, f"Number of bad y1/y2 pairs {n_bad_y1_y2}"
         for coord in BBOXES_COLUMNS:
             assert all((bboxes_df[coord] >= 0).to_list()), coord
+
+    if TEXTS_COLUMN in df.columns:
+        assert isinstance(df.iloc[0][TEXTS_COLUMN], str)
+        assert (df[TEXTS_COLUMN].apply(len) > 0).all()
 
     if CATEGORIES_COLUMN in df.columns:
         label_to_category = defaultdict(set)

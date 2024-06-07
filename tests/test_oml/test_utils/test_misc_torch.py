@@ -3,12 +3,15 @@ from typing import List
 import numpy as np
 import pytest
 import torch
+from torch import FloatTensor
 
 from oml.utils.misc_torch import (
     PCA,
     TData,
     assign_2d,
+    cat_two_sorted_tensors_and_keep_it_sorted,
     elementwise_dist,
+    is_sorted_tensor,
     take_2d,
     unique_by_ids,
 )
@@ -22,6 +25,41 @@ def test_elementwise_dist() -> None:
     val_custom = np.sqrt(((np.array(x1) - np.array(x2)) ** 2).sum(axis=1))
 
     assert torch.isclose(val_torch, torch.tensor(val_custom)).all()
+
+
+@pytest.mark.parametrize(
+    "x1,x2,e,expected",
+    [
+        (
+            # x1
+            torch.tensor([[10, 20, 30], [40, 50, 60]]).float(),
+            # x2
+            torch.tensor([[0.3, 0.4, 0.5], [0.6, 0.8, 0.9]]).float(),
+            # e
+            0.001,
+            # expected: rescaling is needed
+            torch.tensor(
+                [
+                    [0.1 - 0.001, 0.2 - 0.001, 0.3 - 0.001, 0.3, 0.4, 0.5],
+                    [0.4 - 0.001, 0.5 - 0.001, 0.6 - 0.001, 0.6, 0.8, 0.9],
+                ]
+            ).float(),
+        ),
+        (
+            # x1
+            torch.tensor([[-10, -5], [-20, -8]]).float(),
+            # x2
+            torch.tensor([[0.3, 0.4, 0.5], [0.6, 0.8, 0.9]]).float(),
+            # e
+            0.001,
+            # expected: rescaling is not needed, we jast concat
+            torch.tensor([[-10, -5, 0.3, 0.4, 0.5], [-20, -8, 0.6, 0.8, 0.9]]).float(),
+        ),
+    ],
+)
+def test_concat_two_sorted_tensors_with_rescaling(x1, x2, e, expected):  # type: ignore
+    out = cat_two_sorted_tensors_and_keep_it_sorted(x1, x2, eps=e)
+    assert torch.isclose(expected, out).all()
 
 
 # fmt: off
@@ -250,3 +288,20 @@ def test_pca_components_orthogonality() -> None:
     assert torch.all(
         torch.isclose(torch.matmul(pca.components, pca.components.T), torch.eye(embeddings.shape[1]), atol=1.0e-6)
     )
+
+
+def test_is_sorted_tensor() -> None:
+    x = FloatTensor([0, 1e-50, 2e-50, 3e-50, 1, 2])
+    assert is_sorted_tensor(x)
+
+    x = FloatTensor([0, 3e-50, 2e-50, 1e-50, 1, 2])
+    assert is_sorted_tensor(x)
+
+    x = FloatTensor([2, 3e-50, 2e-50, 1e-50, 0, 1])
+    assert not is_sorted_tensor(x)
+
+    x = FloatTensor([3e-50, 2e-50, 1e-50])
+    assert is_sorted_tensor(x)
+
+    x = FloatTensor([1e-50, 2e-50, 3e-50])
+    assert is_sorted_tensor(x)

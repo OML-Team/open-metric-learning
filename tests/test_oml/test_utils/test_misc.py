@@ -1,9 +1,10 @@
-from typing import Any
-
+import matplotlib
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 
-from oml.utils.misc import find_first_occurrences, smart_sample
+from oml.const import RED
+from oml.utils.misc import pad_array_right, smart_sample, visualise_text
 
 
 @pytest.mark.long
@@ -32,19 +33,41 @@ def test_sample_not_enough_items() -> None:
         assert set(samples) == set(array)
 
 
-@pytest.fixture()
-def first_occurrences_test_data() -> Any:
-    data: Any = (
-        ([], []),
-        ([0, 1, 2, 1, 1], [0, 1, 2]),
-        ([10, 10, 10], [0]),
-        ([15, 20, 40, 10, 10], [0, 1, 2, 3]),
-        ([0, 1, 1, 1, 1, 0], [0, 1]),
-    )
-    return data
+def test_pad_array_right() -> None:
+    arr = np.array([1.5, 2, 3])
+    sz = 5
+    val = -100.0
+    arr_pad_expected = np.array([1.5, 2, 3, val, val])
+    arr_pad = pad_array_right(arr, sz, val)
+
+    assert np.allclose(arr_pad_expected, arr_pad)
 
 
-@pytest.mark.long
-def test_find_first_occurrences(first_occurrences_test_data) -> None:  # type: ignore
-    for x, expected in first_occurrences_test_data:
-        assert expected == find_first_occurrences(x)
+def check_image_has_content(image: np.ndarray) -> bool:
+    pixels = image.reshape(-1, 3)
+    unique_colors = np.unique(pixels, axis=0)
+    return unique_colors.shape[0] > 1
+
+
+def test_visualise_text() -> None:
+    current_backend = matplotlib.get_backend()
+    matplotlib.use("Agg")
+
+    img = visualise_text(text="Hello world", color=RED, draw_bbox=False)
+    plt.imshow(img)
+    plt.show()
+    assert check_image_has_content(img)
+
+    # we check the function works on a single extremely huge word
+    img = visualise_text(text="Hello" * 100, color=RED, draw_bbox=False)
+    plt.imshow(img)
+    plt.show()
+    assert check_image_has_content(img)
+
+    # the same, but there are several huge words
+    img = visualise_text(text="Hello" * 50 + " HELLO " + "Hello" * 50, color=RED, draw_bbox=False)
+    plt.imshow(img)
+    plt.show()
+    assert check_image_has_content(img)
+
+    matplotlib.use(current_backend)

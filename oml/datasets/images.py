@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -5,35 +6,25 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import albumentations as albu
 import numpy as np
 import pandas as pd
-import torch
 import torchvision
 from torch import BoolTensor, FloatTensor, LongTensor
 
 from oml.const import (
     BLACK,
     CATEGORIES_COLUMN,
-    CATEGORIES_KEY,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
-    IS_GALLERY_KEY,
     IS_QUERY_COLUMN,
-    IS_QUERY_KEY,
     LABELS_COLUMN,
     LABELS_KEY,
     PATHS_COLUMN,
-    PATHS_KEY,
     SEQUENCE_COLUMN,
-    SEQUENCE_KEY,
     SPLIT_COLUMN,
     X1_COLUMN,
-    X1_KEY,
     X2_COLUMN,
-    X2_KEY,
     Y1_COLUMN,
-    Y1_KEY,
     Y2_COLUMN,
-    Y2_KEY,
     TBBoxes,
     TColor,
 )
@@ -47,14 +38,7 @@ from oml.interfaces.datasets import (
 from oml.registry.transforms import get_transforms
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.images.images import TImReader, get_img_with_bbox
-
-# todo 522: general comment on Datasets
-# We will remove using keys in __getitem__ for:
-# Passing extra information (like categories or sequence id) -> we will use .extra_data instead
-# Modality related info (like bboxes or paths) -> they may only exist as internals of the datasets
-# is_query_key, is_gallery_key -> get_query_ids() and get_gallery_ids() methods
-# Before this, we temporary keep both approaches
+from oml.utils.images.images import TImReader, draw_bbox, imread_pillow
 
 
 def parse_bboxes(df: pd.DataFrame) -> Optional[TBBoxes]:
@@ -93,12 +77,6 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
-        # todo 522: remove
-        paths_key: str = PATHS_KEY,
-        x1_key: str = X1_KEY,
-        x2_key: str = X2_KEY,
-        y1_key: str = Y1_KEY,
-        y2_key: str = Y2_KEY,
     ):
         """
 
@@ -112,11 +90,6 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
             cache_size: Size of the dataset's cache
             input_tensors_key: Key to put tensors into the batches
             index_key: Key to put samples' ids into the batches
-            paths_key: Key put paths into the batches   # todo 522: remove
-            x1_key: Key to put ``x1`` into the batches  # todo 522: remove
-            x2_key: Key to put ``x2`` into the batches  # todo 522: remove
-            y1_key: Key to put ``y1`` into the batches  # todo 522: remove
-            y2_key: Key to put ``y2`` into the batches  # todo 522: remove
 
         """
         assert (bboxes is None) or (len(paths) == len(bboxes))
@@ -147,13 +120,6 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
 
         available_transforms = (albu.Compose, torchvision.transforms.Compose)
         assert isinstance(self._transform, available_transforms), f"Transforms must one of: {available_transforms}"
-
-        # todo 522: remove
-        self.paths_key = paths_key
-        self.x1_key = x1_key
-        self.x2_key = x2_key
-        self.y1_key = y1_key
-        self.y2_key = y2_key
 
     @staticmethod
     def _read_bytes(path: Union[Path, str]) -> bytes:
@@ -190,28 +156,17 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
             else:
                 data[key] = record[item]
 
-        # todo 522: remove
-        data[self.x1_key] = x1
-        data[self.y1_key] = y1
-        data[self.x2_key] = x2
-        data[self.y2_key] = y2
-        data[self.paths_key] = self._paths[item]
-
         return data
 
     def __len__(self) -> int:
         return len(self._paths)
 
     def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
-        bbox = torch.tensor(self._bboxes[item]) if (self._bboxes is not None) else torch.tensor([torch.nan] * 4)
-        image = get_img_with_bbox(im_path=self._paths[item], bbox=bbox, color=color)
+        img = np.array(imread_pillow(self.read_bytes(self._paths[item])))
+        bbox = self._bboxes[item] if (self._bboxes is not None) else None
+        image = draw_bbox(im=img, bbox=bbox, color=color)
 
         return image
-
-    # todo 522: remove
-    @property
-    def bboxes_keys(self) -> Tuple[str, ...]:
-        return self.x1_key, self.y1_key, self.x2_key, self.y2_key
 
 
 class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
@@ -231,18 +186,18 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
         index_key: str = INDEX_KEY,
-        # todo 522: remove
-        paths_key: str = PATHS_KEY,
-        categories_key: Optional[str] = CATEGORIES_KEY,
-        sequence_key: Optional[str] = SEQUENCE_KEY,
-        x1_key: str = X1_KEY,
-        x2_key: str = X2_KEY,
-        y1_key: str = Y1_KEY,
-        y2_key: str = Y2_KEY,
     ):
-        assert (x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
+        assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
         self.labels_key = labels_key
         self.df = df
+
+        extra_data = extra_data or dict()
+
+        if CATEGORIES_COLUMN in df.columns:
+            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].copy()
+
+        if SEQUENCE_COLUMN in df.columns:
+            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
 
         super().__init__(
             paths=self.df[PATHS_COLUMN].tolist(),
@@ -254,35 +209,16 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
-            # todo 522: remove
-            x1_key=x1_key,
-            y2_key=y2_key,
-            x2_key=x2_key,
-            y1_key=y1_key,
-            paths_key=paths_key,
         )
-
-        # todo 522: remove
-        self.categories_key = categories_key if (CATEGORIES_COLUMN in df.columns) else None
-        self.sequence_key = sequence_key if (SEQUENCE_COLUMN in df.columns) else None
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         data = super().__getitem__(item)
         data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
-
-        # todo 522: remove
-        if self.sequence_key:
-            data[self.sequence_key] = self.df[SEQUENCE_COLUMN][item]
-
-        if self.categories_key:
-            data[self.categories_key] = self.df[CATEGORIES_COLUMN][item]
-
         return data
 
     def get_labels(self) -> np.ndarray:
         return np.array(self.df[LABELS_COLUMN])
 
-    # todo 522: remove
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
         if CATEGORIES_COLUMN in self.df.columns:
             label2category = dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
@@ -316,16 +252,6 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
         cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
-        # todo 522: remove
-        paths_key: str = PATHS_KEY,
-        categories_key: Optional[str] = CATEGORIES_KEY,
-        sequence_key: Optional[str] = SEQUENCE_KEY,
-        x1_key: str = X1_KEY,
-        x2_key: str = X2_KEY,
-        y1_key: str = Y1_KEY,
-        y2_key: str = Y2_KEY,
-        is_query_key: str = IS_QUERY_KEY,
-        is_gallery_key: str = IS_GALLERY_KEY,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
         self.df = df
@@ -339,35 +265,13 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
             labels_key=labels_key,
-            # todo 522: remove
-            x1_key=x1_key,
-            y2_key=y2_key,
-            x2_key=x2_key,
-            y1_key=y1_key,
-            paths_key=paths_key,
-            categories_key=categories_key,
-            sequence_key=sequence_key,
         )
-
-        # todo 522: remove
-        self.is_query_key = is_query_key
-        self.is_gallery_key = is_gallery_key
 
     def get_query_ids(self) -> LongTensor:
         return BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
 
     def get_gallery_ids(self) -> LongTensor:
         return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
-
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        data = super().__getitem__(idx)
-        data[self.labels_key] = self.df.iloc[idx][LABELS_COLUMN]
-
-        # todo 522: remove
-        data[self.is_query_key] = bool(self.df[IS_QUERY_COLUMN][idx])
-        data[self.is_gallery_key] = bool(self.df[IS_GALLERY_COLUMN][idx])
-
-        return data
 
 
 class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
@@ -385,21 +289,11 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         f_imread: Optional[TImReader] = None,
         cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
-        # todo 522: remove
-        paths_key: str = PATHS_KEY,
-        categories_key: Optional[str] = CATEGORIES_KEY,
-        sequence_key: Optional[str] = SEQUENCE_KEY,
-        x1_key: str = X1_KEY,
-        x2_key: str = X2_KEY,
-        y1_key: str = Y1_KEY,
-        y2_key: str = Y2_KEY,
-        is_query_key: str = IS_QUERY_KEY,
-        is_gallery_key: str = IS_GALLERY_KEY,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
-        self.df = df.copy()
 
         # instead of implementing the whole logic let's just re-use QGL dataset, but with dropped labels
+        df = deepcopy(df)
         df[LABELS_COLUMN] = "fake_label"
 
         self.__dataset = ImageQueryGalleryLabeledDataset(
@@ -411,17 +305,11 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
             labels_key=LABELS_COLUMN,
-            # todo 522: remove
-            x1_key=x1_key,
-            y2_key=y2_key,
-            x2_key=x2_key,
-            y1_key=y1_key,
-            paths_key=paths_key,
-            categories_key=categories_key,
-            sequence_key=sequence_key,
-            is_query_key=is_query_key,
-            is_gallery_key=is_gallery_key,
         )
+
+        self.extra_data = self.__dataset.extra_data
+        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.index_key = self.__dataset.index_key
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         batch = self.__dataset[item]
@@ -455,7 +343,6 @@ def get_retrieval_images_datasets(
 
     check_retrieval_dataframe_format(df, dataset_root=dataset_root, verbose=verbose)
 
-    # todo 522: why do we need it?
     # first half will consist of "train" split, second one of "val"
     # so labels in train will be from 0 to N-1 and labels in test will be from N to K
     mapper = {l: i for i, l in enumerate(df.sort_values(by=[SPLIT_COLUMN])[LABELS_COLUMN].unique())}

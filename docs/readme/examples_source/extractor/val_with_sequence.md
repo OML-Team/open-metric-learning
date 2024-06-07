@@ -29,38 +29,34 @@ To use this functionality you only need to provide `sequence` column in your dat
 (containing **strings** or **integers**) and pass `sequence_key` to `EmbeddingMetrics()`:
 
 <details>
-<summary>Validation + handling sequences</summary>
-<p>
+<summary><b>See example</b></summary>
 
 [comment]:val-with-sequence-start
 ```python
-import torch
-from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
+from oml.inference import inference
+from oml.datasets import ImageQueryGalleryLabeledDataset
 from oml.models import ViTExtractor
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.retrieval import RetrievalResults
+from oml.utils import get_mock_images_dataset
+from oml.metrics import calc_retrieval_metrics_rr
 
-dataset_root = "mock_dataset/"
-_, df_val = download_mock_dataset(dataset_root, df_name="df_with_sequence.csv")  # <- sequence info is in the file
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).to("cpu")
 
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
+_, df_val = get_mock_images_dataset(global_paths=True, df_name="df_with_sequence.csv")  # <- sequence info is in the file
+dataset = ImageQueryGalleryLabeledDataset(df_val)
+embeddings = inference(extractor, dataset, batch_size=4, num_workers=0)
 
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+rr = RetrievalResults.from_embeddings(embeddings, dataset, n_items=5)
+rr.visualize(query_ids=[2, 1], dataset=dataset, show=True)
 
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics(extra_keys=("paths",), sequence_key=val_dataset.sequence_key)
-calculator.setup(num_samples=len(val_dataset))
-
-with torch.no_grad():
-    for batch in tqdm(val_loader):
-        batch["embeddings"] = extractor(batch["input_tensors"])
-        calculator.update_data(batch)
-
-metrics = calculator.compute_metrics()
+metrics = calc_retrieval_metrics_rr(rr, map_top_k=(3, 5), precision_top_k=(5,), cmc_top_k=(3,))
+print(rr, "\n", metrics)
 
 ```
 [comment]:val-with-sequence-end
-</p>
+
 </details>
+<br>
+
+

@@ -1,13 +1,15 @@
 import inspect
 import os
 import random
-from typing import Any, Dict, Hashable, Iterable, List, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
+from torch import Tensor
 
-from oml.const import TCfg
+from oml.const import BLACK, TCfg, TColor
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -110,8 +112,8 @@ def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
     return tuple(min(x, max_el) for x in arr)
 
 
-def remove_unused_kwargs(kwargs: Dict[str, Any], constructor: Any) -> Dict[str, Any]:
-    return {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
+def remove_unused_kwargs(kwargs: Dict[str, Any], function: Any) -> Dict[str, Any]:
+    return {k: v for k, v in kwargs.items() if k in inspect.signature(function).parameters}
 
 
 def check_if_nonempty_positive_integers(var: Union[int, Sequence[int]], name: str) -> None:
@@ -147,27 +149,43 @@ def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
             assert compare_dicts_recursively(
                 v, d2[k]
             ), f"The dictionaries differs at key {k}.\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
+        elif isinstance(v, Tensor):
+            assert torch.allclose(d2[k], v)
         else:
             assert d2[k] == v, f"Key name: {k}\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
     return True
 
 
-def find_first_occurrences(x: List[Hashable]) -> List[int]:
-    """
-    Args:
-        x: Sequence of something hashable
+def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) -> np.ndarray:
+    assert required_len >= len(arr)
+    assert arr.ndim == 1
 
-    Returns:
-        Indices of elements which are first occurrences
+    return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
-    """
-    seen = set()
-    first_ids = []
-    for i, el in enumerate(x):
-        if el not in seen:
-            first_ids.append(i)
-        seen.add(el)
-    return first_ids
+
+def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
+    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
+    ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=20)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    fig.canvas.draw()
+    width, height = fig.canvas.get_width_height()
+    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    image = image.reshape(height, width, 3)
+    plt.close(fig)
+
+    image = np.resize(image, (256, 256, 3))
+
+    if draw_bbox:
+        frame_thickness = 5
+        image[:frame_thickness, :, :] = color  # Top frame
+        image[-frame_thickness:, :, :] = color  # Bottom frame
+        image[:, :frame_thickness, :] = color  # Left frame
+        image[:, -frame_thickness:, :] = color  # Right frame
+
+    return image
 
 
 __all__ = [
@@ -180,5 +198,6 @@ __all__ = [
     "clip_max",
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
-    "find_first_occurrences",
+    "pad_array_right",
+    "visualise_text",
 ]

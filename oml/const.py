@@ -72,38 +72,32 @@ CROP_KEY = "crop"  # the format is [x1, y1, x2, y2]
 
 # Required dataset format:
 LABELS_COLUMN = "label"
-PATHS_COLUMN = "path"
 SPLIT_COLUMN = "split"
 IS_QUERY_COLUMN = "is_query"
 IS_GALLERY_COLUMN = "is_gallery"
 CATEGORIES_COLUMN = "category"
+SEQUENCE_COLUMN = "sequence"
+# text specific columns:
+TEXTS_COLUMN = "text"
+# image specific columns:
+PATHS_COLUMN = "path"
 X1_COLUMN = "x_1"
 X2_COLUMN = "x_2"
 Y1_COLUMN = "y_1"
 Y2_COLUMN = "y_2"
-SEQUENCE_COLUMN = "sequence"
 
-OBLIGATORY_COLUMNS = [LABELS_COLUMN, PATHS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
+OBLIGATORY_COLUMNS = [LABELS_COLUMN, SPLIT_COLUMN, IS_QUERY_COLUMN, IS_GALLERY_COLUMN]
 BBOXES_COLUMNS = [X1_COLUMN, X2_COLUMN, Y1_COLUMN, Y2_COLUMN]
 
 # Keys for interactions among our classes (datasets, metrics and so on)
 OVERALL_CATEGORIES_KEY = "OVERALL"
 INPUT_TENSORS_KEY = "input_tensors"
 LABELS_KEY = "labels"
-IS_QUERY_KEY = "is_query"
-IS_GALLERY_KEY = "is_gallery"
 EMBEDDINGS_KEY = "embeddings"
-CATEGORIES_KEY = "categories"
-PATHS_KEY = "paths"
-X1_KEY = "x1"
-X2_KEY = "x2"
-Y1_KEY = "y1"
-Y2_KEY = "y2"
 INDEX_KEY = "idx"
-SEQUENCE_KEY = "sequence"
 
-PAIR_1ST_KEY = "input_tensors_1"
-PAIR_2ND_KEY = "input_tensors_2"
+INPUT_TENSORS_KEY_1 = "input_tensors_1"
+INPUT_TENSORS_KEY_2 = "input_tensors_2"
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]
 

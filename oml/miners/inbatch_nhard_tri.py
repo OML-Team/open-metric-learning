@@ -137,3 +137,6 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
             ids_n.extend(i_neg)
 
         return ids_a, ids_p, ids_n
+
+
+__all__ = ["NHardTripletsMiner"]

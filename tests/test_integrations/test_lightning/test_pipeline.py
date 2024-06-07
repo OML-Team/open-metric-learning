@@ -1,33 +1,28 @@
-import sys
 import tempfile
 from functools import partial
 from typing import Any, Dict, List
 
+import numpy as np
 import pytest
 import pytorch_lightning as pl
 import torch
-from torch import nn
+from torch import LongTensor, nn
 from torch.optim import Adam
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
-from oml.const import (
-    EMBEDDINGS_KEY,
-    INDEX_KEY,
-    INPUT_TENSORS_KEY,
-    IS_GALLERY_KEY,
-    IS_QUERY_KEY,
-    LABELS_KEY,
-)
+from oml.const import EMBEDDINGS_KEY, INDEX_KEY, INPUT_TENSORS_KEY, LABELS_KEY
+from oml.interfaces.datasets import IQueryGalleryLabeledDataset
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.losses.triplet import TripletLossWithMiner
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.samplers.balance import BalanceSampler
 
 
-class DummyRetrievalDataset(Dataset):
+class DummyRetrievalDataset(IQueryGalleryLabeledDataset):
     def __init__(self, labels: List[int], im_size: int):
         self.labels = labels
         self.im_size = im_size
+        self.extra_data = dict()
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
@@ -35,13 +30,20 @@ class DummyRetrievalDataset(Dataset):
         return {
             INPUT_TENSORS_KEY: input_tensors,
             LABELS_KEY: label,
-            IS_QUERY_KEY: True,
-            IS_GALLERY_KEY: True,
             INDEX_KEY: item,
         }
 
     def __len__(self) -> int:
         return len(self.labels)
+
+    def get_labels(self) -> np.ndarray:
+        return np.array(self.labels)
+
+    def get_query_ids(self) -> LongTensor:
+        return torch.arange(len(self)).long()
+
+    def get_gallery_ids(self) -> LongTensor:
+        return torch.arange(len(self)).long()
 
 
 class DummyCommonModule(pl.LightningModule):
@@ -89,29 +91,14 @@ def create_retrieval_dataloader(
     return train_retrieval_loader
 
 
-def create_retrieval_callback(loader_idx: int, samples_in_getitem: int) -> MetricValCallback:
-    metric = EmbeddingMetrics(
-        embeddings_key=EMBEDDINGS_KEY,
-        labels_key=LABELS_KEY,
-        is_query_key=IS_QUERY_KEY,
-        is_gallery_key=IS_GALLERY_KEY,
-    )
-    metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx, samples_in_getitem=samples_in_getitem)
+def create_retrieval_callback(dataset: IQueryGalleryLabeledDataset, loader_idx: int) -> MetricValCallback:
+    metric = EmbeddingMetrics(dataset=dataset)
+    metric_callback = MetricValCallback(metric=metric, loader_idx=loader_idx)
     return metric_callback
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="Does not run on macOS")
-@pytest.mark.parametrize(
-    "samples_in_getitem, is_error_expected, pipeline",
-    [
-        (1, False, "retrieval"),
-        (2, True, "retrieval"),
-    ],
-)
 @pytest.mark.parametrize("num_dataloaders", [1, 2])
-def test_lightning(
-    samples_in_getitem: int, is_error_expected: bool, num_dataloaders: int, pipeline: str, num_workers: int
-) -> None:
+def test_lightning(num_dataloaders: int, num_workers: int) -> None:
     num_samples = 12
     im_size = 6
     n_labels = 2
@@ -119,7 +106,6 @@ def test_lightning(
 
     create_dataloader = partial(create_retrieval_dataloader, n_labels=n_labels, n_instances=n_instances)
     lightning_module = DummyExtractorModule(im_size=im_size)
-    create_callback = create_retrieval_callback
 
     train_dataloaders = [
         create_dataloader(num_samples=num_samples, im_size=im_size, num_workers=num_workers)
@@ -129,7 +115,13 @@ def test_lightning(
         create_dataloader(num_samples=num_samples, im_size=im_size, num_workers=num_workers)
         for _ in range(num_dataloaders)
     ]
-    callbacks = [create_callback(loader_idx=k, samples_in_getitem=samples_in_getitem) for k in range(num_dataloaders)]
+    callbacks = [
+        create_retrieval_callback(
+            dataset=val_dataloaders[k].dataset,
+            loader_idx=k,
+        )
+        for k in range(num_dataloaders)
+    ]
 
     trainer = pl.Trainer(
         default_root_dir=tempfile.gettempdir(),
@@ -141,10 +133,5 @@ def test_lightning(
         num_sanity_val_steps=0,
     )
 
-    if is_error_expected:
-        with pytest.raises(ValueError, match=callbacks[0].metric.__class__.__name__):
-            trainer.fit(model=lightning_module, train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
-            trainer.validate(model=lightning_module, dataloaders=val_dataloaders)
-    else:
-        trainer.fit(model=lightning_module, train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
-        trainer.validate(model=lightning_module, dataloaders=val_dataloaders)
+    trainer.fit(model=lightning_module, train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
+    trainer.validate(model=lightning_module, dataloaders=val_dataloaders)

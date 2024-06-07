@@ -4,7 +4,9 @@ from typing import List, Tuple, Union
 
 import torch
 
-from oml.functional.metrics import calc_mask_to_ignore
+from tests.test_oml.test_functional.test_metrics.test_outdated.utils import (
+    calc_mask_to_ignore,
+)
 
 
 def generate_retrieval_case(

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -35,7 +35,7 @@ class TripletLoss(Module):
         Args:
             margin: Margin value, set ``None`` to use `SoftTripletLoss`
             reduction: ``mean``, ``sum`` or ``none``
-            need_logs: Set ``True`` if you want to store logs
+            need_logs: Set ``True`` to store some information to track in ``self.last_logs`` property.
 
         """
         assert reduction in ("mean", "sum", "none")
@@ -46,7 +46,7 @@ class TripletLoss(Module):
         self.margin = margin
         self.reduction = reduction
         self.need_logs = need_logs
-        self.last_logs: Dict[str, float] = {}
+        self._last_logs: Dict[str, float] = {}
 
     def forward(self, anchor: Tensor, positive: Tensor, negative: Tensor) -> Tensor:
         """
@@ -72,7 +72,7 @@ class TripletLoss(Module):
             loss = torch.relu(self.margin + positive_dist - negative_dist)
 
         if self.need_logs:
-            self.last_logs = {
+            self._last_logs = {
                 "active_tri": float((loss.clone().detach() > 0).float().mean()),
                 "pos_dist": float(positive_dist.clone().detach().mean().item()),
                 "neg_dist": float(negative_dist.clone().detach().mean().item()),
@@ -81,6 +81,14 @@ class TripletLoss(Module):
         loss = get_reduced(loss, reduction=self.reduction)
 
         return loss
+
+    @property
+    def last_logs(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dictionary containing useful statistic calculated for the last batch.
+        """
+        return self._last_logs
 
 
 def get_tri_ids_in_plain(n: int) -> Tuple[List[int], List[int], List[int]]:
@@ -120,7 +128,7 @@ class TripletLossPlain(Module):
         Args:
             margin: Margin value, set ``None`` to use `SoftTripletLoss`
             reduction: ``mean``, ``sum`` or ``none``
-            need_logs: Set ``True`` if you want to store logs
+            need_logs: Set ``True`` to store some information to track in ``self.last_logs`` property.
 
         """
         assert reduction in ("mean", "sum", "none")
@@ -128,7 +136,6 @@ class TripletLossPlain(Module):
 
         super(TripletLossPlain, self).__init__()
         self.criterion = TripletLoss(margin=margin, reduction=reduction, need_logs=need_logs)
-        self.last_logs = self.criterion.last_logs
 
     def forward(self, features: torch.Tensor) -> Tensor:
         """
@@ -150,9 +157,16 @@ class TripletLossPlain(Module):
         anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n)
 
         loss = self.criterion(features[anchor_ii], features[positive_ii], features[negative_ii])
-        self.last_logs = self.criterion.last_logs
 
         return loss
+
+    @property
+    def last_logs(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dictionary containing useful statistic calculated for the last batch.
+        """
+        return self.criterion.last_logs
 
 
 class TripletLossWithMiner(ITripletLossWithMiner):
@@ -176,7 +190,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             margin: Margin value, set ``None`` to use `SoftTripletLoss`
             miner: A miner that implements the logic of picking triplets to pass them to the triplet loss.
             reduction: ``mean``, ``sum`` or ``none``
-            need_logs: Set ``True`` if you want to store logs
+            need_logs: Set ``True`` to store some information to track in ``self.last_logs`` property.
 
         """
         assert reduction in ("mean", "sum", "none")
@@ -188,7 +202,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
         self.reduction = reduction
         self.need_logs = need_logs
 
-        self.last_logs: Dict[str, float] = {}
+        self._last_logs: Dict[str, float] = {}
 
     def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
         """
@@ -215,7 +229,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
 
                 is_bank_tri = ~is_orig_tri
                 active = (loss.clone().detach() > 0).float()
-                self.last_logs.update(
+                self._last_logs.update(
                     {
                         "orig_active_tri": active[is_orig_tri].sum() / is_orig_tri.sum(),
                         "bank_active_tri": active[is_bank_tri].sum() / is_bank_tri.sum(),
@@ -230,8 +244,8 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             anchor, positive, negative = self.miner.sample(features=features, labels=labels_list)
             loss = self.tri_loss(anchor=anchor, positive=positive, negative=negative)
 
-        self.last_logs.update(self.tri_loss.last_logs)
-        self.last_logs.update(getattr(self.miner, "last_logs", {}))
+        self._last_logs.update(self.tri_loss.last_logs)
+        self._last_logs.update(getattr(self.miner, "last_logs", {}))
 
         if self.reduction == "mean":
             loss = loss.mean()
@@ -243,6 +257,14 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             raise ValueError()
 
         return loss
+
+    @property
+    def last_logs(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dictionary containing useful statistic calculated for the last batch.
+        """
+        return self._last_logs
 
 
 __all__ = ["TLogs", "TripletLoss", "get_tri_ids_in_plain", "TripletLossPlain", "TripletLossWithMiner"]

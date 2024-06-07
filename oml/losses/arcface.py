@@ -62,7 +62,7 @@ class ArcFaceLoss(nn.Module):
         self.sin_m = np.sin(m)
         self.th = -self.cos_m
         self.mm = self.sin_m * m
-        self.last_logs: Dict[str, float] = {}
+        self._last_logs: Dict[str, float] = {}
 
     def fc(self, x: torch.Tensor) -> torch.Tensor:
         return F.linear(F.normalize(x, p=2), F.normalize(self.weight, p=2))
@@ -94,7 +94,15 @@ class ArcFaceLoss(nn.Module):
 
     @torch.no_grad()
     def _log_accuracy_on_batch(self, logits: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        self.last_logs["accuracy"] = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
+        self._last_logs["accuracy"] = torch.mean((y == torch.argmax(logits, 1)).to(torch.float32))
+
+    @property
+    def last_logs(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dictionary containing useful statistic calculated for the last batch.
+        """
+        return self._last_logs
 
 
 class ArcFaceLossWithMLP(nn.Module):
@@ -143,3 +151,14 @@ class ArcFaceLossWithMLP(nn.Module):
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.arcface(self.mlp(x), y)
+
+    @property
+    def last_logs(self) -> Dict[str, Any]:
+        """
+        Returns:
+             Dictionary containing useful statistic calculated for the last batch.
+        """
+        return self.arcface.last_logs
+
+
+__all__ = ["ArcFaceLoss", "ArcFaceLossWithMLP"]
