@@ -543,6 +543,14 @@ trainer.fit(module)
 
 ## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
+Here is an example of how to train, validate and post-process the model
+on a tiny dataset of
+[images](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4)
+or
+[texts](https://github.com/OML-Team/open-metric-learning/blob/main/oml/utils/download_mock_dataset.py#L83).
+See more details on dataset
+[format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
+
 <div style="overflow-x: auto;">
 
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
