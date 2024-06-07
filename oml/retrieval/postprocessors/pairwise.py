@@ -1,6 +1,6 @@
 from typing import Sequence, Tuple
 
-from torch import FloatTensor, LongTensor, concat
+from torch import FloatTensor, LongTensor, concat, finfo
 
 from oml.inference.abstract import pairwise_inference
 from oml.interfaces.datasets import IQueryGalleryDataset
@@ -141,7 +141,9 @@ class PairwiseReranker(IRetrievalPostprocessor):
 
             distances_upd += [
                 cat_two_sorted_tensors_and_keep_it_sorted(
-                    dist_recomputed_q.view(1, -1), dist_orig[self.top_n :].view(1, -1)
+                    dist_recomputed_q.view(1, -1),
+                    dist_orig[self.top_n :].view(1, -1),
+                    eps=10**3 * finfo(distances_recomputed.dtype).eps,
                 ).view(-1)
             ]
             retrieved_ids_upd += [concat([ri_orig[ii_rerank], ri_orig[self.top_n :]])]
