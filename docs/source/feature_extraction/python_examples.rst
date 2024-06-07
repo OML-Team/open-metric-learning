@@ -1,14 +1,6 @@
 Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using Python-API is the most flexible approach:
-you are not limited by our project & config structures and you can use only the needed part of OML's functionality.
-You will find code snippets below to train, validate and inference the model
-on a tiny dataset of
-`figures <https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing>`_ or texts.
-Here are more details regarding dataset
-`format <https://open-metric-learning.readthedocs.io/en/latest/oml/data.html>`_.
-
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_img_txt.md
 
 Using pre-trained model for retrieval
