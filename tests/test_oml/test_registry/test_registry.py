@@ -9,7 +9,8 @@ from omegaconf import OmegaConf
 from torch import nn
 from torch.optim import Optimizer
 
-from oml.const import CONFIGS_PATH, DOTENV_PATH, TCfg
+from oml.const import CONFIGS_PATH, DOTENV_PATH, TCfg, MOCK_DATASET_PATH
+from oml.registry.datasets import DATASETS_REGISTRY, get_dataset
 from oml.registry.loggers import LOGGERS_REGISTRY, get_logger
 from oml.registry.losses import LOSSES_REGISTRY, get_criterion
 from oml.registry.miners import MINERS_REGISTRY, get_miner
@@ -48,6 +49,8 @@ def get_params() -> Any:
 def get_opt() -> Optimizer:
     return get_optimizer_by_cfg({"name": "sgd", "args": {"lr": 0.001, "params": get_params()}})
 
+def get_mock_dataset_path() -> str:
+    return str(MOCK_DATASET_PATH / 'df.csv')
 
 @pytest.mark.parametrize(
     "folder_name,registry,factory_fun,runtime_args",
@@ -61,6 +64,7 @@ def get_opt() -> Optimizer:
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
         ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
         ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
+        ('dataset', DATASETS_REGISTRY, get_dataset, {"df": get_mock_dataset_path()}),
         pytest.param("logger", LOGGERS_REGISTRY, get_logger, None, marks=pytest.mark.needs_optional_dependency),
     ],
 )
