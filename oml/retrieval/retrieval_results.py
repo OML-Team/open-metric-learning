@@ -308,10 +308,10 @@ class RetrievalResults:
             print(f"Visualizing {n_galleries_to_show} for the following query ids: {query_ids}.")
 
         def visualize_query_fn(item: int, color: TColor) -> np.ndarray:
-            return dataset.visualize(item=dataset.get_query_ids()[item], color=color)
+            return dataset.visualize(item=dataset.get_query_ids()[item].item(), color=color)
 
         def visualize_gallery_fn(item: int, color: TColor) -> np.ndarray:
-            return dataset.visualize(item=dataset.get_gallery_ids()[item], color=color)
+            return dataset.visualize(item=dataset.get_gallery_ids()[item].item(), color=color)
 
         return self.visualize_with_functions(
             query_ids=query_ids,

@@ -1,7 +1,7 @@
 Here is an example where queries and galleries processed separately.
 * First, it may be useful for **streaming retrieval**, when a gallery (index) set is huge and fixed, but
   queries are coming in batches.
-* Second, queries and galleries have different natures, for examples, queries are texts, but galleries are images.
+* Second, queries and galleries have different natures, for examples, **queries are texts, but galleries are images**.
 
 
 <details>
@@ -25,11 +25,11 @@ transform, _ = get_transforms_for_pretrained("vits16_dino")
 paths = pd.concat(get_mock_images_dataset(global_paths=True))["path"]
 galleries, queries1, queries2 = paths[:20], paths[20:22], paths[22:24]
 
-# the gallery is "huge" and fixed, so we only process it once
+# gallery is huge and fixed, so we only process it once
 dataset_gallery = ImageBaseDataset(galleries, transform=transform)
 embeddings_gallery = inference(extractor, dataset_gallery, batch_size=4, num_workers=0)
 
-# queries come "online" in steam
+# queries come "online" in stream
 for queries in [queries1, queries2]:
     dataset_query = ImageBaseDataset(queries, transform=transform)
     embeddings_query = inference(extractor, dataset_query, batch_size=4, num_workers=0)
