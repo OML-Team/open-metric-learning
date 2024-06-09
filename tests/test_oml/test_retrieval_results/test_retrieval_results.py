@@ -221,7 +221,7 @@ def test_retrieval_results_separated_qg() -> None:
 
     for texts in [["Cross", "Square"], ["Circle", "Nice cross", "Bad square"]]:
         dataset_q = TextBaseDataset(texts, tokenizer=tokenizer)
-        embeddings_q = inference(model_q, dataset_q, batch_size=2, num_workers=2).float()
+        embeddings_q = inference(model_q, dataset_q, batch_size=2, num_workers=0).float()
 
         rr = RetrievalResults.from_embeddings_qg(
             embeddings_query=embeddings_q,
