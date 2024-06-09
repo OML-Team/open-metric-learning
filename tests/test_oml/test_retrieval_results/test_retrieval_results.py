@@ -1,8 +1,8 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import pytest
 import torch
 from torch import FloatTensor, LongTensor, nn
-from transformers import AutoTokenizer
 
 from oml.const import LABELS_COLUMN
 from oml.datasets import (
@@ -51,6 +51,8 @@ def get_model_and_datasets_images(with_gt_labels):  # type: ignore
 
 
 def get_model_and_datasets_texts(with_gt_labels):  # type: ignore
+    from transformers import AutoTokenizer
+
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     model = DummyNLPModel(vocab_size=tokenizer.vocab_size)
 
@@ -94,6 +96,9 @@ def get_model_and_datasets_embeddings(with_gt_labels):  # type: ignore
     ],
 )
 def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
+    current_backend = matplotlib.get_backend()
+    matplotlib.use("Agg")
+
     datasets, model = data_getter(with_gt_labels=with_gt_labels)
 
     for dataset in datasets:
@@ -115,6 +120,7 @@ def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
             assert rr.gt_ids is not None
 
         error_expected = not isinstance(dataset, IVisualizableDataset)
+
         if error_expected:
             with pytest.raises(TypeError):
                 fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
@@ -123,10 +129,14 @@ def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
             fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
             plt.close(fig=fig)
 
+    matplotlib.use(current_backend)
     assert True
 
 
 def test_visualisation_for_different_number_of_retrieved_items() -> None:
+    current_backend = matplotlib.get_backend()
+    matplotlib.use("Agg")
+
     datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
     # just some random RR with different shapes
     rr = RetrievalResults(
@@ -145,6 +155,8 @@ def test_visualisation_for_different_number_of_retrieved_items() -> None:
     )
     fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
     plt.close(fig=fig)
+
+    matplotlib.use(current_backend)
 
 
 def test_retrieval_results_creation() -> None:
@@ -192,6 +204,11 @@ def test_retrieval_results_creation() -> None:
 
 @pytest.mark.needs_optional_dependency
 def test_retrieval_results_separated_qg() -> None:
+    from transformers import AutoTokenizer
+
+    current_backend = matplotlib.get_backend()
+    matplotlib.use("Agg")
+
     # GALLERIES ARE IMAGES
     _, df_val = download_mock_dataset(global_paths=True, df_name="df.csv")
     model_g = ResnetExtractor(weights=None, arch="resnet18", gem_p=None, remove_fc=True, normalise_features=False)
@@ -217,4 +234,5 @@ def test_retrieval_results_separated_qg() -> None:
 
         assert rr.gt_ids is None
 
+    matplotlib.use(current_backend)
     assert True
