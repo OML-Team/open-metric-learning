@@ -1,1 +1,1 @@
-- [] I've checked contribution guide:https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html.
+- [ ] I've checked contribution [guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html).
