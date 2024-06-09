@@ -34,7 +34,7 @@ def batched_knn_qg(
 
     Note, since queries and galleries are separated we additionally need
     `ids_query` and `ids_gallery` in order to process the situation when the same items
-    is in query and is in gallery. If `ids_query` and `ids_gallery` don't overlap,
+    are in the query and are in the gallery. If `ids_query` and `ids_gallery` don't overlap,
     just set both of them to Nones.
 
     """

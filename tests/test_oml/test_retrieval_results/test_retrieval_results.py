@@ -63,8 +63,6 @@ def get_model_and_datasets_texts(with_gt_labels):  # type: ignore
         del df_val[LABELS_COLUMN]
         dataset = TextQueryGalleryDataset(df_val, tokenizer=tokenizer)
 
-    plt.imshow(dataset.visualize(item=10, color=(255, 0, 0)))
-
     return [dataset], model
 
 
