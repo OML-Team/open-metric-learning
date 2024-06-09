@@ -86,7 +86,12 @@ def get_model_and_datasets_embeddings(with_gt_labels):  # type: ignore
 
 @pytest.mark.parametrize("with_gt_labels", [False, True])
 @pytest.mark.parametrize(
-    "data_getter", [get_model_and_datasets_embeddings, get_model_and_datasets_images, get_model_and_datasets_texts]
+    "data_getter",
+    [
+        get_model_and_datasets_embeddings,
+        get_model_and_datasets_images,
+        pytest.param(get_model_and_datasets_texts, marks=pytest.mark.needs_optional_dependency),
+    ],
 )
 def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
     datasets, model = data_getter(with_gt_labels=with_gt_labels)
@@ -185,6 +190,7 @@ def test_retrieval_results_creation() -> None:
     assert True
 
 
+@pytest.mark.needs_optional_dependency
 def test_retrieval_results_separated_qg() -> None:
     # GALLERIES ARE IMAGES
     _, df_val = download_mock_dataset(global_paths=True, df_name="df.csv")
