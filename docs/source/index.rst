@@ -36,7 +36,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
    :caption: Postprocessing
    :maxdepth: 2
 
-   postprocessing/postprocessing_home
+   postprocessing/home
 
 .. toctree::
    :caption: Contents

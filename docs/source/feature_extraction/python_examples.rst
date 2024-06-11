@@ -15,7 +15,7 @@ Retrieval by trained model
 Retrieval by trained model: streaming & txt2im
 ##############################################
 
-.. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_streaming_usage.md
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage_streaming.md
 
 .. raw:: html
 
