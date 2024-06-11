@@ -295,6 +295,16 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
+
+<details>
+<summary>Can I export models to ONNX?</summary>
+<p>
+
+Currently, we don't support exporting models to ONNX directly. 
+However, you can use the built-in PyTorch capabilities to achieve this. For more information, please refer to this [issue](https://github.com/OML-Team/open-metric-learning/issues/592).
+</p>
+</details>
+
 </details>
 
 
