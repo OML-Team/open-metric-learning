@@ -18,12 +18,25 @@ def load_version() -> str:
         return re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
 
 
+TESTS_REQUIRE = load_requirements("ci/requirements_tests.txt")
+OPTIONAL_REQUIRE = load_requirements("ci/requirements_optional.txt")
+LOGGERS_REQUIRE = load_requirements("ci/requirements_loggers.txt")
+NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
+
+
 setup(
     # technical things
     version=load_version(),
     packages=find_packages(exclude=["ci", "docs", "pipelines", "tests*"]),
     python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
+    extras_require={
+        "tests": TESTS_REQUIRE,
+        "optional": OPTIONAL_REQUIRE,
+        "loggers": LOGGERS_REQUIRE,
+        "nlp": NLP_REQUIRE,
+        "all": OPTIONAL_REQUIRE + TESTS_REQUIRE + LOGGERS_REQUIRE + NLP_REQUIRE,
+    },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
