@@ -35,7 +35,7 @@ setup(
         "optional": OPTIONAL_REQUIRE,
         "loggers": LOGGERS_REQUIRE,
         "nlp": NLP_REQUIRE,
-        "all": OPTIONAL_REQUIRE + TESTS_REQUIRE + LOGGERS_REQUIRE + NLP_REQUIRE,
+        "full": OPTIONAL_REQUIRE + TESTS_REQUIRE + LOGGERS_REQUIRE + NLP_REQUIRE,
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
