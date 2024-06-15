@@ -20,7 +20,6 @@ def load_version() -> str:
 
 TESTS_REQUIRE = load_requirements("ci/requirements_tests.txt")
 OPTIONAL_REQUIRE = load_requirements("ci/requirements_optional.txt")
-LOGGERS_REQUIRE = load_requirements("ci/requirements_loggers.txt")
 NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
 
 
@@ -33,9 +32,8 @@ setup(
     extras_require={
         "tests": TESTS_REQUIRE,
         "optional": OPTIONAL_REQUIRE,
-        "loggers": LOGGERS_REQUIRE,
         "nlp": NLP_REQUIRE,
-        "full": OPTIONAL_REQUIRE + TESTS_REQUIRE + LOGGERS_REQUIRE + NLP_REQUIRE,
+        "full": OPTIONAL_REQUIRE + NLP_REQUIRE,
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
