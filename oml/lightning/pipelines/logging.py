@@ -117,7 +117,9 @@ class NeptunePipelineLogger(NeptuneLogger, IPipelineLogger):
         self.run["code"].upload_files(source_files)
 
         # log dataframe
-        self.run["dataset"].upload(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
+        self.run["dataset"].upload(
+            str(Path(cfg["dataset"]["args"]["dataset_root"]) / cfg["dataset"]["args"]["dataframe_name"])
+        )
 
     def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
         from neptune.types import File  # this is the optional dependency
@@ -150,7 +152,7 @@ class WandBPipelineLogger(WandbLogger, IPipelineLogger):
 
         # log dataset
         dataset = wandb.Artifact("dataset", type="dataset")
-        dataset.add_file(str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]))
+        dataset.add_file(str(Path(cfg["dataset"]["args"]["dataset_root"]) / cfg["dataset"]["args"]["dataframe_name"]))
         self.experiment.log_artifact(dataset)
 
     def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
@@ -188,7 +190,7 @@ class MLFlowPipelineLogger(MLFlowLogger, IPipelineLogger):
         # log dataframe
         self.experiment.log_artifact(
             run_id=self.run_id,
-            local_path=str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]),
+            local_path=str(Path(cfg["dataset"]["args"]["dataset_root"]) / cfg["dataset"]["args"]["dataframe_name"]),
             artifact_path="dataset",
         )
 
@@ -216,7 +218,9 @@ class ClearMLPipelineLogger(ClearMLLogger, IPipelineLogger):
         # log dataframe
         self.task.upload_artifact(
             name="dataset",
-            artifact_object=str(Path(cfg["dataset_root"]) / cfg["dataframe_name"]),
+            artifact_object=str(
+                Path(cfg["dataset"]["args"]["dataset_root"]) / cfg["dataset"]["args"]["dataframe_name"]
+            ),
         )
 
     def log_figure(self, fig: plt.Figure, title: str, idx: int) -> None:
