@@ -11,3 +11,9 @@ from oml.datasets.texts import (
     TextQueryGalleryDataset,
     TextQueryGalleryLabeledDataset,
 )
+from oml.datasets.audios import (
+    AudioBaseDataset,
+    AudioLabeledDataset,
+    AudioQueryGalleryDataset,
+    AudioQueryGalleryLabeledDataset,
+)

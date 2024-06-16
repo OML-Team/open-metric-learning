@@ -21,6 +21,10 @@ from oml.datasets import (
     TextLabeledDataset,
     TextQueryGalleryDataset,
     TextQueryGalleryLabeledDataset,
+    AudioBaseDataset,
+    AudioLabeledDataset,
+    AudioQueryGalleryDataset,
+    AudioQueryGalleryLabeledDataset,
 )
 from oml.interfaces.datasets import (
     IBaseDataset,
@@ -28,7 +32,11 @@ from oml.interfaces.datasets import (
     IQueryGalleryDataset,
     IVisualizableDataset,
 )
-from oml.utils import get_mock_images_dataset, get_mock_texts_dataset
+from oml.utils import (
+    get_mock_images_dataset,
+    get_mock_texts_dataset,
+    get_mock_audios_dataset
+)
 
 
 class ASCITokenizer:
@@ -53,14 +61,15 @@ def check_labeled(dataset_l: ILabeledDataset, df: pd.DataFrame) -> None:
     item = dataset_l[0]
     assert dataset_l.labels_key in item
 
-    # test label2category()
-    labels = list(dataset_l.get_label2category().keys())
-    categories = list(dataset_l.get_label2category().values())
-    assert set(labels) == set(df[LABELS_COLUMN].tolist())
-    assert set(categories) == set(df[CATEGORIES_COLUMN].tolist())
-
     # test get_labels()
     assert set(dataset_l.get_labels().tolist()) == set(df[LABELS_COLUMN].tolist())
+
+    # test label2category()
+    if CATEGORIES_COLUMN in df:
+        labels = list(dataset_l.get_label2category().keys())
+        categories = list(dataset_l.get_label2category().values())
+        assert set(labels) == set(df[LABELS_COLUMN].tolist())
+        assert set(categories) == set(df[CATEGORIES_COLUMN].tolist())
 
 
 def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> None:
@@ -140,6 +149,31 @@ def test_image_datasets() -> None:
 
     # Query Gallery Labeled
     dataset_qgl = ImageQueryGalleryLabeledDataset(df_val)
+    check_base(dataset_qgl)
+    check_query_gallery(dataset_qgl, df_val)
+    check_labeled(dataset_qgl, df_val)
+
+
+def test_audio_datasets() -> None:
+    df_train, df_val = get_mock_audios_dataset(global_paths=True)
+    df = pd.concat([df_train, df_val])
+
+    # Base
+    dataset_b = AudioBaseDataset(paths=df[PATHS_COLUMN].tolist())
+    check_base(dataset_b)
+
+    # Labeled
+    dataset_l = AudioLabeledDataset(df_train)
+    check_base(dataset_l)
+    check_labeled(dataset_l, df_train)
+
+    # Query Gallery
+    dataset_qg = AudioQueryGalleryDataset(df_val)
+    check_base(dataset_qg)
+    check_query_gallery(dataset_qg, df_val)
+
+    # Query Gallery Labeled
+    dataset_qgl = AudioQueryGalleryLabeledDataset(df_val)
     check_base(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)
