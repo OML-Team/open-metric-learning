@@ -14,7 +14,7 @@ from oml.inference import inference
 from oml.interfaces.datasets import IVisualizableDataset
 from oml.models import ResnetExtractor
 from oml.retrieval.retrieval_results import RetrievalResults
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.download_mock_dataset import download_images_mock_dataset
 from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
     EmbeddingsQueryGalleryLabeledDataset,
@@ -25,7 +25,7 @@ def get_model_and_datasets_images(with_gt_labels):  # type: ignore
     datasets = []
 
     for df_name in ["df.csv", "df_with_bboxes.csv", "df_with_sequence.csv"]:
-        _, df_val = download_mock_dataset(global_paths=True, df_name=df_name)
+        _, df_val = download_images_mock_dataset(global_paths=True, df_name=df_name)
         df_val[PATHS_COLUMN] = df_val[PATHS_COLUMN].apply(lambda x: Path(MOCK_DATASET_PATH) / x)
 
         if with_gt_labels:

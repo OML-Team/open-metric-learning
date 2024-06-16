@@ -8,7 +8,7 @@ from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, SEQUENCE_COLUMN
 from oml.datasets.images import ImageQueryGalleryLabeledDataset
 from oml.functional.metrics import TMetricsDict
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.download_mock_dataset import download_images_mock_dataset
 from oml.utils.misc import compare_dicts_recursively, set_global_seed
 
 
@@ -36,7 +36,7 @@ def test_invariants_in_validation_with_sequences_1() -> None:
     # We check that metrics don't change if we assign unique sequence id
     # to every sample in validation set (so, ignoring logic is not applicable)
 
-    _, df = download_mock_dataset(MOCK_DATASET_PATH)
+    _, df = download_images_mock_dataset(MOCK_DATASET_PATH)
 
     df_with_seq = df.copy()
     df_with_seq[SEQUENCE_COLUMN] = list(range(len(df_with_seq)))
@@ -51,7 +51,7 @@ def test_invariants_in_validation_with_sequences_2() -> None:
     # We check that metrics don't change in the case, when we put
     # a copy of every sample to gallery under the same sequence id
 
-    _, df = download_mock_dataset(MOCK_DATASET_PATH)
+    _, df = download_images_mock_dataset(MOCK_DATASET_PATH)
 
     df_a = df.copy()
     df_a[SEQUENCE_COLUMN] = list(range(len(df_a)))
@@ -77,7 +77,7 @@ def test_invariants_in_validation_with_sequences_3() -> None:
     # If labels == sequence, then every sample has no pull of right answers in gallery
     # to pick from. Thus, we expect our validation to produce the error.
 
-    _, df = download_mock_dataset(MOCK_DATASET_PATH)
+    _, df = download_images_mock_dataset(MOCK_DATASET_PATH)
 
     df_with_seq = df.copy()
     df_with_seq[SEQUENCE_COLUMN] = df_with_seq[LABELS_COLUMN]
