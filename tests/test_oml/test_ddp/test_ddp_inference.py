@@ -10,7 +10,7 @@ from oml.datasets import ImageBaseDataset
 from oml.inference import inference
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.utils.download_mock_dataset import download_mock_dataset
-from tests.test_oml.test_ddp.utils import run_in_ddp
+from tests.test_oml.test_ddp.utils import init_ddp, run_in_ddp
 
 
 @pytest.mark.long
@@ -28,6 +28,8 @@ def test_inference_without_expected_duplicates(world_size: int, n_paths: int, de
 
 
 def run_with_handling_duplicates(rank: int, world_size: int, device: str, paths: List[str], batch_size: int) -> None:
+    init_ddp(rank, world_size)
+
     transform = get_normalisation_resize_torch(im_size=32)
 
     model = resnet18().eval().to(device)
