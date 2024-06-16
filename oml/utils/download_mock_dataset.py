@@ -12,6 +12,10 @@ from oml.const import (
     MOCK_DATASET_MD5,
     MOCK_DATASET_PATH,
     MOCK_DATASET_URL_GDRIVE,
+    MOCK_AUDIO_DATASET_MD5,
+    MOCK_AUDIO_DATASET_PATH,
+    MOCK_AUDIO_DATASET_CSV_NAME,
+    MOCK_AUDIO_DATASET_URL_GDRIVE,
     SPLIT_COLUMN,
     TEXTS_COLUMN,
 )
@@ -188,4 +192,57 @@ def get_mock_texts_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
     return df_train, df_val
 
 
-__all__ = ["get_mock_images_dataset", "get_mock_texts_dataset"]
+def get_mock_audios_dataset(
+    dataset_root: Union[str, Path] = MOCK_AUDIO_DATASET_PATH,
+    df_name: str = MOCK_AUDIO_DATASET_CSV_NAME,
+    check_md5: bool = True,
+    global_paths: bool = False,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Downloads and prepares a mock audio dataset in the required format.
+
+    Args:
+        dataset_root (Union[str, Path]): The directory where the dataset will be saved.
+        df_name (str): The name of the CSV file from which the output DataFrames will be generated.
+        check_md5 (bool): If True, validates the dataset using an MD5 checksum.
+        global_paths (bool): If True, concatenates the paths in the dataset with the dataset_root.
+
+    Returns:
+        Tuple[pd.DataFrame, pd.DataFrame]: DataFrames for the training and validation stages.
+
+    Raises:
+        Exception: If the downloaded dataset is invalid.
+    """
+    dataset_root = Path(dataset_root)
+    dataset_md5 = MOCK_AUDIO_DATASET_MD5 if check_md5 else None
+
+    if not check_exists_and_validate_md5(dataset_root, dataset_md5):
+        try:
+            print("Downloading from oml.daloroserver.com")
+            download_folder_from_remote_storage(
+                remote_folder=MOCK_AUDIO_DATASET_PATH.name,
+                local_folder=str(dataset_root)
+            )
+        except Exception:
+            print("We could not download from oml.daloroserver.com, let's try Google Drive.")
+            gdown.download_folder(url=MOCK_AUDIO_DATASET_URL_GDRIVE, output=str(dataset_root))
+    else:
+        print(f"Mock dataset has been downloaded already to {dataset_root}")
+
+    if not check_exists_and_validate_md5(dataset_root, dataset_md5):
+        raise Exception("Downloaded mock dataset is invalid.")
+
+    df = pd.read_csv(dataset_root / df_name)
+
+    if global_paths:
+        df["path"] = df["path"].apply(lambda x: str(dataset_root / x))
+
+    df_train = df[df["split"] == "train"].reset_index(drop=True)
+    df_val = df[df["split"] == "validation"].reset_index(drop=True)
+
+    df_val = df_val.astype({"is_query": bool, "is_gallery": bool})
+
+    return df_train, df_val
+
+
+__all__ = ["get_mock_images_dataset", "get_mock_texts_dataset", "get_mock_audio_dataset"]
