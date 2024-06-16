@@ -104,7 +104,30 @@ def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
     )
 
 
+def convert_to_new_format_if_needed(
+    cfg: TCfg,
+) -> Dict[str, Any]:
+    old_keys = {"dataset_root", "dataframe_name", "cache_size", "transforms_train", "transforms_val"}
+    keys_to_process = old_keys.intersection(set(cfg.keys()))
+    if keys_to_process:
+        print("Used old cfg version. Converting to new format")
+        args = dict()
+        for key in keys_to_process:
+            args[key] = cfg[key]
+
+        cfg["dataset"] = {
+            "name": "oml_image_dataset",
+            "args": args,
+        }
+        # pop old keys
+        for key in keys_to_process:
+            print(f"Popping {key}")
+            cfg.pop(key)
+    return cfg
+
+
 __all__ = [
+    "convert_to_new_format_if_needed",
     "parse_engine_params_from_config",
     "check_is_config_for_ddp",
     "parse_scheduler_from_config",
