@@ -4,35 +4,25 @@ accelerator: cpu
 devices: 2
 find_unused_parameters: True
 
-train_dataset:
-  name: image_label_dataset
+dataset:
+  name: oml_image_dataset
   args:
-    df: path_to_df/train.csv
-    cache_size: 1999
-    transform:
-      name: hypvit_torch
+    dataset_root: path_to_df/train.csv
+    dataframe_name: df.csv
+    cache_size: 10
+    transforms_train:
+      name: augs_torch
       args:
-        image_size: 224
+        im_size: 224
 
-val_dataset:
-  ...
+    transforms_val:
+      name: norm_resize_torch
+      args:
+        im_size: 224
 
-#dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-#dataframe_name: df.csv
 logs_root: logs
 
 num_workers: 0
-cache_size: 10
-
-#transforms_train:
-#  name: augs_torch
-#  args:
-#    im_size: 224
-#
-#transforms_val:
-#  name: norm_resize_torch
-#  args:
-#    im_size: 224
 
 criterion:
   name: arcface
