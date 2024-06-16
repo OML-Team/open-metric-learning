@@ -1,39 +1,44 @@
-import atexit
+import inspect
 from datetime import timedelta
 from typing import Any, Callable, Tuple
 
-from torch.distributed import init_process_group
+from torch.distributed import init_process_group, destroy_process_group
 from torch.multiprocessing import spawn
 
-from oml.const import TMP_PATH
+import os
+
 from oml.utils.misc import set_global_seed
 
-# NOTE: tests use the same filename, so it's not safe to run them in parallel
-# If you will decide to run them in parallel, keep in mind:
-# - main process and workers should know the same filename
-# - main workers and workers run in separate Python interpreters and have no shared Python objects
-CONN_FILE = TMP_PATH / "ddp"
+
+def assert_signature(fn: Callable):
+    signature = inspect.signature(fn)
+
+    parameters = list(signature.parameters.keys())
+
+    if len(parameters) < 2 or parameters[0] != 'rank' or parameters[1] != 'world_size':
+        raise ValueError(
+            f"The function '{fn.__name__}' should have 'rank' and 'world_size' as the first two parameters.")
 
 
-def init_ddp(rank: int, world_size: int) -> None:
-    if world_size == 0:
-        pass
-    else:
-        init_process_group(
-            backend="gloo",
-            rank=rank,
-            world_size=world_size,
-            timeout=timedelta(seconds=10),
-            init_method=f"file://{CONN_FILE}",
-        )
+def ddp_fn_wrapper(rank: int, world_size: int, fn: Callable, *args: Tuple[Any, ...]) -> Any:  # type: ignore
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    init_process_group(
+        backend="gloo",
+        rank=rank,
+        world_size=world_size,
+        timeout=timedelta(seconds=10),
+    )
     set_global_seed(1)
+    res = fn(rank, world_size, *args)
+    destroy_process_group()
+    return res
 
 
-def run_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> None:  # type: ignore
-    CONN_FILE.unlink(missing_ok=True)
-    CONN_FILE.parent.mkdir(exist_ok=True, parents=True)
+def run_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> Any:  # type: ignore
+    assert_signature(fn)
     if world_size == 0:
+        set_global_seed(1)
         return fn(0, world_size, *args)
     # note, 'spawn' automatically passes 'rank' as first argument for 'fn'
-    spawn(fn, args=(world_size, *args), nprocs=world_size, join=True)
-    atexit.register(lambda: CONN_FILE.unlink(missing_ok=True))
+    spawn(ddp_fn_wrapper, args=(world_size, fn, *args), nprocs=world_size, join=True)

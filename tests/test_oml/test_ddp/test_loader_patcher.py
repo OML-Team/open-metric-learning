@@ -14,7 +14,7 @@ from oml.samplers.balance import BalanceSampler
 from oml.samplers.category_balance import CategoryBalanceSampler
 from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSampler
 
-from .utils import init_ddp, run_in_ddp
+from .utils import run_in_ddp
 
 
 @pytest.mark.long
@@ -109,7 +109,6 @@ def check_patching_balance_batch_sampler(
     sampler_class,
     setup_kwargs,
 ) -> None:
-    init_ddp(rank, world_size)
     labels = [[label] * randint(n_instances_sampler, 2 * n_instances_sampler) for label in range(n_labels_dataset)]
     labels = list(chain(*labels))
     dataset = list(range(len(labels)))
@@ -172,7 +171,6 @@ def test_patching_seq_sampler(
 def check_patching_seq_sampler(
     rank: int, world_size: int, num_samples: int, drop_last: bool, shuffle: bool, batch_size: int, num_workers: int
 ) -> None:
-    init_ddp(rank, world_size)
     dataset = list(range(num_samples))
     loader = DataLoader(
         dataset=dataset,
