@@ -1,2 +1,0 @@
-grad-cam==1.4.6
-jupyter>=1.0.0
