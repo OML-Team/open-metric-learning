@@ -2,7 +2,6 @@ import random
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
@@ -34,34 +33,8 @@ from oml.interfaces.datasets import (
     ILabeledDataset,
     IVisualizableDataset,
     IQueryGalleryDataset,
-    IQueryGalleryLabeledDataset,
 )
-
-
-def visualize_audio(
-        melspec: np.ndarray,
-        color: TColor = BLACK,
-        draw_bbox: bool = True
-) -> np.ndarray:
-
-    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    ax.imshow(melspec, aspect="auto", origin="lower")
-    ax.set_axis_off()
-    fig.canvas.draw()
-    width, height = fig.canvas.get_width_height()
-    image = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    image = image.reshape(height, width, 3)
-    plt.close(fig)
-
-    if draw_bbox:
-        frame_thickness = 5
-        image[:frame_thickness, :, :] = color  # Top frame
-        image[-frame_thickness:, :, :] = color  # Bottom frame
-        image[:, :frame_thickness, :] = color  # Left frame
-        image[:, -frame_thickness:, :] = color  # Right frame
-
-    return image
+from oml.utils.audios import visualize_audio, visualize_audio_html
 
 
 class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
@@ -179,6 +152,29 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         audio = self._trim_or_pad(audio, frame_offset)
         return audio
 
+    def get_spectral_repr(
+            self,
+            audio: torch.Tensor,
+            params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS
+    ) -> FloatTensor:
+        """
+        Generate a spectral representation (by default, log-scaled MelSpec) from and audio signal.
+        Used primarily for visualization.
+
+        Parameters:
+            audio (FloatTensor): The input audio tensor.
+            params (Dict[str, Any]): Parameters for spectral representation computation.
+
+        Returns:
+            FloatTensor: The spectral representation of the input audio tensor.
+        """
+        melspectrogram = MelSpectrogram(
+            sample_rate=self.sr, **params
+        )
+        melspec = melspectrogram(audio)
+        log_melspec = torch.log1p(melspec)
+        return log_melspec
+
     def __getitem__(self, item: int) -> Dict[str, Union[FloatTensor, int]]:
         audio_tensor = self.get_audio(item)
         data = {
@@ -196,29 +192,29 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     def __len__(self) -> int:
         return len(self._paths)
 
-    def visualize(self, item: int, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
+    def visualize(
+            self,
+            item: int,
+            color: Union[TColor, str] = BLACK,
+            html: bool = False
+    ) -> Union[np.ndarray, str]:
         """
         Visualize an audio file as a Mel-spectrogram using torchaudio and matplotlib.
 
         Args:
             item (int): Dataset item index.
             color (str): Color of the plot.
-            draw_bbox (bool): Whether to add bounding box or not.
+            html (bool): Whether audio is visualized using HTML or not.
 
         Returns:
             np.ndarray: Array representing the image of the plot.
         """
         audio = self.get_audio(item)
-
-        melspectrogram = MelSpectrogram(
-            sample_rate=self.sr,
-            **DEFAULT_MELSPEC_PARAMS
+        spec_repr = self.get_spectral_repr(audio).squeeze(0)
+        img = (
+            visualize_audio_html(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
+            if html else visualize_audio(spec_repr=spec_repr, color=color)
         )
-        melspec = torch.log1p(
-            melspectrogram(audio)
-        ).squeeze(0).numpy()
-
-        img = visualize_audio(melspec=melspec, color=color)
         return img
 
 
