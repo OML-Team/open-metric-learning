@@ -18,12 +18,19 @@ def load_version() -> str:
         return re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
 
 
+NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
+
+
 setup(
     # technical things
     version=load_version(),
     packages=find_packages(exclude=["ci", "docs", "pipelines", "tests*"]),
     python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
+    extras_require={
+        "nlp": NLP_REQUIRE,
+        "all": NLP_REQUIRE,  # later will be cv and audio
+    },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
