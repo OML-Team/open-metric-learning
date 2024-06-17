@@ -29,7 +29,7 @@ setup(
     install_requires=load_requirements("ci/requirements.txt"),
     extras_require={
         "nlp": NLP_REQUIRE,
-        "full": NLP_REQUIRE,  # later will be cv and audio
+        "all": NLP_REQUIRE,  # later will be cv and audio
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
