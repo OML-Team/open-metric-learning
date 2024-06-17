@@ -116,8 +116,4 @@ INPUT_FRAME_OFFSET_KEY = "frame_offset"
 DEFAULT_DURATION = 3.0
 DEFAULT_SAMPLE_RATE = 16_000
 DEFAULT_NUM_CHANNELS = 1
-DEFAULT_MELSPEC_PARAMS = {
-    "n_fft": 2048,
-    "hop_length": 512,
-    "n_mels": 128
-}
+DEFAULT_MELSPEC_PARAMS = {"n_fft": 2048, "hop_length": 512, "n_mels": 128}

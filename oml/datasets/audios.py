@@ -6,33 +6,34 @@ import numpy as np
 import pandas as pd
 import torch
 import torchaudio
+from numpy.typing import NDArray
 from torch import BoolTensor, FloatTensor, LongTensor
 from torchaudio.transforms import MelSpectrogram, Resample
 
 from oml.const import (
     AUDIO_EXTENSIONS,
-    DEFAULT_MELSPEC_PARAMS,
-    DEFAULT_SAMPLE_RATE,
-    DEFAULT_DURATION,
-    DEFAULT_NUM_CHANNELS,
-    INDEX_KEY,
-    LABELS_KEY,
-    INPUT_TENSORS_KEY,
-    INPUT_FRAME_OFFSET_KEY,
+    BLACK,
     CATEGORIES_COLUMN,
-    IS_QUERY_COLUMN,
+    DEFAULT_DURATION,
+    DEFAULT_MELSPEC_PARAMS,
+    DEFAULT_NUM_CHANNELS,
+    DEFAULT_SAMPLE_RATE,
+    INDEX_KEY,
+    INPUT_FRAME_OFFSET_KEY,
+    INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
+    IS_QUERY_COLUMN,
     LABELS_COLUMN,
+    LABELS_KEY,
     PATHS_COLUMN,
     SEQUENCE_COLUMN,
     TColor,
-    BLACK,
 )
 from oml.interfaces.datasets import (
     IBaseDataset,
     ILabeledDataset,
-    IVisualizableDataset,
     IQueryGalleryDataset,
+    IVisualizableDataset,
 )
 from oml.utils.audios import visualize_audio, visualize_audio_html
 
@@ -86,10 +87,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
 
-        self._paths = [
-            Path(p) if dataset_root is None else Path(dataset_root) / p
-            for p in paths
-        ]
+        self._paths = [Path(p) if dataset_root is None else Path(dataset_root) / p for p in paths]
 
     def _downmix_and_resample(self, audio: FloatTensor, sr: int) -> FloatTensor:
         """
@@ -124,7 +122,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         if audio_length > self.num_frames:
             if frame_offset is None:
                 frame_offset = random.randrange(0, audio_length - self.num_frames)
-            audio = audio[:, frame_offset:frame_offset + self.num_frames]
+            audio = audio[:, frame_offset : frame_offset + self.num_frames]
         else:
             padding = (self.num_frames - audio_length, 0)
             audio = torch.nn.functional.pad(audio, padding)
@@ -141,22 +139,16 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             FloatTensor: Processed audio tensor.
         """
         path = self._paths[item]
-        assert path.suffix in AUDIO_EXTENSIONS, \
-            (f"Input audio has invalid extension '{path.suffix}'. "
-             f"It should be one of {AUDIO_EXTENSIONS}.")
+        assert (
+            path.suffix in AUDIO_EXTENSIONS
+        ), f"Input audio has invalid extension '{path.suffix}'. It should be one of {AUDIO_EXTENSIONS}."
         audio, sr = torchaudio.load(path)
-        frame_offset = (
-            None if self.frame_offsets is None else self.frame_offsets[item]
-        )
+        frame_offset = None if self.frame_offsets is None else self.frame_offsets[item]
         audio = self._downmix_and_resample(audio, sr)
         audio = self._trim_or_pad(audio, frame_offset)
         return audio
 
-    def get_spectral_repr(
-            self,
-            audio: torch.Tensor,
-            params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS
-    ) -> FloatTensor:
+    def get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
         """
         Generate a spectral representation (by default, log-scaled MelSpec) from an audio signal.
         Used primarily for visualization.
@@ -168,9 +160,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Returns:
             FloatTensor: The spectral representation of the input audio tensor.
         """
-        melspectrogram = MelSpectrogram(
-            sample_rate=self.sr, **params
-        )
+        melspectrogram = MelSpectrogram(sample_rate=self.sr, **params)
         melspec = melspectrogram(audio)
         log_melspec = torch.log1p(melspec)
         return log_melspec
@@ -192,30 +182,35 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     def __len__(self) -> int:
         return len(self._paths)
 
-    def visualize(
-            self,
-            item: int,
-            color: Union[TColor, str] = BLACK,
-            html: bool = False
-    ) -> Union[np.ndarray, str]:
+    def visualize(self, item: int, color: TColor = BLACK) -> NDArray[np.uint8]:
         """
         Visualize an audio file.
 
         Args:
             item (int): Dataset item index.
             color (str): Color of the plot.
-            html (bool): Whether audio is visualized using HTML or not.
 
         Returns:
-            np.ndarray: Array representing the image of the plot.
+            NDArray: Array representing the image of the plot.
         """
         audio = self.get_audio(item)
         spec_repr = self.get_spectral_repr(audio).squeeze(0)
-        img = (
-            visualize_audio_html(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
-            if html else visualize_audio(spec_repr=spec_repr, color=color)
-        )
-        return img
+        return visualize_audio(spec_repr=spec_repr, color=color)
+
+    def visualize_html(self, item: int, color: str = "black") -> str:
+        """
+        Visualize an audio file in HTML markup.
+
+        Args:
+            item (int): Dataset item index.
+            color (str): Color of the plot.
+
+        Returns:
+            str: HTML markup with spectral representation image and audio player.
+        """
+        audio = self.get_audio(item)
+        spec_repr = self.get_spectral_repr(audio).squeeze(0)
+        return visualize_audio_html(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
 
 
 class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
@@ -266,7 +261,7 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
         return data
 
-    def get_labels(self) -> np.ndarray:
+    def get_labels(self) -> NDArray[np.int64]:
         return np.array(self.df[LABELS_COLUMN])
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
@@ -285,6 +280,7 @@ class AudioQueryGalleryDataset(AudioBaseDataset, IQueryGalleryDataset):
     (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
 
     """
+
     def __init__(
         self,
         df: pd.DataFrame,

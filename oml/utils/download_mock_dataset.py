@@ -9,13 +9,13 @@ from oml.const import (
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
     LABELS_COLUMN,
+    MOCK_AUDIO_DATASET_CSV_NAME,
+    MOCK_AUDIO_DATASET_MD5,
+    MOCK_AUDIO_DATASET_PATH,
+    MOCK_AUDIO_DATASET_URL_GDRIVE,
     MOCK_DATASET_MD5,
     MOCK_DATASET_PATH,
     MOCK_DATASET_URL_GDRIVE,
-    MOCK_AUDIO_DATASET_MD5,
-    MOCK_AUDIO_DATASET_PATH,
-    MOCK_AUDIO_DATASET_CSV_NAME,
-    MOCK_AUDIO_DATASET_URL_GDRIVE,
     SPLIT_COLUMN,
     TEXTS_COLUMN,
 )
@@ -220,8 +220,7 @@ def get_mock_audios_dataset(
         try:
             print("Downloading from oml.daloroserver.com")
             download_folder_from_remote_storage(
-                remote_folder=MOCK_AUDIO_DATASET_PATH.name,
-                local_folder=str(dataset_root)
+                remote_folder=MOCK_AUDIO_DATASET_PATH.name, local_folder=str(dataset_root)
             )
         except Exception:
             print("We could not download from oml.daloroserver.com, let's try Google Drive.")
@@ -245,4 +244,4 @@ def get_mock_audios_dataset(
     return df_train, df_val
 
 
-__all__ = ["get_mock_images_dataset", "get_mock_texts_dataset", "get_mock_audio_dataset"]
+__all__ = ["get_mock_images_dataset", "get_mock_texts_dataset", "get_mock_audios_dataset"]

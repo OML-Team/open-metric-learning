@@ -4,19 +4,13 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 import torchaudio
+from numpy.typing import NDArray
 from torch import FloatTensor
 
-from oml.const import (
-    TColor,
-    BLACK
-)
+from oml.const import BLACK, TColor
 
 
-def visualize_audio(
-    spec_repr: FloatTensor,
-    color: TColor = BLACK,
-    draw_bbox: bool = True
-) -> np.ndarray:
+def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True) -> NDArray[np.uint8]:
     """
     Visualizes an audio spectrogram representation as an image with optional colored bounding box.
 
@@ -26,14 +20,14 @@ def visualize_audio(
         draw_bbox (bool): A flag indicating whether to draw a bounding box around the image.
 
     Returns:
-        np.ndarray: An RGB image as a numpy array shaped (height, width, 3).
+        NDArray: An RGB image as a numpy array shaped (height, width, 3).
     """
     fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100, frameon=True, linewidth=100)
 
     ax.imshow(spec_repr, aspect="auto", origin="lower")
     if draw_bbox:
         frame_thickness = 5
-        for axis in ['top', 'bottom', 'left', 'right']:
+        for axis in ["top", "bottom", "left", "right"]:
             ax.spines[axis].set_linewidth(frame_thickness)
             ax.spines[axis].set_edgecolor(color)
     ax.set_xticks([])
@@ -47,12 +41,7 @@ def visualize_audio(
     return image
 
 
-def visualize_audio_html(
-    audio: FloatTensor,
-    spec_repr: FloatTensor,
-    sr: int,
-    color: str = 'black'
-) -> str:
+def visualize_audio_html(audio: FloatTensor, spec_repr: FloatTensor, sr: int, color: str = "black") -> str:
     """
     Generates an HTML representation including an image of a spectral representation and an audio player.
 
@@ -75,14 +64,14 @@ def visualize_audio_html(
     buf = BytesIO()
     plt.savefig(buf)
     buf.seek(0)
-    image_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    image_base64 = base64.b64encode(buf.getvalue()).decode("ascii")
     plt.close(fig)
 
     # generate base64 audio
     buf = BytesIO()
-    torchaudio.save(buf, audio, sample_rate=sr, format='wav')
+    torchaudio.save(buf, audio, sample_rate=sr, format="wav")
     buf.seek(0)
-    audio_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    audio_base64 = base64.b64encode(buf.getvalue()).decode("ascii")
 
     # generate HTML
     html = f"""

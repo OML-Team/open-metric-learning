@@ -13,6 +13,10 @@ from oml.const import (
     TEXTS_COLUMN,
 )
 from oml.datasets import (
+    AudioBaseDataset,
+    AudioLabeledDataset,
+    AudioQueryGalleryDataset,
+    AudioQueryGalleryLabeledDataset,
     ImageBaseDataset,
     ImageLabeledDataset,
     ImageQueryGalleryDataset,
@@ -21,10 +25,6 @@ from oml.datasets import (
     TextLabeledDataset,
     TextQueryGalleryDataset,
     TextQueryGalleryLabeledDataset,
-    AudioBaseDataset,
-    AudioLabeledDataset,
-    AudioQueryGalleryDataset,
-    AudioQueryGalleryLabeledDataset,
 )
 from oml.interfaces.datasets import (
     IBaseDataset,
@@ -33,9 +33,9 @@ from oml.interfaces.datasets import (
     IVisualizableDataset,
 )
 from oml.utils import (
+    get_mock_audios_dataset,
     get_mock_images_dataset,
     get_mock_texts_dataset,
-    get_mock_audios_dataset
 )
 
 
