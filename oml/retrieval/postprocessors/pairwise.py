@@ -117,9 +117,11 @@ class PairwiseReranker(IRetrievalPostprocessor):
         # Queries have different number of retrieved items, so we track what pairs are relevant to what queries (bounds)
         pairs = []
         bounds = [0]
+        query_ids = dataset.get_query_ids()
+        gallery_ids = dataset.get_gallery_ids()
         for iq, ids_gallery in enumerate(retrieved_ids):
-            ids_gallery_global = dataset.get_gallery_ids()[ids_gallery][: self.top_n].tolist()
-            ids_query_global = [dataset.get_query_ids()[iq].item()] * len(ids_gallery_global)
+            ids_gallery_global = gallery_ids[ids_gallery][: self.top_n].tolist()
+            ids_query_global = [query_ids[iq].item()] * len(ids_gallery_global)
 
             pairs.extend(list(zip(ids_query_global, ids_gallery_global)))
             bounds.append(bounds[-1] + len(ids_gallery_global))

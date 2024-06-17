@@ -1,9 +1,5 @@
 ```shell
-pip install -U open-metric-learning
-```
-
-If you need OML for NLP, install the extra requirements with:
-```shell
+pip install -U open-metric-learning; # minimum dependencies
 pip install -U open-metric-learning[nlp]
 ```
 
