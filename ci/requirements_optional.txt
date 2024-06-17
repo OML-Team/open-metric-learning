@@ -5,3 +5,4 @@ wandb>=0.15.4
 mlflow>=2.0.0
 clearml>=1.5.0
 transformers>=4.0
+torchaudio>=2.0,<=2.1.1

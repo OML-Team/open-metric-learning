@@ -158,7 +158,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS
     ) -> FloatTensor:
         """
-        Generate a spectral representation (by default, log-scaled MelSpec) from and audio signal.
+        Generate a spectral representation (by default, log-scaled MelSpec) from an audio signal.
         Used primarily for visualization.
 
         Parameters:
@@ -199,7 +199,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             html: bool = False
     ) -> Union[np.ndarray, str]:
         """
-        Visualize an audio file as a Mel-spectrogram using torchaudio and matplotlib.
+        Visualize an audio file.
 
         Args:
             item (int): Dataset item index.
