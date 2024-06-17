@@ -101,7 +101,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
     assert len(x1.shape) == len(x2.shape) == 2
     assert x1.shape == x2.shape
 
-    # we need an extra dim here to avoid pairwise behaviour of torch.cdist
+    # we need an extra dim here to avoid pairwise behavior of torch.cdist
     if len(x1.shape) == 2:
         x1 = x1.unsqueeze(1)
         x2 = x2.unsqueeze(1)
@@ -263,7 +263,7 @@ class SumOnline(OnlineCalc):
 
 class OnlineDict(MutableMapping):  # type: ignore
     """
-    We don't inherite from built-in 'dict' due to internal C optimization. We mimic to dict with MutableMapping
+    We don't inherit from built-in 'dict' due to internal C optimization. We mimic to dict with MutableMapping
     https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
 
     """
@@ -395,7 +395,7 @@ class PCA:
 
     def _fit(self, embeddings: torch.Tensor) -> None:
         """
-        Perform the PCA. Evaluate ``components``, ``expoained_variance``, ``explained_variance_ratio``,
+        Perform the PCA. Evaluate ``components``, ``explained_variance``, ``explained_variance_ratio``,
         ``singular_values``, ``mean``.
 
         Args:
@@ -470,7 +470,7 @@ class PCA:
         Let :math:`\\lambda_1, \\ldots, \\lambda_d\\in\\mathbb{R}` be a set of eigenvalues
         of the covariance matrix of :math:`X` sorted in descending order.
         Then for a given value of desired explained variance :math:`r`,
-        the number of principal components that explaines :math:`r\\cdot 100\\%%` variance is the largest integer
+        the number of principal components that explains :math:`r\\cdot 100\\%%` variance is the largest integer
         :math:`n` such that
 
         .. math::
