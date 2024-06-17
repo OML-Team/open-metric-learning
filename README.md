@@ -335,11 +335,7 @@ for our paper
 ## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
 ```shell
-pip install -U open-metric-learning
-```
-
-If you need OML for NLP, install the extra requirements with:
-```shell
+pip install -U open-metric-learning; # minimum dependencies
 pip install -U open-metric-learning[nlp]
 ```
 
