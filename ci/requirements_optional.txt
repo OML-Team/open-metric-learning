@@ -1,3 +1,4 @@
+numpy<2.0
 grad-cam==1.4.6
 jupyter>=1.0.0
 neptune>=1.0.0, <1.10.1
