@@ -1,6 +1,7 @@
 # Ours
 *.DS_Store*
 *.idea/*
+.vscode/*
 .env
 dataset
 lightning_logs/
