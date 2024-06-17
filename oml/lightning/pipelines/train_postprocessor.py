@@ -22,6 +22,7 @@ from oml.lightning.modules.pairwise_postprocessing import (
 )
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
+    convert_to_new_format_if_needed,
     parse_ckpt_callback_from_config,
     parse_engine_params_from_config,
     parse_logger_from_config,
@@ -124,6 +125,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     set_global_seed(cfg["seed"])
 
     cfg = dictconfig_to_dict(cfg)
+    cfg = convert_to_new_format_if_needed(cfg)
     pprint(cfg)
 
     logger = parse_logger_from_config(cfg)
