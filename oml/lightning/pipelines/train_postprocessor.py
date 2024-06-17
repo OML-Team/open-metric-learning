@@ -46,8 +46,8 @@ def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
 
     cfg_extraction_str = (
         dict2str(cfg["extractor"])
-        + dict2str(cfg["transforms_extraction"])
-        + str(cfg["dataframe_name"])
+        + dict2str(cfg["datasets"]["args"]["transforms_extraction"])
+        + str(cfg["datasets"]["args"]["dataframe_name"])
         + str(cfg.get("precision", 32))
     )
 
@@ -61,11 +61,11 @@ def get_loaders_with_embeddings(
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
     extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
-    transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
+    transforms_extraction = get_transforms_by_cfg(cfg["datasets"]["args"]["transforms_extraction"])
 
     train_extraction, val_extraction = get_retrieval_images_datasets(
-        dataset_root=Path(cfg["dataset_root"]),
-        dataframe_name=cfg["dataframe_name"],
+        dataset_root=Path(cfg["datasets"]["args"]["dataset_root"]),
+        dataframe_name=cfg["datasets"]["args"]["dataframe_name"],
         transforms_train=transforms_extraction,
         transforms_val=transforms_extraction,
     )
@@ -87,14 +87,14 @@ def get_loaders_with_embeddings(
         emb_val = inference(dataset=val_extraction, **args)
 
     train_dataset = ImageLabeledDataset(
-        dataset_root=cfg["dataset_root"],
+        dataset_root=cfg["datasets"]["args"]["dataset_root"],
         df=train_extraction.df,
-        transform=get_transforms_by_cfg(cfg["transforms_train"]),
+        transform=get_transforms_by_cfg(cfg["datasets"]["args"]["transforms_train"]),
         extra_data={EMBEDDINGS_KEY: emb_train},
     )
 
     valid_dataset = ImageQueryGalleryLabeledDataset(
-        dataset_root=cfg["dataset_root"],
+        dataset_root=cfg["datasets"]["args"]["dataset_root"],
         df=val_extraction.df,
         transform=transforms_extraction,
         extra_data={EMBEDDINGS_KEY: emb_val},

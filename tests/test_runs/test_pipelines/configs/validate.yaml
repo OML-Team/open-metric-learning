@@ -2,7 +2,7 @@ accelerator: cpu
 devices: 1
 
 
-dataset:
+datasets:
   name: oml_image_dataset
   args:
     dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder

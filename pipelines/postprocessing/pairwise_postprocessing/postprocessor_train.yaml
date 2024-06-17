@@ -6,9 +6,24 @@ accelerator: gpu
 devices: 2
 find_unused_parameters: False
 
-dataset_root: /path/to/dataset/   # <---- specify path to your dataset
+
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: /path/to/dataset/   # <---- specify path to your dataset
+    dataframe_name: df.csv
+    transforms_extraction:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+    transforms_train:
+      name: augs_hypvit_torch
+      args:
+        im_size: 224
+        min_scale: 0.8
+
 logs_root: /path/to/logs   # <---- specify path to your logs
-dataframe_name: df.csv
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -29,11 +44,6 @@ extractor:
     weights: ${extractor_weights}
     arch: vits16
 
-transforms_extraction:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 # TRAIN POSTPROCESSOR
 
@@ -73,11 +83,6 @@ sampler:
     n_labels: 30
     n_instances: 4
 
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 224
-    min_scale: 0.8
 
 # VALIDATE POSTPROCESSOR BY RE-RANKING TOP-N OUTPUTS
 

@@ -6,8 +6,22 @@ accelerator: cpu
 devices: 2
 find_unused_parameters: False
 
-dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df_with_category.csv
+datasets:
+  name: oml_image_dataset
+  args:
+      dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+      dataframe_name: df_with_category.csv
+      transforms_train:
+        name: augs_hypvit_torch
+        args:
+          im_size: 32
+          min_scale: 0.8
+      transforms_extraction:
+        name: norm_resize_hypvit_torch
+        args:
+          im_size: 32
+          crop_size: 32
+
 logs_root: logs
 
 num_workers: 0
@@ -26,11 +40,6 @@ extractor:
     weights: null
     arch: vits16
 
-transforms_extraction:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 32
-    crop_size: 32
 
 # TRAIN
 
@@ -67,11 +76,6 @@ sampler:
     resample_labels: True
     weight_categories: True
 
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 32
-    min_scale: 0.8
 
 # VALIDATION
 

@@ -19,7 +19,7 @@ from oml.lightning.pipelines.parser import (
     parse_scheduler_from_config,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
-from oml.registry.datasets import build_image_dataset
+from oml.registry.datasets import get_image_datasets
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
@@ -28,7 +28,7 @@ from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader, ILabeledDataset, IQueryGalleryLabeledDataset]:
 
-    train_dataset, valid_dataset = build_image_dataset(cfg["dataset"]["name"], **cfg["dataset"]["args"])
+    train_dataset, valid_dataset = get_image_datasets(cfg["datasets"]["name"], **cfg["datasets"]["args"])
 
     assert isinstance(train_dataset, ILabeledDataset)
     assert isinstance(valid_dataset, IQueryGalleryLabeledDataset)

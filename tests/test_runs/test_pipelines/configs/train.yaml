@@ -4,7 +4,7 @@ accelerator: cpu
 devices: 2
 find_unused_parameters: True
 
-dataset:
+datasets:
   name: oml_image_dataset
   args:
     dataset_root: path_to_df/train.csv

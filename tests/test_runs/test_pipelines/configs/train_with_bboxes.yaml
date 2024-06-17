@@ -4,22 +4,27 @@ accelerator: cpu
 devices: 1
 find_unused_parameters: False
 
-dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df_with_bboxes.csv
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+    dataframe_name: df_with_bboxes.csv
+    cache_size: 100
+    transforms_train:
+      name: custom_augmentations
+      args:
+        im_size: 32
+
+    transforms_val:
+      name: norm_resize_albu
+      args:
+        im_size: 48
+
+
 logs_root: logs
 
 num_workers: 0
-cache_size: 100
 
-transforms_train:
-  name: custom_augmentations
-  args:
-    im_size: 32
-
-transforms_val:
-  name: norm_resize_albu
-  args:
-    im_size: 48
 
 criterion:
   name: triplet_with_miner

@@ -39,10 +39,10 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
     pprint(cfg)
 
     _, valid_dataset = get_retrieval_images_datasets(
-        dataset_root=Path(cfg["dataset"]["args"]["dataset_root"]),
+        dataset_root=Path(cfg["datasets"]["args"]["dataset_root"]),
         transforms_train=None,
-        transforms_val=get_transforms_by_cfg(cfg["dataset"]["args"]["transforms_val"]),
-        dataframe_name=cfg["dataset"]["args"]["dataframe_name"],
+        transforms_val=get_transforms_by_cfg(cfg["datasets"]["args"]["transforms_val"]),
+        dataframe_name=cfg["datasets"]["args"]["dataframe_name"],
     )
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 

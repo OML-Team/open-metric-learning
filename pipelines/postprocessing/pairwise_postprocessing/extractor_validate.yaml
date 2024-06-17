@@ -2,17 +2,19 @@ accelerator: gpu
 precision: 32
 devices: 1
 
-dataset_root: /path/to/dataset/  # <---- specify path to your dataset
-dataframe_name: df.csv
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: /path/to/dataset/  # <---- specify path to your dataset
+    dataframe_name: df.csv
+    transforms_val:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
 
 bs_val: 128
 num_workers: 20
-
-transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 weights: /path/to/extractor.ckpt  # <---- specify path to an extractor
 

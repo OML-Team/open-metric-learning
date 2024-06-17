@@ -107,22 +107,25 @@ def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:
 def convert_to_new_format_if_needed(
     cfg: TCfg,
 ) -> Dict[str, Any]:
-    old_keys = {"dataset_root", "dataframe_name", "cache_size", "transforms_train", "transforms_val"}
+    old_keys = {
+        "dataset_root",
+        "dataframe_name",
+        "cache_size",
+        "transforms_train",
+        "transforms_val",
+        "transforms_extraction",
+    }
     keys_to_process = old_keys.intersection(set(cfg.keys()))
     if keys_to_process:
-        print("Used old cfg version. Converting to new format")
+        print("Used old cfg version (before oml 3.1.0). Converting to new format")
         args = dict()
         for key in keys_to_process:
-            args[key] = cfg[key]
+            args[key] = cfg.pop(key)
 
         cfg["dataset"] = {
             "name": "oml_image_dataset",
             "args": args,
         }
-        # pop old keys
-        for key in keys_to_process:
-            print(f"Popping {key}")
-            cfg.pop(key)
     return cfg
 
 

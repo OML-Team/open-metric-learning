@@ -28,7 +28,7 @@ TRANSFORMS_REGISTRY["custom_augmentations"] = get_custom_augs  # type: ignore
 def main_hydra(cfg: DictConfig) -> None:
     cfg = dictconfig_to_dict(cfg)
     download_images_mock_dataset(MOCK_DATASET_PATH)
-    cfg["dataset_root"] = MOCK_DATASET_PATH
+    cfg["datasets"]["args"]["dataset_root"] = MOCK_DATASET_PATH
     extractor_training_pipeline(cfg)
 
 

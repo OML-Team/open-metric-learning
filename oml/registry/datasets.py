@@ -7,7 +7,7 @@ from oml.interfaces.datasets import ILabeledDataset, IQueryGalleryLabeledDataset
 from oml.registry.transforms import get_transforms_by_cfg
 
 
-def _build_image_dataset(**cfg: TCfg) -> Tuple[ILabeledDataset, IQueryGalleryLabeledDataset]:
+def get_image_datasets_by_cfg(**cfg: TCfg) -> Tuple[ILabeledDataset, IQueryGalleryLabeledDataset]:
 
     transforms_train = cfg.get("transforms_train", None)
     transforms_val = cfg.get("transforms_val", None)
@@ -30,14 +30,14 @@ def _build_image_dataset(**cfg: TCfg) -> Tuple[ILabeledDataset, IQueryGalleryLab
     return dataset_train, dataset_val
 
 
-def build_image_dataset(
+def get_image_datasets(
     dataset_name: str, **kwargs: Dict[str, Any]
 ) -> Tuple[ILabeledDataset, IQueryGalleryLabeledDataset]:
     return DATASET_BUILDER_REGISTRY[dataset_name](**kwargs)
 
 
 DATASET_BUILDER_REGISTRY = {
-    "oml_image_dataset": _build_image_dataset,
+    "oml_image_dataset": get_image_datasets_by_cfg,
 }
 
-__all__ = ["build_image_dataset", "DATASET_BUILDER_REGISTRY"]
+__all__ = ["get_image_datasets", "DATASET_BUILDER_REGISTRY"]

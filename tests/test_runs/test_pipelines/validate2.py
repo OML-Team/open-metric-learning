@@ -11,7 +11,7 @@ from oml.utils.misc import dictconfig_to_dict
 def main_hydra(cfg: DictConfig) -> None:
     cfg = dictconfig_to_dict(cfg)
     download_images_mock_dataset(MOCK_DATASET_PATH)
-    cfg["dataset_root"] = str(MOCK_DATASET_PATH)
+    cfg["datasets"]["args"]["dataset_root"] = str(MOCK_DATASET_PATH)
     extractor_validation_pipeline(cfg)
 
 
