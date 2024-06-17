@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch import Tensor, cdist
 
-TSingleValues = Union[int, float, np.float_, np.int_, torch.Tensor]
+TSingleValues = Union[int, float, np.float64, np.int_, torch.Tensor]
 TSequenceValues = Union[List[float], Tuple[float, ...], np.ndarray, torch.Tensor]
 TOnlineValues = Union[TSingleValues, TSequenceValues]
 
