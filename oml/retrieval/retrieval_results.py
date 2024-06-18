@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from pprint import pformat
 from typing import Callable, List, Optional, Sequence, Tuple, Union
@@ -70,7 +71,7 @@ class RetrievalResults:
         if gt_ids is not None:
             assert len(distances) == len(gt_ids)
             if any(len(x) == 0 for x in gt_ids):
-                raise RuntimeError("Every query must have at least one relevant gallery id.")
+                warnings.warn("Some of the queries don't have available gts.")
 
         self._distances = tuple(distances)
         self._retrieved_ids = tuple(retrieved_ids)
