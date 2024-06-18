@@ -862,6 +862,10 @@ Note, we don't have our own text models zoo at the moment.
 <p>
 
 [comment]:zoo-text-start
+```shell
+pip install open-metric-learning[nlp]
+```
+
 ```python
 from transformers import AutoModel, AutoTokenizer
 
