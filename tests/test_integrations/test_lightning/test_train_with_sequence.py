@@ -82,7 +82,7 @@ def test_invariants_in_validation_with_sequences_3() -> None:
     df_with_seq = df.copy()
     df_with_seq[SEQUENCE_COLUMN] = df_with_seq[LABELS_COLUMN]
 
-    with pytest.raises(RuntimeError):
+    with pytest.warns(UserWarning, match="Some of the queries don't have available gts."):
         validation(df)
         validation(df_with_seq)
 
