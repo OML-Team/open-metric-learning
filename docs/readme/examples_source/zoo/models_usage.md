@@ -9,11 +9,11 @@ Note, we don't have our own text models zoo at the moment.
 <summary><b>See example</b></summary>
 <p>
 
-[comment]:zoo-text-start
 ```shell
 pip install open-metric-learning[nlp]
 ```
 
+[comment]:zoo-text-start
 ```python
 from transformers import AutoModel, AutoTokenizer
 
