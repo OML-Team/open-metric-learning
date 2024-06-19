@@ -23,7 +23,7 @@ def get_image_datasets_by_cfg(**cfg: TCfg) -> Tuple[ILabeledDataset, IQueryGalle
         dataframe_name=str(cfg["dataframe_name"]),
         transforms_train=transforms_train,
         transforms_val=transforms_val,
-        cache_size=int(str(cfg["cache_size"])),
+        cache_size=int(str(cfg.get("cache_size", 0))),
         verbose=bool(cfg.get("verbose", True)),
     )
 

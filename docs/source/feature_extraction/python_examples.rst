@@ -3,10 +3,19 @@ Examples
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_img_txt.md
 
-Using pre-trained model for retrieval
+Retrieval by trained model
 ########################################
 
 .. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage.md
+
+.. raw:: html
+
+    <br>
+
+Retrieval by trained model: streaming & txt2im
+##############################################
+
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/retrieval_usage_streaming.md
 
 .. raw:: html
 

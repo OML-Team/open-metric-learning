@@ -4,8 +4,8 @@ Re-ranking by Siamese model
 .. toctree::
    :maxdepth: 1
 
-   python_examples
-   pipelines
+   siamese_examples
+   stir_paper
 
 Algorithmic postprocessing
 =============================
@@ -14,4 +14,3 @@ Algorithmic postprocessing
    :maxdepth: 1
 
    algo_examples
-

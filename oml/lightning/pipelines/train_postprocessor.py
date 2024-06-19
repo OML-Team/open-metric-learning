@@ -89,6 +89,7 @@ def get_loaders_with_embeddings(
 
     train_dataset = ImageLabeledDataset(
         dataset_root=cfg["datasets"]["args"]["dataset_root"],
+        cache_size=cfg.get("cache_size", 0),
         df=train_extraction.df,
         transform=get_transforms_by_cfg(cfg["datasets"]["args"]["transforms_train"]),
         extra_data={EMBEDDINGS_KEY: emb_train},
@@ -96,6 +97,7 @@ def get_loaders_with_embeddings(
 
     valid_dataset = ImageQueryGalleryLabeledDataset(
         dataset_root=cfg["datasets"]["args"]["dataset_root"],
+        cache_size=cfg.get("cache_size", 0),
         df=val_extraction.df,
         transform=transforms_extraction,
         extra_data={EMBEDDINGS_KEY: emb_val},

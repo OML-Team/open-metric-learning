@@ -48,8 +48,8 @@ class EmbeddingsQueryGalleryDataset(IQueryGalleryDataset):
         assert len(embeddings) == len(is_query) == len(is_gallery)
 
         self._embeddings = embeddings
-        self._is_query = is_query
-        self._is_gallery = is_gallery
+        self._query_ids = is_query.nonzero().squeeze()
+        self._gallery_ids = is_gallery.nonzero().squeeze()
 
         self.extra_data = {}
         if categories is not None:
@@ -81,10 +81,10 @@ class EmbeddingsQueryGalleryDataset(IQueryGalleryDataset):
         return len(self._embeddings)
 
     def get_query_ids(self) -> LongTensor:
-        return self._is_query.nonzero().squeeze()
+        return self._query_ids
 
     def get_gallery_ids(self) -> LongTensor:
-        return self._is_gallery.nonzero().squeeze()
+        return self._gallery_ids
 
 
 class EmbeddingsQueryGalleryLabeledDataset(EmbeddingsQueryGalleryDataset, IQueryGalleryLabeledDataset):

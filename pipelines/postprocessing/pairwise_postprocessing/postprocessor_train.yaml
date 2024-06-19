@@ -27,6 +27,7 @@ logs_root: /path/to/logs   # <---- specify path to your logs
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
+cache_size: 0
 max_epochs: 1000
 valid_period: 10
 

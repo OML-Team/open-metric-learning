@@ -65,7 +65,6 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
 
     """
     set_global_seed(cfg["seed"])
-    pprint(cfg)
 
     cfg = dictconfig_to_dict(cfg)
     cfg = convert_to_new_format_if_needed(cfg)

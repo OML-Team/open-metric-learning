@@ -1,5 +1,6 @@
 ```shell
-pip install -U open-metric-learning
+pip install -U open-metric-learning; # minimum dependencies
+pip install -U open-metric-learning[nlp]
 ```
 
 <details><summary>DockerHub</summary>

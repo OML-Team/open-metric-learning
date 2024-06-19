@@ -7,6 +7,7 @@ from oml.models.texts import HFWrapper
 from oml.utils import get_mock_texts_dataset
 
 
+@pytest.mark.long
 @pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize(
     "model_name, feat_dim", [("roberta-base", 768), ("bert-base-uncased", 768), ("distilbert-base-uncased", 768)]

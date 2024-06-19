@@ -16,7 +16,7 @@ and their `category` is `tables`.
 <br>
 
 ```bash
-pip install transformers
+pip install open-metric-learning[nlp]
 ```
 
 [comment]:categories-start

@@ -22,7 +22,8 @@ OML is a PyTorch-based framework to train and validate the models producing high
 <a href="https://www.meituan.com" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/6/61/Meituan_English_Logo.png" width="100"/></a>ㅤㅤ
 <a href="https://constructor.io/" target="_blank"><img src="https://rethink.industries/wp-content/uploads/2022/04/constructor.io-logo.png" width="100"/></a>ㅤㅤ
 <a href="https://edgify.ai/" target="_blank"><img src="https://edgify.ai/wp-content/themes/edgifyai/dist/assets/logo.svg" width="100" height="30"/></a>ㅤㅤ
-<a href="https://inspector-cloud.ru/" target="_blank"><img src="https://thumb.tildacdn.com/tild6533-6433-4137-a266-613963373637/-/resize/540x/-/format/webp/photo.png" width="100" height="30"/></a>
+<a href="https://inspector-cloud.ru/" target="_blank"><img src="https://thumb.tildacdn.com/tild6533-6433-4137-a266-613963373637/-/resize/540x/-/format/webp/photo.png" width="150" height="30"/></a>ㅤㅤ
+<a href="https://yango-tech.com/" target="_blank"><img src="https://yango-backend.sborkademo.com/media/pages/home/205f66f309-1717169752/opengr4-1200x630-crop-q85.jpg" width="100" height="30"/></a>
 
 
 <a href="https://www.ox.ac.uk/" target="_blank"><img src="https://i.ibb.co/zhWL6tD/21-05-2019-16-08-10-6922268.png" width="120"/></a>ㅤㅤ
@@ -295,6 +296,16 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
+
+<details>
+<summary>Can I export models to ONNX?</summary>
+<p>
+
+Currently, we don't support exporting models to ONNX directly.
+However, you can use the built-in PyTorch capabilities to achieve this. For more information, please refer to this [issue](https://github.com/OML-Team/open-metric-learning/issues/592).
+</p>
+</details>
+
 </details>
 
 
@@ -324,7 +335,8 @@ for our paper
 ## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
 ```shell
-pip install -U open-metric-learning
+pip install -U open-metric-learning; # minimum dependencies
+pip install -U open-metric-learning[nlp]
 ```
 
 <details><summary>DockerHub</summary>
@@ -427,7 +439,7 @@ rr_upd = postprocessor.process(rr, dataset)
 
 </td>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html"><b>Post-processing by NN</b></a> |
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/siamese_examples.html"><b>Post-processing by NN</b></a> |
 <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing"><b>Paper</b></a>
 
 ```python
@@ -736,7 +748,7 @@ validation()
 [Extra illustrations, explanations and tips](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction#training)
 for the code above.
 
-### Using pre-trained model for retrieval
+### Retrieval by trained model
 
 Here is an inference time example (in other words, retrieval on test set).
 The code below works for both texts and images.
@@ -776,6 +788,57 @@ print(rr)
 
 
 
+### Retrieval by trained model: streaming & txt2im
+
+Here is an example where queries and galleries processed separately.
+* First, it may be useful for **streaming retrieval**, when a gallery (index) set is huge and fixed, but
+  queries are coming in batches.
+* Second, queries and galleries have different natures, for examples, **queries are texts, but galleries are images**.
+
+
+<details>
+<summary><b>See example</b></summary>
+<p>
+
+[comment]:usage-streaming-retrieval-start
+```python
+import pandas as pd
+
+from oml.datasets import ImageBaseDataset
+from oml.inference import inference
+from oml.models import ViTExtractor
+from oml.registry import get_transforms_for_pretrained
+from oml.retrieval import RetrievalResults, ConstantThresholding
+from oml.utils import get_mock_images_dataset
+
+extractor = ViTExtractor.from_pretrained("vits16_dino").to("cpu")
+transform, _ = get_transforms_for_pretrained("vits16_dino")
+
+paths = pd.concat(get_mock_images_dataset(global_paths=True))["path"]
+galleries, queries1, queries2 = paths[:20], paths[20:22], paths[22:24]
+
+# gallery is huge and fixed, so we only process it once
+dataset_gallery = ImageBaseDataset(galleries, transform=transform)
+embeddings_gallery = inference(extractor, dataset_gallery, batch_size=4, num_workers=0)
+
+# queries come "online" in stream
+for queries in [queries1, queries2]:
+    dataset_query = ImageBaseDataset(queries, transform=transform)
+    embeddings_query = inference(extractor, dataset_query, batch_size=4, num_workers=0)
+
+    # for the operation below we are going to provide integrations with vector search DB like QDrant or Faiss
+    rr = RetrievalResults.from_embeddings_qg(
+        embeddings_query=embeddings_query, embeddings_gallery=embeddings_gallery,
+        dataset_query=dataset_query, dataset_gallery=dataset_gallery
+    )
+    rr = ConstantThresholding(th=80).process(rr)
+    rr.visualize_qg([0, 1], dataset_query=dataset_query, dataset_gallery=dataset_gallery, show=True)
+    print(rr)
+```
+[comment]:usage-streaming-retrieval-end
+
+</details>
+
 ## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 
 Pipelines provide a way to run metric learning experiments via changing only the config file.
@@ -797,6 +860,10 @@ Note, we don't have our own text models zoo at the moment.
 <details style="padding-bottom: 15px">
 <summary><b>See example</b></summary>
 <p>
+
+```shell
+pip install open-metric-learning[nlp]
+```
 
 [comment]:zoo-text-start
 ```python

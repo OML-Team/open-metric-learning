@@ -15,7 +15,10 @@ RetrievalResults
 
     .. automethod:: __init__
     .. automethod:: from_embeddings
+    .. automethod:: from_embeddings_qg
     .. automethod:: visualize
+    .. automethod:: visualize_qg
+    .. automethod:: visualize_with_functions
     .. automethod:: is_empty
     .. automethod:: deepcopy
     .. autoproperty:: n_retrieved_items
