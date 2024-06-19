@@ -4,21 +4,18 @@ accelerator: cpu
 devices: 1
 find_unused_parameters: False
 
-datasets:
-  name: oml_image_dataset
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_bboxes.csv
+cache_size: 100
+transforms_train:
+  name: custom_augmentations
   args:
-    dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-    dataframe_name: df_with_bboxes.csv
-    cache_size: 100
-    transforms_train:
-      name: custom_augmentations
-      args:
-        im_size: 32
+    im_size: 32
 
-    transforms_val:
-      name: norm_resize_albu
-      args:
-        im_size: 48
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 48
 
 
 logs_root: logs

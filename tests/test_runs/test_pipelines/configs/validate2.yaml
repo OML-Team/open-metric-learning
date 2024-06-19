@@ -1,16 +1,13 @@
 accelerator: cpu
 devices: 2
 
-datasets:
-  name: oml_image_dataset
-  args:
-    dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-    dataframe_name: df_with_category.csv
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_category.csv
 
-    transforms_val:
-      name: norm_resize_torch
-      args:
-        im_size: 32
+transforms_val:
+  name: norm_resize_torch
+  args:
+    im_size: 32
 
 logs_root: logs
 

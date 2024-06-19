@@ -122,7 +122,7 @@ def convert_to_new_format_if_needed(
         for key in keys_to_process:
             args[key] = cfg.pop(key)
 
-        cfg["dataset"] = {
+        cfg["datasets"] = {
             "name": "oml_image_dataset",
             "args": args,
         }

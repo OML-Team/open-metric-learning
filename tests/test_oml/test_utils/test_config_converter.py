@@ -11,7 +11,7 @@ def test_old_config_conversion() -> None:
     }
 
     expected_config = {
-        "dataset": {
+        "datasets": {
             "name": "oml_image_dataset",
             "args": {
                 "dataframe_name": "df.csv",
