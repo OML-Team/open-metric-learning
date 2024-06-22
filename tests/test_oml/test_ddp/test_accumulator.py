@@ -15,18 +15,17 @@ from .utils import run_in_ddp
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
 @pytest.mark.parametrize("create_duplicate", [True, False])
 def test_ddp_accumulator(world_size: int, device: str, create_duplicate: bool) -> None:
-    run_in_ddp(world_size=world_size, fn=check_accumulator, args=(world_size, device, create_duplicate))
+    run_in_ddp(world_size=world_size, fn=check_accumulator, args=(device, create_duplicate))
 
 
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
 @pytest.mark.parametrize("create_duplicate", [True, False])
 def test_fake_ddp_accumulator(device: str, create_duplicate: bool) -> None:
     # we expect the same duplicate removing behaviour without initializing DDP
-    check_accumulator(world_size=1, device=device, create_duplicate=create_duplicate)
+    check_accumulator(rank=0, world_size=1, device=device, create_duplicate=create_duplicate)
 
 
-def check_accumulator(world_size: int, device: str, create_duplicate: bool) -> None:
-    rank = get_rank_safe()
+def check_accumulator(rank: int, world_size: int, device: str, create_duplicate: bool) -> None:
     value = rank + 1
     size = value
 

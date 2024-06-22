@@ -40,7 +40,7 @@ def test_patching_balance_sampler(
     sampler_class: IBatchSampler,
     setup_kwargs: Dict[str, Any],
 ) -> None:
-    args = (world_size, n_labels_dataset, n_labels_sampler, n_instances_sampler, sampler_class, setup_kwargs)
+    args = (n_labels_dataset, n_labels_sampler, n_instances_sampler, sampler_class, setup_kwargs)
     run_in_ddp(world_size=world_size, fn=check_patching_balance_batch_sampler, args=args)
 
 
@@ -101,6 +101,7 @@ def _setup_distinct_category_sampler(
 
 
 def check_patching_balance_batch_sampler(
+    rank: int,
     world_size: int,
     n_labels_dataset: int,
     n_labels_sampler: int,
@@ -163,12 +164,12 @@ def check_patching_balance_batch_sampler(
 def test_patching_seq_sampler(
     world_size: int, num_samples: int, drop_last: bool, shuffle: bool, batch_size: int, num_workers: int
 ) -> None:
-    args = (world_size, num_samples, drop_last, shuffle, batch_size, num_workers)
+    args = (num_samples, drop_last, shuffle, batch_size, num_workers)
     run_in_ddp(world_size=world_size, fn=check_patching_seq_sampler, args=args)
 
 
 def check_patching_seq_sampler(
-    world_size: int, num_samples: int, drop_last: bool, shuffle: bool, batch_size: int, num_workers: int
+    rank: int, world_size: int, num_samples: int, drop_last: bool, shuffle: bool, batch_size: int, num_workers: int
 ) -> None:
     dataset = list(range(num_samples))
     loader = DataLoader(

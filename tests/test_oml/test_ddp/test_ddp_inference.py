@@ -27,7 +27,7 @@ def test_inference_without_expected_duplicates(world_size: int, n_paths: int, de
     run_in_ddp(world_size=world_size, fn=run_with_handling_duplicates, args=(device, paths, batch_size))
 
 
-def run_with_handling_duplicates(device: str, paths: List[str], batch_size: int) -> None:
+def run_with_handling_duplicates(rank: int, world_size: int, device: str, paths: List[str], batch_size: int) -> None:
     transform = get_normalisation_resize_torch(im_size=32)
 
     model = resnet18().eval().to(device)
