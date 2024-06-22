@@ -1,5 +1,5 @@
 ```bash
-pip install transformers
+pip install open-metric-learning[nlp]
 ```
 
 [comment]:lightning-ddp-start

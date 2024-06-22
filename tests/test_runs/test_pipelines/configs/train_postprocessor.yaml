@@ -11,6 +11,7 @@ dataframe_name: df_with_category.csv
 logs_root: logs
 
 num_workers: 0
+cache_size: 50
 max_epochs: 2
 valid_period: 1
 

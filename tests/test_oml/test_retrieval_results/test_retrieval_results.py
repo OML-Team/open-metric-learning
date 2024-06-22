@@ -159,7 +159,7 @@ def test_visualisation_for_different_number_of_retrieved_items() -> None:
 
 def test_retrieval_results_creation() -> None:
     # there is a query with no gt
-    with pytest.raises(RuntimeError):
+    with pytest.warns(UserWarning, match="Some of the queries don't have available gts."):
         RetrievalResults(
             distances=[torch.arange(3).float(), torch.arange(3).float()],
             retrieved_ids=[LongTensor([1, 0, 2]), LongTensor([4, 0, 1])],
