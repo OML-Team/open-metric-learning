@@ -18,6 +18,7 @@ def calc_hash(source: Union[Path, str, bytes]) -> str:
         descriptor = BytesIO(source)  # type: ignore
     else:
         raise TypeError("Not supported type")
+    descriptor.seek(0)
     hash_md5 = hashlib.md5()
     for chunk in iter(lambda: descriptor.read(4096), b""):
         hash_md5.update(chunk)

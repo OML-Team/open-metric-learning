@@ -50,12 +50,12 @@ def fn_ddp_wrapper(
 
 def run_in_ddp(world_size: int, fn: Callable, args: Tuple[Any, ...] = ()) -> Any:  # type: ignore
     assert_signature(fn)
-    if world_size == 0:
-        set_global_seed(1)
-        return fn(0, world_size, *args)
-    else:
+    if world_size > 1:
         connection_file = generate_connection_filename(world_size, fn, *args)
         connection_file.unlink(missing_ok=True)
         connection_file.parent.mkdir(exist_ok=True, parents=True)
         # note, 'spawn' automatically passes 'rank' to its first argument
         spawn(fn_ddp_wrapper, args=(connection_file, world_size, fn, *args), nprocs=world_size, join=True)
+    else:
+        set_global_seed(1)
+        return fn(0, world_size, *args)
