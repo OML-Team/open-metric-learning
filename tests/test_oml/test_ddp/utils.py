@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Callable, Tuple
 
+import torch
 from torch.distributed import init_process_group, destroy_process_group
 from torch.multiprocessing import spawn
 
@@ -42,6 +43,7 @@ def fn_ddp_wrapper(rank: int, connection_file: Path, world_size: int, fn: Callab
         timeout=timedelta(seconds=120),
     )
     set_global_seed(1)
+    torch.set_num_threads(1)
     res = fn(rank, world_size, *args)
     destroy_process_group()
     return res
