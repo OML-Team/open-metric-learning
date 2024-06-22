@@ -1,5 +1,5 @@
 import hashlib
-from io import FileIO, BytesIO
+from io import BytesIO, FileIO
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -15,7 +15,7 @@ def calc_hash(source: Union[Path, str, bytes]) -> str:
         source = Path(source).resolve()
         descriptor = FileIO(str(source), mode="rb")
     elif isinstance(source, bytes):
-        descriptor = BytesIO(source)
+        descriptor = BytesIO(source)  # type: ignore
     else:
         raise TypeError("Not supported type")
     hash_md5 = hashlib.md5()

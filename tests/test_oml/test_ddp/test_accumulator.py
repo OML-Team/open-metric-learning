@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import torch
 
-from oml.ddp.utils import get_rank_safe
 from oml.metrics.accumulation import Accumulator
 
 from .utils import run_in_ddp
