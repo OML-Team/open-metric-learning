@@ -6,23 +6,28 @@ accelerator: gpu  # cpu or gpu
 devices: 1  # number of devices to use or list of the exact devices, we will use DDP for gpu accelerator and devices > 1
 find_unused_parameters: False  # The parameter for DDPStrategy
 
-dataframe_name: df_with_bboxes.csv  # dataframe filename, see the documentation for the desired format
-dataset_root: data/CARS196/  # path to the dataset
+
+datasets:
+  name: oml_image_dataset
+  args:
+    dataframe_name: df_with_bboxes.csv  # dataframe filename, see the documentation for the desired format
+    dataset_root: data/CARS196/  # path to the dataset
+    cache_size: 0  # set the number of images you wish to cache in train & val datasets
+    transforms_train:  # transformations that will be applied in train dataset
+      name: augs_albu
+      args:
+        im_size: 224
+
+    transforms_val:  # transformations that will be applied in val dataset
+      name: norm_resize_albu
+      args:
+        im_size: 224
+
+
 logs_root: logs/CARS196/  # logs root folder
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}  # logs folder for the current experiment
 
 num_workers: 20  # number of workers to use in DataLoader
-cache_size: 0  # set the number of images you wish to cache in train & val datasets
-
-transforms_train:  # transformations that will be applied in train dataset
-  name: augs_albu
-  args:
-    im_size: 224
-
-transforms_val:  # transformations that will be applied in val dataset
-  name: norm_resize_albu
-  args:
-    im_size: 224
 
 sampler:  # batch sampler, in this case, effective batch size is 20 * 10 = 200
   name: balance

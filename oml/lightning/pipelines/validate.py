@@ -11,6 +11,7 @@ from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
+    convert_to_new_format_if_needed,
     parse_engine_params_from_config,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
@@ -30,16 +31,18 @@ def extractor_validation_pipeline(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]
 
     """
     cfg = dictconfig_to_dict(cfg)
+    cfg = convert_to_new_format_if_needed(cfg)
+
     trainer_engine_params = parse_engine_params_from_config(cfg)
     is_ddp = check_is_config_for_ddp(trainer_engine_params)
 
     pprint(cfg)
 
     _, valid_dataset = get_retrieval_images_datasets(
-        dataset_root=Path(cfg["dataset_root"]),
+        dataset_root=Path(cfg["datasets"]["args"]["dataset_root"]),
         transforms_train=None,
-        transforms_val=get_transforms_by_cfg(cfg["transforms_val"]),
-        dataframe_name=cfg["dataframe_name"],
+        transforms_val=get_transforms_by_cfg(cfg["datasets"]["args"]["transforms_val"]),
+        dataframe_name=cfg["datasets"]["args"]["dataframe_name"],
     )
     loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
 
