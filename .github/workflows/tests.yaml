@@ -50,6 +50,7 @@ jobs:
         python3 -m pip install -r ci/requirements_tests.txt
         python3 -m pip install -r ci/requirements_optional.txt
         python3 -m pip install -r ci/requirements_nlp.txt
+        python3 -m pip install -r ci/requirements_audio.txt
         python3 -m pip install -e .
     - name: Running all tests
       run: |
