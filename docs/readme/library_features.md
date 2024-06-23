@@ -88,7 +88,7 @@ rr_upd = postprocessor.process(rr, dataset)
 
 </td>
 <td style="text-align: left;">
-<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/python_examples.html"><b>Post-processing by NN</b></a> |
+<a href="https://open-metric-learning.readthedocs.io/en/latest/postprocessing/siamese_examples.html"><b>Post-processing by NN</b></a> |
 <a href="https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing"><b>Paper</b></a>
 
 ```python

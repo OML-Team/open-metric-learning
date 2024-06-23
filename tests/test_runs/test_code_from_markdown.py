@@ -25,6 +25,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     "fname,start_indicator,end_indicator",
     [
         ("extractor/retrieval_usage.md", "[comment]:usage-retrieval-start\n", "[comment]:usage-retrieval-end\n"),
+        ("extractor/retrieval_usage_streaming.md", "[comment]:usage-streaming-retrieval-start\n", "[comment]:usage-streaming-retrieval-end\n"),  # noqa
         ("extractor/train_2loaders_val.md", "[comment]:lightning-2loaders-start\n", "[comment]:lightning-2loaders-end\n"),  # noqa
         ("extractor/train_val_img_txt.md", "[comment]:train-val-img-start\n", "[comment]:train-val-img-end\n"),
         pytest.param("extractor/train_val_img_txt.md", "[comment]:train-val-txt-start\n", "[comment]:train-val-txt-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa

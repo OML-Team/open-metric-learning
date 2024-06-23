@@ -59,7 +59,7 @@ That is why mining is happening inside the forward pass, see
 Validation part consists of the following steps:
 1. Accumulating all the embeddings in [EmbeddingMetrics](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#embeddingmetrics).
 2. Calculating distances between queries and galleries.
-3. [Optional] Applying some specific retrieval postprocessing [techniques](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/postprocessing_home.html) like re-ranking.
+3. [Optional] Applying some specific retrieval postprocessing [techniques](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/home.html) like re-ranking.
 4. Calculating retrieval metrics like
    [CMC@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-cmc),
    [Precision@k](https://open-metric-learning.readthedocs.io/en/latest/contents/metrics.html#calc-precision),

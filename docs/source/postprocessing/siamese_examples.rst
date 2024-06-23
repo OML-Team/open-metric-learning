@@ -1,4 +1,4 @@
-Examples
+Python examples
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Also see: `Retrieval & post-processing <https://open-metric-learning.readthedocs.io/en/latest/contents/retrieval.html>`_.

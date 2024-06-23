@@ -24,6 +24,9 @@ class DummyRetrievalDataset(IQueryGalleryLabeledDataset):
         self.im_size = im_size
         self.extra_data = dict()
 
+        self._query_ids = torch.arange(len(self)).long()
+        self._gallery_ids = torch.arange(len(self)).long()
+
     def __getitem__(self, item: int) -> Dict[str, Any]:
         input_tensors = torch.rand((3, self.im_size, self.im_size))
         label = torch.tensor(self.labels[item]).long()
@@ -40,10 +43,10 @@ class DummyRetrievalDataset(IQueryGalleryLabeledDataset):
         return np.array(self.labels)
 
     def get_query_ids(self) -> LongTensor:
-        return torch.arange(len(self)).long()
+        return self._query_ids
 
     def get_gallery_ids(self) -> LongTensor:
-        return torch.arange(len(self)).long()
+        return self._gallery_ids
 
 
 class DummyCommonModule(pl.LightningModule):

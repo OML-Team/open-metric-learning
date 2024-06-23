@@ -189,11 +189,14 @@ class TextQueryGalleryLabeledDataset(TextLabeledDataset, IQueryGalleryLabeledDat
             index_key=index_key,
         )
 
+        self._query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
+        self._gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+
     def get_query_ids(self) -> LongTensor:
-        return BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
+        return self._query_ids
 
     def get_gallery_ids(self) -> LongTensor:
-        return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+        return self._gallery_ids
 
 
 class TextQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):

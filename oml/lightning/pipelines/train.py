@@ -32,7 +32,7 @@ def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader, ILabeledDa
         transforms_train=get_transforms_by_cfg(cfg["transforms_train"]),
         transforms_val=get_transforms_by_cfg(cfg["transforms_val"]),
         dataframe_name=cfg["dataframe_name"],
-        cache_size=cfg["cache_size"],
+        cache_size=cfg.get("cache_size", 0),
         verbose=cfg.get("show_dataset_warnings", True),
     )
 
