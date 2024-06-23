@@ -19,6 +19,7 @@ from oml.const import (
     DEFAULT_DURATION,
     DEFAULT_MELSPEC_PARAMS,
     DEFAULT_SAMPLE_RATE,
+    DEFAULT_USE_RANDOM_START,
     FRAME_OFFSET_COLUMN,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
@@ -51,11 +52,12 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         paths: List[Union[str, Path]],
         dataset_root: Optional[Union[str, Path]] = None,
         extra_data: Optional[Dict[str, Any]] = None,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
+        sr: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = DEFAULT_DURATION,
+        use_random_start: bool = DEFAULT_USE_RANDOM_START,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
     ):
         """
         Initializes the AudioDataset.
@@ -64,16 +66,13 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             paths: List of audio file paths.
             dataset_root: Base path for audio files, optional.
             extra_data: Extra data to include in dataset items.
-            sr: Sampling rate of audio files.
-            max_num_seconds: Duration to use from each audio file.
-            num_channels: Number of audio channels.
             input_tensors_key: Key under which audio tensors are stored.
             index_key : Key for indexing dataset items.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            use_random_start: Extract audio fragment randomly or use predefined frame offsets from `extra_data`.
+            num_channels: Number of audio channels.
         """
-        self.sr = sr
-        self.num_frames = int(max_num_seconds * sr)
-        self.num_channels = num_channels
-
         if extra_data is not None:
             assert all(
                 len(record) == len(paths) for record in extra_data.values()
@@ -82,12 +81,23 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         else:
             self.extra_data = {}
 
-        self.frame_offsets: Optional[List[int]] = self.extra_data.get(FRAME_OFFSET_COLUMN)
-
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
 
         self._paths = [Path(p) if dataset_root is None else Path(dataset_root) / p for p in paths]
+        assert all(
+            path.suffix in AUDIO_EXTENSIONS for path in self._paths
+        ), f"Input audios should have one of '{AUDIO_EXTENSIONS}' extensions."
+
+        self.sr = sr
+        self.num_frames = int(max_num_seconds * sr)
+        self.num_channels = num_channels
+        self.use_random_start = use_random_start
+        if not use_random_start:
+            assert (
+                FRAME_OFFSET_COLUMN in self.extra_data
+            ), f"If `use_random_start` is False, `extra_data` must contain '{FRAME_OFFSET_COLUMN}'."
+        self.frame_offsets: Optional[List[int]] = self.extra_data.get(FRAME_OFFSET_COLUMN)
 
     def _downmix_and_resample(self, audio: FloatTensor, sr: int) -> FloatTensor:
         """
@@ -139,16 +149,13 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             Processed audio tensor.
         """
         path = self._paths[item]
-        assert (
-            path.suffix in AUDIO_EXTENSIONS
-        ), f"Input audio has invalid extension '{path.suffix}'. It should be one of {AUDIO_EXTENSIONS}."
         audio, sr = torchaudio.load(path)
         frame_offset = None if self.frame_offsets is None else self.frame_offsets[item]
         audio = self._downmix_and_resample(audio, sr)
         audio = self._trim_or_pad(audio, frame_offset)
         return audio
 
-    def _get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
+    def get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
         """
         Generate a spectral representation (by default, log-scaled MelSpec) from an audio signal.
         Used primarily for visualization.
@@ -194,7 +201,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             Array representing the image of the plot.
         """
         audio = self.get_audio(item)
-        spec_repr = self._get_spectral_repr(audio).squeeze(0)
+        spec_repr = self.get_spectral_repr(audio).squeeze(0)
         return visualize_audio(spec_repr=spec_repr, color=color)
 
     def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
@@ -209,7 +216,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             HTML markup with spectral representation image and audio player.
         """
         audio = self.get_audio(item)
-        spec_repr = self._get_spectral_repr(audio)
+        spec_repr = self.get_spectral_repr(audio)
         return visualize_audio_with_player(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
 
 
@@ -224,12 +231,13 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         df: pd.DataFrame,
         dataset_root: Optional[Union[str, Path]] = None,
         extra_data: Optional[Dict[str, Any]] = None,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
+        sr: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = DEFAULT_DURATION,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
         assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
         self.labels_key = labels_key
@@ -250,11 +258,12 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
             paths=df[PATHS_COLUMN],
             dataset_root=dataset_root,
             extra_data=extra_data,
+            input_tensors_key=input_tensors_key,
+            index_key=index_key,
             sr=sr,
             max_num_seconds=max_num_seconds,
             num_channels=num_channels,
-            input_tensors_key=input_tensors_key,
-            index_key=index_key,
+            use_random_start=use_random_start,
         )
         self._labels = np.array(self.df[LABELS_COLUMN])
         self._label2category = (
@@ -288,12 +297,13 @@ class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledD
         df: pd.DataFrame,
         dataset_root: Optional[Union[str, Path]] = None,
         extra_data: Optional[Dict[str, Any]] = None,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
+        sr: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = DEFAULT_DURATION,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
         self.df = df
@@ -302,12 +312,13 @@ class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledD
             df=df,
             dataset_root=dataset_root,
             extra_data=extra_data,
-            sr=sr,
-            max_num_seconds=max_num_seconds,
-            num_channels=num_channels,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
             labels_key=labels_key,
+            sr=sr,
+            max_num_seconds=max_num_seconds,
+            num_channels=num_channels,
+            use_random_start=use_random_start,
         )
         self.query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
         self.gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
@@ -332,11 +343,12 @@ class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         df: pd.DataFrame,
         dataset_root: Optional[Union[str, Path]] = None,
         extra_data: Optional[Dict[str, Any]] = None,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        index_key: str = INDEX_KEY,
         sr: int = DEFAULT_SAMPLE_RATE,
         num_seconds: float = DEFAULT_DURATION,
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
-        input_tensors_key: str = INPUT_TENSORS_KEY,
-        index_key: str = INDEX_KEY,
+        use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
         df = deepcopy(df)
@@ -346,12 +358,13 @@ class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
             df=df,
             dataset_root=dataset_root,
             extra_data=extra_data,
-            sr=sr,
-            max_num_seconds=num_seconds,
-            num_channels=num_channels,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
             labels_key=LABELS_COLUMN,
+            sr=sr,
+            max_num_seconds=num_seconds,
+            num_channels=num_channels,
+            use_random_start=use_random_start,
         )
 
         self.extra_data = self.__dataset.extra_data
