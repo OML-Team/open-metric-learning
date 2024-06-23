@@ -1,4 +1,5 @@
 import hashlib
+from io import BytesIO, FileIO
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -9,11 +10,18 @@ import validators
 from oml.const import CKPT_SAVE_ROOT, REQUESTS_TIMEOUT
 
 
-def calc_file_hash(fname: Union[Path, str]) -> str:
+def calc_hash(source: Union[Path, str, bytes]) -> str:
+    if isinstance(source, (Path, str)):
+        source = Path(source).resolve()
+        descriptor = FileIO(str(source), mode="rb")
+    elif isinstance(source, bytes):
+        descriptor = BytesIO(source)  # type: ignore
+    else:
+        raise TypeError("Not supported type")
+    descriptor.seek(0)
     hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
+    for chunk in iter(lambda: descriptor.read(4096), b""):
+        hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
 
@@ -32,7 +40,7 @@ def calc_folder_hash(folder: Union[Path, str]) -> str:
     folder_hash.update(structure_hash)
 
     for file in files:
-        file_hash = calc_file_hash(folder / file).encode()
+        file_hash = calc_hash(folder / file).encode()
         folder_hash.update(file_hash)
     return folder_hash.hexdigest()
 
@@ -49,7 +57,7 @@ def check_exists_and_validate_md5(path: Union[str, Path], md5: Optional[str] = N
     if path.is_dir():
         existing_hash = calc_folder_hash(path)
     else:
-        existing_hash = calc_file_hash(path)
+        existing_hash = calc_hash(path)
 
     print(f"Existing hash: {existing_hash}, expected hash: {md5}")
 
@@ -112,7 +120,7 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     save_path = str(CKPT_SAVE_ROOT / fname)
 
     if Path(save_path).exists():
-        actual_hash = calc_file_hash(save_path)
+        actual_hash = calc_hash(save_path)
         if actual_hash.startswith(hash_md5):
             print("Checkpoint is already here.")
             return save_path
@@ -132,14 +140,14 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     else:  # we assume we work with file id (Google Drive)
         gdown.download(id=url_or_fid, output=save_path, quiet=False)
 
-    if not calc_file_hash(save_path).startswith(hash_md5):
+    if not calc_hash(save_path).startswith(hash_md5):
         raise Exception("Downloaded checkpoint is probably broken. " "Hash values don't match.")
 
     return str(save_path)
 
 
 __all__ = [
-    "calc_file_hash",
+    "calc_hash",
     "calc_folder_hash",
     "check_exists_and_validate_md5",
     "download_file_from_url",
