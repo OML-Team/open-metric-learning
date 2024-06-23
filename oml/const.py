@@ -112,7 +112,7 @@ MOCK_AUDIO_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1aYqXBNn
 MOCK_AUDIO_DATASET_MD5 = "87ba6367ac1231c6be4ccca5e8ace837"
 
 AUDIO_EXTENSIONS = [".mp3", ".wav", ".ogg", ".flac"]
-FRAME_OFFSET_COLUMN = "frame_offset"
+START_TIME_COLUMN = "start_time"
 DEFAULT_DURATION = 3.0
 DEFAULT_SAMPLE_RATE = 16_000
 DEFAULT_AUDIO_NUM_CHANNELS = 1

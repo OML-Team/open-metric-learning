@@ -3,7 +3,7 @@ import random
 import pandas as pd
 import pytest
 
-from oml.const import FRAME_OFFSET_COLUMN, PATHS_COLUMN
+from oml.const import PATHS_COLUMN, START_TIME_COLUMN
 from oml.datasets import AudioBaseDataset
 from oml.utils import get_mock_audios_dataset
 
@@ -33,17 +33,17 @@ def test_resample_trim_pad(df: pd.DataFrame, sr: int, max_num_seconds: float) ->
         ), f"Audio length {audio.shape[1]} does not match expected {int(max_num_seconds * sr)}"
 
 
-def test_frame_offsets(df: pd.DataFrame) -> None:
+def test_start_times(df: pd.DataFrame) -> None:
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=True)
     for _ in dataset:
         pass
     assert True, "Dataset iteration failed with random start"
 
-    with pytest.raises(Exception, match="If `use_random_start` is False, `extra_data` must contain 'frame_offset'"):
+    with pytest.raises(Exception, match="If `use_random_start` is False, `extra_data` must contain 'start_time'"):
         AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=False, extra_data={})
 
-    extra_data = {FRAME_OFFSET_COLUMN: [random.uniform(0, 1) for _ in range(len(df))]}
+    extra_data = {START_TIME_COLUMN: [random.uniform(0, 1) for _ in range(len(df))]}
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=True, extra_data=extra_data)
     for _ in dataset:
         pass
-    assert True, "Dataset iteration failed with frame offsets"
+    assert True, "Dataset iteration failed with start times"

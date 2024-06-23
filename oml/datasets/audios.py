@@ -20,7 +20,6 @@ from oml.const import (
     DEFAULT_MELSPEC_PARAMS,
     DEFAULT_SAMPLE_RATE,
     DEFAULT_USE_RANDOM_START,
-    FRAME_OFFSET_COLUMN,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
@@ -29,6 +28,7 @@ from oml.const import (
     LABELS_KEY,
     PATHS_COLUMN,
     SEQUENCE_COLUMN,
+    START_TIME_COLUMN,
     TColor,
 )
 from oml.interfaces.datasets import (
@@ -54,7 +54,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         sr: Sampling rate of audio files.
         max_num_seconds: Duration to use from each audio file.
         num_channels: Number of audio channels.
-        use_random_start: Extract audio fragment randomly or use predefined frame offsets from `extra_data`.
+        use_random_start: Extract audio fragment randomly or use predefined start times (in seconds) from `extra_data`.
     """
 
     def __init__(
@@ -94,9 +94,9 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         self.use_random_start = use_random_start
         if not use_random_start:
             assert (
-                FRAME_OFFSET_COLUMN in self.extra_data
-            ), f"If `use_random_start` is False, `extra_data` must contain '{FRAME_OFFSET_COLUMN}'."
-        self.frame_offsets: Optional[List[int]] = self.extra_data.get(FRAME_OFFSET_COLUMN)
+                START_TIME_COLUMN in self.extra_data
+            ), f"If `use_random_start` is False, `extra_data` must contain '{START_TIME_COLUMN}'."
+        self.start_times: Optional[List[int]] = self.extra_data.get(START_TIME_COLUMN)
 
     def _downmix_and_resample(self, audio: FloatTensor, sr: int) -> FloatTensor:
         """
@@ -116,23 +116,22 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             audio = resampler(audio)
         return audio
 
-    def _trim_or_pad(self, audio: FloatTensor, frame_offset: int) -> FloatTensor:
+    def _trim_or_pad(self, audio: FloatTensor, start_time: int) -> FloatTensor:
         """
         Trim or pad the audio to match the desired number of frames.
 
         Args:
             audio: Audio tensor.
-            frame_offset: Starting frame offset for trimming.
+            start_time: Starting time for trimming.
 
         Returns:
             Trimmed or padded audio tensor.
         """
         audio_length = audio.shape[1]
         if audio_length > self.num_frames:
-            if frame_offset is None:
-                frame_offset = random.randrange(0, audio_length - self.num_frames)
-            else:
-                frame_offset = int(frame_offset * self.sr)
+            frame_offset = (
+                random.randrange(0, audio_length - self.num_frames) if start_time is None else int(start_time * self.sr)
+            )
             audio = audio[:, frame_offset : frame_offset + self.num_frames]
         else:
             padding = (self.num_frames - audio_length, 0)
@@ -151,9 +150,9 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         """
         path = self._paths[item]
         audio, sr = torchaudio.load(path)
-        frame_offset = None if self.frame_offsets is None else self.frame_offsets[item]
+        start_time = None if self.start_times is None else self.start_times[item]
         audio = self._downmix_and_resample(audio, sr)
-        audio = self._trim_or_pad(audio, frame_offset)
+        audio = self._trim_or_pad(audio, start_time)
         return audio
 
     def get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
@@ -252,8 +251,8 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         if SEQUENCE_COLUMN in df.columns:
             extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
 
-        if FRAME_OFFSET_COLUMN in df.columns:
-            extra_data[FRAME_OFFSET_COLUMN] = df[FRAME_OFFSET_COLUMN].copy()
+        if START_TIME_COLUMN in df.columns:
+            extra_data[START_TIME_COLUMN] = df[START_TIME_COLUMN].copy()
 
         super().__init__(
             paths=df[PATHS_COLUMN],
