@@ -45,6 +45,16 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     """
     The base class that handles audio specific logic.
 
+    Args:
+        paths: List of audio file paths.
+        dataset_root: Base path for audio files, optional.
+        extra_data: Extra data to include in dataset items.
+        input_tensors_key: Key under which audio tensors are stored.
+        index_key : Key for indexing dataset items.
+        sr: Sampling rate of audio files.
+        max_num_seconds: Duration to use from each audio file.
+        num_channels: Number of audio channels.
+        use_random_start: Extract audio fragment randomly or use predefined frame offsets from `extra_data`.
     """
 
     def __init__(
@@ -56,22 +66,11 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         index_key: str = INDEX_KEY,
         sr: int = DEFAULT_SAMPLE_RATE,
         max_num_seconds: float = DEFAULT_DURATION,
-        use_random_start: bool = DEFAULT_USE_RANDOM_START,
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
         """
         Initializes the AudioDataset.
-
-        Args:
-            paths: List of audio file paths.
-            dataset_root: Base path for audio files, optional.
-            extra_data: Extra data to include in dataset items.
-            input_tensors_key: Key under which audio tensors are stored.
-            index_key : Key for indexing dataset items.
-            sr: Sampling rate of audio files.
-            max_num_seconds: Duration to use from each audio file.
-            use_random_start: Extract audio fragment randomly or use predefined frame offsets from `extra_data`.
-            num_channels: Number of audio channels.
         """
         if extra_data is not None:
             assert all(
@@ -132,6 +131,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         if audio_length > self.num_frames:
             if frame_offset is None:
                 frame_offset = random.randrange(0, audio_length - self.num_frames)
+            else:
+                frame_offset = int(frame_offset * self.sr)
             audio = audio[:, frame_offset : frame_offset + self.num_frames]
         else:
             padding = (self.num_frames - audio_length, 0)

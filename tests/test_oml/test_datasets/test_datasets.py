@@ -89,7 +89,7 @@ def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> N
         assert df[IS_GALLERY_COLUMN].iloc[int(ig)]
 
 
-def check_visaulization(dataset_v: IVisualizableDataset) -> None:
+def check_visualization(dataset_v: IVisualizableDataset) -> None:
     current_backend = matplotlib.get_backend()
     matplotlib.use("Agg")
     _ = dataset_v.visualize(item=0, color=BLACK)
@@ -112,19 +112,19 @@ def test_text_datasets() -> None:
     # Labeled
     dataset_l = TextLabeledDataset(df_train, tokenizer=tokenizer)
     check_base(dataset_l)
-    check_visaulization(dataset_l)
+    check_visualization(dataset_l)
     check_labeled(dataset_l, df_train)
 
     # Query Gallery
     dataset_qg = TextQueryGalleryDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qg)
-    check_visaulization(dataset_qg)
+    check_visualization(dataset_qg)
     check_query_gallery(dataset_qg, df_val)
 
     # Query Gallery Labeled
     dataset_qgl = TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qgl)
-    check_visaulization(dataset_qgl)
+    check_visualization(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)
 
