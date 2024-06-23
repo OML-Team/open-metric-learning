@@ -1,73 +1,94 @@
 import base64
 from io import BytesIO
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torchaudio
 from numpy.typing import NDArray
+from PIL import Image
 from torch import FloatTensor
 
 from oml.const import BLACK, TColor
 
 
-def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True) -> NDArray[np.uint8]:
+def _visualize_audio(
+    spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True, return_b64: bool = False
+) -> Union[NDArray[np.uint8], str]:
     """
-    Visualizes an audio spectrogram representation as an image with optional colored bounding box.
+    Internal function to visualize an audio spectrogram.
 
-    Parameters:
-        spec_repr (FloatTensor): The spectral representation data as a 2D torch tensor.
-        color (TColor): The color used for the bounding box.
-        draw_bbox (bool): A flag indicating whether to draw a bounding box around the image.
+    Args:
+        spec_repr: The spectrogram representation as a FloatTensor.
+        color: The color of the bounding box.
+        draw_bbox: Whether to draw a bounding box around the spectrogram.
+        return_b64: Whether to return the image as a base64 string.
 
     Returns:
-        NDArray: An RGB image as a numpy array shaped (height, width, 3).
+        If return_b64 is False, returns the image as a NumPy array.
+        If return_b64 is True, returns the image as a base64 string.
     """
-    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100, frameon=True, linewidth=100)
+    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
 
+    # actual image
     ax.imshow(spec_repr, aspect="auto", origin="lower")
+
+    # bbox and axes
     if draw_bbox:
         frame_thickness = 5
         for axis in ["top", "bottom", "left", "right"]:
             ax.spines[axis].set_linewidth(frame_thickness)
-            ax.spines[axis].set_edgecolor(color)
+            ax.spines[axis].set_edgecolor(
+                [c / 255 for c in color]
+            )  # TODO: change all colors from arrays to strings in vis functions
     ax.set_xticks([])
     ax.set_yticks([])
 
+    # drawing
     fig.canvas.draw()
-    width, height = fig.canvas.get_width_height()
-    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    image = image.reshape(height, width, 3)
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    img: Union[NDArray[np.uint8], str] = (
+        base64.b64encode(buf.getvalue()).decode("ascii") if return_b64 else np.array(Image.open(buf), dtype=np.uint8)
+    )
     plt.close(fig)
-    return image
+    return img
 
 
-def visualize_audio_html(audio: FloatTensor, spec_repr: FloatTensor, sr: int, color: str = "black") -> str:
+def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True) -> NDArray[np.uint8]:
     """
-    Generates an HTML representation including an image of a spectral representation and an audio player.
+    Visualize an audio spectral representation and return it as a NumPy array.
 
-    Parameters:
-        audio (FloatTensor): The raw audio data as a 1D torch tensor.
-        spec_repr (FloatTensor): The spectral representation data as a 2D torch tensor.
-        sr (int): The sample rate of the audio data.
-        color (str): The color used for the HTML border around the spectral representation and audio player.
+    Args:
+        spec_repr: The spectral representation as a FloatTensor.
+        color: The color of the bounding box.
+        draw_bbox: Whether to draw a bounding box around the spectral representation.
 
     Returns:
-        str: A string containing HTML that embeds both the image and the audio player.
+        The spectral representation image as a NumPy array.
     """
-    # generate base64 image
-    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
-    fig.canvas.draw()
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    ax.imshow(spec_repr, aspect="auto", origin="lower")
-    ax.set_axis_off()
+    return _visualize_audio(spec_repr, color, draw_bbox, return_b64=False)  # type: ignore
 
-    buf = BytesIO()
-    plt.savefig(buf)
-    buf.seek(0)
-    image_base64 = base64.b64encode(buf.getvalue()).decode("ascii")
-    plt.close(fig)
 
-    # generate base64 audio
+def visualize_audio_with_player(
+    audio: FloatTensor, spec_repr: FloatTensor, sr: int, color: TColor = BLACK, draw_bbox: bool = True
+) -> str:
+    """
+    Visualize an audio spectral representation and provide an HTML string with an audio player.
+
+    Args:
+        audio: The audio waveform as a FloatTensor.
+        spec_repr: The spectral representation as a FloatTensor.
+        sr: The sampling rate of the audio.
+        color: The color of the bounding box.
+        draw_bbox: Whether to draw a bounding box around the spectral representation.
+
+    Returns:
+        An HTML string that contains the spectral representation image and an audio player.
+    """
+    image_base64 = _visualize_audio(spec_repr, color, draw_bbox, return_b64=True)  # type: ignore
+
     buf = BytesIO()
     torchaudio.save(buf, audio, sample_rate=sr, format="wav")
     buf.seek(0)

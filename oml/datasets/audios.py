@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -7,19 +8,19 @@ import pandas as pd
 import torch
 import torchaudio
 from numpy.typing import NDArray
-from torch import BoolTensor, FloatTensor, LongTensor
+from torch import BoolTensor, FloatTensor
 from torchaudio.transforms import MelSpectrogram, Resample
 
 from oml.const import (
     AUDIO_EXTENSIONS,
     BLACK,
     CATEGORIES_COLUMN,
+    DEFAULT_AUDIO_NUM_CHANNELS,
     DEFAULT_DURATION,
     DEFAULT_MELSPEC_PARAMS,
-    DEFAULT_NUM_CHANNELS,
     DEFAULT_SAMPLE_RATE,
+    FRAME_OFFSET_COLUMN,
     INDEX_KEY,
-    INPUT_FRAME_OFFSET_KEY,
     INPUT_TENSORS_KEY,
     IS_GALLERY_COLUMN,
     IS_QUERY_COLUMN,
@@ -33,9 +34,10 @@ from oml.interfaces.datasets import (
     IBaseDataset,
     ILabeledDataset,
     IQueryGalleryDataset,
+    IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
-from oml.utils.audios import visualize_audio, visualize_audio_html
+from oml.utils.audios import visualize_audio, visualize_audio_with_player
 
 
 class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
@@ -50,28 +52,26 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         dataset_root: Optional[Union[str, Path]] = None,
         extra_data: Optional[Dict[str, Any]] = None,
         sr: int = DEFAULT_SAMPLE_RATE,
-        num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_NUM_CHANNELS,
+        max_num_seconds: float = DEFAULT_DURATION,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         input_tensors_key: str = INPUT_TENSORS_KEY,
-        input_frame_offset_key: str = INPUT_FRAME_OFFSET_KEY,
         index_key: str = INDEX_KEY,
     ):
         """
         Initializes the AudioDataset.
 
         Args:
-            paths (List[Union[str, Path]]): List of audio file paths.
-            dataset_root (Optional[Union[str, Path]]): Base path for audio files, optional.
-            extra_data (Optional[Dict[str, Any]]): Extra data to include in dataset items.
-            sr (int): Sampling rate of audio files.
-            num_seconds (float): Duration to use from each audio file.
-            num_channels (int): Number of audio channels.
-            input_tensors_key (str): Key under which audio tensors are stored.
-            input_frame_offset_key (str): Key under which audio offsets are stored
-            index_key (str): Key for indexing dataset items.
+            paths: List of audio file paths.
+            dataset_root: Base path for audio files, optional.
+            extra_data: Extra data to include in dataset items.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            num_channels: Number of audio channels.
+            input_tensors_key: Key under which audio tensors are stored.
+            index_key : Key for indexing dataset items.
         """
         self.sr = sr
-        self.num_frames = int(num_seconds * sr)
+        self.num_frames = int(max_num_seconds * sr)
         self.num_channels = num_channels
 
         if extra_data is not None:
@@ -82,7 +82,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         else:
             self.extra_data = {}
 
-        self.frame_offsets: List[int] = self.extra_data.get(input_frame_offset_key)
+        self.frame_offsets: Optional[List[int]] = self.extra_data.get(FRAME_OFFSET_COLUMN)
 
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
@@ -94,11 +94,11 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Downmix audio to mono and resample it to the dataset's sampling rate.
 
         Args:
-            audio (FloatTensor): Input audio tensor.
-            sr (int): Original sampling rate of the audio.
+            audio: Input audio tensor.
+            sr: Original sampling rate of the audio.
 
         Returns:
-            FloatTensor: Processed audio tensor.
+            Processed audio tensor.
         """
         if audio.shape[0] != self.num_channels:
             audio = audio.mean(dim=1, keepdim=True)
@@ -112,11 +112,11 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Trim or pad the audio to match the desired number of frames.
 
         Args:
-            audio (FloatTensor): Audio tensor.
-            frame_offset (int): Starting frame offset for trimming.
+            audio: Audio tensor.
+            frame_offset: Starting frame offset for trimming.
 
         Returns:
-            FloatTensor: Trimmed or padded audio tensor.
+            Trimmed or padded audio tensor.
         """
         audio_length = audio.shape[1]
         if audio_length > self.num_frames:
@@ -133,10 +133,10 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Load and process an audio file.
 
         Args:
-            item (int): Dataset item index.
+            item: Dataset item index.
 
         Returns:
-            FloatTensor: Processed audio tensor.
+            Processed audio tensor.
         """
         path = self._paths[item]
         assert (
@@ -148,21 +148,21 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         audio = self._trim_or_pad(audio, frame_offset)
         return audio
 
-    def get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
+    def _get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
         """
         Generate a spectral representation (by default, log-scaled MelSpec) from an audio signal.
         Used primarily for visualization.
 
         Parameters:
-            audio (FloatTensor): The input audio tensor.
-            params (Dict[str, Any]): Parameters for spectral representation computation.
+            audio: The input audio tensor.
+            params: Parameters for spectral representation computation.
 
         Returns:
-            FloatTensor: The spectral representation of the input audio tensor.
+            The spectral representation of the input audio tensor.
         """
         melspectrogram = MelSpectrogram(sample_rate=self.sr, **params)
         melspec = melspectrogram(audio)
-        log_melspec = torch.log1p(melspec)
+        log_melspec = torch.log1p(melspec).squeeze(0)
         return log_melspec
 
     def __getitem__(self, item: int) -> Dict[str, Union[FloatTensor, int]]:
@@ -187,30 +187,30 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Visualize an audio file.
 
         Args:
-            item (int): Dataset item index.
-            color (str): Color of the plot.
+            item: Dataset item index.
+            color: Color of the plot.
 
         Returns:
-            NDArray: Array representing the image of the plot.
+            Array representing the image of the plot.
         """
         audio = self.get_audio(item)
-        spec_repr = self.get_spectral_repr(audio).squeeze(0)
+        spec_repr = self._get_spectral_repr(audio).squeeze(0)
         return visualize_audio(spec_repr=spec_repr, color=color)
 
-    def visualize_html(self, item: int, color: str = "black") -> str:
+    def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
         """
         Visualize an audio file in HTML markup.
 
         Args:
-            item (int): Dataset item index.
-            color (str): Color of the plot.
+            item: Dataset item index.
+            color: Color of the plot.
 
         Returns:
-            str: HTML markup with spectral representation image and audio player.
+            HTML markup with spectral representation image and audio player.
         """
         audio = self.get_audio(item)
-        spec_repr = self.get_spectral_repr(audio).squeeze(0)
-        return visualize_audio_html(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
+        spec_repr = self._get_spectral_repr(audio)
+        return visualize_audio_with_player(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
 
 
 class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
@@ -225,10 +225,9 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         dataset_root: Optional[Union[str, Path]] = None,
         extra_data: Optional[Dict[str, Any]] = None,
         sr: int = DEFAULT_SAMPLE_RATE,
-        num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_NUM_CHANNELS,
+        max_num_seconds: float = DEFAULT_DURATION,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         input_tensors_key: str = INPUT_TENSORS_KEY,
-        input_frame_offset_key: str = INPUT_FRAME_OFFSET_KEY,
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
     ):
@@ -244,16 +243,24 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         if SEQUENCE_COLUMN in df.columns:
             extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
 
+        if FRAME_OFFSET_COLUMN in df.columns:
+            extra_data[FRAME_OFFSET_COLUMN] = df[FRAME_OFFSET_COLUMN].copy()
+
         super().__init__(
             paths=df[PATHS_COLUMN],
             dataset_root=dataset_root,
             extra_data=extra_data,
             sr=sr,
-            num_seconds=num_seconds,
+            max_num_seconds=max_num_seconds,
             num_channels=num_channels,
             input_tensors_key=input_tensors_key,
-            input_frame_offset_key=input_frame_offset_key,
             index_key=index_key,
+        )
+        self._labels = np.array(self.df[LABELS_COLUMN])
+        self._label2category = (
+            dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
+            if CATEGORIES_COLUMN in self.df.columns
+            else None
         )
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
@@ -262,18 +269,57 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         return data
 
     def get_labels(self) -> NDArray[np.int64]:
-        return np.array(self.df[LABELS_COLUMN])
+        return self._labels
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
-        if CATEGORIES_COLUMN in self.df.columns:
-            label2category = dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
-        else:
-            label2category = None
-
-        return label2category
+        return self._label2category
 
 
-class AudioQueryGalleryDataset(AudioBaseDataset, IQueryGalleryDataset):
+class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledDataset):
+    """
+    The **annotated** dataset of audios having `query`/`gallery` split.
+    To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
+    (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
+
+    """
+
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        dataset_root: Optional[Union[str, Path]] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
+        sr: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = DEFAULT_DURATION,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        index_key: str = INDEX_KEY,
+        labels_key: str = LABELS_KEY,
+    ):
+        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
+        self.df = df
+
+        super().__init__(
+            df=df,
+            dataset_root=dataset_root,
+            extra_data=extra_data,
+            sr=sr,
+            max_num_seconds=max_num_seconds,
+            num_channels=num_channels,
+            input_tensors_key=input_tensors_key,
+            index_key=index_key,
+            labels_key=labels_key,
+        )
+        self.query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
+        self.gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+
+    def get_query_ids(self) -> BoolTensor:
+        return self.query_ids
+
+    def get_gallery_ids(self) -> BoolTensor:
+        return self.gallery_ids
+
+
+class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     """
     The **non-annotated** dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
@@ -288,66 +334,54 @@ class AudioQueryGalleryDataset(AudioBaseDataset, IQueryGalleryDataset):
         extra_data: Optional[Dict[str, Any]] = None,
         sr: int = DEFAULT_SAMPLE_RATE,
         num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_NUM_CHANNELS,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         input_tensors_key: str = INPUT_TENSORS_KEY,
-        input_frame_offset_key: str = INPUT_FRAME_OFFSET_KEY,
         index_key: str = INDEX_KEY,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
-        self.df = df
+        df = deepcopy(df)
+        df[LABELS_COLUMN] = "fake_label"
 
-        super().__init__(
-            paths=df[PATHS_COLUMN],
-            dataset_root=dataset_root,
-            extra_data=extra_data,
-            sr=sr,
-            num_seconds=num_seconds,
-            num_channels=num_channels,
-            input_tensors_key=input_tensors_key,
-            input_frame_offset_key=input_frame_offset_key,
-            index_key=index_key,
-        )
-
-    def get_query_ids(self) -> LongTensor:
-        return BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
-
-    def get_gallery_ids(self) -> LongTensor:
-        return BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
-
-
-class AudioQueryGalleryLabeledDataset(AudioQueryGalleryDataset, AudioLabeledDataset):
-    """
-    The **annotated** dataset of audios having `query`/`gallery` split.
-    To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
-    (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
-
-    """
-
-    def __init__(
-        self,
-        df: pd.DataFrame,
-        dataset_root: Optional[Union[str, Path]] = None,
-        extra_data: Optional[Dict[str, Any]] = None,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_NUM_CHANNELS,
-        input_tensors_key: str = INPUT_TENSORS_KEY,
-        input_frame_offset_key: str = INPUT_FRAME_OFFSET_KEY,
-        index_key: str = INDEX_KEY,
-        labels_key: str = LABELS_KEY,
-    ):
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
-
-        AudioLabeledDataset.__init__(
-            self,
+        self.__dataset = AudioQueryGalleryLabeledDataset(
             df=df,
             dataset_root=dataset_root,
             extra_data=extra_data,
             sr=sr,
-            num_seconds=num_seconds,
+            max_num_seconds=num_seconds,
             num_channels=num_channels,
             input_tensors_key=input_tensors_key,
-            input_frame_offset_key=input_frame_offset_key,
             index_key=index_key,
-            labels_key=labels_key,
+            labels_key=LABELS_COLUMN,
         )
+
+        self.extra_data = self.__dataset.extra_data
+        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.index_key = self.__dataset.index_key
+
+    def __getitem__(self, item: int) -> Dict[str, Any]:
+        batch = self.__dataset[item]
+        del batch[self.__dataset.labels_key]
+        return batch
+
+    def __len__(self) -> int:
+        return len(self.__dataset)
+
+    def get_query_ids(self) -> BoolTensor:
+        return self.__dataset.query_ids
+
+    def get_gallery_ids(self) -> BoolTensor:
+        return self.__dataset.gallery_ids
+
+    def visualize(self, item: int, color: TColor = BLACK) -> NDArray[np.uint8]:
+        return self.__dataset.visualize(item=item, color=color)
+
+    def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
+        return self.__dataset.visualize_with_player(item, color)
+
+
+__all__ = [
+    "AudioBaseDataset",
+    "AudioLabeledDataset",
+    "AudioQueryGalleryDataset",
+    "AudioQueryGalleryLabeledDataset",
+]

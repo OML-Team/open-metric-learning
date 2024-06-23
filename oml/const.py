@@ -40,6 +40,7 @@ STORAGE_URL = "https://oml.daloroserver.com"
 STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
+MOCK_DATASET_CSV_NAME = "df.csv"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
 MOCK_DATASET_MD5 = "a23478efd4746d18f937fa6c5758c0ed"
 
@@ -109,11 +110,10 @@ HYDRA_BEHAVIOUR = "1.1"
 MOCK_AUDIO_DATASET_PATH = CACHE_PATH / "mock_audio_dataset"
 MOCK_AUDIO_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1aYqXBNnERFRIzxr_6cBVO_v_qz2dU7ta"
 MOCK_AUDIO_DATASET_MD5 = "87ba6367ac1231c6be4ccca5e8ace837"
-MOCK_AUDIO_DATASET_CSV_NAME = "df.csv"
 
 AUDIO_EXTENSIONS = [".mp3", ".wav", ".ogg", ".flac"]
-INPUT_FRAME_OFFSET_KEY = "frame_offset"
+FRAME_OFFSET_COLUMN = "frame_offset"
 DEFAULT_DURATION = 3.0
 DEFAULT_SAMPLE_RATE = 16_000
-DEFAULT_NUM_CHANNELS = 1
+DEFAULT_AUDIO_NUM_CHANNELS = 1
 DEFAULT_MELSPEC_PARAMS = {"n_fft": 2048, "hop_length": 512, "n_mels": 128}
