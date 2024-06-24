@@ -102,7 +102,7 @@ INPUT_TENSORS_KEY_2 = "input_tensors_2"
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]
 
-# hydra provides ability to set its behaviour for convinient backwards compatibility
+# hydra provides ability to set its behaviour for convenient backwards compatibility
 # no matter what the current version is
 HYDRA_BEHAVIOUR = "1.1"
 
