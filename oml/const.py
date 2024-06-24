@@ -40,7 +40,7 @@ STORAGE_URL = "https://oml.daloroserver.com"
 STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
-MOCK_DATASET_CSV_NAME = "df.csv"
+MOCK_DATASET_DEFAULT_CSV = "df.csv"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
 MOCK_DATASET_MD5 = "a23478efd4746d18f937fa6c5758c0ed"
 

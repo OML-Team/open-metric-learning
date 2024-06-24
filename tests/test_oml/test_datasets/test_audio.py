@@ -14,6 +14,7 @@ def df() -> pd.DataFrame:
     return pd.concat([df_train, df_val])
 
 
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("num_channels", [1, 2])
 def test_downmix(df: pd.DataFrame, num_channels: int) -> None:
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), num_channels=num_channels)
@@ -22,6 +23,7 @@ def test_downmix(df: pd.DataFrame, num_channels: int) -> None:
         assert audio.shape[0] <= num_channels, f"Audio channels {audio.shape[0]} exceed specified {num_channels}"
 
 
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("sr", [8000, 16000, 22050, 44100, 48000])
 @pytest.mark.parametrize("max_num_seconds", [0.01, 0.5, 1.0, 3.0, 10.0, 100.0])
 def test_resample_trim_pad(df: pd.DataFrame, sr: int, max_num_seconds: float) -> None:
@@ -33,14 +35,17 @@ def test_resample_trim_pad(df: pd.DataFrame, sr: int, max_num_seconds: float) ->
         ), f"Audio length {audio.shape[1]} does not match expected {int(max_num_seconds * sr)}"
 
 
+@pytest.mark.needs_optional_dependency
 def test_start_times(df: pd.DataFrame) -> None:
+    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=False)
+    for _ in dataset:
+        pass
+    assert True, "Dataset iteration failed without random start"
+
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=True)
     for _ in dataset:
         pass
     assert True, "Dataset iteration failed with random start"
-
-    with pytest.raises(Exception, match="If `use_random_start` is False, `extra_data` must contain 'start_time'"):
-        AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=False, extra_data={})
 
     extra_data = {START_TIME_COLUMN: [random.uniform(0, 1) for _ in range(len(df))]}
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=True, extra_data=extra_data)

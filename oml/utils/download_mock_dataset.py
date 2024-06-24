@@ -12,7 +12,7 @@ from oml.const import (
     MOCK_AUDIO_DATASET_MD5,
     MOCK_AUDIO_DATASET_PATH,
     MOCK_AUDIO_DATASET_URL_GDRIVE,
-    MOCK_DATASET_CSV_NAME,
+    MOCK_DATASET_DEFAULT_CSV,
     MOCK_DATASET_MD5,
     MOCK_DATASET_PATH,
     MOCK_DATASET_URL_GDRIVE,
@@ -86,7 +86,7 @@ def _get_mock_dataset(
 
 def get_mock_images_dataset(
     dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
-    df_name: str = MOCK_DATASET_CSV_NAME,
+    df_name: str = MOCK_DATASET_DEFAULT_CSV,
     check_md5: bool = True,
     global_paths: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -130,7 +130,7 @@ def download_mock_dataset(
 
 def get_mock_audios_dataset(
     dataset_root: Union[str, Path] = MOCK_AUDIO_DATASET_PATH,
-    df_name: str = MOCK_DATASET_CSV_NAME,
+    df_name: str = MOCK_DATASET_DEFAULT_CSV,
     check_md5: bool = True,
     global_paths: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:

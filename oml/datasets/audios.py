@@ -44,17 +44,6 @@ from oml.utils.audios import visualize_audio, visualize_audio_with_player
 class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     """
     The base class that handles audio specific logic.
-
-    Args:
-        paths: List of audio file paths.
-        dataset_root: Base path for audio files, optional.
-        extra_data: Extra data to include in dataset items.
-        input_tensors_key: Key under which audio tensors are stored.
-        index_key : Key for indexing dataset items.
-        sr: Sampling rate of audio files.
-        max_num_seconds: Duration to use from each audio file.
-        num_channels: Number of audio channels.
-        use_random_start: Extract audio fragment randomly or use predefined start times (in seconds) from `extra_data`.
     """
 
     def __init__(
@@ -71,6 +60,18 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     ):
         """
         Initializes the AudioDataset.
+
+        Args:
+            paths: List of audio file paths.
+            dataset_root: Base path for audio files.
+            extra_data: Extra data to include in dataset items.
+            input_tensors_key: Key under which audio tensors are stored.
+            index_key: Key for indexing dataset items.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            num_channels: Number of audio channels.
+            use_random_start: Extract audio fragment randomly or from its beginning.
+                            if `start_time` is specified in `extra_data`, then it will be used instead.
         """
         if extra_data is not None:
             assert all(
@@ -92,10 +93,6 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         self.num_frames = int(max_num_seconds * sr)
         self.num_channels = num_channels
         self.use_random_start = use_random_start
-        if not use_random_start:
-            assert (
-                START_TIME_COLUMN in self.extra_data
-            ), f"If `use_random_start` is False, `extra_data` must contain '{START_TIME_COLUMN}'."
         self.start_times: Optional[List[int]] = self.extra_data.get(START_TIME_COLUMN)
 
     def _downmix_and_resample(self, audio: FloatTensor, sr: int) -> FloatTensor:
@@ -119,6 +116,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     def _trim_or_pad(self, audio: FloatTensor, start_time: int) -> FloatTensor:
         """
         Trim or pad the audio to match the desired number of frames.
+        if `start_time` is specified, then it will be used, else if
 
         Args:
             audio: Audio tensor.
@@ -129,9 +127,10 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         """
         audio_length = audio.shape[1]
         if audio_length > self.num_frames:
-            frame_offset = (
-                random.randrange(0, audio_length - self.num_frames) if start_time is None else int(start_time * self.sr)
-            )
+            if start_time is not None:
+                frame_offset = int(start_time * self.sr)
+            else:
+                frame_offset = random.randrange(0, audio_length - self.num_frames) if self.use_random_start else 0
             audio = audio[:, frame_offset : frame_offset + self.num_frames]
         else:
             padding = (self.num_frames - audio_length, 0)
@@ -160,7 +159,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Generate a spectral representation (by default, log-scaled MelSpec) from an audio signal.
         Used primarily for visualization.
 
-        Parameters:
+        Args:
             audio: The input audio tensor.
             params: Parameters for spectral representation computation.
 
@@ -239,6 +238,22 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
+        """
+        Initializes the AudioLabeledDataset.
+
+        Args:
+            df: DataFrame with input data.
+            dataset_root: Base path for audio files.
+            extra_data: Extra data to include in dataset items.
+            input_tensors_key: Key under which audio tensors are stored.
+            index_key: Key for indexing dataset items.
+            labels_key: Key under which labels are stored.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            num_channels: Number of audio channels.
+            use_random_start: Extract audio fragment randomly or from its beginning.
+                            if `start_time` is specified in `extra_data`, then it will be used instead.
+        """
         assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
         self.labels_key = labels_key
         self.df = df
@@ -250,9 +265,6 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
 
         if SEQUENCE_COLUMN in df.columns:
             extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
-
-        if START_TIME_COLUMN in df.columns:
-            extra_data[START_TIME_COLUMN] = df[START_TIME_COLUMN].copy()
 
         super().__init__(
             paths=df[PATHS_COLUMN],
@@ -305,6 +317,22 @@ class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledD
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
+        """
+        Initializes the AudioQueryGalleryLabeledDataset.
+
+        Args:
+            df: DataFrame with input data.
+            dataset_root: Base path for audio files.
+            extra_data: Extra data to include in dataset items.
+            input_tensors_key: Key under which audio tensors are stored.
+            index_key: Key for indexing dataset items.
+            labels_key: Key under which labels are stored.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            num_channels: Number of audio channels.
+            use_random_start: Extract audio fragment randomly or from its beginning.
+                            if `start_time` is specified in `extra_data`, then it will be used instead.
+        """
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
         self.df = df
 
@@ -346,10 +374,25 @@ class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         sr: int = DEFAULT_SAMPLE_RATE,
-        num_seconds: float = DEFAULT_DURATION,
+        max_num_seconds: float = DEFAULT_DURATION,
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
         use_random_start: bool = DEFAULT_USE_RANDOM_START,
     ):
+        """
+        Initializes the AudioQueryGalleryDataset.
+
+        Args:
+            df: DataFrame with input data.
+            dataset_root: Base path for audio files.
+            extra_data: Extra data to include in dataset items.
+            input_tensors_key: Key under which audio tensors are stored.
+            index_key: Key for indexing dataset items.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            num_channels: Number of audio channels.
+            use_random_start: Extract audio fragment randomly or from its beginning.
+                            if `start_time` is specified in `extra_data`, then it will be used instead.
+        """
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
         df = deepcopy(df)
         df[LABELS_COLUMN] = "fake_label"
@@ -362,7 +405,7 @@ class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
             index_key=index_key,
             labels_key=LABELS_COLUMN,
             sr=sr,
-            max_num_seconds=num_seconds,
+            max_num_seconds=max_num_seconds,
             num_channels=num_channels,
             use_random_start=use_random_start,
         )

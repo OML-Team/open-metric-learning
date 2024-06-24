@@ -1,5 +1,6 @@
 import matplotlib
 import pandas as pd
+import pytest
 import torch
 from torch import LongTensor
 
@@ -154,6 +155,7 @@ def test_image_datasets() -> None:
     check_labeled(dataset_qgl, df_val)
 
 
+@pytest.mark.needs_optional_dependency
 def test_audio_datasets() -> None:
     df_train, df_val = get_mock_audios_dataset(global_paths=True)
     df = pd.concat([df_train, df_val])
