@@ -1,4 +1,3 @@
-from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -7,19 +6,15 @@ import albumentations as albu
 import numpy as np
 import pandas as pd
 import torchvision
-from torch import BoolTensor, FloatTensor, LongTensor
+from torch import FloatTensor
 
 from oml.const import (
     BLACK,
-    CATEGORIES_COLUMN,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
-    IS_GALLERY_COLUMN,
-    IS_QUERY_COLUMN,
     LABELS_COLUMN,
     LABELS_KEY,
     PATHS_COLUMN,
-    SEQUENCE_COLUMN,
     SPLIT_COLUMN,
     X1_COLUMN,
     X2_COLUMN,
@@ -28,15 +23,14 @@ from oml.const import (
     TBBoxes,
     TColor,
 )
-from oml.datasets.base import (
-    LabeledDatasetDF,
-    QueryGalleryDatasetDF,
-    QueryGalleryLabeledDatasetDF,
+from oml.datasets.dataframe import (
+    DFLabeledDataset,
+    DFQueryGalleryDataset,
+    DFQueryGalleryLabeledDataset,
 )
 from oml.interfaces.datasets import (
     IBaseDataset,
     ILabeledDataset,
-    IQueryGalleryDataset,
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
@@ -174,11 +168,13 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         return image
 
 
-class ImageLabeledDataset(LabeledDatasetDF, IVisualizableDataset):
+class ImageLabeledDataset(DFLabeledDataset, IVisualizableDataset):
     """
     The dataset of images having their ground truth labels.
 
     """
+
+    _dataset: ImageBaseDataset
 
     def __init__(
         self,
@@ -193,8 +189,8 @@ class ImageLabeledDataset(LabeledDatasetDF, IVisualizableDataset):
         index_key: str = INDEX_KEY,
     ):
         dataset = ImageBaseDataset(
-            paths=self.df[PATHS_COLUMN].tolist(),
-            bboxes=parse_bboxes(self.df),
+            paths=df[PATHS_COLUMN].tolist(),
+            bboxes=parse_bboxes(df),
             extra_data=None,
             dataset_root=dataset_root,
             transform=transform,
@@ -206,10 +202,10 @@ class ImageLabeledDataset(LabeledDatasetDF, IVisualizableDataset):
         super().__init__(dataset=dataset, df=df, extra_data=extra_data, labels_key=labels_key)
 
     def visualize(self, item: int, color: TColor) -> np.ndarray:
-        return self.__dataset.visualize(item=item, color=color)
+        return self._dataset.visualize(item=item, color=color)
 
 
-class ImageQueryGalleryLabeledDataset(QueryGalleryLabeledDatasetDF, IVisualizableDataset):
+class ImageQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizableDataset):
     """
     The annotated dataset of images having `query`/`gallery` split.
 
@@ -223,6 +219,8 @@ class ImageQueryGalleryLabeledDataset(QueryGalleryLabeledDatasetDF, IVisualizabl
 
     """
 
+    _dataset: ImageBaseDataset
+
     def __init__(
         self,
         df: pd.DataFrame,
@@ -235,8 +233,8 @@ class ImageQueryGalleryLabeledDataset(QueryGalleryLabeledDatasetDF, IVisualizabl
         labels_key: str = LABELS_KEY,
     ):
         dataset = ImageBaseDataset(
-            paths=self.df[PATHS_COLUMN].tolist(),
-            bboxes=parse_bboxes(self.df),
+            paths=df[PATHS_COLUMN].tolist(),
+            bboxes=parse_bboxes(df),
             extra_data=None,
             dataset_root=dataset_root,
             transform=transform,
@@ -248,14 +246,16 @@ class ImageQueryGalleryLabeledDataset(QueryGalleryLabeledDatasetDF, IVisualizabl
         super().__init__(dataset=dataset, df=df, extra_data=extra_data, labels_key=labels_key)
 
     def visualize(self, item: int, color: TColor) -> np.ndarray:
-        return self.__dataset.visualize(item=item, color=color)
+        return self._dataset.visualize(item=item, color=color)
 
 
-class ImageQueryGalleryDataset(QueryGalleryDatasetDF, IVisualizableDataset):
+class ImageQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
     """
     The NOT annotated dataset of images having `query`/`gallery` split.
 
     """
+
+    _dataset: ImageBaseDataset
 
     def __init__(
         self,
@@ -268,8 +268,8 @@ class ImageQueryGalleryDataset(QueryGalleryDatasetDF, IVisualizableDataset):
         input_tensors_key: str = INPUT_TENSORS_KEY,
     ):
         dataset = ImageBaseDataset(
-            paths=self.df[PATHS_COLUMN].tolist(),
-            bboxes=parse_bboxes(self.df),
+            paths=df[PATHS_COLUMN].tolist(),
+            bboxes=parse_bboxes(df),
             extra_data=None,
             dataset_root=dataset_root,
             transform=transform,
@@ -280,7 +280,7 @@ class ImageQueryGalleryDataset(QueryGalleryDatasetDF, IVisualizableDataset):
         super().__init__(dataset=dataset, df=df, extra_data=extra_data)
 
     def visualize(self, item: int, color: TColor) -> np.ndarray:
-        return self.__dataset.visualize(item=item, color=color)
+        return self._dataset.visualize(item=item, color=color)
 
 
 def get_retrieval_images_datasets(

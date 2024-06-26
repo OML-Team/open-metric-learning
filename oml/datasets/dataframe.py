@@ -20,8 +20,8 @@ from oml.interfaces.datasets import (
 )
 
 
-def update_dataset_extra_data(dataset, df, extra_data):
-    extra_data = dict() or extra_data
+def update_extra_data(dataset: IBaseDataset, df: pd.DataFrame, extra_data: Dict[str, Any]) -> IBaseDataset:
+    extra_data = dict() if extra_data is None else extra_data
 
     if CATEGORIES_COLUMN in df.columns:
         extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].copy()
@@ -34,7 +34,7 @@ def update_dataset_extra_data(dataset, df, extra_data):
     return dataset
 
 
-def label_to_category(df: pd.DataFrame) -> Dict[Union[str, int], str]:
+def build_label2category(df: pd.DataFrame) -> Optional[Dict[int, Union[str, int]]]:
     if CATEGORIES_COLUMN in df.columns:
         label2category = dict(zip(df[LABELS_COLUMN], df[CATEGORIES_COLUMN]))
     else:
@@ -52,27 +52,31 @@ class DFLabeledDataset(ILabeledDataset):
         labels_key: str = LABELS_KEY,
     ):
         assert LABELS_COLUMN in df.columns
+        dataset = update_extra_data(dataset, df, extra_data)
 
-        self.__dataset = update_dataset_extra_data(dataset, df, extra_data)
+        self._dataset = dataset
+        self._labels = np.array(df[LABELS_COLUMN].copy())
+        self._label2category = build_label2category(df)
 
         self.df = df
+        self.extra_data = self._dataset.extra_data
         self.labels_key = labels_key
-        self.index_key = self.__dataset.index_key
-        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.index_key = self._dataset.index_key
+        self.input_tensors_key = self._dataset.input_tensors_key
 
     def __len__(self) -> int:
-        return len(self.__dataset)
+        return len(self._dataset)
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
-        data = self.__dataset[item]
-        data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
+        data = self._dataset[item]
+        data[self.labels_key] = self._labels[item]
         return data
 
     def get_labels(self) -> np.ndarray:
-        return np.array(self.df[LABELS_COLUMN])
+        return self._labels
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
-        return label_to_category(self.df)
+        return self._label2category
 
 
 class DFQueryGalleryDataset(IQueryGalleryDataset):
@@ -83,21 +87,22 @@ class DFQueryGalleryDataset(IQueryGalleryDataset):
         extra_data: Optional[Dict[str, Any]] = None,
     ):
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN))
+        dataset = update_extra_data(dataset, df, extra_data)
 
-        self.__dataset = update_dataset_extra_data(dataset, df, extra_data)
+        self._dataset = dataset
+        self._query_ids = BoolTensor(df[IS_QUERY_COLUMN]).nonzero().squeeze()
+        self._gallery_ids = BoolTensor(df[IS_GALLERY_COLUMN]).nonzero().squeeze()
 
         self.df = df
-        self._query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
-        self._gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
-
-        self.index_key = self.__dataset.index_key
-        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.extra_data = self._dataset.extra_data
+        self.index_key = self._dataset.index_key
+        self.input_tensors_key = self._dataset.input_tensors_key
 
     def __len__(self) -> int:
-        return len(self.__dataset)
+        return len(self._dataset)
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
-        return self.__dataset[item]
+        return self._dataset[item]
 
     def get_query_ids(self) -> LongTensor:
         return self._query_ids
@@ -114,24 +119,28 @@ class DFQueryGalleryLabeledDataset(IQueryGalleryLabeledDataset):
         extra_data: Optional[Dict[str, Any]] = None,
         labels_key: str = LABELS_KEY,
     ):
-
         assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN))
+        dataset = update_extra_data(dataset, df, extra_data)
 
-        self.__dataset = update_dataset_extra_data(dataset, df, extra_data)
+        self._dataset = dataset
+        self._query_ids = BoolTensor(df[IS_QUERY_COLUMN]).nonzero().squeeze()
+        self._gallery_ids = BoolTensor(df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+        self._labels = np.array(df[LABELS_COLUMN].copy())
+        self._label2category = build_label2category(df)
 
         self.df = df
-        self._query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
-        self._gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
-
-        self.index_key = self.__dataset.index_key
-        self.input_tensors_key = self.__dataset.input_tensors_key
+        self.extra_data = self._dataset.extra_data
+        self.index_key = self._dataset.index_key
+        self.input_tensors_key = self._dataset.input_tensors_key
         self.labels_key = labels_key
 
     def __len__(self) -> int:
-        return len(self.__dataset)
+        return len(self._dataset)
 
     def __getitem__(self, item: int) -> Dict[str, Any]:
-        return self.__dataset[item]
+        data = self._dataset[item]
+        data[self.labels_key] = self._labels[item]
+        return data
 
     def get_query_ids(self) -> LongTensor:
         return self._query_ids
@@ -140,10 +149,10 @@ class DFQueryGalleryLabeledDataset(IQueryGalleryLabeledDataset):
         return self._gallery_ids
 
     def get_labels(self) -> np.ndarray:
-        return np.array(self.df[LABELS_COLUMN])
+        return self._labels
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
-        return label_to_category(self.df)
+        return self._label2category
 
 
 __all__ = ["DFLabeledDataset", "DFQueryGalleryDataset", "DFQueryGalleryLabeledDataset"]
