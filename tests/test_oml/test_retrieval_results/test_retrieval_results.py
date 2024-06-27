@@ -94,30 +94,29 @@ def get_model_and_datasets_embeddings(with_gt_labels):  # type: ignore
     ],
 )
 def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
-    with matplotlib_backend("Agg"):
+    datasets, model = data_getter(with_gt_labels=with_gt_labels)
 
-        datasets, model = data_getter(with_gt_labels=with_gt_labels)
+    for dataset in datasets:
 
-        for dataset in datasets:
+        n_query = len(dataset.get_query_ids())
 
-            n_query = len(dataset.get_query_ids())
+        embeddings = inference(model=model, dataset=dataset, num_workers=0, batch_size=4).float()
 
-            embeddings = inference(model=model, dataset=dataset, num_workers=0, batch_size=4).float()
+        top_n = 2
+        rr = RetrievalResults.from_embeddings(embeddings=embeddings, dataset=dataset, n_items=top_n)
 
-            top_n = 2
-            rr = RetrievalResults.from_embeddings(embeddings=embeddings, dataset=dataset, n_items=top_n)
+        assert len(rr.distances) == n_query
 
-            assert len(rr.distances) == n_query
+        for dist in rr.distances:
+            assert is_sorted_tensor(dist)
+            assert len(dist) == top_n
 
-            for dist in rr.distances:
-                assert is_sorted_tensor(dist)
-                assert len(dist) == top_n
+        if with_gt_labels:
+            assert rr.gt_ids is not None
 
-            if with_gt_labels:
-                assert rr.gt_ids is not None
+        error_expected = not isinstance(dataset, IVisualizableDataset)
 
-            error_expected = not isinstance(dataset, IVisualizableDataset)
-
+        with matplotlib_backend("Agg"):
             if error_expected:
                 with pytest.raises(TypeError):
                     fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
@@ -130,24 +129,24 @@ def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
 
 
 def test_visualisation_for_different_number_of_retrieved_items() -> None:
+    datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
+    # just some random RR with different shapes
+    rr = RetrievalResults(
+        distances=[FloatTensor([0.1, 0.2]), FloatTensor([0.3, 0.4, 0.5]), FloatTensor([0.1]), FloatTensor([])],
+        retrieved_ids=[LongTensor([1, 0]), LongTensor([1, 2, 0]), LongTensor([2]), LongTensor([])],
+        gt_ids=[LongTensor([0]), LongTensor([1]), LongTensor([1, 2]), LongTensor([0])],
+    )
+    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
+    plt.close(fig=fig)
+
+    # empty RR
+    rr = RetrievalResults(
+        distances=[FloatTensor([])] * 4,
+        retrieved_ids=[LongTensor([])] * 4,
+        gt_ids=[LongTensor([0, 2])] * 4,
+    )
+
     with matplotlib_backend("Agg"):
-
-        datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
-        # just some random RR with different shapes
-        rr = RetrievalResults(
-            distances=[FloatTensor([0.1, 0.2]), FloatTensor([0.3, 0.4, 0.5]), FloatTensor([0.1]), FloatTensor([])],
-            retrieved_ids=[LongTensor([1, 0]), LongTensor([1, 2, 0]), LongTensor([2]), LongTensor([])],
-            gt_ids=[LongTensor([0]), LongTensor([1]), LongTensor([1, 2]), LongTensor([0])],
-        )
-        fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
-        plt.close(fig=fig)
-
-        # empty RR
-        rr = RetrievalResults(
-            distances=[FloatTensor([])] * 4,
-            retrieved_ids=[LongTensor([])] * 4,
-            gt_ids=[LongTensor([0, 2])] * 4,
-        )
         fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
         plt.close(fig=fig)
 
@@ -199,31 +198,31 @@ def test_retrieval_results_creation() -> None:
 def test_retrieval_results_separated_qg() -> None:
     from transformers import AutoTokenizer
 
-    with matplotlib_backend("Agg"):
+    # GALLERIES ARE IMAGES
+    _, df_val = download_mock_dataset(global_paths=True, df_name="df.csv")
+    model_g = ResnetExtractor(weights=None, arch="resnet18", gem_p=None, remove_fc=True, normalise_features=False)
+    dataset_g = ImageBaseDataset(paths=df_val["path"].tolist())
+    embeddings_g = inference(model_g, dataset_g, batch_size=2, num_workers=0).float()
 
-        # GALLERIES ARE IMAGES
-        _, df_val = download_mock_dataset(global_paths=True, df_name="df.csv")
-        model_g = ResnetExtractor(weights=None, arch="resnet18", gem_p=None, remove_fc=True, normalise_features=False)
-        dataset_g = ImageBaseDataset(paths=df_val["path"].tolist())
-        embeddings_g = inference(model_g, dataset_g, batch_size=2, num_workers=0).float()
+    # QUERIES ARE TEXTS AND THEY COME IN BATCHES
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+    model_q = DummyNLPModel(vocab_size=tokenizer.vocab_size, emb_size=model_g.feat_dim)
 
-        # QUERIES ARE TEXTS AND THEY COME IN BATCHES
-        tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-        model_q = DummyNLPModel(vocab_size=tokenizer.vocab_size, emb_size=model_g.feat_dim)
+    for texts in [["Cross", "Square"], ["Circle", "Nice cross", "Bad square"]]:
+        dataset_q = TextBaseDataset(texts, tokenizer=tokenizer)
+        embeddings_q = inference(model_q, dataset_q, batch_size=2, num_workers=0).float()
 
-        for texts in [["Cross", "Square"], ["Circle", "Nice cross", "Bad square"]]:
-            dataset_q = TextBaseDataset(texts, tokenizer=tokenizer)
-            embeddings_q = inference(model_q, dataset_q, batch_size=2, num_workers=0).float()
+        rr = RetrievalResults.from_embeddings_qg(
+            embeddings_query=embeddings_q,
+            embeddings_gallery=embeddings_g,
+            dataset_query=dataset_q,
+            dataset_gallery=dataset_g,
+            n_items=3,
+        )
 
-            rr = RetrievalResults.from_embeddings_qg(
-                embeddings_query=embeddings_q,
-                embeddings_gallery=embeddings_g,
-                dataset_query=dataset_q,
-                dataset_gallery=dataset_g,
-                n_items=3,
-            )
+        with matplotlib_backend("Agg"):
             rr.visualize_qg(query_ids=[0, 1], dataset_query=dataset_q, dataset_gallery=dataset_g, show=True)
 
-            assert rr.gt_ids is None
+        assert rr.gt_ids is None
 
     assert True
