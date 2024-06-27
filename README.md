@@ -980,7 +980,7 @@ I want to thank people who worked with me on that module:
 [Sergey Kolesnikov](https://github.com/Scitator)
 and others.
 
-I would like to thank people who continue working on this pipeline when it became a separe project:
+I would like to thank people who continue working on this pipeline when it became a separate project:
 [Julia Shenshina](https://github.com/julia-shenshina),
 [Misha Kindulov](https://github.com/b0nce),
 [Aron Dik](https://github.com/dapladoc),
