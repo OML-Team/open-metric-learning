@@ -4,12 +4,6 @@ import pandas as pd
 import pytest
 
 from oml.const import PATHS_COLUMN, START_TIME_COLUMN
-from oml.datasets.audios import (
-    AudioBaseDataset,
-    AudioLabeledDataset,
-    AudioQueryGalleryDataset,
-    AudioQueryGalleryLabeledDataset,
-)
 from oml.utils import get_mock_audios_dataset
 from tests.test_oml.test_datasets.test_datasets import (
     check_base,
@@ -27,6 +21,8 @@ def df() -> pd.DataFrame:
 @pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("num_channels", [1, 2])
 def test_downmix(df: pd.DataFrame, num_channels: int) -> None:
+    from oml.datasets.audios import AudioBaseDataset
+
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), num_channels=num_channels)
     for item in dataset:
         audio = item[dataset.input_tensors_key]
@@ -37,6 +33,8 @@ def test_downmix(df: pd.DataFrame, num_channels: int) -> None:
 @pytest.mark.parametrize("sr", [8000, 16000, 22050, 44100, 48000])
 @pytest.mark.parametrize("max_num_seconds", [0.01, 0.5, 1.0, 3.0, 10.0, 100.0])
 def test_resample_trim_pad(df: pd.DataFrame, sr: int, max_num_seconds: float) -> None:
+    from oml.datasets.audios import AudioBaseDataset
+
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), sr=sr, max_num_seconds=max_num_seconds)
     for item in dataset:
         audio = item[dataset.input_tensors_key]
@@ -47,6 +45,8 @@ def test_resample_trim_pad(df: pd.DataFrame, sr: int, max_num_seconds: float) ->
 
 @pytest.mark.needs_optional_dependency
 def test_start_times(df: pd.DataFrame) -> None:
+    from oml.datasets.audios import AudioBaseDataset
+
     dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=False)
     for _ in dataset:
         pass
@@ -66,6 +66,13 @@ def test_start_times(df: pd.DataFrame) -> None:
 
 @pytest.mark.needs_optional_dependency
 def test_audio_datasets() -> None:
+    from oml.datasets.audios import (
+        AudioBaseDataset,
+        AudioLabeledDataset,
+        AudioQueryGalleryDataset,
+        AudioQueryGalleryLabeledDataset,
+    )
+
     df_train, df_val = get_mock_audios_dataset(global_paths=True)
     df = pd.concat([df_train, df_val])
 
