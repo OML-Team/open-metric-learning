@@ -1,4 +1,3 @@
-import matplotlib
 import pandas as pd
 import torch
 from torch import LongTensor
@@ -29,6 +28,7 @@ from oml.interfaces.datasets import (
     IVisualizableDataset,
 )
 from oml.utils import get_mock_images_dataset, get_mock_texts_dataset
+from oml.utils.misc import matplotlib_backend
 
 
 class ASCITokenizer:
@@ -81,10 +81,8 @@ def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> N
 
 
 def check_visaulization(dataset_v: IVisualizableDataset) -> None:
-    current_backend = matplotlib.get_backend()
-    matplotlib.use("Agg")
-    _ = dataset_v.visualize(item=0, color=BLACK)
-    matplotlib.use(current_backend)
+    with matplotlib_backend("Agg"):
+        _ = dataset_v.visualize(item=0, color=BLACK)
     assert True
 
 
