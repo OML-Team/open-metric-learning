@@ -1,10 +1,14 @@
-import matplotlib
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
 
 from oml.const import RED
-from oml.utils.misc import pad_array_right, smart_sample, visualise_text
+from oml.utils.misc import (
+    matplotlib_backend,
+    pad_array_right,
+    smart_sample,
+    visualise_text,
+)
 
 
 @pytest.mark.long
@@ -50,24 +54,21 @@ def check_image_has_content(image: np.ndarray) -> bool:
 
 
 def test_visualise_text() -> None:
-    current_backend = matplotlib.get_backend()
-    matplotlib.use("Agg")
+    with matplotlib_backend("Agg"):
 
-    img = visualise_text(text="Hello world", color=RED, draw_bbox=False)
-    plt.imshow(img)
-    plt.show()
-    assert check_image_has_content(img)
+        img = visualise_text(text="Hello world", color=RED, draw_bbox=False)
+        plt.imshow(img)
+        plt.show()
+        assert check_image_has_content(img)
 
-    # we check the function works on a single extremely huge word
-    img = visualise_text(text="Hello" * 100, color=RED, draw_bbox=False)
-    plt.imshow(img)
-    plt.show()
-    assert check_image_has_content(img)
+        # we check the function works on a single extremely huge word
+        img = visualise_text(text="Hello" * 100, color=RED, draw_bbox=False)
+        plt.imshow(img)
+        plt.show()
+        assert check_image_has_content(img)
 
-    # the same, but there are several huge words
-    img = visualise_text(text="Hello" * 50 + " HELLO " + "Hello" * 50, color=RED, draw_bbox=False)
-    plt.imshow(img)
-    plt.show()
-    assert check_image_has_content(img)
-
-    matplotlib.use(current_backend)
+        # the same, but there are several huge words
+        img = visualise_text(text="Hello" * 50 + " HELLO " + "Hello" * 50, color=RED, draw_bbox=False)
+        plt.imshow(img)
+        plt.show()
+        assert check_image_has_content(img)

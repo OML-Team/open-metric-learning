@@ -1,4 +1,3 @@
-import matplotlib
 import matplotlib.pyplot as plt
 import pytest
 import torch
@@ -23,6 +22,7 @@ from oml.utils.download_mock_dataset import (
     download_mock_dataset,
     get_mock_texts_dataset,
 )
+from oml.utils.misc import matplotlib_backend
 from oml.utils.misc_torch import is_sorted_tensor
 from tests.test_integrations.utils import (
     EmbeddingsQueryGalleryDataset,
@@ -94,9 +94,6 @@ def get_model_and_datasets_embeddings(with_gt_labels):  # type: ignore
     ],
 )
 def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
-    current_backend = matplotlib.get_backend()
-    matplotlib.use("Agg")
-
     datasets, model = data_getter(with_gt_labels=with_gt_labels)
 
     for dataset in datasets:
@@ -119,22 +116,19 @@ def test_retrieval_results(with_gt_labels, data_getter) -> None:  # type: ignore
 
         error_expected = not isinstance(dataset, IVisualizableDataset)
 
-        if error_expected:
-            with pytest.raises(TypeError):
+        with matplotlib_backend("Agg"):
+            if error_expected:
+                with pytest.raises(TypeError):
+                    fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
+                    plt.close(fig=fig)
+            else:
                 fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
                 plt.close(fig=fig)
-        else:
-            fig = rr.visualize(query_ids=[0, 3], dataset=dataset, n_galleries_to_show=3, show=True)
-            plt.close(fig=fig)
 
-    matplotlib.use(current_backend)
     assert True
 
 
 def test_visualisation_for_different_number_of_retrieved_items() -> None:
-    current_backend = matplotlib.get_backend()
-    matplotlib.use("Agg")
-
     datasets, _ = get_model_and_datasets_images(with_gt_labels=False)
     # just some random RR with different shapes
     rr = RetrievalResults(
@@ -151,10 +145,10 @@ def test_visualisation_for_different_number_of_retrieved_items() -> None:
         retrieved_ids=[LongTensor([])] * 4,
         gt_ids=[LongTensor([0, 2])] * 4,
     )
-    fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
-    plt.close(fig=fig)
 
-    matplotlib.use(current_backend)
+    with matplotlib_backend("Agg"):
+        fig = rr.visualize(query_ids=[0, 1, 2, 3], dataset=datasets[0], show=True)
+        plt.close(fig=fig)
 
 
 def test_retrieval_results_creation() -> None:
@@ -204,9 +198,6 @@ def test_retrieval_results_creation() -> None:
 def test_retrieval_results_separated_qg() -> None:
     from transformers import AutoTokenizer
 
-    current_backend = matplotlib.get_backend()
-    matplotlib.use("Agg")
-
     # GALLERIES ARE IMAGES
     _, df_val = download_mock_dataset(global_paths=True, df_name="df.csv")
     model_g = ResnetExtractor(weights=None, arch="resnet18", gem_p=None, remove_fc=True, normalise_features=False)
@@ -228,9 +219,10 @@ def test_retrieval_results_separated_qg() -> None:
             dataset_gallery=dataset_g,
             n_items=3,
         )
-        rr.visualize_qg(query_ids=[0, 1], dataset_query=dataset_q, dataset_gallery=dataset_g, show=True)
+
+        with matplotlib_backend("Agg"):
+            rr.visualize_qg(query_ids=[0, 1], dataset_query=dataset_q, dataset_gallery=dataset_g, show=True)
 
         assert rr.gt_ids is None
 
-    matplotlib.use(current_backend)
     assert True
