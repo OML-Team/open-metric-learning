@@ -1,9 +1,3 @@
-from oml.datasets.audios import (
-    AudioBaseDataset,
-    AudioLabeledDataset,
-    AudioQueryGalleryDataset,
-    AudioQueryGalleryLabeledDataset,
-)
 from oml.datasets.images import (
     ImageBaseDataset,
     ImageLabeledDataset,

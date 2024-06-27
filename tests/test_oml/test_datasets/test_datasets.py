@@ -1,6 +1,5 @@
 import matplotlib
 import pandas as pd
-import pytest
 import torch
 from torch import LongTensor
 
@@ -14,10 +13,6 @@ from oml.const import (
     TEXTS_COLUMN,
 )
 from oml.datasets import (
-    AudioBaseDataset,
-    AudioLabeledDataset,
-    AudioQueryGalleryDataset,
-    AudioQueryGalleryLabeledDataset,
     ImageBaseDataset,
     ImageLabeledDataset,
     ImageQueryGalleryDataset,
@@ -33,11 +28,7 @@ from oml.interfaces.datasets import (
     IQueryGalleryDataset,
     IVisualizableDataset,
 )
-from oml.utils import (
-    get_mock_audios_dataset,
-    get_mock_images_dataset,
-    get_mock_texts_dataset,
-)
+from oml.utils import get_mock_images_dataset, get_mock_texts_dataset
 
 
 class ASCITokenizer:
@@ -150,32 +141,6 @@ def test_image_datasets() -> None:
 
     # Query Gallery Labeled
     dataset_qgl = ImageQueryGalleryLabeledDataset(df_val)
-    check_base(dataset_qgl)
-    check_query_gallery(dataset_qgl, df_val)
-    check_labeled(dataset_qgl, df_val)
-
-
-@pytest.mark.needs_optional_dependency
-def test_audio_datasets() -> None:
-    df_train, df_val = get_mock_audios_dataset(global_paths=True)
-    df = pd.concat([df_train, df_val])
-
-    # Base
-    dataset_b = AudioBaseDataset(paths=df[PATHS_COLUMN].tolist())
-    check_base(dataset_b)
-
-    # Labeled
-    dataset_l = AudioLabeledDataset(df_train)
-    check_base(dataset_l)
-    check_labeled(dataset_l, df_train)
-
-    # Query Gallery
-    dataset_qg = AudioQueryGalleryDataset(df_val)
-    check_base(dataset_qg)
-    check_query_gallery(dataset_qg, df_val)
-
-    # Query Gallery Labeled
-    dataset_qgl = AudioQueryGalleryLabeledDataset(df_val)
     check_base(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)
