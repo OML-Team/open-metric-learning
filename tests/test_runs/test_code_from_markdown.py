@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from oml.const import PROJECT_ROOT
-from oml.utils.misc import matplotlib_backend
 
 
 def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str:
@@ -43,18 +42,16 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
     ],
 )  # fmt: skip
 def test_code_blocks_in_readme(fname: str, start_indicator: str, end_indicator: str) -> None:
-    with matplotlib_backend("Agg"):
+    code = find_code_block(PROJECT_ROOT / "docs/readme/examples_source" / fname, start_indicator, end_indicator)
+    tmp_fname = "tmp.py"
 
-        code = find_code_block(PROJECT_ROOT / "docs/readme/examples_source" / fname, start_indicator, end_indicator)
-        tmp_fname = "tmp.py"
+    with open(tmp_fname, "w") as f:
+        f.write(code)
 
-        with open(tmp_fname, "w") as f:
-            f.write(code)
-
-        try:
-            subprocess.run(f"python {tmp_fname}", check=True, shell=True)
-        finally:
-            Path(tmp_fname).unlink()
+    try:
+        subprocess.run(f"python {tmp_fname}", check=True, shell=True)
+    finally:
+        Path(tmp_fname).unlink()
 
 
 def test_minimal_pipeline_example() -> None:
