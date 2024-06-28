@@ -1,4 +1,3 @@
-from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -7,19 +6,15 @@ import albumentations as albu
 import numpy as np
 import pandas as pd
 import torchvision
-from torch import BoolTensor, FloatTensor, LongTensor
+from torch import FloatTensor
 
 from oml.const import (
     BLACK,
-    CATEGORIES_COLUMN,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
-    IS_GALLERY_COLUMN,
-    IS_QUERY_COLUMN,
     LABELS_COLUMN,
     LABELS_KEY,
     PATHS_COLUMN,
-    SEQUENCE_COLUMN,
     SPLIT_COLUMN,
     X1_COLUMN,
     X2_COLUMN,
@@ -28,10 +23,14 @@ from oml.const import (
     TBBoxes,
     TColor,
 )
+from oml.datasets.dataframe import (
+    DFLabeledDataset,
+    DFQueryGalleryDataset,
+    DFQueryGalleryLabeledDataset,
+)
 from oml.interfaces.datasets import (
     IBaseDataset,
     ILabeledDataset,
-    IQueryGalleryDataset,
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
@@ -169,11 +168,13 @@ class ImageBaseDataset(IBaseDataset, IVisualizableDataset):
         return image
 
 
-class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
+class ImageLabeledDataset(DFLabeledDataset, IVisualizableDataset):
     """
     The dataset of images having their ground truth labels.
 
     """
+
+    _dataset: ImageBaseDataset
 
     def __init__(
         self,
@@ -187,22 +188,10 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
         labels_key: str = LABELS_KEY,
         index_key: str = INDEX_KEY,
     ):
-        assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
-        self.labels_key = labels_key
-        self.df = df
-
-        extra_data = extra_data or dict()
-
-        if CATEGORIES_COLUMN in df.columns:
-            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].copy()
-
-        if SEQUENCE_COLUMN in df.columns:
-            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
-
-        super().__init__(
-            paths=self.df[PATHS_COLUMN].tolist(),
-            bboxes=parse_bboxes(self.df),
-            extra_data=extra_data,
+        dataset = ImageBaseDataset(
+            paths=df[PATHS_COLUMN].tolist(),
+            bboxes=parse_bboxes(df),
+            extra_data=None,
             dataset_root=dataset_root,
             transform=transform,
             f_imread=f_imread,
@@ -210,25 +199,13 @@ class ImageLabeledDataset(ImageBaseDataset, ILabeledDataset):
             input_tensors_key=input_tensors_key,
             index_key=index_key,
         )
+        super().__init__(dataset=dataset, df=df, extra_data=extra_data, labels_key=labels_key)
 
-    def __getitem__(self, item: int) -> Dict[str, Any]:
-        data = super().__getitem__(item)
-        data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
-        return data
-
-    def get_labels(self) -> np.ndarray:
-        return np.array(self.df[LABELS_COLUMN])
-
-    def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
-        if CATEGORIES_COLUMN in self.df.columns:
-            label2category = dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
-        else:
-            label2category = None
-
-        return label2category
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
+        return self._dataset.visualize(item=item, color=color)
 
 
-class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledDataset):
+class ImageQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizableDataset):
     """
     The annotated dataset of images having `query`/`gallery` split.
 
@@ -242,6 +219,8 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
 
     """
 
+    _dataset: ImageBaseDataset
+
     def __init__(
         self,
         df: pd.DataFrame,
@@ -253,35 +232,30 @@ class ImageQueryGalleryLabeledDataset(ImageLabeledDataset, IQueryGalleryLabeledD
         input_tensors_key: str = INPUT_TENSORS_KEY,
         labels_key: str = LABELS_KEY,
     ):
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
-        self.df = df
-
-        super().__init__(
-            df=df,
-            extra_data=extra_data,
+        dataset = ImageBaseDataset(
+            paths=df[PATHS_COLUMN].tolist(),
+            bboxes=parse_bboxes(df),
+            extra_data=None,
             dataset_root=dataset_root,
             transform=transform,
             f_imread=f_imread,
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
-            labels_key=labels_key,
         )
 
-        self._query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
-        self._gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+        super().__init__(dataset=dataset, df=df, extra_data=extra_data, labels_key=labels_key)
 
-    def get_query_ids(self) -> LongTensor:
-        return self._query_ids
-
-    def get_gallery_ids(self) -> LongTensor:
-        return self._gallery_ids
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
+        return self._dataset.visualize(item=item, color=color)
 
 
-class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
+class ImageQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
     """
     The NOT annotated dataset of images having `query`/`gallery` split.
 
     """
+
+    _dataset: ImageBaseDataset
 
     def __init__(
         self,
@@ -293,43 +267,20 @@ class ImageQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
         cache_size: Optional[int] = 0,
         input_tensors_key: str = INPUT_TENSORS_KEY,
     ):
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
-
-        # instead of implementing the whole logic let's just re-use QGL dataset, but with dropped labels
-        df = deepcopy(df)
-        df[LABELS_COLUMN] = "fake_label"
-
-        self.__dataset = ImageQueryGalleryLabeledDataset(
-            df=df,
-            extra_data=extra_data,
+        dataset = ImageBaseDataset(
+            paths=df[PATHS_COLUMN].tolist(),
+            bboxes=parse_bboxes(df),
+            extra_data=None,
             dataset_root=dataset_root,
             transform=transform,
             f_imread=f_imread,
             cache_size=cache_size,
             input_tensors_key=input_tensors_key,
-            labels_key=LABELS_COLUMN,
         )
+        super().__init__(dataset=dataset, df=df, extra_data=extra_data)
 
-        self.extra_data = self.__dataset.extra_data
-        self.input_tensors_key = self.__dataset.input_tensors_key
-        self.index_key = self.__dataset.index_key
-
-    def __getitem__(self, item: int) -> Dict[str, Any]:
-        batch = self.__dataset[item]
-        del batch[self.__dataset.labels_key]
-        return batch
-
-    def __len__(self) -> int:
-        return len(self.__dataset)
-
-    def get_query_ids(self) -> LongTensor:
-        return self.__dataset.get_query_ids()
-
-    def get_gallery_ids(self) -> LongTensor:
-        return self.__dataset.get_gallery_ids()
-
-    def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
-        return self.__dataset.visualize(item=item, color=color)
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
+        return self._dataset.visualize(item=item, color=color)
 
 
 def get_retrieval_images_datasets(
