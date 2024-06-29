@@ -593,7 +593,7 @@ from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
 from oml.miners import AllTripletsMiner
 from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
+from oml.registry.transforms import get_transforms_for_pretrained
 from oml.retrieval import RetrievalResults, AdaptiveThresholding
 from oml.samplers import BalanceSampler
 from oml.utils import get_mock_images_dataset
@@ -762,7 +762,7 @@ The code below works for both texts and images.
 from oml.datasets import ImageQueryGalleryDataset
 from oml.inference import inference
 from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
+from oml.registry.transforms import get_transforms_for_pretrained
 from oml.utils import get_mock_images_dataset
 from oml.retrieval import RetrievalResults, AdaptiveThresholding
 
@@ -807,7 +807,7 @@ import pandas as pd
 from oml.datasets import ImageBaseDataset
 from oml.inference import inference
 from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
+from oml.registry.transforms import get_transforms_for_pretrained
 from oml.retrieval import RetrievalResults, ConstantThresholding
 from oml.utils import get_mock_images_dataset
 
@@ -896,7 +896,7 @@ use other arbitrary models after you inherited it from [IExtractor](https://open
 ```python
 from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
 from oml.models import ViTExtractor
-from oml.registry import get_transforms_for_pretrained
+from oml.registry.transforms import get_transforms_for_pretrained
 
 model = ViTExtractor.from_pretrained("vits16_dino").eval()
 transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
