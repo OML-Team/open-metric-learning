@@ -45,20 +45,18 @@ def test_resample_trim_pad(df: pd.DataFrame, sr: int, max_num_seconds: float) ->
 
 @pytest.mark.needs_optional_dependency
 def test_start_times(df: pd.DataFrame) -> None:
-    from oml.datasets.audios import AudioBaseDataset
+    from oml.datasets.audios import AudioBaseDataset, AudioLabeledDataset
 
-    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=False)
+    # test base dataset
+    start_times = [random.uniform(0, 1) for _ in range(len(df))]
+    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), start_times=start_times)
     for _ in dataset:
         pass
-    assert True, "Dataset iteration failed without random start"
+    assert True, "Dataset iteration failed with start times"
 
-    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=True)
-    for _ in dataset:
-        pass
-    assert True, "Dataset iteration failed with random start"
-
-    extra_data = {START_TIME_COLUMN: [random.uniform(0, 1) for _ in range(len(df))]}
-    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), use_random_start=True, extra_data=extra_data)
+    # test non-base dataset
+    df[START_TIME_COLUMN] = [random.uniform(0, 1) for _ in range(len(df))]
+    dataset = AudioLabeledDataset(df)
     for _ in dataset:
         pass
     assert True, "Dataset iteration failed with start times"

@@ -4,10 +4,30 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from PIL import Image
 from torch import FloatTensor
 
 from oml.const import BLACK, TColor
+
+
+def default_spec_repr_func(audio: FloatTensor) -> FloatTensor:
+    """
+    Generate a default spectral representation (log-scaled MelSpec) from an audio signal.
+    Used primarily for visualization.
+
+    Args:
+        audio: The input audio tensor.
+
+    Returns:
+        The spectral representation of the input audio tensor.
+    """
+    from torchaudio.transforms import MelSpectrogram
+
+    melspectrogram = MelSpectrogram(sample_rate=16000, n_fft=2048, hop_length=512, n_mels=128)
+    melspec = melspectrogram(audio)
+    log_melspec = torch.log1p(melspec).squeeze(0)
+    return log_melspec
 
 
 def _visualize_audio(

@@ -1,41 +1,48 @@
-import random
-from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 import torch
-from torch import BoolTensor, FloatTensor
+from torch import FloatTensor
 
 from oml.const import (
     AUDIO_EXTENSIONS,
     BLACK,
-    CATEGORIES_COLUMN,
     DEFAULT_AUDIO_NUM_CHANNELS,
     DEFAULT_DURATION,
-    DEFAULT_MELSPEC_PARAMS,
     DEFAULT_SAMPLE_RATE,
-    DEFAULT_USE_RANDOM_START,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
-    IS_GALLERY_COLUMN,
-    IS_QUERY_COLUMN,
-    LABELS_COLUMN,
     LABELS_KEY,
     PATHS_COLUMN,
-    SEQUENCE_COLUMN,
     START_TIME_COLUMN,
     TColor,
 )
-from oml.interfaces.datasets import (
-    IBaseDataset,
-    ILabeledDataset,
-    IQueryGalleryDataset,
-    IQueryGalleryLabeledDataset,
-    IVisualizableDataset,
+from oml.datasets.dataframe import (
+    DFLabeledDataset,
+    DFQueryGalleryDataset,
+    DFQueryGalleryLabeledDataset,
 )
-from oml.utils.audios import visualize_audio, visualize_audio_with_player
+from oml.interfaces.datasets import IBaseDataset, IVisualizableDataset
+from oml.utils.audios import (
+    default_spec_repr_func,
+    visualize_audio,
+    visualize_audio_with_player,
+)
+
+
+def parse_start_times(df: pd.DataFrame) -> Optional[List[float]]:
+    """
+    Parses starting time points from DataFrame.
+    """
+    start_times = None
+    if START_TIME_COLUMN in df.columns:
+        assert (
+            df[START_TIME_COLUMN].dtype == float
+        ), f"Expected dtype of '{START_TIME_COLUMN}' column is `float`, `{df[START_TIME_COLUMN].dtype}` is found."
+        start_times = df[START_TIME_COLUMN].astype(float).tolist()
+    return start_times
 
 
 class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
@@ -53,7 +60,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         sr: int = DEFAULT_SAMPLE_RATE,
         max_num_seconds: float = DEFAULT_DURATION,
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
-        use_random_start: bool = DEFAULT_USE_RANDOM_START,
+        start_times: Optional[List[float]] = None,
+        spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
         Initializes the AudioDataset.
@@ -67,9 +75,11 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             sr: Sampling rate of audio files.
             max_num_seconds: Duration to use from each audio file.
             num_channels: Number of audio channels.
-            use_random_start: Extract audio fragment randomly or from its beginning.
-                            if `start_time` is specified in `extra_data`, then it will be used instead.
+            start_times: List of start time offsets in **seconds** for each audio.
+            spec_repr_func: Spectral representation extraction function used for visualization.
         """
+        assert (start_times is None) or (len(paths) == len(start_times))
+
         if extra_data is not None:
             assert all(
                 len(record) == len(paths) for record in extra_data.values()
@@ -89,8 +99,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         self.sr = sr
         self.num_frames = int(max_num_seconds * sr)
         self.num_channels = num_channels
-        self.use_random_start = use_random_start
-        self.start_times: Optional[List[int]] = self.extra_data.get(START_TIME_COLUMN)
+        self.frame_offsets = [int(st * sr) for st in start_times] if start_times is not None else [0] * len(paths)
+        self.spectral_function = spec_repr_func or default_spec_repr_func
 
     def _downmix_and_resample(self, audio: FloatTensor, sr: int) -> FloatTensor:
         """
@@ -112,24 +122,20 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             audio = resampler(audio)
         return audio
 
-    def _trim_or_pad(self, audio: FloatTensor, start_time: int) -> FloatTensor:
+    def _trim_or_pad(self, audio: FloatTensor, frame_offset: int) -> FloatTensor:
         """
         Trim or pad the audio to match the desired number of frames.
         if `start_time` is specified, then it will be used, else if
 
         Args:
             audio: Audio tensor.
-            start_time: Starting time for trimming.
+            frame_offset: Frame offset for trimming.
 
         Returns:
             Trimmed or padded audio tensor.
         """
         audio_length = audio.shape[1]
         if audio_length > self.num_frames:
-            if start_time is not None:
-                frame_offset = int(start_time * self.sr)
-            else:
-                frame_offset = random.randrange(0, audio_length - self.num_frames) if self.use_random_start else 0
             audio = audio[:, frame_offset : frame_offset + self.num_frames]
         else:
             padding = (self.num_frames - audio_length, 0)
@@ -150,29 +156,9 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
 
         path = self._paths[item]
         audio, sr = torchaudio.load(path)
-        start_time = None if self.start_times is None else self.start_times[item]
         audio = self._downmix_and_resample(audio, sr)
-        audio = self._trim_or_pad(audio, start_time)
+        audio = self._trim_or_pad(audio, self.frame_offsets[item])
         return audio
-
-    def get_spectral_repr(self, audio: FloatTensor, params: Dict[str, Any] = DEFAULT_MELSPEC_PARAMS) -> FloatTensor:
-        """
-        Generate a spectral representation (by default, log-scaled MelSpec) from an audio signal.
-        Used primarily for visualization.
-
-        Args:
-            audio: The input audio tensor.
-            params: Parameters for spectral representation computation.
-
-        Returns:
-            The spectral representation of the input audio tensor.
-        """
-        from torchaudio.transforms import MelSpectrogram
-
-        melspectrogram = MelSpectrogram(sample_rate=self.sr, **params)
-        melspec = melspectrogram(audio)
-        log_melspec = torch.log1p(melspec).squeeze(0)
-        return log_melspec
 
     def __getitem__(self, item: int) -> Dict[str, Union[FloatTensor, int]]:
         audio_tensor = self.get_audio(item)
@@ -203,7 +189,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             Array representing the image of the plot.
         """
         audio = self.get_audio(item)
-        spec_repr = self.get_spectral_repr(audio).squeeze(0)
+        spec_repr = self.spectral_function(audio)
         return visualize_audio(spec_repr=spec_repr, color=color)
 
     def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
@@ -218,15 +204,17 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             HTML markup with spectral representation image and audio player.
         """
         audio = self.get_audio(item)
-        spec_repr = self.get_spectral_repr(audio)
+        spec_repr = self.spectral_function(audio)
         return visualize_audio_with_player(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
 
 
-class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
+class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
     """
     The dataset of audios having their ground truth labels.
 
     """
+
+    _dataset: AudioBaseDataset
 
     def __init__(
         self,
@@ -239,7 +227,7 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         sr: int = DEFAULT_SAMPLE_RATE,
         max_num_seconds: float = DEFAULT_DURATION,
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
-        use_random_start: bool = DEFAULT_USE_RANDOM_START,
+        spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
         Initializes the AudioLabeledDataset.
@@ -254,23 +242,10 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
             sr: Sampling rate of audio files.
             max_num_seconds: Duration to use from each audio file.
             num_channels: Number of audio channels.
-            use_random_start: Extract audio fragment randomly or from its beginning.
-                            if `start_time` is specified in `extra_data`, then it will be used instead.
+            spec_repr_func: Spectral representation extraction function used for visualization.
         """
-        assert all(x in df.columns for x in (LABELS_COLUMN, PATHS_COLUMN))
-        self.labels_key = labels_key
-        self.df = df
-
-        extra_data = extra_data or dict()
-
-        if CATEGORIES_COLUMN in df.columns:
-            extra_data[CATEGORIES_COLUMN] = df[CATEGORIES_COLUMN].copy()
-
-        if SEQUENCE_COLUMN in df.columns:
-            extra_data[SEQUENCE_COLUMN] = df[SEQUENCE_COLUMN].copy()
-
-        super().__init__(
-            paths=df[PATHS_COLUMN],
+        dataset = AudioBaseDataset(
+            paths=df[PATHS_COLUMN].tolist(),
             dataset_root=dataset_root,
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
@@ -278,34 +253,84 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
             sr=sr,
             max_num_seconds=max_num_seconds,
             num_channels=num_channels,
-            use_random_start=use_random_start,
+            start_times=parse_start_times(df),
+            spec_repr_func=spec_repr_func,
         )
-        self._labels = np.array(self.df[LABELS_COLUMN])
-        self._label2category = (
-            dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
-            if CATEGORIES_COLUMN in self.df.columns
-            else None
+        super().__init__(dataset=dataset, df=df, extra_data=extra_data, labels_key=labels_key)
+
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
+        return self._dataset.visualize(item=item, color=color)
+
+    def visualize_with_player(self, item: int, color: TColor) -> str:
+        return self._dataset.visualize_with_player(item=item, color=color)
+
+
+class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
+    """
+    The **non-annotated** dataset of audios having `query`/`gallery` split.
+    To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
+    (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
+
+    """
+
+    _dataset: AudioBaseDataset
+
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        dataset_root: Optional[Union[str, Path]] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
+        input_tensors_key: str = INPUT_TENSORS_KEY,
+        index_key: str = INDEX_KEY,
+        sr: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = DEFAULT_DURATION,
+        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
+    ):
+        """
+        Initializes the AudioQueryGalleryDataset.
+
+        Args:
+            df: DataFrame with input data.
+            dataset_root: Base path for audio files.
+            extra_data: Extra data to include in dataset items.
+            input_tensors_key: Key under which audio tensors are stored.
+            index_key: Key for indexing dataset items.
+            sr: Sampling rate of audio files.
+            max_num_seconds: Duration to use from each audio file.
+            num_channels: Number of audio channels.
+            spec_repr_func: Spectral representation extraction function used for visualization.
+        """
+        dataset = AudioBaseDataset(
+            paths=df[PATHS_COLUMN].tolist(),
+            dataset_root=dataset_root,
+            extra_data=extra_data,
+            input_tensors_key=input_tensors_key,
+            index_key=index_key,
+            sr=sr,
+            max_num_seconds=max_num_seconds,
+            num_channels=num_channels,
+            start_times=parse_start_times(df),
+            spec_repr_func=spec_repr_func,
         )
+        super().__init__(dataset=dataset, df=df, extra_data=extra_data)
 
-    def __getitem__(self, item: int) -> Dict[str, Any]:
-        data = super().__getitem__(item)
-        data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
-        return data
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
+        return self._dataset.visualize(item=item, color=color)
 
-    def get_labels(self) -> np.ndarray:
-        return self._labels
-
-    def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
-        return self._label2category
+    def visualize_with_player(self, item: int, color: TColor) -> str:
+        return self._dataset.visualize_with_player(item=item, color=color)
 
 
-class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledDataset):
+class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizableDataset):
     """
     The **annotated** dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
     (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
 
     """
+
+    _dataset: AudioBaseDataset
 
     def __init__(
         self,
@@ -318,7 +343,7 @@ class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledD
         sr: int = DEFAULT_SAMPLE_RATE,
         max_num_seconds: float = DEFAULT_DURATION,
         num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
-        use_random_start: bool = DEFAULT_USE_RANDOM_START,
+        spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
         Initializes the AudioQueryGalleryLabeledDataset.
@@ -333,109 +358,27 @@ class AudioQueryGalleryLabeledDataset(AudioLabeledDataset, IQueryGalleryLabeledD
             sr: Sampling rate of audio files.
             max_num_seconds: Duration to use from each audio file.
             num_channels: Number of audio channels.
-            use_random_start: Extract audio fragment randomly or from its beginning.
-                            if `start_time` is specified in `extra_data`, then it will be used instead.
+            spec_repr_func: Spectral representation extraction function used for visualization.
         """
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, LABELS_COLUMN, PATHS_COLUMN))
-        self.df = df
-
-        super().__init__(
-            df=df,
+        dataset = AudioBaseDataset(
+            paths=df[PATHS_COLUMN].tolist(),
             dataset_root=dataset_root,
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
-            labels_key=labels_key,
             sr=sr,
             max_num_seconds=max_num_seconds,
             num_channels=num_channels,
-            use_random_start=use_random_start,
+            start_times=parse_start_times(df),
+            spec_repr_func=spec_repr_func,
         )
-        self.query_ids = BoolTensor(self.df[IS_QUERY_COLUMN]).nonzero().squeeze()
-        self.gallery_ids = BoolTensor(self.df[IS_GALLERY_COLUMN]).nonzero().squeeze()
+        super().__init__(dataset=dataset, df=df, extra_data=extra_data, labels_key=labels_key)
 
-    def get_query_ids(self) -> BoolTensor:
-        return self.query_ids
+    def visualize(self, item: int, color: TColor) -> np.ndarray:
+        return self._dataset.visualize(item=item, color=color)
 
-    def get_gallery_ids(self) -> BoolTensor:
-        return self.gallery_ids
-
-
-class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
-    """
-    The **non-annotated** dataset of audios having `query`/`gallery` split.
-    To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
-    (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
-
-    """
-
-    def __init__(
-        self,
-        df: pd.DataFrame,
-        dataset_root: Optional[Union[str, Path]] = None,
-        extra_data: Optional[Dict[str, Any]] = None,
-        input_tensors_key: str = INPUT_TENSORS_KEY,
-        index_key: str = INDEX_KEY,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
-        use_random_start: bool = DEFAULT_USE_RANDOM_START,
-    ):
-        """
-        Initializes the AudioQueryGalleryDataset.
-
-        Args:
-            df: DataFrame with input data.
-            dataset_root: Base path for audio files.
-            extra_data: Extra data to include in dataset items.
-            input_tensors_key: Key under which audio tensors are stored.
-            index_key: Key for indexing dataset items.
-            sr: Sampling rate of audio files.
-            max_num_seconds: Duration to use from each audio file.
-            num_channels: Number of audio channels.
-            use_random_start: Extract audio fragment randomly or from its beginning.
-                            if `start_time` is specified in `extra_data`, then it will be used instead.
-        """
-        assert all(x in df.columns for x in (IS_QUERY_COLUMN, IS_GALLERY_COLUMN, PATHS_COLUMN))
-        df = deepcopy(df)
-        df[LABELS_COLUMN] = "fake_label"
-
-        self.__dataset = AudioQueryGalleryLabeledDataset(
-            df=df,
-            dataset_root=dataset_root,
-            extra_data=extra_data,
-            input_tensors_key=input_tensors_key,
-            index_key=index_key,
-            labels_key=LABELS_COLUMN,
-            sr=sr,
-            max_num_seconds=max_num_seconds,
-            num_channels=num_channels,
-            use_random_start=use_random_start,
-        )
-
-        self.extra_data = self.__dataset.extra_data
-        self.input_tensors_key = self.__dataset.input_tensors_key
-        self.index_key = self.__dataset.index_key
-
-    def __getitem__(self, item: int) -> Dict[str, Any]:
-        batch = self.__dataset[item]
-        del batch[self.__dataset.labels_key]
-        return batch
-
-    def __len__(self) -> int:
-        return len(self.__dataset)
-
-    def get_query_ids(self) -> BoolTensor:
-        return self.__dataset.query_ids
-
-    def get_gallery_ids(self) -> BoolTensor:
-        return self.__dataset.gallery_ids
-
-    def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
-        return self.__dataset.visualize(item=item, color=color)
-
-    def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
-        return self.__dataset.visualize_with_player(item, color)
+    def visualize_with_player(self, item: int, color: TColor) -> str:
+        return self._dataset.visualize_with_player(item=item, color=color)
 
 
 __all__ = [

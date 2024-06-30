@@ -108,13 +108,11 @@ HYDRA_BEHAVIOUR = "1.1"
 
 # Audio specific constants
 MOCK_AUDIO_DATASET_PATH = CACHE_PATH / "mock_audio_dataset"
-MOCK_AUDIO_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1aYqXBNnERFRIzxr_6cBVO_v_qz2dU7ta"
-MOCK_AUDIO_DATASET_MD5 = "87ba6367ac1231c6be4ccca5e8ace837"
+MOCK_AUDIO_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1NcKnyXqDyyYARrDETmhJcTTXegO3W0Ju"
+MOCK_AUDIO_DATASET_MD5 = "b6d1818fe0491909fa5ff8749c82c023"
 
 AUDIO_EXTENSIONS = [".mp3", ".wav", ".ogg", ".flac"]
 START_TIME_COLUMN = "start_time"
 DEFAULT_DURATION = 3.0
 DEFAULT_SAMPLE_RATE = 16_000
 DEFAULT_AUDIO_NUM_CHANNELS = 1
-DEFAULT_USE_RANDOM_START = True
-DEFAULT_MELSPEC_PARAMS = {"n_fft": 2048, "hop_length": 512, "n_mels": 128}
