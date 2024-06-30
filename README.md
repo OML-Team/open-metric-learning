@@ -337,6 +337,7 @@ for our paper
 ```shell
 pip install -U open-metric-learning; # minimum dependencies
 pip install -U open-metric-learning[nlp]
+pip install -U open-metric-learning[audio]
 ```
 
 <details><summary>DockerHub</summary>

@@ -53,14 +53,15 @@ def check_labeled(dataset_l: ILabeledDataset, df: pd.DataFrame) -> None:
     item = dataset_l[0]
     assert dataset_l.labels_key in item
 
-    # test label2category()
-    labels = list(dataset_l.get_label2category().keys())
-    categories = list(dataset_l.get_label2category().values())
-    assert set(labels) == set(df[LABELS_COLUMN].tolist())
-    assert set(categories) == set(df[CATEGORIES_COLUMN].tolist())
-
     # test get_labels()
     assert set(dataset_l.get_labels().tolist()) == set(df[LABELS_COLUMN].tolist())
+
+    # test label2category()
+    if CATEGORIES_COLUMN in df:
+        labels = list(dataset_l.get_label2category().keys())
+        categories = list(dataset_l.get_label2category().values())
+        assert set(labels) == set(df[LABELS_COLUMN].tolist())
+        assert set(categories) == set(df[CATEGORIES_COLUMN].tolist())
 
 
 def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> None:
@@ -80,7 +81,7 @@ def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> N
         assert df[IS_GALLERY_COLUMN].iloc[int(ig)]
 
 
-def check_visaulization(dataset_v: IVisualizableDataset) -> None:
+def check_visualization(dataset_v: IVisualizableDataset) -> None:
     with matplotlib_backend("Agg"):
         _ = dataset_v.visualize(item=0, color=BLACK)
     assert True
@@ -101,19 +102,19 @@ def test_text_datasets() -> None:
     # Labeled
     dataset_l = TextLabeledDataset(df_train, tokenizer=tokenizer)
     check_base(dataset_l)
-    check_visaulization(dataset_l)
+    check_visualization(dataset_l)
     check_labeled(dataset_l, df_train)
 
     # Query Gallery
     dataset_qg = TextQueryGalleryDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qg)
-    check_visaulization(dataset_qg)
+    check_visualization(dataset_qg)
     check_query_gallery(dataset_qg, df_val)
 
     # Query Gallery Labeled
     dataset_qgl = TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qgl)
-    check_visaulization(dataset_qgl)
+    check_visualization(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)
 

@@ -31,10 +31,12 @@ COPY ci/requirements.txt requirements.txt
 COPY ci/requirements_tests.txt requirements_tests.txt
 COPY ci/requirements_optional.txt requirements_optional.txt
 COPY ci/requirements_nlp.txt requirements_nlp.txt
+COPY ci/requirements_audio.txt requirements_audio.txt
 RUN pip install --no-cache-dir -r requirements.txt ${EXTRA_INDEX}
 RUN pip install --no-cache-dir -r requirements_tests.txt
 RUN pip install --no-cache-dir -r requirements_optional.txt
 RUN pip install --no-cache-dir -r requirements_nlp.txt
+RUN pip install --no-cache-dir -r requirements_audio.txt
 
 WORKDIR /oml-lib
 COPY . /oml-lib
