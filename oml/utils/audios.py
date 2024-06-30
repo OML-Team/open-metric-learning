@@ -4,7 +4,6 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.typing import NDArray
 from PIL import Image
 from torch import FloatTensor
 
@@ -13,7 +12,7 @@ from oml.const import BLACK, TColor
 
 def _visualize_audio(
     spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True, return_b64: bool = False
-) -> Union[NDArray[np.uint8], str]:
+) -> Union[np.ndarray, str]:
     """
     Internal function to visualize an audio spectrogram.
 
@@ -48,14 +47,14 @@ def _visualize_audio(
     buf = BytesIO()
     plt.savefig(buf, format="png", bbox_inches="tight")
     buf.seek(0)
-    img: Union[NDArray[np.uint8], str] = (
+    img: Union[np.ndarray, str] = (
         base64.b64encode(buf.getvalue()).decode("ascii") if return_b64 else np.array(Image.open(buf), dtype=np.uint8)
     )
     plt.close(fig)
     return img
 
 
-def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True) -> NDArray[np.uint8]:
+def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
     """
     Visualize an audio spectral representation and return it as a NumPy array.
 

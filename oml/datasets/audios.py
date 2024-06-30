@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 import torch
-from numpy.typing import NDArray
 from torch import BoolTensor, FloatTensor
 
 from oml.const import (
@@ -192,7 +191,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
     def __len__(self) -> int:
         return len(self._paths)
 
-    def visualize(self, item: int, color: TColor = BLACK) -> NDArray[np.uint8]:
+    def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
         """
         Visualize an audio file.
 
@@ -293,7 +292,7 @@ class AudioLabeledDataset(AudioBaseDataset, ILabeledDataset):
         data[self.labels_key] = self.df.iloc[item][LABELS_COLUMN]
         return data
 
-    def get_labels(self) -> NDArray[np.int64]:
+    def get_labels(self) -> np.ndarray:
         return self._labels
 
     def get_label2category(self) -> Optional[Dict[int, Union[str, int]]]:
@@ -432,7 +431,7 @@ class AudioQueryGalleryDataset(IVisualizableDataset, IQueryGalleryDataset):
     def get_gallery_ids(self) -> BoolTensor:
         return self.__dataset.gallery_ids
 
-    def visualize(self, item: int, color: TColor = BLACK) -> NDArray[np.uint8]:
+    def visualize(self, item: int, color: TColor = BLACK) -> np.ndarray:
         return self.__dataset.visualize(item=item, color=color)
 
     def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
