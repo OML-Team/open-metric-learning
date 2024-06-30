@@ -6,10 +6,8 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 import torch
-import torchaudio
 from numpy.typing import NDArray
 from torch import BoolTensor, FloatTensor
-from torchaudio.transforms import MelSpectrogram, Resample
 
 from oml.const import (
     AUDIO_EXTENSIONS,
@@ -106,6 +104,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Returns:
             Processed audio tensor.
         """
+        from torchaudio.transforms import Resample
+
         if audio.shape[0] != self.num_channels:
             audio = audio.mean(dim=1, keepdim=True)
         if sr != self.sr:
@@ -147,6 +147,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Returns:
             Processed audio tensor.
         """
+        import torchaudio
+
         path = self._paths[item]
         audio, sr = torchaudio.load(path)
         start_time = None if self.start_times is None else self.start_times[item]
@@ -166,6 +168,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         Returns:
             The spectral representation of the input audio tensor.
         """
+        from torchaudio.transforms import MelSpectrogram
+
         melspectrogram = MelSpectrogram(sample_rate=self.sr, **params)
         melspec = melspectrogram(audio)
         log_melspec = torch.log1p(melspec).squeeze(0)

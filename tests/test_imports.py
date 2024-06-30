@@ -9,7 +9,16 @@ import pytest
 
 from oml.const import PROJECT_ROOT
 
-LIBS_TO_IGNORE = ["torch_xla", "pytorch_grad_cam", "wandb", "neptune", "clearml", "IPython", "transformers"]
+LIBS_TO_IGNORE = [
+    "torch_xla",
+    "pytorch_grad_cam",
+    "wandb",
+    "neptune",
+    "clearml",
+    "IPython",
+    "transformers",
+    "torchaudio",
+]
 
 NEED_TO_TEST_NOTEBOOKS = True
 

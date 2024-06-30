@@ -4,7 +4,6 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torchaudio
 from numpy.typing import NDArray
 from PIL import Image
 from torch import FloatTensor
@@ -87,6 +86,8 @@ def visualize_audio_with_player(
     Returns:
         An HTML string that contains the spectral representation image and an audio player.
     """
+    import torchaudio
+
     image_base64 = _visualize_audio(spec_repr, color, draw_bbox, return_b64=True)  # type: ignore
 
     buf = BytesIO()
