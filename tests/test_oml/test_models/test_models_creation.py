@@ -51,6 +51,29 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
     assert torch.allclose(features1, features2)
 
 
+@pytest.mark.parametrize(
+    "constructor,args",
+    [
+        (ViTUnicomExtractor, {"normalise_features": False, "arch": "vitb32_unicom"}),
+    ],
+)
+def test_extractor_unicom_gradient_checkpoint(constructor: IExtractor, args: Dict[str, Any]) -> None:
+    im = torch.randn(1, 3, 224, 224)
+
+    # 1. Random weights, use torch.utils.checkpoint
+    extractor = constructor(weights=None, using_checkpoint=True, **args).eval()
+    features1 = extractor.extract(im)
+
+    # 2. Same random weights, don't use torch.utils.checkpoint
+    fname = "weights_tmp.pth"
+    torch.save({"state_dict": extractor.state_dict()}, fname)
+    extractor = constructor(weights=fname, using_checkpoint=False, **args).eval()
+    features2 = extractor.extract(im)
+    Path(fname).unlink()
+
+    assert torch.allclose(features1, features2)
+
+
 @pytest.mark.long
 @pytest.mark.skipif(os.getenv("DOWNLOAD_ZOO_IN_TESTS") != "yes", reason="It's a traffic consuming test.")
 @pytest.mark.parametrize("constructor", list(EXTRACTORS_REGISTRY.values()))
