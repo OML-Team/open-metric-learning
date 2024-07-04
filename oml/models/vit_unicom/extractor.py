@@ -70,7 +70,7 @@ class ViTUnicomExtractor(IExtractor):
         self.arch = arch
         self.normalise_features = normalise_features
 
-        self.model = self.constructors[arch](using_checkpoint)
+        self.model = self.constructors[arch](using_checkpoint=using_checkpoint)
 
         if weights is None:
             return
