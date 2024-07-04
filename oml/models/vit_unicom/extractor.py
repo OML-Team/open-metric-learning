@@ -14,20 +14,20 @@ from oml.models.vit_unicom.external.model import load  # type: ignore
 from oml.utils.misc_torch import normalise
 
 
-def unicom_vitb32() -> vision_transformer.VisionTransformer:  # type: ignore
-    return vision_transformer.build_model("ViT-B/32")  # type: ignore
+def unicom_vitb32(using_checkpoint: bool = True) -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-B/32", using_checkpoint=using_checkpoint)  # type: ignore
 
 
-def unicom_vitb16() -> vision_transformer.VisionTransformer:  # type: ignore
-    return vision_transformer.build_model("ViT-B/16")  # type: ignore
+def unicom_vitb16(using_checkpoint: bool = True) -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-B/16", using_checkpoint=using_checkpoint)  # type: ignore
 
 
-def unicom_vitl14() -> vision_transformer.VisionTransformer:  # type: ignore
-    return vision_transformer.build_model("ViT-L/14")  # type: ignore
+def unicom_vitl14(using_checkpoint: bool = True) -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-L/14", using_checkpoint=using_checkpoint)  # type: ignore
 
 
-def unicom_vitl14_336px() -> vision_transformer.VisionTransformer:  # type: ignore
-    return vision_transformer.build_model("ViT-L/14@336px")  # type: ignore
+def unicom_vitl14_336px(using_checkpoint: bool = True) -> vision_transformer.VisionTransformer:  # type: ignore
+    return vision_transformer.build_model("ViT-L/14@336px", using_checkpoint=using_checkpoint)  # type: ignore
 
 
 class ViTUnicomExtractor(IExtractor):
@@ -57,14 +57,26 @@ class ViTUnicomExtractor(IExtractor):
         },
     }
 
-    def __init__(self, weights: Optional[Union[Path, str]], arch: str, normalise_features: bool):
+    def __init__(
+        self, weights: Optional[Union[Path, str]], arch: str, normalise_features: bool, use_gradiend_ckpt: bool = True
+    ):
+        """
+        Args:
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to
+             randomly initialize model's weights. You can check the available pretrained checkpoints
+             in ``self.pretrained_models``.
+            arch: Might be one of ``vitb32_unicom``, ``vitb16_unicom``, ``vitl14_unicom``, ``vitl14_336px_unicom``.
+             You can check all the available options in ``self.constructors``
+            normalise_features: Set ``True`` to normalise output features
+            use_gradiend_ckpt: Whether to use gradient checkpointing inside VisionTransformer class.
+        """
         assert arch in self.constructors
         super(IExtractor, self).__init__()
 
         self.arch = arch
         self.normalise_features = normalise_features
 
-        self.model = self.constructors[arch]()
+        self.model = self.constructors[arch](using_checkpoint=use_gradiend_ckpt)
 
         if weights is None:
             return
