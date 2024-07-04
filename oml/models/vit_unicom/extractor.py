@@ -58,19 +58,25 @@ class ViTUnicomExtractor(IExtractor):
     }
 
     def __init__(
-        self,
-        weights: Optional[Union[Path, str]],
-        arch: str,
-        normalise_features: bool,
-        using_checkpoint: bool = True
+        self, weights: Optional[Union[Path, str]], arch: str, normalise_features: bool, use_gradiend_ckpt: bool = True
     ):
+        """
+        Args:
+            weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to
+             randomly initialize model's weights. You can check the available pretrained checkpoints
+             in ``self.pretrained_models``.
+            arch: Might be one of ``vitb32_unicom``, ``vitb16_unicom``, ``vitl14_unicom``, ``vitl14_336px_unicom``.
+             You can check all the available options in ``self.constructors``
+            normalise_features: Set ``True`` to normalise output features
+            use_gradiend_ckpt: Whether to use gradient checkpointing inside VisionTransformer class.
+        """
         assert arch in self.constructors
         super(IExtractor, self).__init__()
 
         self.arch = arch
         self.normalise_features = normalise_features
 
-        self.model = self.constructors[arch](using_checkpoint=using_checkpoint)
+        self.model = self.constructors[arch](using_checkpoint=use_gradiend_ckpt)
 
         if weights is None:
             return

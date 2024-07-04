@@ -51,6 +51,7 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
     assert torch.allclose(features1, features2)
 
 
+@pytest.mark.long
 @pytest.mark.parametrize(
     "constructor,args",
     [
