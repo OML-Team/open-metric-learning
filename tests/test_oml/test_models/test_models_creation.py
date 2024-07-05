@@ -51,7 +51,6 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
     assert torch.allclose(features1, features2)
 
 
-@pytest.mark.long
 @pytest.mark.parametrize(
     "constructor,args",
     [
@@ -62,13 +61,13 @@ def test_extractor_unicom_gradient_checkpoint(constructor: IExtractor, args: Dic
     im = torch.randn(1, 3, 224, 224)
 
     # 1. Random weights, use torch.utils.checkpoint
-    extractor = constructor(weights=None, use_gradiend_ckpt=True, **args).eval()
+    extractor = constructor(weights=None, use_gradient_ckpt=True, **args).eval()
     features1 = extractor.extract(im)
 
     # 2. Same random weights, don't use torch.utils.checkpoint
     fname = "weights_tmp.pth"
     torch.save({"state_dict": extractor.state_dict()}, fname)
-    extractor = constructor(weights=fname, use_gradiend_ckpt=False, **args).eval()
+    extractor = constructor(weights=fname, use_gradient_ckpt=False, **args).eval()
     features2 = extractor.extract(im)
     Path(fname).unlink()
 
