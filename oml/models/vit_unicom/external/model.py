@@ -83,7 +83,7 @@ def _download(url: str, root: str):
 
 
 # copy from https://github.com/openai/CLIP/blob/main/clip/clip.py#L94
-def load(name: str, device: str = "cpu", download_root: str = None):
+def load(name: str, device: str = "cpu", download_root: str = None, using_checkpoint: bool = True):
     if name in _MODELS:
         model_path = _download(_MODELS[name], download_root or os.path.expanduser("~/.cache/unicom"))
     elif os.path.isfile(name):
@@ -93,7 +93,7 @@ def load(name: str, device: str = "cpu", download_root: str = None):
     with open(model_path, "rb") as opened_file:
         state_dict = torch.load(opened_file, map_location="cpu")
 
-    model, transform = load_model_and_transform(name)
+    model, transform = load_model_and_transform(name, using_checkpoint=using_checkpoint)
     state_dict_fp32 = {}
     for k, v in state_dict.items():
         state_dict_fp32[k] = v.float()

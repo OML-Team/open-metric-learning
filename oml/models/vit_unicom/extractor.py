@@ -40,25 +40,33 @@ class ViTUnicomExtractor(IExtractor):
 
     pretrained_models = {
         "vitb32_unicom": {
-            "download_fn": lambda: load("ViT-B/32", download_root=CKPT_SAVE_ROOT),
+            "download_fn": lambda using_checkpoint: load(
+                "ViT-B/32", download_root=CKPT_SAVE_ROOT, using_checkpoint=using_checkpoint
+            ),
             "init_args": {"arch": "vitb32_unicom", "normalise_features": True},
         },
         "vitb16_unicom": {
-            "download_fn": lambda: load("ViT-B/16", download_root=CKPT_SAVE_ROOT),
+            "download_fn": lambda using_checkpoint: load(
+                "ViT-B/16", download_root=CKPT_SAVE_ROOT, using_checkpoint=using_checkpoint
+            ),
             "init_args": {"arch": "vitb16_unicom", "normalise_features": True},
         },
         "vitl14_unicom": {
-            "download_fn": lambda: load("ViT-L/14", download_root=CKPT_SAVE_ROOT),
+            "download_fn": lambda using_checkpoint: load(
+                "ViT-L/14", download_root=CKPT_SAVE_ROOT, using_checkpoint=using_checkpoint
+            ),
             "init_args": {"arch": "vitl14_unicom", "normalise_features": True},
         },
         "vitl14_336px_unicom": {
-            "download_fn": lambda: load("ViT-L/14@336px", download_root=CKPT_SAVE_ROOT),
+            "download_fn": lambda using_checkpoint: load(
+                "ViT-L/14@336px", download_root=CKPT_SAVE_ROOT, using_checkpoint=using_checkpoint
+            ),
             "init_args": {"arch": "vitl14_336px_unicom", "normalise_features": True},
         },
     }
 
     def __init__(
-        self, weights: Optional[Union[Path, str]], arch: str, normalise_features: bool, use_gradiend_ckpt: bool = True
+        self, weights: Optional[Union[Path, str]], arch: str, normalise_features: bool, use_gradient_ckpt: bool = True
     ):
         """
         Args:
@@ -68,7 +76,7 @@ class ViTUnicomExtractor(IExtractor):
             arch: Might be one of ``vitb32_unicom``, ``vitb16_unicom``, ``vitl14_unicom``, ``vitl14_336px_unicom``.
              You can check all the available options in ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
-            use_gradiend_ckpt: Whether to use gradient checkpointing inside VisionTransformer class.
+            use_gradient_ckpt: Whether to use gradient checkpointing inside VisionTransformer class.
         """
         assert arch in self.constructors
         super(IExtractor, self).__init__()
@@ -76,12 +84,14 @@ class ViTUnicomExtractor(IExtractor):
         self.arch = arch
         self.normalise_features = normalise_features
 
-        self.model = self.constructors[arch](using_checkpoint=use_gradiend_ckpt)
+        self.model = self.constructors[arch](using_checkpoint=use_gradient_ckpt)
 
         if weights is None:
             return
         elif weights in self.constructors:
-            self.model, _ = self.pretrained_models[weights]["download_fn"]()  # type: ignore
+            self.model, _ = self.pretrained_models[weights]["download_fn"](  # type: ignore
+                using_checkpoint=use_gradient_ckpt
+            )
         else:
             ckpt = torch.load(weights, map_location="cpu")
             state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
