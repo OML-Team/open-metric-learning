@@ -22,7 +22,7 @@ class IExtractor(nn.Module, ABC):
         raise NotImplementedError()
 
     @classmethod
-    def from_pretrained(cls, weights: str) -> "IExtractor":
+    def from_pretrained(cls, weights: str, **kwargs: Dict[str, Any]) -> "IExtractor":
         """
         This method allows to download a pretrained checkpoint.
         The class field ``self.pretrained_models`` is the dictionary which keeps records of all the available
@@ -41,7 +41,7 @@ class IExtractor(nn.Module, ABC):
                 f"There is no pretrained model {weights}. The existing ones are {list(cls.pretrained_models.keys())}."
             )
 
-        extractor = cls(weights=weights, **cls.pretrained_models[weights]["init_args"])  # type: ignore
+        extractor = cls(weights=weights, **cls.pretrained_models[weights]["init_args"], **kwargs)  # type: ignore
         return extractor
 
 
