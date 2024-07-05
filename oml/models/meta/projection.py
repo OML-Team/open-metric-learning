@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import torch
 from torchvision.ops import MLP
@@ -88,7 +88,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
         self.train_backbone = True
 
     @classmethod
-    def from_pretrained(cls, weights: str, **kwargs: Dict[str, Any]) -> "IExtractor":
+    def from_pretrained(cls, weights: str, **kwargs) -> "IExtractor":  # type: ignore
         # The current class takes another model as a constructor's argument, so, they need to be
         # in the `self.pretrained_models`. The problem is these models will be instantiated even if we simply
         # import something from the current module. To avoid it we added the logic of wrapping/unwrapping
