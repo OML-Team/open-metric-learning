@@ -78,7 +78,7 @@ class ViTUnicomExtractor(IExtractor):
 
         self.model = self.constructors[arch](using_checkpoint=use_gradiend_ckpt)
 
-        if weights is None:
+        if weights is None or (weights in self.constructors and weights == arch):
             return
         elif weights in self.constructors:
             self.model, _ = self.pretrained_models[weights]["download_fn"]()  # type: ignore
