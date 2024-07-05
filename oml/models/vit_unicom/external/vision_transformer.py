@@ -347,14 +347,14 @@ def transform(im_size):
     )
 
 
-def load_model_and_transform(name="ViT-L/14@336px"):
+def load_model_and_transform(name="ViT-L/14@336px", using_checkpoint: bool = True):
     if name == "ViT-B/32":
-        return build_model(name), transform(224)
+        return build_model(name, using_checkpoint=using_checkpoint), transform(224)
     elif name == "ViT-B/16":
-        return build_model(name), transform(224)
+        return build_model(name, using_checkpoint=using_checkpoint), transform(224)
     elif name == "ViT-L/14":
-        return build_model(name), transform(224)
+        return build_model(name, using_checkpoint=using_checkpoint), transform(224)
     elif name == "ViT-L/14@336px":
-        return build_model(name), transform(336)
+        return build_model(name, using_checkpoint=using_checkpoint), transform(336)
     else:
         raise
