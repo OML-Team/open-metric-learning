@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 import torch
 from torch import LongTensor
 
@@ -12,6 +13,10 @@ from oml.const import (
     TEXTS_COLUMN,
 )
 from oml.datasets import (
+    AudioBaseDataset,
+    AudioLabeledDataset,
+    AudioQueryGalleryDataset,
+    AudioQueryGalleryLabeledDataset,
     ImageBaseDataset,
     ImageLabeledDataset,
     ImageQueryGalleryDataset,
@@ -27,7 +32,11 @@ from oml.interfaces.datasets import (
     IQueryGalleryDataset,
     IVisualizableDataset,
 )
-from oml.utils import get_mock_images_dataset, get_mock_texts_dataset
+from oml.utils import (
+    get_mock_audios_dataset,
+    get_mock_images_dataset,
+    get_mock_texts_dataset,
+)
 from oml.utils.misc import matplotlib_backend
 
 
@@ -139,6 +148,76 @@ def test_image_datasets() -> None:
 
     # Query Gallery Labeled
     dataset_qgl = ImageQueryGalleryLabeledDataset(df_val)
+    check_base(dataset_qgl)
+    check_query_gallery(dataset_qgl, df_val)
+    check_labeled(dataset_qgl, df_val)
+
+
+def get_df() -> pd.DataFrame:
+    df_train, df_val = get_mock_audios_dataset(global_paths=True)
+    return pd.concat([df_train, df_val])
+
+
+def get_df_with_start_times() -> pd.DataFrame:
+    df_train, df_val = get_mock_audios_dataset(df_name="df_with_start_times.csv", global_paths=True)
+    return pd.concat([df_train, df_val])
+
+
+@pytest.mark.needs_optional_dependency
+@pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
+@pytest.mark.parametrize("is_mono", [True, False])
+def test_downmix(df: pd.DataFrame, is_mono: bool) -> None:
+    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), is_mono=is_mono)
+    for item in dataset:
+        audio = item[dataset.input_tensors_key]
+        if is_mono:
+            assert audio.shape[0] == 1, f"Audio should be mono, but has {audio.shape[0]} channels"
+
+
+@pytest.mark.needs_optional_dependency
+@pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
+@pytest.mark.parametrize("sample_rate", [8000, 16000, 44100])
+@pytest.mark.parametrize("max_num_seconds", [0.01, 3.0, 100.0])
+def test_resample_trim_pad(df: pd.DataFrame, sample_rate: int, max_num_seconds: float) -> None:
+    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), sample_rate=sample_rate, max_num_seconds=max_num_seconds)
+    for item in dataset:
+        audio = item[dataset.input_tensors_key]
+        assert audio.shape[1] == int(
+            max_num_seconds * sample_rate
+        ), f"Audio length {audio.shape[1]} does not match expected {int(max_num_seconds * sample_rate)}"
+
+
+@pytest.mark.needs_optional_dependency
+def test_start_times() -> None:
+    df = get_df_with_start_times()
+    dataset = AudioLabeledDataset(df)
+    for _ in dataset:
+        pass
+    assert True, "Dataset iteration failed with start times"
+
+
+@pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
+def test_audio_datasets(df: pd.DataFrame) -> None:
+
+    df_train = df[df["split"].eq("train")].copy()
+    df_val = df[df["split"].eq("validation")].copy()
+
+    # Base
+    dataset_b = AudioBaseDataset(paths=df[PATHS_COLUMN].tolist())
+    check_base(dataset_b)
+
+    # Labeled
+    dataset_l = AudioLabeledDataset(df_train)
+    check_base(dataset_l)
+    check_labeled(dataset_l, df_train)
+
+    # Query Gallery
+    dataset_qg = AudioQueryGalleryDataset(df_val)
+    check_base(dataset_qg)
+    check_query_gallery(dataset_qg, df_val)
+
+    # Query Gallery Labeled
+    dataset_qgl = AudioQueryGalleryLabeledDataset(df_val)
     check_base(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)

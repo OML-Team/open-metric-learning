@@ -25,7 +25,7 @@ from oml.utils.remote_storage import download_folder_from_remote_storage
 
 def _get_mock_dataset(
     dataset_local_folder: Union[str, Path],
-    dataset_remote_folder: Union[str, Path],
+    dataset_remote_folder: str,
     dataset_md5: str,
     dataset_gdrive_url: str,
     df_name: str,
@@ -37,7 +37,7 @@ def _get_mock_dataset(
 
     Args:
         dataset_local_folder: The directory where the dataset will be saved.
-        dataset_remote_folder: The remote directory from which the dataset will be downloaded.
+        dataset_remote_folder: The remote directory on `oml.daloroserver.com` from which the dataset will be downloaded.
         dataset_md5: The MD5 checksum used to validate the dataset.
         dataset_gdrive_url: The Google Drive URL for the dataset download as a fallback option.
         df_name: The name of the CSV file from which the output DataFrames will be generated.
@@ -53,14 +53,13 @@ def _get_mock_dataset(
         Exception: If the downloaded dataset is invalid.
     """
     dataset_local_folder = Path(dataset_local_folder)
-    dataset_remote_folder = Path(dataset_remote_folder)
     dataset_md5 = dataset_md5 if check_md5 else None
 
     if not check_exists_and_validate_md5(dataset_local_folder, dataset_md5):
         try:
             print("Downloading from oml.daloroserver.com")
             download_folder_from_remote_storage(
-                remote_folder=dataset_remote_folder.name, local_folder=str(dataset_local_folder)
+                remote_folder=dataset_remote_folder, local_folder=str(dataset_local_folder)
             )
         except Exception:
             print("We could not download from oml.daloroserver.com, let's try Google Drive.")
@@ -106,7 +105,7 @@ def get_mock_images_dataset(
     """
     return _get_mock_dataset(
         dataset_local_folder=dataset_root,
-        dataset_remote_folder=MOCK_DATASET_PATH,
+        dataset_remote_folder=MOCK_DATASET_PATH.name,
         dataset_md5=MOCK_DATASET_MD5,
         dataset_gdrive_url=MOCK_DATASET_URL_GDRIVE,
         df_name=df_name,
@@ -150,7 +149,7 @@ def get_mock_audios_dataset(
     """
     return _get_mock_dataset(
         dataset_local_folder=dataset_root,
-        dataset_remote_folder=MOCK_AUDIO_DATASET_PATH,
+        dataset_remote_folder=MOCK_AUDIO_DATASET_PATH.name,
         dataset_md5=MOCK_AUDIO_DATASET_MD5,
         dataset_gdrive_url=MOCK_AUDIO_DATASET_URL_GDRIVE,
         df_name=df_name,

@@ -8,7 +8,7 @@ import torch
 from PIL import Image
 from torch import FloatTensor
 
-from oml.const import BLACK, TColor
+from oml.const import BLACK, DEFAULT_SAMPLE_RATE, TColor
 
 
 def default_spec_repr_func(audio: FloatTensor) -> FloatTensor:
@@ -24,7 +24,7 @@ def default_spec_repr_func(audio: FloatTensor) -> FloatTensor:
     """
     from torchaudio.transforms import MelSpectrogram
 
-    melspectrogram = MelSpectrogram(sample_rate=16000, n_fft=2048, hop_length=512, n_mels=128)
+    melspectrogram = MelSpectrogram(sample_rate=DEFAULT_SAMPLE_RATE, n_fft=2048, hop_length=512, n_mels=128)
     melspec = melspectrogram(audio)
     log_melspec = torch.log1p(melspec).squeeze(0)
     return log_melspec
@@ -90,7 +90,7 @@ def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bo
 
 
 def visualize_audio_with_player(
-    audio: FloatTensor, spec_repr: FloatTensor, sr: int, color: TColor = BLACK, draw_bbox: bool = True
+    audio: FloatTensor, spec_repr: FloatTensor, sample_rate: int, color: TColor = BLACK, draw_bbox: bool = True
 ) -> str:
     """
     Visualize an audio spectral representation and provide an HTML string with an audio player.
@@ -98,7 +98,7 @@ def visualize_audio_with_player(
     Args:
         audio: The audio waveform as a FloatTensor.
         spec_repr: The spectral representation as a FloatTensor.
-        sr: The sampling rate of the audio.
+        sample_rate: The sampling rate of the audio.
         color: The color of the bounding box.
         draw_bbox: Whether to draw a bounding box around the spectral representation.
 
@@ -110,7 +110,7 @@ def visualize_audio_with_player(
     image_base64 = _visualize_audio(spec_repr, color, draw_bbox, return_b64=True)  # type: ignore
 
     buf = BytesIO()
-    torchaudio.save(buf, audio, sample_rate=sr, format="wav")
+    torchaudio.save(buf, audio, sample_rate=sample_rate, format="wav")
     buf.seek(0)
     audio_base64 = base64.b64encode(buf.getvalue()).decode("ascii")
 

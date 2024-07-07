@@ -9,12 +9,12 @@ from torch import FloatTensor
 from oml.const import (
     AUDIO_EXTENSIONS,
     BLACK,
-    DEFAULT_AUDIO_NUM_CHANNELS,
-    DEFAULT_DURATION,
+    DEFAULT_IS_MONO,
     DEFAULT_SAMPLE_RATE,
     INDEX_KEY,
     INPUT_TENSORS_KEY,
     LABELS_KEY,
+    MAX_AUDIO_LEN,
     PATHS_COLUMN,
     START_TIME_COLUMN,
     TColor,
@@ -41,6 +41,7 @@ def parse_start_times(df: pd.DataFrame) -> Optional[List[float]]:
         assert (
             df[START_TIME_COLUMN].dtype == float
         ), f"Expected dtype of '{START_TIME_COLUMN}' column is `float`, `{df[START_TIME_COLUMN].dtype}` is found."
+        df[START_TIME_COLUMN] = df[START_TIME_COLUMN].fillna(0)
         start_times = df[START_TIME_COLUMN].astype(float).tolist()
     return start_times
 
@@ -57,14 +58,13 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         extra_data: Optional[Dict[str, Any]] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        sample_rate: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = MAX_AUDIO_LEN,
+        is_mono: bool = DEFAULT_IS_MONO,
         start_times: Optional[List[float]] = None,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
-        Initializes the AudioDataset.
 
         Args:
             paths: List of audio file paths.
@@ -72,13 +72,23 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             extra_data: Extra data to include in dataset items.
             input_tensors_key: Key under which audio tensors are stored.
             index_key: Key for indexing dataset items.
-            sr: Sampling rate of audio files.
-            max_num_seconds: Duration to use from each audio file.
-            num_channels: Number of audio channels.
-            start_times: List of start time offsets in **seconds** for each audio.
+            sample_rate: Sampling rate of audio files.
+            max_num_seconds: Duration to use for each audio file.
+            is_mono: If True, the audio will be downmixed to one channel; otherwise, it will remain unchanged.
+            start_times: List of start time offsets in ``seconds`` for each audio.
             spec_repr_func: Spectral representation extraction function used for visualization.
         """
-        assert (start_times is None) or (len(paths) == len(start_times))
+        assert (start_times is None) or (
+            len(paths) == len(start_times)
+        ), "The length of 'start_times' must match the length of 'paths' if 'start_times' is provided."
+        assert sample_rate > 0, "The sample rate must be a positive integer."
+        assert max_num_seconds > 0, "The maximum number of seconds must be a positive float."
+        assert isinstance(is_mono, bool), "'is_mono' must be a boolean."
+
+        paths = [Path(p) if dataset_root is None else Path(dataset_root) / p for p in paths]
+        assert all(
+            path.suffix in AUDIO_EXTENSIONS for path in paths
+        ), f"Input audios should have one of '{AUDIO_EXTENSIONS}' extensions."
 
         if extra_data is not None:
             assert all(
@@ -91,54 +101,50 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         self.input_tensors_key = input_tensors_key
         self.index_key = index_key
 
-        self._paths = [Path(p) if dataset_root is None else Path(dataset_root) / p for p in paths]
-        assert all(
-            path.suffix in AUDIO_EXTENSIONS for path in self._paths
-        ), f"Input audios should have one of '{AUDIO_EXTENSIONS}' extensions."
+        self._paths = paths
+        self._sample_rate = sample_rate
+        self._num_frames = int(max_num_seconds * sample_rate)
+        self._is_mono = is_mono
+        self._frame_offsets = (
+            [int(st * sample_rate) for st in start_times] if start_times is not None else [0] * len(paths)
+        )
+        self._spectral_function = spec_repr_func or default_spec_repr_func
 
-        self.sr = sr
-        self.num_frames = int(max_num_seconds * sr)
-        self.num_channels = num_channels
-        self.frame_offsets = [int(st * sr) for st in start_times] if start_times is not None else [0] * len(paths)
-        self.spectral_function = spec_repr_func or default_spec_repr_func
-
-    def _downmix_and_resample(self, audio: FloatTensor, sr: int) -> FloatTensor:
+    def _downmix_and_resample(self, audio: FloatTensor, sample_rate: int) -> FloatTensor:
         """
-        Downmix audio to mono and resample it to the dataset's sampling rate.
+        (Optionally) downmix audio to mono and resample it to the dataset's sampling rate.
 
         Args:
             audio: Input audio tensor.
-            sr: Original sampling rate of the audio.
+            sample_rate: Original sampling rate of the audio.
 
         Returns:
             Processed audio tensor.
         """
         from torchaudio.transforms import Resample
 
-        if audio.shape[0] != self.num_channels:
+        if self._is_mono and audio.shape[0] != 1:
             audio = audio.mean(dim=1, keepdim=True)
-        if sr != self.sr:
-            resampler = Resample(sr, self.sr)
+        if sample_rate != self._sample_rate:
+            resampler = Resample(sample_rate, self._sample_rate)
             audio = resampler(audio)
         return audio
 
     def _trim_or_pad(self, audio: FloatTensor, frame_offset: int) -> FloatTensor:
         """
-        Trim or pad the audio to match the desired number of frames.
-        if `start_time` is specified, then it will be used, else if
+        Trim and/or pad the audio to match the desired number of frames.
 
         Args:
             audio: Audio tensor.
             frame_offset: Frame offset for trimming.
 
         Returns:
-            Trimmed or padded audio tensor.
+            Trimmed and/or padded audio tensor.
         """
-        audio_length = audio.shape[1]
-        if audio_length > self.num_frames:
-            audio = audio[:, frame_offset : frame_offset + self.num_frames]
-        else:
-            padding = (self.num_frames - audio_length, 0)
+        if audio.shape[1] > self._num_frames:
+            audio = audio[:, frame_offset : frame_offset + self._num_frames]
+        if audio.shape[1] < self._num_frames:
+            padding = (self._num_frames - audio.shape[1], 0)
             audio = torch.nn.functional.pad(audio, padding)
         return audio
 
@@ -155,9 +161,9 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         import torchaudio
 
         path = self._paths[item]
-        audio, sr = torchaudio.load(path)
-        audio = self._downmix_and_resample(audio, sr)
-        audio = self._trim_or_pad(audio, self.frame_offsets[item])
+        audio, sample_rate = torchaudio.load(path)
+        audio = self._downmix_and_resample(audio, sample_rate)
+        audio = self._trim_or_pad(audio, self._frame_offsets[item])
         return audio
 
     def __getitem__(self, item: int) -> Dict[str, Union[FloatTensor, int]]:
@@ -189,7 +195,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             Array representing the image of the plot.
         """
         audio = self.get_audio(item)
-        spec_repr = self.spectral_function(audio)
+        spec_repr = self._spectral_function(audio)
         return visualize_audio(spec_repr=spec_repr, color=color)
 
     def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
@@ -204,8 +210,8 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             HTML markup with spectral representation image and audio player.
         """
         audio = self.get_audio(item)
-        spec_repr = self.spectral_function(audio)
-        return visualize_audio_with_player(audio=audio, spec_repr=spec_repr, sr=self.sr, color=color)
+        spec_repr = self._spectral_function(audio)
+        return visualize_audio_with_player(audio=audio, spec_repr=spec_repr, sample_rate=self._sample_rate, color=color)
 
 
 class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
@@ -224,13 +230,12 @@ class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        sample_rate: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = MAX_AUDIO_LEN,
+        is_mono: bool = DEFAULT_IS_MONO,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
-        Initializes the AudioLabeledDataset.
 
         Args:
             df: DataFrame with input data.
@@ -239,9 +244,9 @@ class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
             input_tensors_key: Key under which audio tensors are stored.
             index_key: Key for indexing dataset items.
             labels_key: Key under which labels are stored.
-            sr: Sampling rate of audio files.
+            sample_rate: Sampling rate of audio files.
             max_num_seconds: Duration to use from each audio file.
-            num_channels: Number of audio channels.
+            is_mono: If True, the audio will be downmixed to one channel; otherwise, it will remain unchanged.
             spec_repr_func: Spectral representation extraction function used for visualization.
         """
         dataset = AudioBaseDataset(
@@ -250,9 +255,9 @@ class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
-            sr=sr,
+            sample_rate=sample_rate,
             max_num_seconds=max_num_seconds,
-            num_channels=num_channels,
+            is_mono=is_mono,
             start_times=parse_start_times(df),
             spec_repr_func=spec_repr_func,
         )
@@ -267,7 +272,7 @@ class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
 
 class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
     """
-    The **non-annotated** dataset of audios having `query`/`gallery` split.
+    The non-annotated dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
     (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
 
@@ -282,13 +287,12 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
         extra_data: Optional[Dict[str, Any]] = None,
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        sample_rate: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = MAX_AUDIO_LEN,
+        is_mono: bool = DEFAULT_IS_MONO,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
-        Initializes the AudioQueryGalleryDataset.
 
         Args:
             df: DataFrame with input data.
@@ -296,9 +300,9 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
             extra_data: Extra data to include in dataset items.
             input_tensors_key: Key under which audio tensors are stored.
             index_key: Key for indexing dataset items.
-            sr: Sampling rate of audio files.
+            sample_rate: Sampling rate of audio files.
             max_num_seconds: Duration to use from each audio file.
-            num_channels: Number of audio channels.
+            is_mono: If True, the audio will be downmixed to one channel; otherwise, it will remain unchanged.
             spec_repr_func: Spectral representation extraction function used for visualization.
         """
         dataset = AudioBaseDataset(
@@ -307,9 +311,9 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
-            sr=sr,
+            sample_rate=sample_rate,
             max_num_seconds=max_num_seconds,
-            num_channels=num_channels,
+            is_mono=is_mono,
             start_times=parse_start_times(df),
             spec_repr_func=spec_repr_func,
         )
@@ -324,7 +328,7 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
 
 class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizableDataset):
     """
-    The **annotated** dataset of audios having `query`/`gallery` split.
+    The annotated dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
     (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
 
@@ -340,13 +344,12 @@ class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizabl
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
-        sr: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = DEFAULT_DURATION,
-        num_channels: int = DEFAULT_AUDIO_NUM_CHANNELS,
+        sample_rate: int = DEFAULT_SAMPLE_RATE,
+        max_num_seconds: float = MAX_AUDIO_LEN,
+        is_mono: bool = DEFAULT_IS_MONO,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
         """
-        Initializes the AudioQueryGalleryLabeledDataset.
 
         Args:
             df: DataFrame with input data.
@@ -355,9 +358,9 @@ class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizabl
             input_tensors_key: Key under which audio tensors are stored.
             index_key: Key for indexing dataset items.
             labels_key: Key under which labels are stored.
-            sr: Sampling rate of audio files.
+            sample_rate: Sampling rate of audio files.
             max_num_seconds: Duration to use from each audio file.
-            num_channels: Number of audio channels.
+            is_mono: If True, the audio will be downmixed to one channel; otherwise, it will remain unchanged.
             spec_repr_func: Spectral representation extraction function used for visualization.
         """
         dataset = AudioBaseDataset(
@@ -366,9 +369,9 @@ class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizabl
             extra_data=extra_data,
             input_tensors_key=input_tensors_key,
             index_key=index_key,
-            sr=sr,
+            sample_rate=sample_rate,
             max_num_seconds=max_num_seconds,
-            num_channels=num_channels,
+            is_mono=is_mono,
             start_times=parse_start_times(df),
             spec_repr_func=spec_repr_func,
         )
