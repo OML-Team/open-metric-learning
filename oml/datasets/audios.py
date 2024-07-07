@@ -75,7 +75,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
             sample_rate: Sampling rate of audio files.
             max_num_seconds: Duration to use for each audio file.
             is_mono: If True, the audio will be downmixed to one channel; otherwise, it will remain unchanged.
-            start_times: List of start time offsets in ``seconds`` for each audio.
+            start_times: List of start time offsets in `seconds` for each audio.
             spec_repr_func: Spectral representation extraction function used for visualization.
         """
         assert (start_times is None) or (
@@ -274,7 +274,7 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
     """
     The non-annotated dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
-    (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
+    (except for this exact query), you should mark the item as `is_query == True` and `is_gallery == True`.
 
     """
 
@@ -330,7 +330,7 @@ class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizabl
     """
     The annotated dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
-    (except for this exact query), you should mark the item as ``is_query == True`` and ``is_gallery == True``.
+    (except for this exact query), you should mark the item as `is_query == True` and `is_gallery == True`.
 
     """
 
