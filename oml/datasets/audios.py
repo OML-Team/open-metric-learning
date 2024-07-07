@@ -41,7 +41,7 @@ def parse_start_times(df: pd.DataFrame) -> Optional[List[float]]:
         assert (
             df[START_TIME_COLUMN].dtype == float
         ), f"Expected dtype of '{START_TIME_COLUMN}' column is `float`, `{df[START_TIME_COLUMN].dtype}` is found."
-        df[START_TIME_COLUMN] = df[START_TIME_COLUMN].fillna(0)
+        df[START_TIME_COLUMN] = df[START_TIME_COLUMN].fillna(0.0)
         start_times = df[START_TIME_COLUMN].astype(float).tolist()
     return start_times
 
