@@ -196,6 +196,7 @@ def test_start_times() -> None:
     assert True, "Dataset iteration failed with start times"
 
 
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
 def test_audio_datasets(df: pd.DataFrame) -> None:
 

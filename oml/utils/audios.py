@@ -56,9 +56,7 @@ def _visualize_audio(
         frame_thickness = 5
         for axis in ["top", "bottom", "left", "right"]:
             ax.spines[axis].set_linewidth(frame_thickness)
-            ax.spines[axis].set_edgecolor(
-                [c / 255 for c in color]
-            )  # TODO: change all colors from arrays to strings in vis functions
+            ax.spines[axis].set_edgecolor([c / 255 for c in color])
     ax.set_xticks([])
     ax.set_yticks([])
 
