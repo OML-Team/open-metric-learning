@@ -17,7 +17,7 @@ datasets.
   or ``False`` (or ``0``) where ``split == validation``. Note, that both values can be ``True`` at
   the same time. Then we will validate every item
   in the validation set using the "1 vs rest" approach (datasets of this kind are ``SOP``, ``CARS196`` or ``CUB``).
-* [**Images**] ``path`` - path to image. It may be global or relative path (in these case you need to pass ``dataset_root`` to build-in Datasets.)
+* [**Images**, **Audios**] ``path`` - path to image/audio. It may be global or relative path (in these case you need to pass ``dataset_root`` to build-in Datasets.)
 * [**Texts**] ``text`` - text describing an item.
 
 
