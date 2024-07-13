@@ -54,7 +54,7 @@ def vitl14_224() -> VisionTransformer:
 def vitl14_336() -> VisionTransformer:
     return VisionTransformer(
         output_dim=768,
-        input_resolution=224,
+        input_resolution=336,
         layers=24,
         width=1024,
         patch_size=14,
