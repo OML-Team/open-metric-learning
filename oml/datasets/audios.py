@@ -181,7 +181,6 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
                 raise ValueError(f"<extra_data> and dataset share the same key: {key}")
             else:
                 data[key] = record[item]
-
         return data
 
     def __len__(self) -> int:
