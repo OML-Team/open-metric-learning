@@ -41,8 +41,8 @@ def _get_mock_dataset(
         dataset_md5: The MD5 checksum used to validate the dataset.
         dataset_gdrive_url: The Google Drive URL for the dataset download as a fallback option.
         df_name: The name of the CSV file from which the output DataFrames will be generated.
-        check_md5: If True, validates the dataset using an MD5 checksum. Default is True.
-        global_paths: If True, concatenates the paths in the dataset with the dataset_local_folder. Default is False.
+        check_md5: If ``True``, validates the dataset using an MD5 checksum.
+        global_paths: If ``True``, concatenates the paths in the dataset with the dataset_local_folder.
 
     Returns:
         A tuple containing two DataFrames:
@@ -95,8 +95,8 @@ def get_mock_images_dataset(
     Args:
         dataset_root: The directory where the dataset will be saved.
         df_name: The name of the CSV file from which the output DataFrames will be generated.
-        check_md5: If True, validates the dataset using an MD5 checksum. Default is True.
-        global_paths: If True, concatenates the paths in the dataset with the dataset_local_folder. Default is False.
+        check_md5: If ``True``, validates the dataset using an MD5 checksum.
+        global_paths: If ``True``, concatenates the paths in the dataset with the dataset_local_folder.
 
     Returns:
         A tuple containing two DataFrames:
@@ -139,8 +139,8 @@ def get_mock_audios_dataset(
     Args:
         dataset_root: The directory where the dataset will be saved.
         df_name: The name of the CSV file from which the output DataFrames will be generated.
-        check_md5: If True, validates the dataset using an MD5 checksum. Default is True.
-        global_paths: If True, concatenates the paths in the dataset with the dataset_local_folder. Default is False.
+        check_md5: If ``True``, validates the dataset using an MD5 checksum.
+        global_paths: If ``True``, concatenates the paths in the dataset with the dataset_local_folder.
 
     Returns:
         A tuple containing two DataFrames:

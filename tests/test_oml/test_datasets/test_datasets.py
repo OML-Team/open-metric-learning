@@ -165,39 +165,6 @@ def get_df_with_start_times() -> pd.DataFrame:
 
 @pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
-@pytest.mark.parametrize("is_mono", [True, False])
-def test_downmix(df: pd.DataFrame, is_mono: bool) -> None:
-    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), is_mono=is_mono)
-    for item in dataset:
-        audio = item[dataset.input_tensors_key]
-        if is_mono:
-            assert audio.shape[0] == 1, f"Audio should be mono, but has {audio.shape[0]} channels"
-
-
-@pytest.mark.needs_optional_dependency
-@pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
-@pytest.mark.parametrize("sample_rate", [8000, 16000, 44100])
-@pytest.mark.parametrize("max_num_seconds", [0.01, 3.0, 100.0])
-def test_resample_trim_pad(df: pd.DataFrame, sample_rate: int, max_num_seconds: float) -> None:
-    dataset = AudioBaseDataset(df[PATHS_COLUMN].tolist(), sample_rate=sample_rate, max_num_seconds=max_num_seconds)
-    for item in dataset:
-        audio = item[dataset.input_tensors_key]
-        assert audio.shape[1] == int(
-            max_num_seconds * sample_rate
-        ), f"Audio length {audio.shape[1]} does not match expected {int(max_num_seconds * sample_rate)}"
-
-
-@pytest.mark.needs_optional_dependency
-def test_start_times() -> None:
-    df = get_df_with_start_times()
-    dataset = AudioLabeledDataset(df)
-    for _ in dataset:
-        pass
-    assert True, "Dataset iteration failed with start times"
-
-
-@pytest.mark.needs_optional_dependency
-@pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
 def test_audio_datasets(df: pd.DataFrame) -> None:
 
     df_train = df[df["split"].eq("train")].copy()

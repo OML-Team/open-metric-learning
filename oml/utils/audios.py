@@ -14,7 +14,6 @@ from oml.const import BLACK, DEFAULT_SAMPLE_RATE, TColor
 def default_spec_repr_func(audio: FloatTensor) -> FloatTensor:
     """
     Generate a default spectral representation (log-scaled MelSpec) from an audio signal.
-    Used primarily for visualization.
 
     Args:
         audio: The input audio tensor.
@@ -37,14 +36,14 @@ def _visualize_audio(
     Internal function to visualize an audio spectrogram.
 
     Args:
-        spec_repr: The spectrogram representation as a FloatTensor.
+        spec_repr: The spectrogram representation.
         color: The color of the bounding box.
         draw_bbox: Whether to draw a bounding box around the spectrogram.
         return_b64: Whether to return the image as a base64 string.
 
     Returns:
-        If return_b64 is False, returns the image as a NumPy array.
-        If return_b64 is True, returns the image as a base64 string.
+        If return_b64 is ``False``, returns the image as an array.
+        If return_b64 is ``True``, returns the image as a base64 string.
     """
     fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
 
@@ -77,12 +76,12 @@ def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bo
     Visualize an audio spectral representation and return it as a NumPy array.
 
     Args:
-        spec_repr: The spectral representation as a FloatTensor.
+        spec_repr: The spectral representation.
         color: The color of the bounding box.
         draw_bbox: Whether to draw a bounding box around the spectral representation.
 
     Returns:
-        The spectral representation image as a NumPy array.
+        The spectral representation image as an array.
     """
     return _visualize_audio(spec_repr, color, draw_bbox, return_b64=False)  # type: ignore
 
@@ -94,8 +93,8 @@ def visualize_audio_with_player(
     Visualize an audio spectral representation and provide an HTML string with an audio player.
 
     Args:
-        audio: The audio waveform as a FloatTensor.
-        spec_repr: The spectral representation as a FloatTensor.
+        audio: The audio waveform.
+        spec_repr: The spectral representation.
         sample_rate: The sampling rate of the audio.
         color: The color of the bounding box.
         draw_bbox: Whether to draw a bounding box around the spectral representation.
