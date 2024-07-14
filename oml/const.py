@@ -40,6 +40,7 @@ STORAGE_URL = "https://oml.daloroserver.com"
 STORAGE_CKPTS = STORAGE_URL + "/download/checkpoints"
 
 MOCK_DATASET_PATH = CACHE_PATH / "mock_dataset"
+MOCK_DATASET_DEFAULT_CSV = "df.csv"
 MOCK_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing"
 MOCK_DATASET_MD5 = "a23478efd4746d18f937fa6c5758c0ed"
 
@@ -101,6 +102,17 @@ INPUT_TENSORS_KEY_2 = "input_tensors_2"
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "JPG", "JPEG", "png"]
 
-# hydra provides ability to set its behaviour for convinient backwards compatibility
+# hydra provides ability to set its behaviour for convenient backwards compatibility
 # no matter what the current version is
 HYDRA_BEHAVIOUR = "1.1"
+
+# Audio specific constants
+MOCK_AUDIO_DATASET_PATH = CACHE_PATH / "mock_audio_dataset"
+MOCK_AUDIO_DATASET_URL_GDRIVE = "https://drive.google.com/drive/folders/1NcKnyXqDyyYARrDETmhJcTTXegO3W0Ju"
+MOCK_AUDIO_DATASET_MD5 = "45629afad9ff28f9148f3ea60f659d18"
+
+AUDIO_EXTENSIONS = [".mp3", ".wav", ".ogg", ".flac"]
+START_TIME_COLUMN = "start_time"
+MAX_AUDIO_LEN = 3.0
+DEFAULT_SAMPLE_RATE = 16_000
+DEFAULT_CONVERT_TO_MONO = True
