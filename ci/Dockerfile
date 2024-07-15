@@ -36,7 +36,7 @@ RUN pip install --no-cache-dir -r requirements.txt ${EXTRA_INDEX}
 RUN pip install --no-cache-dir -r requirements_tests.txt
 RUN pip install --no-cache-dir -r requirements_optional.txt
 RUN pip install --no-cache-dir -r requirements_nlp.txt
-RUN pip install --no-cache-dir -r requirements_audio.txt
+RUN pip install --no-cache-dir -r requirements_audio.txt ${EXTRA_INDEX}
 
 WORKDIR /oml-lib
 COPY . /oml-lib
