@@ -62,7 +62,12 @@ def get_opt() -> Optimizer:
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
         ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
         ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
-        ("datasets", DATASET_BUILDER_REGISTRY, get_image_datasets, {"dataset_root": MOCK_DATASET_PATH}),
+        (
+            "datasets",
+            DATASET_BUILDER_REGISTRY,
+            get_image_datasets,
+            {"dataset_root": MOCK_DATASET_PATH, "embeddings_cache_dir": MOCK_DATASET_PATH},
+        ),
         pytest.param("logger", LOGGERS_REGISTRY, get_logger, None, marks=pytest.mark.needs_optional_dependency),
     ],
 )

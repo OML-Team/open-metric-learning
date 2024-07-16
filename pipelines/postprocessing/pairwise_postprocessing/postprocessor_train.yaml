@@ -12,11 +12,25 @@ datasets:
   args:
     dataset_root: /path/to/dataset/   # <---- specify path to your dataset
     dataframe_name: df.csv
+    embeddings_cache_dir: ${dataset_root} #TODO: check if this has correct substitution  # CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
+    cache_size: 0
+    batch_size_inference: 128
+    num_workers: ${num_workers}
+    precision: ${precision}
+    feature_extractor:
+      name: vit
+      args:
+        normalise_features: True
+        use_multi_scale: False
+        weights: /path/to/extractor.ckpt  # <---- specify path to baseline feature extractor
+        arch: vits16
+
     transforms_extraction:
       name: norm_resize_hypvit_torch
       args:
         im_size: 224
         crop_size: 224
+
     transforms_train:
       name: augs_hypvit_torch
       args:
@@ -27,23 +41,9 @@ logs_root: /path/to/logs   # <---- specify path to your logs
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
+
 max_epochs: 1000
 valid_period: 10
-
-# CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
-
-embeddings_cache_dir: ${dataset_root}
-
-extractor_weights: /path/to/extractor.ckpt  # <---- specify path to baseline feature extractor
-
-extractor:
-  name: vit
-  args:
-    normalise_features: True
-    use_multi_scale: False
-    weights: ${extractor_weights}
-    arch: vits16
 
 
 # TRAIN POSTPROCESSOR
@@ -87,7 +87,7 @@ sampler:
 
 # VALIDATE POSTPROCESSOR BY RE-RANKING TOP-N OUTPUTS
 
-batch_size_inference: 128
+batch_size_inference: 128  # TODO: Is this expected with bs for reranker below?
 
 postprocessor:
   name: pairwise_reranker
