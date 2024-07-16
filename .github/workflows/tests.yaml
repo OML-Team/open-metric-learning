@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+    timeout-minutes: 30
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -37,6 +38,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+    timeout-minutes: 60
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -50,6 +52,7 @@ jobs:
         python3 -m pip install -r ci/requirements_tests.txt
         python3 -m pip install -r ci/requirements_optional.txt
         python3 -m pip install -r ci/requirements_nlp.txt
+        python3 -m pip install -r ci/requirements_audio.txt
         python3 -m pip install -e .
     - name: Running all tests
       run: |

@@ -1,8 +1,10 @@
 import inspect
 import os
 import random
-from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
+from contextlib import contextmanager
+from typing import Any, Dict, Generator, Iterable, List, Sequence, Tuple, Union
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -188,6 +190,16 @@ def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> 
     return image
 
 
+@contextmanager
+def matplotlib_backend(backend: str) -> Generator[None, None, None]:
+    current_backend = matplotlib.get_backend()
+    try:
+        matplotlib.use(backend)
+        yield
+    finally:
+        matplotlib.use(current_backend)
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -200,4 +212,5 @@ __all__ = [
     "compare_dicts_recursively",
     "pad_array_right",
     "visualise_text",
+    "matplotlib_backend",
 ]

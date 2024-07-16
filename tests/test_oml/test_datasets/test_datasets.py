@@ -1,5 +1,5 @@
-import matplotlib
 import pandas as pd
+import pytest
 import torch
 from torch import LongTensor
 
@@ -13,6 +13,10 @@ from oml.const import (
     TEXTS_COLUMN,
 )
 from oml.datasets import (
+    AudioBaseDataset,
+    AudioLabeledDataset,
+    AudioQueryGalleryDataset,
+    AudioQueryGalleryLabeledDataset,
     ImageBaseDataset,
     ImageLabeledDataset,
     ImageQueryGalleryDataset,
@@ -28,7 +32,12 @@ from oml.interfaces.datasets import (
     IQueryGalleryDataset,
     IVisualizableDataset,
 )
-from oml.utils import get_mock_images_dataset, get_mock_texts_dataset
+from oml.utils import (
+    get_mock_audios_dataset,
+    get_mock_images_dataset,
+    get_mock_texts_dataset,
+)
+from oml.utils.misc import matplotlib_backend
 
 
 class ASCITokenizer:
@@ -53,14 +62,15 @@ def check_labeled(dataset_l: ILabeledDataset, df: pd.DataFrame) -> None:
     item = dataset_l[0]
     assert dataset_l.labels_key in item
 
-    # test label2category()
-    labels = list(dataset_l.get_label2category().keys())
-    categories = list(dataset_l.get_label2category().values())
-    assert set(labels) == set(df[LABELS_COLUMN].tolist())
-    assert set(categories) == set(df[CATEGORIES_COLUMN].tolist())
-
     # test get_labels()
     assert set(dataset_l.get_labels().tolist()) == set(df[LABELS_COLUMN].tolist())
+
+    # test label2category()
+    if CATEGORIES_COLUMN in df:
+        labels = list(dataset_l.get_label2category().keys())
+        categories = list(dataset_l.get_label2category().values())
+        assert set(labels) == set(df[LABELS_COLUMN].tolist())
+        assert set(categories) == set(df[CATEGORIES_COLUMN].tolist())
 
 
 def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> None:
@@ -80,11 +90,9 @@ def check_query_gallery(dataset_qg: IQueryGalleryDataset, df: pd.DataFrame) -> N
         assert df[IS_GALLERY_COLUMN].iloc[int(ig)]
 
 
-def check_visaulization(dataset_v: IVisualizableDataset) -> None:
-    current_backend = matplotlib.get_backend()
-    matplotlib.use("Agg")
-    _ = dataset_v.visualize(item=0, color=BLACK)
-    matplotlib.use(current_backend)
+def check_visualization(dataset_v: IVisualizableDataset) -> None:
+    with matplotlib_backend("Agg"):
+        _ = dataset_v.visualize(item=0, color=BLACK)
     assert True
 
 
@@ -103,19 +111,19 @@ def test_text_datasets() -> None:
     # Labeled
     dataset_l = TextLabeledDataset(df_train, tokenizer=tokenizer)
     check_base(dataset_l)
-    check_visaulization(dataset_l)
+    check_visualization(dataset_l)
     check_labeled(dataset_l, df_train)
 
     # Query Gallery
     dataset_qg = TextQueryGalleryDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qg)
-    check_visaulization(dataset_qg)
+    check_visualization(dataset_qg)
     check_query_gallery(dataset_qg, df_val)
 
     # Query Gallery Labeled
     dataset_qgl = TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
     check_base(dataset_qgl)
-    check_visaulization(dataset_qgl)
+    check_visualization(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)
 
@@ -140,6 +148,44 @@ def test_image_datasets() -> None:
 
     # Query Gallery Labeled
     dataset_qgl = ImageQueryGalleryLabeledDataset(df_val)
+    check_base(dataset_qgl)
+    check_query_gallery(dataset_qgl, df_val)
+    check_labeled(dataset_qgl, df_val)
+
+
+def get_df() -> pd.DataFrame:
+    df_train, df_val = get_mock_audios_dataset(global_paths=True)
+    return pd.concat([df_train, df_val])
+
+
+def get_df_with_start_times() -> pd.DataFrame:
+    df_train, df_val = get_mock_audios_dataset(df_name="df_with_start_times.csv", global_paths=True)
+    return pd.concat([df_train, df_val])
+
+
+@pytest.mark.needs_optional_dependency
+@pytest.mark.parametrize("df", (get_df(), get_df_with_start_times()))
+def test_audio_datasets(df: pd.DataFrame) -> None:
+
+    df_train = df[df["split"].eq("train")].copy()
+    df_val = df[df["split"].eq("validation")].copy()
+
+    # Base
+    dataset_b = AudioBaseDataset(paths=df[PATHS_COLUMN].tolist())
+    check_base(dataset_b)
+
+    # Labeled
+    dataset_l = AudioLabeledDataset(df_train)
+    check_base(dataset_l)
+    check_labeled(dataset_l, df_train)
+
+    # Query Gallery
+    dataset_qg = AudioQueryGalleryDataset(df_val)
+    check_base(dataset_qg)
+    check_query_gallery(dataset_qg, df_val)
+
+    # Query Gallery Labeled
+    dataset_qgl = AudioQueryGalleryLabeledDataset(df_val)
     check_base(dataset_qgl)
     check_query_gallery(dataset_qgl, df_val)
     check_labeled(dataset_qgl, df_val)

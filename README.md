@@ -21,10 +21,10 @@ OML is a PyTorch-based framework to train and validate the models producing high
 <a href="https://www.epoch8.co/" target="_blank"><img src="https://i.ibb.co/GdNVTyt/Screenshot-2023-07-04-at-11-19-24.png" width="100"/></a>ㅤㅤ
 <a href="https://www.meituan.com" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/6/61/Meituan_English_Logo.png" width="100"/></a>ㅤㅤ
 <a href="https://constructor.io/" target="_blank"><img src="https://rethink.industries/wp-content/uploads/2022/04/constructor.io-logo.png" width="100"/></a>ㅤㅤ
-<a href="https://edgify.ai/" target="_blank"><img src="https://edgify.ai/wp-content/themes/edgifyai/dist/assets/logo.svg" width="100" height="30"/></a>ㅤㅤ
+<a href="https://edgify.ai/" target="_blank"><img src="https://edgify.ai/wp-content/uploads/2024/04/new-edgify-logo.svg" width="100" height="30"/></a>ㅤㅤ
 <a href="https://inspector-cloud.ru/" target="_blank"><img src="https://thumb.tildacdn.com/tild6533-6433-4137-a266-613963373637/-/resize/540x/-/format/webp/photo.png" width="150" height="30"/></a>ㅤㅤ
-<a href="https://yango-tech.com/" target="_blank"><img src="https://yango-backend.sborkademo.com/media/pages/home/205f66f309-1717169752/opengr4-1200x630-crop-q85.jpg" width="100" height="30"/></a>
-
+<a href="https://yango-tech.com/" target="_blank"><img src="https://yango-backend.sborkademo.com/media/pages/home/205f66f309-1717169752/opengr4-1200x630-crop-q85.jpg" width="100" height="30"/></a>ㅤㅤ
+<a href="https://www.adagrad.ai/" target="_blank"><img src="https://assets-global.website-files.com/619cafd224a31d1835ece5bd/61de7f23546e9662e51605ba_Adagrad_logo_footer-2022.png" width="100" height="30"/></a>
 
 <a href="https://www.ox.ac.uk/" target="_blank"><img src="https://i.ibb.co/zhWL6tD/21-05-2019-16-08-10-6922268.png" width="120"/></a>ㅤㅤ
 <a href="https://www.hse.ru/en/" target="_blank"><img src="https://www.hse.ru/data/2020/11/16/1367274044/HSE_University_blue.jpg.(230x86x123).jpg" width="100"/></a>
@@ -337,6 +337,7 @@ for our paper
 ```shell
 pip install -U open-metric-learning; # minimum dependencies
 pip install -U open-metric-learning[nlp]
+pip install -U open-metric-learning[audio]
 ```
 
 <details><summary>DockerHub</summary>
@@ -979,7 +980,7 @@ I want to thank people who worked with me on that module:
 [Sergey Kolesnikov](https://github.com/Scitator)
 and others.
 
-I would like to thank people who continue working on this pipeline when it became a separe project:
+I would like to thank people who continue working on this pipeline when it became a separate project:
 [Julia Shenshina](https://github.com/julia-shenshina),
 [Misha Kindulov](https://github.com/b0nce),
 [Aron Dik](https://github.com/dapladoc),
