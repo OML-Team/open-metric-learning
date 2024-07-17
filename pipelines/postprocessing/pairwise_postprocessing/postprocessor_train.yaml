@@ -8,13 +8,13 @@ find_unused_parameters: False
 
 
 datasets:
-  name: oml_image_dataset
+  name: oml_reranking_dataset
   args:
     dataset_root: /path/to/dataset/   # <---- specify path to your dataset
     dataframe_name: df.csv
-    embeddings_cache_dir: ${dataset_root} #TODO: check if this has correct substitution  # CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
+    embeddings_cache_dir: ${datasets.args.dataset_root} # CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
     cache_size: 0
-    batch_size_inference: 128
+    batch_size_inference: ${batch_size_inference}
     num_workers: ${num_workers}
     precision: ${precision}
     feature_extractor:
@@ -87,7 +87,7 @@ sampler:
 
 # VALIDATE POSTPROCESSOR BY RE-RANKING TOP-N OUTPUTS
 
-batch_size_inference: 128  # TODO: Is this expected with bs for reranker below?
+batch_size_inference: 128
 
 postprocessor:
   name: pairwise_reranker

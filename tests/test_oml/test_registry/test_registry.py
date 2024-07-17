@@ -66,7 +66,7 @@ def get_opt() -> Optimizer:
             "datasets",
             DATASET_BUILDER_REGISTRY,
             get_image_datasets,
-            {"dataset_root": MOCK_DATASET_PATH, "embeddings_cache_dir": MOCK_DATASET_PATH},
+            {"dataset_root": MOCK_DATASET_PATH, "embeddings_cache_dir": None},
         ),
         pytest.param("logger", LOGGERS_REGISTRY, get_logger, None, marks=pytest.mark.needs_optional_dependency),
     ],

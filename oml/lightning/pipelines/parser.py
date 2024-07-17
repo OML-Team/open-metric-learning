@@ -113,7 +113,6 @@ def convert_to_new_format_if_needed(
         "cache_size",
         "transforms_train",
         "transforms_val",
-        "transforms_extraction",
     }
     keys_to_process = old_keys.intersection(set(cfg.keys()))
     if keys_to_process:

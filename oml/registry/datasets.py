@@ -50,7 +50,7 @@ def get_postprocessor_datasets_by_cfg(**cfg: TCfg) -> Tuple[ILabeledDataset, IQu
     )
 
     args = {
-        "model": get_extractor_by_cfg(cfg["feature_extractor"]).to(str(cfg["device"])),
+        "model": get_extractor_by_cfg(cfg["feature_extractor"]).to(str(cfg["accelerator"])),
         "num_workers": cfg["num_workers"],
         "batch_size": cfg["batch_size_inference"],
         "use_fp16": int(str(cfg.get("precision", 32))) == 16,
@@ -84,7 +84,6 @@ def get_postprocessor_datasets_by_cfg(**cfg: TCfg) -> Tuple[ILabeledDataset, IQu
     return train_dataset, valid_dataset
 
 
-# TODO: move to utils probably
 def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
     def dict2str(dictionary: Dict[str, Any]) -> str:
         flatten_items = flatten_dict(dictionary).items()

@@ -7,11 +7,24 @@ devices: 2
 find_unused_parameters: False
 
 datasets:
-  name: oml_image_dataset
+  name: oml_reranking_dataset
   args:
       dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
       dataframe_name: df_with_category.csv
       cache_size: 50
+      batch_size_inference: ${batch_size_inference}
+      embeddings_cache_dir: ${datasets.args.dataset_root}
+      num_workers: ${num_workers}
+      precision: ${precision}
+      accelerator: ${accelerator}
+      feature_extractor:
+        name: vit
+        args:
+          normalise_features: False
+          use_multi_scale: False
+          weights: null
+          arch: vits16
+
       transforms_train:
         name: augs_hypvit_torch
         args:
@@ -31,24 +44,13 @@ valid_period: 1
 
 # EXTRACTION
 
-embeddings_cache_dir: /tmp
-
-extractor:
-  name: vit
-  args:
-    normalise_features: False
-    use_multi_scale: False
-    weights: null
-    arch: vits16
-
-
 # TRAIN
 
 pairwise_model:
   name: concat_siamese
   args:
     mlp_hidden_dims: [384, 192]
-    extractor: ${extractor}
+    extractor: ${datasets.args.feature_extractor}
 
 hard_pairs_mining: True
 
