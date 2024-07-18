@@ -6,35 +6,45 @@ accelerator: gpu
 devices: 2
 find_unused_parameters: False
 
-dataset_root: /path/to/dataset/   # <---- specify path to your dataset
+
+datasets:
+  name: oml_reranking_dataset
+  args:
+    dataset_root: /path/to/dataset/   # <---- specify path to your dataset
+    dataframe_name: df.csv
+    embeddings_cache_dir: ${datasets.args.dataset_root} # CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
+    cache_size: 0
+    batch_size_inference: ${batch_size_inference}
+    num_workers: ${num_workers}
+    precision: ${precision}
+    feature_extractor:
+      name: vit
+      args:
+        normalise_features: True
+        use_multi_scale: False
+        weights: /path/to/extractor.ckpt  # <---- specify path to baseline feature extractor
+        arch: vits16
+
+    transforms_extraction:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+
+    transforms_train:
+      name: augs_hypvit_torch
+      args:
+        im_size: 224
+        min_scale: 0.8
+
 logs_root: /path/to/logs   # <---- specify path to your logs
-dataframe_name: df.csv
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
+
 max_epochs: 1000
 valid_period: 10
 
-# CACHE EMBEDDINGS PRODUCED BY BASELINE FEATURE EXTRACTOR
-
-embeddings_cache_dir: ${dataset_root}
-
-extractor_weights: /path/to/extractor.ckpt  # <---- specify path to baseline feature extractor
-
-extractor:
-  name: vit
-  args:
-    normalise_features: True
-    use_multi_scale: False
-    weights: ${extractor_weights}
-    arch: vits16
-
-transforms_extraction:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 # TRAIN POSTPROCESSOR
 
@@ -74,11 +84,6 @@ sampler:
     n_labels: 30
     n_instances: 4
 
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 224
-    min_scale: 0.8
 
 # VALIDATE POSTPROCESSOR BY RE-RANKING TOP-N OUTPUTS
 

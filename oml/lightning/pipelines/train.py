@@ -6,12 +6,12 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from oml.const import TCfg
-from oml.datasets.images import get_retrieval_images_datasets
 from oml.interfaces.datasets import ILabeledDataset, IQueryGalleryLabeledDataset
 from oml.lightning.callbacks.metric import MetricValCallback
 from oml.lightning.modules.extractor import ExtractorModule, ExtractorModuleDDP
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
+    convert_to_new_format_if_needed,
     parse_ckpt_callback_from_config,
     parse_engine_params_from_config,
     parse_logger_from_config,
@@ -19,22 +19,19 @@ from oml.lightning.pipelines.parser import (
     parse_scheduler_from_config,
 )
 from oml.metrics.embeddings import EmbeddingMetrics
+from oml.registry.datasets import get_image_datasets
 from oml.registry.losses import get_criterion_by_cfg
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.optimizers import get_optimizer_by_cfg
-from oml.registry.transforms import get_transforms_by_cfg
 from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 
 def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader, ILabeledDataset, IQueryGalleryLabeledDataset]:
-    train_dataset, valid_dataset = get_retrieval_images_datasets(
-        dataset_root=Path(cfg["dataset_root"]),
-        transforms_train=get_transforms_by_cfg(cfg["transforms_train"]),
-        transforms_val=get_transforms_by_cfg(cfg["transforms_val"]),
-        dataframe_name=cfg["dataframe_name"],
-        cache_size=cfg.get("cache_size", 0),
-        verbose=cfg.get("show_dataset_warnings", True),
-    )
+
+    train_dataset, valid_dataset = get_image_datasets(cfg["datasets"]["name"], **cfg["datasets"]["args"])
+
+    assert isinstance(train_dataset, ILabeledDataset)
+    assert isinstance(valid_dataset, IQueryGalleryLabeledDataset)
 
     sampler = parse_sampler_from_config(cfg, train_dataset)
 
@@ -70,6 +67,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
     set_global_seed(cfg["seed"])
 
     cfg = dictconfig_to_dict(cfg)
+    cfg = convert_to_new_format_if_needed(cfg)
     pprint(cfg)
 
     logger = parse_logger_from_config(cfg)

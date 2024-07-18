@@ -114,7 +114,7 @@ def get_mock_images_dataset(
     )
 
 
-def download_mock_dataset(
+def download_images_mock_dataset(
     dataset_root: Union[str, Path] = MOCK_DATASET_PATH,
     check_md5: bool = True,
     df_name: str = "df.csv",
