@@ -10,6 +10,7 @@ from torch import nn
 from torch.optim import Optimizer
 
 from oml.const import CONFIGS_PATH, DOTENV_PATH, TCfg
+from oml.registry.datasets import DATASETS_REGISTRY, get_dataset_by_cfg
 from oml.registry.loggers import LOGGERS_REGISTRY, get_logger
 from oml.registry.losses import LOSSES_REGISTRY, get_criterion
 from oml.registry.miners import MINERS_REGISTRY, get_miner
@@ -61,6 +62,7 @@ def get_opt() -> Optimizer:
         ("transforms", TRANSFORMS_REGISTRY, get_transforms, None),
         ("pairwise_model", PAIRWISE_MODELS_REGISTRY, get_pairwise_model, None),
         ("postprocessor", POSTPROCESSORS_REGISTRY, get_postprocessor, None),
+        ("datasets", DATASETS_REGISTRY, get_dataset_by_cfg, None),
         pytest.param("logger", LOGGERS_REGISTRY, get_logger, None, marks=pytest.mark.needs_optional_dependency),
     ],
 )
