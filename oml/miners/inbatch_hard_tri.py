@@ -57,7 +57,7 @@ class HardTripletsMiner(ITripletsMinerInBatch):
 
         """
 
-        labels = torch.IntTensor(labels)
+        labels = torch.tensor(labels)
 
         # Ensure labels are a torch tensor
         labels = labels.to(distmat.device)
