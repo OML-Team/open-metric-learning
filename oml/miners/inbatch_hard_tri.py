@@ -1,11 +1,9 @@
 from typing import List
 
-import numpy as np
 import torch
 from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
-from oml.utils.misc import find_value_ids
 from oml.utils.misc_torch import pairwise_dist
 
 
