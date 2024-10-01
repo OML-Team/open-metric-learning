@@ -71,12 +71,12 @@ class HardTripletsMiner(ITripletsMinerInBatch):
 
         # Get the hardest positives: argmax over the distance matrix where labels match (i.e. hardest positive)
         dist_pos = distmat.clone()
-        dist_pos[~label_equal] = -float('inf')  # Set non-positives to -inf
+        dist_pos[~label_equal] = -float("inf")  # Set non-positives to -inf
         hardest_pos_idx = torch.argmax(dist_pos, dim=1)
 
         # Get the hardest negatives: argmin over the distance matrix where labels don't match (i.e. hardest negative)
         dist_neg = distmat.clone()
-        dist_neg[~label_not_equal] = float('inf')  # Set non-negatives to +inf
+        dist_neg[~label_not_equal] = float("inf")  # Set non-negatives to +inf
         hardest_neg_idx = torch.argmin(dist_neg, dim=1)
 
         # Return anchor indices, positive indices, and negative indices
