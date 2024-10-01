@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Iterator, List, Union
 
 import numpy as np
@@ -67,7 +67,7 @@ class BalanceSampler(IBatchSampler):
 
         lbl2idx = defaultdict(list)
 
-        for idx, label in tqdm(enumerate(labels), total=len(labels)):
+        for idx, label in enumerate(labels):
             lbl2idx[label].append(idx)
 
         self.lbl2idx = dict(lbl2idx)

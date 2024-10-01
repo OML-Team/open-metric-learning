@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+import torch
 from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
