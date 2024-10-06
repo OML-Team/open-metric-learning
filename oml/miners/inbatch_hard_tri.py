@@ -67,24 +67,22 @@ class HardTripletsMiner(ITripletsMinerInBatch):
         label_equal = labels.unsqueeze(0) == labels.unsqueeze(1)  # Shape [batch_size, batch_size]
         label_not_equal = ~label_equal
 
-        label_equal.fill_diagonal_(False)
-
         # Get the hardest positives: argmax over the distance matrix where labels match (i.e. hardest positive)
         dist_pos = distmat.clone()
-        dist_pos[~label_equal] = -float("inf")  # Set non-positives to -inf
+        dist_pos[label_not_equal] = -float("inf")  # Set non-positives to -inf
         hardest_pos_idx = torch.argmax(dist_pos, dim=1)
 
         # Get the hardest negatives: argmin over the distance matrix where labels don't match (i.e. hardest negative)
         dist_neg = distmat.clone()
-        dist_neg[~label_not_equal] = float("inf")  # Set non-negatives to +inf
+        dist_neg[label_equal] = float("inf")  # Set non-negatives to +inf
         hardest_neg_idx = torch.argmin(dist_neg, dim=1)
 
         # Return anchor indices, positive indices, and negative indices
-        ids_anchor = torch.arange(batch_size, device=distmat.device)
+        ids_anchor = list(range(batch_size))
         ids_pos = hardest_pos_idx
         ids_neg = hardest_neg_idx
 
-        return ids_anchor.cpu().tolist(), ids_pos.cpu().tolist(), ids_neg.cpu().tolist()
+        return ids_anchor, ids_pos.cpu().tolist(), ids_neg.cpu().tolist()
 
 
 __all__ = ["HardTripletsMiner"]
