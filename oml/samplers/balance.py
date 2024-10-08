@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Iterator, List, Union
 
 import numpy as np
@@ -64,7 +64,13 @@ class BalanceSampler(IBatchSampler):
         self._unq_labels = unq_labels
 
         labels = np.array(labels)
-        self.lbl2idx = {label: np.arange(len(labels))[labels == label].tolist() for label in set(labels)}
+
+        lbl2idx = defaultdict(list)
+
+        for idx, label in enumerate(labels):
+            lbl2idx[label].append(idx)
+
+        self.lbl2idx = dict(lbl2idx)
 
         self._batches_in_epoch = len(self._unq_labels) // self.n_labels
 

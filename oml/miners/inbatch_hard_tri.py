@@ -1,10 +1,9 @@
 from typing import List
 
-import numpy as np
+import torch
 from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
-from oml.utils.misc import find_value_ids
 from oml.utils.misc_torch import pairwise_dist
 
 
@@ -57,24 +56,33 @@ class HardTripletsMiner(ITripletsMinerInBatch):
                 ``(anchor, positive, negative)``
 
         """
-        ids_all = set(range(len(labels)))
 
-        ids_anchor, ids_pos, ids_neg = [], [], []
+        labels = torch.tensor(labels)
 
-        for i_anch, label in enumerate(labels):
-            ids_label = set(find_value_ids(it=labels, value=label))
+        # Ensure labels are a torch tensor
+        labels = labels.to(distmat.device)
 
-            ids_pos_cur = np.array(list(ids_label - {i_anch}), int)
-            ids_neg_cur = np.array(list(ids_all - ids_label), int)
+        batch_size = labels.size(0)
 
-            i_pos = ids_pos_cur[distmat[i_anch, ids_pos_cur].argmax()]
-            i_neg = ids_neg_cur[distmat[i_anch, ids_neg_cur].argmin()]
+        label_equal = labels.unsqueeze(0) == labels.unsqueeze(1)  # Shape [batch_size, batch_size]
+        label_not_equal = ~label_equal
 
-            ids_anchor.append(i_anch)
-            ids_pos.append(i_pos)
-            ids_neg.append(i_neg)
+        # Get the hardest positives: argmax over the distance matrix where labels match (i.e. hardest positive)
+        dist_pos = distmat.clone()
+        dist_pos[label_not_equal] = -float("inf")  # Set non-positives to -inf
+        hardest_pos_idx = torch.argmax(dist_pos, dim=1)
 
-        return ids_anchor, ids_pos, ids_neg
+        # Get the hardest negatives: argmin over the distance matrix where labels don't match (i.e. hardest negative)
+        dist_neg = distmat.clone()
+        dist_neg[label_equal] = float("inf")  # Set non-negatives to +inf
+        hardest_neg_idx = torch.argmin(dist_neg, dim=1)
+
+        # Return anchor indices, positive indices, and negative indices
+        ids_anchor = list(range(batch_size))
+        ids_pos = hardest_pos_idx
+        ids_neg = hardest_neg_idx
+
+        return ids_anchor, ids_pos.cpu().tolist(), ids_neg.cpu().tolist()
 
 
 __all__ = ["HardTripletsMiner"]
