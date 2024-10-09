@@ -37,10 +37,11 @@ repos:
 
 # check code style
 - repo: https://github.com/pycqa/flake8
-  rev: 3.8.4
+  rev: 6.1.0
   hooks:
   - id: flake8
     exclude: __init__.py
+    additional_dependencies: ['importlib-metadata<7.0']
 
 
 # static type checking
