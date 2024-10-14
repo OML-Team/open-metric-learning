@@ -13,12 +13,12 @@ from oml.retrieval.postprocessors.pairwise import PairwiseReranker
 from oml.retrieval.retrieval_results import RetrievalResults
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
 from oml.transforms.images.utils import TTransforms
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.download_mock_dataset import download_images_mock_dataset
 from tests.utils import check_if_sequence_of_tensors_are_equal
 
 
 def get_validation_results(model: nn.Module, transforms: TTransforms) -> Tuple[RetrievalResults, IQueryGalleryDataset]:
-    _, df_val = download_mock_dataset(MOCK_DATASET_PATH)
+    _, df_val = download_images_mock_dataset(MOCK_DATASET_PATH)
 
     dataset = ImageQueryGalleryLabeledDataset(df=df_val, transform=transforms, dataset_root=MOCK_DATASET_PATH)
 

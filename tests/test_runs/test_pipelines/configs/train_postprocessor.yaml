@@ -6,32 +6,43 @@ accelerator: cpu
 devices: 2
 find_unused_parameters: False
 
-dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df_with_category.csv
+datasets:
+  name: oml_reranking_dataset
+  args:
+      dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+      dataframe_name: df_with_category.csv
+      cache_size: 50
+      batch_size_inference: ${batch_size_inference}
+      embeddings_cache_dir: ${datasets.args.dataset_root}
+      num_workers: ${num_workers}
+      precision: ${precision}
+      accelerator: ${accelerator}
+      feature_extractor:
+        name: vit
+        args:
+          normalise_features: False
+          use_multi_scale: False
+          weights: null
+          arch: vits16
+
+      transforms_train:
+        name: augs_hypvit_torch
+        args:
+          im_size: 32
+          min_scale: 0.8
+      transforms_extraction:
+        name: norm_resize_hypvit_torch
+        args:
+          im_size: 32
+          crop_size: 32
+
 logs_root: logs
 
 num_workers: 0
-cache_size: 50
 max_epochs: 2
 valid_period: 1
 
 # EXTRACTION
-
-embeddings_cache_dir: /tmp
-
-extractor:
-  name: vit
-  args:
-    normalise_features: False
-    use_multi_scale: False
-    weights: null
-    arch: vits16
-
-transforms_extraction:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 32
-    crop_size: 32
 
 # TRAIN
 
@@ -39,7 +50,7 @@ pairwise_model:
   name: concat_siamese
   args:
     mlp_hidden_dims: [384, 192]
-    extractor: ${extractor}
+    extractor: ${datasets.args.feature_extractor}
 
 hard_pairs_mining: True
 
@@ -68,11 +79,6 @@ sampler:
     resample_labels: True
     weight_categories: True
 
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 32
-    min_scale: 0.8
 
 # VALIDATION
 

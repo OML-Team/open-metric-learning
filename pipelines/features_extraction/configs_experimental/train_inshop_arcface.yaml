@@ -6,26 +6,29 @@ precision: 32
 accelerator: gpu
 devices: 1
 
-dataframe_name: df_no_bboxes.csv
-dataset_root: data/DeepFashion_InShop/
+datasets:
+  name: oml_image_dataset
+  args:
+    dataframe_name: df_no_bboxes.csv
+    dataset_root: data/DeepFashion_InShop/
+    cache_size: 0
+    transforms_train:
+      name: augs_hypvit_torch
+      args:
+        im_size: 224
+
+    transforms_val:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+
 logs_root: logs/DeepFashion_InShop/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 show_dataset_warnings: False
 
 num_workers: 20
-cache_size: 0
-
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 224
-
-transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 sampler: null
 bs_train: 128

@@ -2,16 +2,18 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: data/CUB_200_2011/
-dataframe_name: df_with_bboxes.csv
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: data/CUB_200_2011/
+    dataframe_name: df_with_bboxes.csv
+    transforms_val:
+      name: norm_resize_albu
+      args:
+        im_size: 224
 
 bs_val: 256
 num_workers: 8
-
-transforms_val:
-  name: norm_resize_albu
-  args:
-    im_size: 224
 
 extractor:
   name: vit

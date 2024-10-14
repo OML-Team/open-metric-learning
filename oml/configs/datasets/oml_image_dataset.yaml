@@ -1,0 +1,12 @@
+name: oml_image_dataset
+args:
+  dataframe_name: df.csv
+  cache_size: 100
+  transforms_train:
+    name: norm_resize_torch
+    args:
+      im_size: 224
+  transforms_val:
+    name: norm_resize_torch
+    args:
+      im_size: 224

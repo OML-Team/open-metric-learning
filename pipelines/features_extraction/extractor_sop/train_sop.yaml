@@ -6,24 +6,27 @@ accelerator: gpu
 devices: 2
 find_unused_parameters: False
 
-dataframe_name: df.csv
-dataset_root: data/Stanford_Online_Products/
+datasets:
+  name: oml_image_dataset
+  args:
+    dataframe_name: df.csv
+    dataset_root: data/Stanford_Online_Products/
+    cache_size: 0
+    transforms_train:
+      name: augs_hypvit_torch
+      args:
+        im_size: 224
+
+    transforms_val:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+
 logs_root: logs/Stanford_Online_Products/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
-
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 224
-
-transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 sampler:
   name: category_balance
