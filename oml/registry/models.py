@@ -4,6 +4,7 @@ from warnings import warn
 from torch import nn
 
 from oml.interfaces.models import IExtractor, IPairwiseModel
+from oml.models.audio.ecapa_tdnn.extractor import ECAPATDNNExtractor
 from oml.models.meta.projection import ExtractorWithMLP
 from oml.models.meta.siamese import (
     ConcatSiamese,
@@ -22,6 +23,7 @@ EXTRACTORS_REGISTRY = {
     "vit_clip": ViTCLIPExtractor,
     "vit_unicom": ViTUnicomExtractor,
     "extractor_with_mlp": ExtractorWithMLP,
+    "ecapa_tdnn": ECAPATDNNExtractor,
 }
 
 PAIRWISE_MODELS_REGISTRY = {
