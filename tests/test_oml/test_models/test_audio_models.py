@@ -11,6 +11,7 @@ from oml.models.audio.ecapa_tdnn.extractor import ECAPATDNNExtractor
 from oml.utils import get_mock_audios_dataset
 
 
+@pytest.mark.needs_optional_dependency
 @pytest.mark.parametrize(
     "constructor,args",
     [
@@ -36,6 +37,7 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
 
 
 @pytest.mark.long
+@pytest.mark.needs_optional_dependency
 @pytest.mark.skipif(os.getenv("DOWNLOAD_ZOO_IN_TESTS") != "yes", reason="It's a traffic consuming test.")
 @pytest.mark.parametrize(
     "constructor,weights",
