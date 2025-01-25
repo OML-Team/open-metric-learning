@@ -174,8 +174,8 @@ def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> 
 
     fig.canvas.draw()
     width, height = fig.canvas.get_width_height()
-    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    image = image.reshape(height, width, 3)
+    image = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
+    image = image.reshape(height, width, 4)[..., :3]
     plt.close(fig)
 
     image = np.resize(image, (256, 256, 3))
