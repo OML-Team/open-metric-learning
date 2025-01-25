@@ -15,7 +15,9 @@ This model is modified and combined based on the following three projects:
 
 '''
 
-import math, torch, torchaudio
+import math
+
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -140,6 +142,8 @@ class FbankAug(nn.Module):
 class ECAPA_TDNN(nn.Module):
 
     def __init__(self, C):
+
+        import torchaudio
 
         super(ECAPA_TDNN, self).__init__()
 
