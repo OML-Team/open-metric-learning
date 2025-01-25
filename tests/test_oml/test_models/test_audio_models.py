@@ -48,7 +48,7 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
 def test_checkpoints_from_zoo(constructor: IExtractor, weights: str) -> None:
 
     df_train, _ = get_mock_audios_dataset(global_paths=True)
-    dataset = AudioLabeledDataset(df_train)
+    dataset = AudioLabeledDataset(df_train, max_num_seconds=None)
 
     model = constructor.from_pretrained(weights).eval()
     emb1 = model.extract(dataset[0]["input_tensors"])
