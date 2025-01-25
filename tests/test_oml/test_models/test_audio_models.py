@@ -27,7 +27,7 @@ def test_extractor(constructor: IExtractor, args: Dict[str, Any]) -> None:
     fname = "weights_tmp.pth"
     torch.save({"state_dict": extractor.state_dict()}, fname)
 
-    extractor = ECAPATDNNExtractor(weights=fname, filter_state_dict_prefix="model.", **args).eval()
+    extractor = constructor(weights=fname, **args).eval()
     features2 = extractor.extract(signal)
     Path(fname).unlink()
 

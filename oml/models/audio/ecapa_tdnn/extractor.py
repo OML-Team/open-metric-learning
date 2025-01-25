@@ -27,7 +27,6 @@ class ECAPATDNNExtractor(IExtractor):
             "init_args": {
                 "arch": "ecapa_tdnn_taoruijie",
                 "normalise_features": False,
-                "filter_state_dict_prefix": "speaker_encoder.",
             },
         }
     }
@@ -37,14 +36,13 @@ class ECAPATDNNExtractor(IExtractor):
         weights: Optional[Union[Path, str]],
         arch: str,
         normalise_features: bool = False,
-        filter_state_dict_prefix: Optional[str] = None,
     ):
         """
         Args:
             weights: Path to weights or special key for pretrained ones or ``None`` for random initialization.
              You can check available pretrained checkpoints in ``ECAPATDNNExtractor.pretrained_models``.
             arch: Model architecture, currently only supports ``ecapa_tdnn_taoruijie``.
-            normalise_features: Set ``True`` to normalise output features
+            normalise_features: Set ``True`` to normalise output features.
         """
         super().__init__()
 
@@ -63,12 +61,21 @@ class ECAPATDNNExtractor(IExtractor):
                 pretrained["hash"],  # type: ignore
                 fname=pretrained["fname"],  # type: ignore
             )
-        ckpt = torch.load(weights, map_location="cpu")
-        if "state_dict" in ckpt:
-            ckpt = ckpt["state_dict"]
-        if filter_state_dict_prefix is not None:
-            ckpt = filter_state_dict(ckpt, filter_state_dict_prefix)
-        self.model.load_state_dict(ckpt, strict=True)
+            state_dict = self.prepare_state_dict(weights, filter_prefix="speaker_encoder.")
+        else:
+            state_dict = self.prepare_state_dict(weights, filter_prefix="model.")
+
+        self.model.load_state_dict(state_dict, strict=True)
+
+    def prepare_state_dict(self, weights_path: Union[Path, str], filter_prefix: Optional[str] = None) -> TStateDict:
+        state_dict = torch.load(weights_path, map_location="cpu")
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+        if filter_prefix is not None:
+            state_dict = OrderedDict(
+                (k[len(filter_prefix) :], v) for k, v in state_dict.items() if k.startswith(filter_prefix)
+            )
+        return state_dict
 
     @property
     def feat_dim(self) -> int:
@@ -81,11 +88,6 @@ class ECAPATDNNExtractor(IExtractor):
         if self.normalise_features:
             x = normalise(x)
         return x
-
-
-def filter_state_dict(state_dict: TStateDict, prefix: str) -> TStateDict:
-    prefix_len = len(prefix)
-    return OrderedDict((k[prefix_len:], v) for k, v in state_dict.items() if k.startswith(prefix))
 
 
 __all__ = ["ECAPATDNNExtractor"]
