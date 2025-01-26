@@ -1,0 +1,5 @@
+name: ecapa_tdnn
+args:
+  arch: ecapa_tdnn_taoruijie
+  weights: null
+  normalise_features: False
