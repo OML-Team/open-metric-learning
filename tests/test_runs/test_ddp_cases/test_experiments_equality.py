@@ -84,7 +84,7 @@ TORCH_EPS = 10 * torch.finfo(torch.float32).eps
 
 def is_equal_models(model1: nn.Module, model2: nn.Module) -> Tuple[bool, List[torch.Tensor]]:
     for module1, module2 in zip(model1.modules(), model2.modules()):
-        assert type(module1) == type(module2)
+        assert isinstance(module1, type(module2)) and isinstance(module2, type(module1))
         if isinstance(module1, nn.Linear):
             if not torch.all(torch.isclose(module1.weight, module2.weight, atol=TORCH_EPS)):
                 return False, [module1.weight, module2.weight]

@@ -1,0 +1,3 @@
+name: augs_random_resized_crop
+args:
+  im_size: 224

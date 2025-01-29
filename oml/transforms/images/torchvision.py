@@ -17,7 +17,7 @@ def get_augs_torch(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD)
     return augs
 
 
-def get_augs_hypvit(
+def get_augs_random_resized_crop(
     im_size: int = 224, min_scale: float = 0.2, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> t.Compose:
     augs = t.Compose(
@@ -31,7 +31,7 @@ def get_augs_hypvit(
     return augs
 
 
-def get_normalisation_resize_hypvit(
+def get_normalisation_resize_center_crop(
     im_size: int = 224, crop_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> t.Compose:
     transforms = t.Compose(
@@ -57,6 +57,6 @@ __all__ = [
     "get_augs_torch",
     "get_normalisation_torch",
     "get_normalisation_resize_torch",
-    "get_augs_hypvit",
-    "get_normalisation_resize_hypvit",
+    "get_augs_random_resized_crop",
+    "get_normalisation_resize_center_crop",
 ]

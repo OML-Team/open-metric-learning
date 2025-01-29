@@ -36,7 +36,7 @@ def get_numpy_image() -> np.ndarray:
 def test_visualisation(draw_function: Any, image: Union[np.ndarray, Image.Image]) -> None:
     image_modified = draw_function(image)
 
-    assert type(image_modified) == type(image)
+    assert isinstance(image_modified, type(image))
 
     image_modified = np.array(image_modified)
 
