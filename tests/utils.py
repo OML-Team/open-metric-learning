@@ -36,5 +36,6 @@ class DummyNLPModel(IExtractor):
         x = x.float()
         return x
 
+    @property
     def feat_dim(self) -> int:
         return self.model.embedding_dim
