@@ -49,11 +49,11 @@ jobs:
     - name: Installation
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install -r ci/requirements_tests.txt --index-url https://download.pytorch.org/whl/cpu
-        python3 -m pip install -r ci/requirements_optional.txt --index-url https://download.pytorch.org/whl/cpu
-        python3 -m pip install -r ci/requirements_nlp.txt --index-url https://download.pytorch.org/whl/cpu
-        python3 -m pip install -r ci/requirements_audio.txt --index-url https://download.pytorch.org/whl/cpu
-        python3 -m pip install -e . --index-url https://download.pytorch.org/whl/cpu
+        python3 -m pip install -r ci/requirements_tests.txt
+        python3 -m pip install -r ci/requirements_optional.txt
+        python3 -m pip install -r ci/requirements_nlp.txt
+        python3 -m pip install -r ci/requirements_audio.txt
+        python3 -m pip install -e .
     - name: Running all tests
       run: |
         if [ "${{ matrix.python-version }}" == "3.8" ]; then
