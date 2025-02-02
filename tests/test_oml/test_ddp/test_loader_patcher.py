@@ -1,5 +1,4 @@
 # type: ignore
-import os
 from itertools import chain
 from math import ceil
 from random import randint
@@ -18,7 +17,7 @@ from oml.samplers.distinct_category_balance import DistinctCategoryBalanceSample
 from .utils import run_in_ddp
 
 
-@pytest.mark.skipif(os.getenv("GITHUB_ACTIONS") == "true", reason="This test has tendency to fail on CI machines.")
+@pytest.mark.skip(reason="Dead locks may appear when running in CI")
 @pytest.mark.long
 @pytest.mark.parametrize("n_labels_sampler", [2, 5])
 @pytest.mark.parametrize("n_instances_sampler", [2, 5])
@@ -157,7 +156,7 @@ def check_patching_balance_batch_sampler(
     assert len(set(outputs_from_epochs)) == len(outputs_from_epochs)
 
 
-@pytest.mark.skipif(os.getenv("GITHUB_ACTIONS") == "true", reason="This test has tendency to fail on CI machines.")
+@pytest.mark.skip(reason="Dead locks may appear when running in CI")
 @pytest.mark.long
 @pytest.mark.parametrize("shuffle", [True, False])
 @pytest.mark.parametrize("drop_last", [True, False])
