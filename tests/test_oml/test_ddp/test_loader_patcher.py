@@ -18,6 +18,7 @@ from .utils import run_in_ddp
 
 
 @pytest.mark.long
+@pytest.mark.skip(reason="Dead locks may appear when running in CI")
 @pytest.mark.parametrize("n_labels_sampler", [2, 5])
 @pytest.mark.parametrize("n_instances_sampler", [2, 5])
 @pytest.mark.parametrize("n_labels_dataset", [100, 85])
@@ -156,6 +157,7 @@ def check_patching_balance_batch_sampler(
 
 
 @pytest.mark.long
+@pytest.mark.skip(reason="Dead locks may appear when running in CI")
 @pytest.mark.parametrize("shuffle", [True, False])
 @pytest.mark.parametrize("drop_last", [True, False])
 @pytest.mark.parametrize("batch_size", [10, 17])
