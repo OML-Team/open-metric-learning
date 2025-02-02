@@ -29,6 +29,10 @@ jobs:
     - name: Hardware stats
       run: |
         lshw
+    - name: Hostname
+      run: |
+        hostname
+            
 
   all_tests:
     runs-on: ubuntu-latest
