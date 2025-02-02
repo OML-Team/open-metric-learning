@@ -19,7 +19,7 @@ def check_triplets_consistency(
 
     assert num_sampled_tri == len(ids_pos) == len(ids_neg)
 
-    for (i_a, i_p, i_n) in zip(ids_anchor, ids_pos, ids_neg):
+    for i_a, i_p, i_n in zip(ids_anchor, ids_pos, ids_neg):
         assert len({i_a, i_p, i_n}) == 3
         assert labels[i_a] == labels[i_p]
         assert labels[i_a] != labels[i_n]
