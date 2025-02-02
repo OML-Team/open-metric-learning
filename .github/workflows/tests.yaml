@@ -23,12 +23,12 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Phys cores
+    - name: CPU stats
       run: |
-        lscpu | grep 'Core(s) per socket' | awk '{print $4}'
-    - name: Log cores
+        lscpu
+    - name: Hardware stats
       run: |
-        python -c "import os; print(os.cpu_count())"
+        lshw
 
   all_tests:
     runs-on: ubuntu-latest
