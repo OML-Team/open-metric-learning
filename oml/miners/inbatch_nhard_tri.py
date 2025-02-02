@@ -123,9 +123,9 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
         hardest_negative = ids_smallest_distance[idx_anch_neg_reduced, idx_neg_sorted_by_dist]
         idx_anch_neg = all_ids_reduced[idx_anch_neg_reduced]
 
-        ids_a = []
-        ids_p = []
-        ids_n = []
+        ids_a: List[int] = []
+        ids_p: List[int] = []
+        ids_n: List[int] = []
 
         for idx_anch in torch.arange(len(labels), device=distmat.device)[torch.logical_not(ignore_anchor_mask)]:
             positives = hardest_positive[idx_anch_pos == idx_anch][self.positive_slice]
