@@ -32,7 +32,7 @@ def test_all_triplets_miner(features_and_labels: List[Tuple[torch.Tensor, List[i
 
 @pytest.mark.long
 def test_compare_all_triplets_miner_with_naive_version(
-    features_and_labels: List[Tuple[torch.Tensor, List[int]]]
+    features_and_labels: List[Tuple[torch.Tensor, List[int]]],
 ) -> None:
     max_tri = sys.maxsize
     miner = AllTripletsMiner(max_output_triplets=max_tri)
