@@ -1,3 +1,4 @@
+from oml.models.audio.ecapa_tdnn.extractor import ECAPATDNNExtractor
 from oml.models.meta.projection import ExtractorWithMLP
 from oml.models.meta.siamese import (
     ConcatSiamese,
