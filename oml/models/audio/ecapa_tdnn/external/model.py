@@ -1,6 +1,6 @@
 # isort: skip_file
 # fmt: off
-# type: ignore
+# mypy: disable-error-code="no-untyped-def"
 # flake8: noqa
 
 # The model is taken from the following project:
