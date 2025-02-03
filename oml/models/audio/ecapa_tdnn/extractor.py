@@ -82,7 +82,12 @@ class ECAPATDNNExtractor(IExtractor):
         return self.model.fc6.weight.shape[0]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert x.ndim == 2, "The model expects input audio to have shape (batch_size, n_samples)"
+        assert x.ndim == 2 or (
+            x.ndim == 3 and x.shape[1] == 1
+        ), "The model expects input audio to have shape (batch_size, n_samples) or (batch_size, 1, n_samples)"
+
+        if x.ndim == 3:
+            x = x.squeeze(1)
 
         x = self.model.forward(x, aug=False)
         if self.normalise_features:
