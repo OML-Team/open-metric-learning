@@ -30,12 +30,12 @@ def extractor_prediction_pipeline(cfg: TCfg) -> None:
 
     pprint(cfg)
 
-    transforms = get_transforms_by_cfg(cfg["transforms_predict"])
-    filenames = [list(Path(cfg["data_dir"]).glob(f"**/*.{ext}")) for ext in IMAGE_EXTENSIONS]
+    transforms = get_transforms_by_cfg(cfg["datasets"]["args"]["transforms_predict"])
+    filenames = [list(Path(cfg["datasets"]["args"]["data_dir"]).glob(f"**/*.{ext}")) for ext in IMAGE_EXTENSIONS]
     filenames = list(itertools.chain(*filenames))
 
     if len(filenames) == 0:
-        raise RuntimeError(f"There are no images in the provided directory: {cfg['data_dir']}")
+        raise RuntimeError(f"There are no images in the provided directory: {cfg['datasets']['args']['data_dir']}")
 
     f_imread = get_im_reader_for_transforms(transforms)
 

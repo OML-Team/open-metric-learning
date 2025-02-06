@@ -6,11 +6,7 @@ find_unused_parameters: False
 
 dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
 dataframe_name: df_with_bboxes.csv
-logs_root: logs
-
-num_workers: 0
 cache_size: 100
-
 transforms_train:
   name: custom_augmentations
   args:
@@ -20,6 +16,12 @@ transforms_val:
   name: norm_resize_albu
   args:
     im_size: 48
+
+
+logs_root: logs
+
+num_workers: 0
+
 
 criterion:
   name: triplet_with_miner

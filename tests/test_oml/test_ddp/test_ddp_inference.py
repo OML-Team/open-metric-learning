@@ -9,7 +9,7 @@ from oml.const import MOCK_DATASET_PATH
 from oml.datasets import ImageBaseDataset
 from oml.inference import inference
 from oml.transforms.images.torchvision import get_normalisation_resize_torch
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.download_mock_dataset import download_images_mock_dataset
 from tests.test_oml.test_ddp.utils import run_in_ddp
 
 
@@ -18,7 +18,7 @@ from tests.test_oml.test_ddp.utils import run_in_ddp
 @pytest.mark.parametrize("world_size,n_paths", [(3, 5), (3, 6)])
 @pytest.mark.parametrize("device", ["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"])
 def test_inference_without_expected_duplicates(world_size: int, n_paths: int, device: str, batch_size: int) -> None:
-    _, df_val = download_mock_dataset(MOCK_DATASET_PATH)
+    _, df_val = download_images_mock_dataset(MOCK_DATASET_PATH)
     paths = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x).tolist()
 
     assert len(paths) >= n_paths, "Something is wrong with mock dataset. You should fix it."
