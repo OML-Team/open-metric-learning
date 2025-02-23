@@ -111,6 +111,58 @@ TextQueryGalleryDataset
     .. automethod:: get_gallery_ids
     .. automethod:: visualize
 
+AudioBaseDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.audios.AudioBaseDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
+    .. automethod:: visualize
+    .. automethod:: visualize_with_player
+
+AudioLabeledDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.audios.AudioLabeledDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
+    .. automethod:: get_labels
+    .. automethod:: get_label2category
+    .. automethod:: visualize
+    .. automethod:: visualize_with_player
+
+AudioQueryGalleryDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.audios.AudioQueryGalleryDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
+    .. automethod:: get_query_ids
+    .. automethod:: get_gallery_ids
+    .. automethod:: visualize
+    .. automethod:: visualize_with_player
+
+AudioQueryGalleryLabeledDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.datasets.audios.AudioQueryGalleryLabeledDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__
+    .. automethod:: __getitem__
+    .. automethod:: get_query_ids
+    .. automethod:: get_gallery_ids
+    .. automethod:: get_labels
+    .. automethod:: get_label2category
+    .. automethod:: visualize
+    .. automethod:: visualize_with_player
+
 PairDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.datasets.pairs.PairDataset
@@ -127,3 +179,7 @@ get_mock_images_dataset
 get_mock_texts_dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: oml.utils.download_mock_dataset.get_mock_texts_dataset
+
+get_mock_audios_dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: oml.utils.download_mock_dataset.get_mock_audios_dataset
