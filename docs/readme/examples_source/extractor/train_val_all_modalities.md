@@ -57,26 +57,25 @@ criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
-def training():
-    for batch in DataLoader(train, batch_sampler=sampler):
-        embeddings = model(batch["input_tensors"])
-        loss = criterion(embeddings, batch["labels"])
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        print(criterion.last_logs)
+# training 1 epoch
+for batch in DataLoader(train, batch_sampler=sampler):
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+    print(criterion.last_logs)
 
 
-def validation():
-    embeddings = inference(model, val, batch_size=4, num_workers=0)
-    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
-    rr = AdaptiveThresholding(n_std=2).process(rr)
-    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
-    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+# validation by retrieving relevant items
+embeddings = inference(model, val, batch_size=4, num_workers=0)
+rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+rr = AdaptiveThresholding(n_std=2).process(rr)
+rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 
-training()
-validation()
+
 ```
 [comment]:train-val-img-end
 
@@ -112,26 +111,25 @@ criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
-def training():
-    for batch in DataLoader(train, batch_sampler=sampler):
-        embeddings = model(batch["input_tensors"])
-        loss = criterion(embeddings, batch["labels"])
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        print(criterion.last_logs)
+# training 1 epoch
+for batch in DataLoader(train, batch_sampler=sampler):
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+    print(criterion.last_logs)
 
 
-def validation():
-    embeddings = inference(model, val, batch_size=4, num_workers=0)
-    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
-    rr = AdaptiveThresholding(n_std=2).process(rr)
-    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
-    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+# validation by retrieving relevant items
+embeddings = inference(model, val, batch_size=4, num_workers=0)
+rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+rr = AdaptiveThresholding(n_std=2).process(rr)
+rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 
-training()
-validation()
+
 ```
 [comment]:train-val-txt-end
 </td>
@@ -164,26 +162,25 @@ criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
-def training():
-    for batch in DataLoader(train, batch_sampler=sampler):
-        embeddings = model(batch["input_tensors"])
-        loss = criterion(embeddings, batch["labels"])
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        print(criterion.last_logs)
+# training 1 epoch
+for batch in DataLoader(train, batch_sampler=sampler):
+    embeddings = model(batch["input_tensors"])
+    loss = criterion(embeddings, batch["labels"])
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+    print(criterion.last_logs)
 
 
-def validation():
-    embeddings = inference(model, val, batch_size=4, num_workers=0)
-    rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
-    rr = AdaptiveThresholding(n_std=2).process(rr)
-    rr.visualize(query_ids=[2, 1], dataset=val, show=True)
-    print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
+# validation by retrieving relevant items
+embeddings = inference(model, val, batch_size=4, num_workers=0)
+rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
+rr = AdaptiveThresholding(n_std=2).process(rr)
+rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 
-training()
-validation()
+
 ```
 [comment]:train-val-aud-end
 </td>
