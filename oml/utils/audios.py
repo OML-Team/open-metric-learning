@@ -122,3 +122,6 @@ def visualize_audio_with_player(
     </div>
     """
     return html
+
+
+__all__ = ["default_spec_repr_func", "visualize_audio", "visualize_audio_with_player"]

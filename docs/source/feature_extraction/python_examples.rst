@@ -1,7 +1,7 @@
 Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_img_txt.md
+.. mdinclude:: ../../../docs/readme/examples_source/extractor/train_val_all_modalities.md
 
 Retrieval by trained model
 ########################################

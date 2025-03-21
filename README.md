@@ -24,7 +24,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
 <a href="https://edgify.ai/" target="_blank"><img src="https://edgify.ai/wp-content/uploads/2024/04/new-edgify-logo.svg" width="100" height="30"/></a>ㅤㅤ
 <a href="https://inspector-cloud.ru/" target="_blank"><img src="https://thumb.tildacdn.com/tild6533-6433-4137-a266-613963373637/-/resize/540x/-/format/webp/photo.png" width="150" height="30"/></a>ㅤㅤ
 <a href="https://yango-tech.com/" target="_blank"><img src="https://yango-backend.sborkademo.com/media/pages/home/205f66f309-1717169752/opengr4-1200x630-crop-q85.jpg" width="100" height="30"/></a>ㅤㅤ
-<a href="https://www.adagrad.ai/" target="_blank"><img src="https://assets-global.website-files.com/619cafd224a31d1835ece5bd/61de7f23546e9662e51605ba_Adagrad_logo_footer-2022.png" width="100" height="30"/></a>
+<a href="https://www.adagrad.ai/" target="_blank"><img src="https://cdn.prod.website-files.com/619cafd224a31d1835ece5bd/66b5e8e2818e2231e4734805_Frame%201.2.png" width="100" height="30"/></a>
 
 <a href="https://www.ox.ac.uk/" target="_blank"><img src="https://i.ibb.co/zhWL6tD/21-05-2019-16-08-10-6922268.png" width="120"/></a>ㅤㅤ
 <a href="https://www.hse.ru/en/" target="_blank"><img src="https://www.hse.ru/data/2020/11/16/1367274044/HSE_University_blue.jpg.(230x86x123).jpg" width="100"/></a>
@@ -41,61 +41,6 @@ universities who have used OML in their theses.
 <div align="left">
 
 
-<details>
-<summary><b>OML 3.0 has been released!</b></summary>
-<p>
-
-The update focuses on several components:
-
-* We added "official" texts support and the corresponding Python examples. (Note, texts support in Pipelines is not supported yet.)
-
-* We introduced the `RetrievalResults` (`RR`) class — a container to store gallery items retrieved for given queries.
-`RR` provides a unified way to visualize predictions and compute metrics (if ground truths are known).
-It also simplifies post-processing, where an `RR` object is taken as input and another `RR_upd` is produced as output.
-Having these two objects allows comparison retrieval results visually or by metrics.
-Moreover, you can easily create a chain of such post-processors.
-  * `RR` is memory optimized because of using batching: in other words, it doesn't store full matrix of query-gallery distances.
-    (It doesn't make search approximate though).
-
-* We made `Model` and `Dataset` the only classes responsible for processing modality-specific logic.
-`Model` is responsible for interpreting its input dimensions: for example, `BxCxHxW` for images or `BxLxD` for sequences like texts.
-`Dataset` is responsible for preparing an item: it may use `Transforms` for images or `Tokenizer` for texts.
-Functions computing metrics like `calc_retrieval_metrics_rr`, `RetrievalResults`, `PairwiseReranker`, and other classes and functions are unified
-to work with any modality.
-  * We added `IVisualizableDataset` having method `.visaulize()` that shows a single item. If implemented,
-   `RetrievalResults` is able to show the layout of retrieved results.
-
-#### Migration from OML 2.* [Python API]:
-
-The easiest way to catch up with changes is to re-read the examples!
-
-* The recommended way of validation is to use `RetrievalResults` and functions like `calc_retrieval_metrics_rr`,
-`calc_fnmr_at_fmr_rr`, and others. The `EmbeddingMetrics` class is kept for use with PyTorch Lightning and inside Pipelines.
-Note, the signatures of `EmbeddingMetrics` methods have been slightly changed, see Lightning examples for that.
-
-* Since modality-specific logic is confined to `Dataset`, it doesn't output `PATHS_KEY`, `X1_KEY`, `X2_KEY`, `Y1_KEY`, and `Y2_KEY` anymore.
-Keys which are not modality-specific like `LABELS_KEY`, `IS_GALLERY`, `IS_QUERY_KEY`, `CATEGORIES_KEY` are still in use.
-
-* `inference_on_images` is now `inference` and works with any modality.
-
-* Slightly changed interfaces of `Datasets.` For example, we have `IQueryGalleryDataset` and `IQueryGalleryLabeledDataset` interfaces.
-  The first has to be used for inference, the second one for validation. Also added `IVisualizableDataset` interface.
-
-* Removed some internals like `IMetricDDP`, `EmbeddingMetricsDDP`, `calc_distance_matrix`, `calc_gt_mask`, `calc_mask_to_ignore`,
-  `apply_mask_to_ignore`. These changes shouldn't affect you. Also removed code related to a pipeline with precomputed triplets.
-
-#### Migration from OML 2.* [Pipelines]:
-
-* [Feature extraction](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction):
-No changes, except for adding an optional argument — `mode_for_checkpointing = (min | max)`. It may be useful
-to switch between *the lower, the better* and *the greater, the better* type of metrics.
-
-* [Pairwise-postprocessing pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing/pairwise_postprocessing):
-Slightly changed the name and arguments of the `postprocessor` sub config — `pairwise_images` is now `pairwise_reranker`
-and doesn't need transforms.
-
-</p>
-</details>
 
 ## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
@@ -565,6 +510,8 @@ or
 See more details on dataset
 [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 
+SCROLL RIGHT FOR **IMAGES** > **TEXTS** > **AUDIOS**
+
 <div style="overflow-x: auto;">
 
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
@@ -575,6 +522,7 @@ See more details on dataset
 <tr>
     <td style="text-align: left; padding: 0;"><b>IMAGES</b></td>
     <td style="text-align: left; padding: 0;"><b>TEXTS</b></td>
+    <td style="text-align: left; padding: 0;"><b>AUDIOS</b></td>
 </tr>
 
 <tr>
@@ -719,7 +667,7 @@ criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
-def training() -> None:
+def training():
     for batch in DataLoader(train, batch_sampler=sampler):
         embeddings = model(batch["input_tensors"])
         loss = criterion(embeddings, batch["labels"])
@@ -729,7 +677,7 @@ def training() -> None:
         print(criterion.last_logs)
 
 
-def validation() -> None:
+def validation():
     embeddings = inference(model, val, batch_size=4, num_workers=0)
     rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
     rr = AdaptiveThresholding(n_std=2).process(rr)
@@ -809,7 +757,7 @@ validation()
 
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1WTNXqAHdPbnSuwHaKggFXAWGjQaCyu1B?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Sfz7xMdjXg634-3KmBPq8Zs6i_gbsWD1?usp=sharing)
 
 </td>
 

@@ -7,6 +7,8 @@ or
 See more details on dataset
 [format](https://open-metric-learning.readthedocs.io/en/latest/oml/data.html).
 
+SCROLL RIGHT FOR **IMAGES** > **TEXTS** > **AUDIOS**
+
 <div style="overflow-x: auto;">
 
 <table style="width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;">
@@ -17,6 +19,7 @@ See more details on dataset
 <tr>
     <td style="text-align: left; padding: 0;"><b>IMAGES</b></td>
     <td style="text-align: left; padding: 0;"><b>TEXTS</b></td>
+    <td style="text-align: left; padding: 0;"><b>AUDIOS</b></td>
 </tr>
 
 <tr>
@@ -161,7 +164,7 @@ criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
-def training() -> None:
+def training():
     for batch in DataLoader(train, batch_sampler=sampler):
         embeddings = model(batch["input_tensors"])
         loss = criterion(embeddings, batch["labels"])
@@ -171,7 +174,7 @@ def training() -> None:
         print(criterion.last_logs)
 
 
-def validation() -> None:
+def validation():
     embeddings = inference(model, val, batch_size=4, num_workers=0)
     rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
     rr = AdaptiveThresholding(n_std=2).process(rr)
@@ -251,7 +254,7 @@ validation()
 
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1WTNXqAHdPbnSuwHaKggFXAWGjQaCyu1B?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Sfz7xMdjXg634-3KmBPq8Zs6i_gbsWD1?usp=sharing)
 
 </td>
 

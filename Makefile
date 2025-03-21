@@ -27,7 +27,7 @@ build_readme:
 	cat docs/readme/library_features.md >> ${README_FILE}
 	# Python examples: image + texts, train + val
 	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
-	cat docs/readme/examples_source/extractor/train_val_img_txt.md >> ${README_FILE}
+	cat docs/readme/examples_source/extractor/train_val_all_modalities.md >> ${README_FILE}
 	# Retrieval usage
 	echo "\n### Retrieval by trained model\n" >> ${README_FILE}
 	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
