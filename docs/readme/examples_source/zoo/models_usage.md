@@ -109,3 +109,45 @@ The metrics below are for 224 x 224 images:
 
 *The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
+
+### How to use audio models?
+
+You can use an audio model from our Zoo or
+use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
+
+Currently, our Zoo includes one audio model for speaker verification - [ECAPA-TDNN](https://github.com/TaoRuijie/ECAPA-TDNN/tree/main) model:
+
+<details style="padding-bottom: 15px">
+<summary><b>See example</b></summary>
+<p>
+
+[comment]:zoo-audio-start
+```python
+import torchaudio
+
+from oml.models import ECAPATDNNExtractor
+
+model = ECAPATDNNExtractor.from_pretrained("ecapa_tdnn_taoruijie").to("cpu").eval()
+
+audio, sr = torchaudio.load("path/to/your/audio.wav")   # put path to your audio file here
+if audio.shape[0] > 1:                                  # expected shape: (1, time)
+    audio = audio.mean(dim=0, keepdim=True)
+if sr != 16000:                                         # expected sample rate: 16000
+    audio = torchaudio.functional.resample(audio, sr, 16000)
+
+embeddings = model.extract(audio)
+```
+[comment]:zoo-audio-end
+
+</p>
+</details>
+
+### Audio models zoo
+
+Models, integrated from external repositories:
+
+|                        model                         | Vox1_O | Vox1_E | Vox1_H |
+|:---------------------------------------------------:|:-------:|:-------:|:-------:|
+| `ECAPATDNNExtractor.from_pretrained("ecapa_tdnn_taoruijie")`  |  0.86  |  1.18  |  2.17  |
+
+*The metrics above represent Equal Error Rate (EER). Lower is better.*
