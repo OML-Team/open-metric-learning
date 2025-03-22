@@ -87,7 +87,12 @@ def visualize_audio(spec_repr: FloatTensor, color: TColor = BLACK, draw_bbox: bo
 
 
 def visualize_audio_with_player(
-    audio: FloatTensor, spec_repr: FloatTensor, sample_rate: int, color: TColor = BLACK, draw_bbox: bool = True
+    audio: FloatTensor,
+    spec_repr: FloatTensor,
+    sample_rate: int,
+    title: str = "",
+    color: TColor = BLACK,
+    draw_bbox: bool = True,
 ) -> str:
     """
     Visualize an audio spectral representation and provide an HTML string with an audio player.
@@ -96,6 +101,7 @@ def visualize_audio_with_player(
         audio: The audio waveform.
         spec_repr: The spectral representation.
         sample_rate: The sampling rate of the audio.
+        title: Title of the output HTML block if needed.
         color: The color of the bounding box.
         draw_bbox: Whether to draw a bounding box around the spectral representation.
 
@@ -113,14 +119,18 @@ def visualize_audio_with_player(
 
     # generate HTML
     html = f"""
-    <div style="border:5px solid {color}; padding: 3px; display: inline-block;">
-        <img src="data:image/png;base64,{image_base64}" alt="Mel Spectrogram" />
-        <audio controls style="display: block; width: 100%; margin-top: 3px;">
-            <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
-            Your browser does not support the audio element.
-        </audio>
+    <div style="margin: 10px; display: inline-block;">
+        <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{title}</div>
+        <div style="border:5px solid {color}; padding: 3px;">
+            <img src="data:image/png;base64,{image_base64}" style="width:128px; height:128px;" alt="Mel Spectrogram" />
+            <audio controls style="display: block; width: 100%; margin-top: 3px;">
+                <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
     </div>
     """
+
     return html
 
 

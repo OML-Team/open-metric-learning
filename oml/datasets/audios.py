@@ -25,7 +25,11 @@ from oml.datasets.dataframe import (
     DFQueryGalleryDataset,
     DFQueryGalleryLabeledDataset,
 )
-from oml.interfaces.datasets import IBaseDataset, IVisualizableDataset
+from oml.interfaces.datasets import (
+    IBaseDataset,
+    IHTMLVisualizableDataset,
+    IVisualizableDataset,
+)
 from oml.utils.audios import (
     default_spec_repr_func,
     visualize_audio,
@@ -47,7 +51,7 @@ def parse_start_times(df: pd.DataFrame) -> Optional[List[float]]:
     return start_times
 
 
-class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
+class AudioBaseDataset(IBaseDataset, IVisualizableDataset, IHTMLVisualizableDataset):
     """
     The base class that handles audio specific logic.
     """
@@ -213,23 +217,27 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset):
         spec_repr = self._spectral_function(audio)
         return visualize_audio(spec_repr=spec_repr, color=color)
 
-    def visualize_with_player(self, item: int, color: TColor = BLACK) -> str:
+    def visualize_as_html(self, item: int, title: str, color: TColor = BLACK) -> str:
         """
         Visualize an audio file in HTML markup.
 
         Args:
             item: Dataset item index.
             color: Color of the plot.
+            title: The title of html block.
 
         Returns:
             HTML markup with spectral representation image and audio player.
         """
         audio = self.get_audio(item)
         spec_repr = self._spectral_function(audio)
-        return visualize_audio_with_player(audio=audio, spec_repr=spec_repr, sample_rate=self._sample_rate, color=color)
+        html = visualize_audio_with_player(
+            audio=audio, spec_repr=spec_repr, sample_rate=self._sample_rate, color=color, title=title
+        )
+        return html
 
 
-class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
+class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset, IHTMLVisualizableDataset):
     """
     The dataset of audios having their ground truth labels.
 
@@ -281,11 +289,11 @@ class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset):
     def visualize(self, item: int, color: TColor) -> np.ndarray:
         return self._dataset.visualize(item=item, color=color)
 
-    def visualize_with_player(self, item: int, color: TColor) -> str:
-        return self._dataset.visualize_with_player(item=item, color=color)
+    def visualize_as_html(self, item: int, title: str, color: TColor) -> str:
+        return self._dataset.visualize_as_html(item=item, title=title, color=color)
 
 
-class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
+class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset, IHTMLVisualizableDataset):
     """
     The `non-annotated` dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
@@ -337,11 +345,11 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset):
     def visualize(self, item: int, color: TColor) -> np.ndarray:
         return self._dataset.visualize(item=item, color=color)
 
-    def visualize_with_player(self, item: int, color: TColor) -> str:
-        return self._dataset.visualize_with_player(item=item, color=color)
+    def visualize_as_html(self, item: int, title: str, color: TColor) -> str:
+        return self._dataset.visualize_as_html(item=item, color=color, title=title)
 
 
-class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizableDataset):
+class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizableDataset, IHTMLVisualizableDataset):
     """
     The `annotated` dataset of audios having `query`/`gallery` split.
     To perform `1 vs rest` validation, where a query is evaluated versus the whole validation dataset
@@ -395,8 +403,8 @@ class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizabl
     def visualize(self, item: int, color: TColor) -> np.ndarray:
         return self._dataset.visualize(item=item, color=color)
 
-    def visualize_with_player(self, item: int, color: TColor) -> str:
-        return self._dataset.visualize_with_player(item=item, color=color)
+    def visualize_as_html(self, item: int, title: str, color: TColor) -> str:
+        return self._dataset.visualize_as_html(item=item, color=color, title=title)
 
 
 __all__ = [
