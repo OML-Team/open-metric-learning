@@ -16,7 +16,7 @@ OML is a PyTorch-based framework to train and validate the models producing high
 ### Trusted by
 
 <div align="center">
-<a href="https://docs.neptune.ai/integrations/community_developed/" target="_blank"><img src="https://security.neptune.ai/api/share/b707f1e8-e287-4f01-b590-39a6fa7e9faa/logo.png" width="100"/></a>ㅤㅤ
+<a href="https://docs.neptune.ai/integrations/community_developed/" target="_blank"><img src="https://i.ibb.co/bMDShKDx/neptune-logo-less-margin-e1611939742683.png" width="100"/></a>ㅤㅤ
 <a href="https://www.newyorker.de/" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/New_Yorker.svg/1280px-New_Yorker.svg.png" width="100"/></a>ㅤㅤ
 <a href="https://www.epoch8.co/" target="_blank"><img src="https://i.ibb.co/GdNVTyt/Screenshot-2023-07-04-at-11-19-24.png" width="100"/></a>ㅤㅤ
 <a href="https://www.meituan.com" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/6/61/Meituan_English_Logo.png" width="100"/></a>ㅤㅤ
@@ -283,6 +283,9 @@ for our paper
 pip install -U open-metric-learning; # minimum dependencies
 pip install -U open-metric-learning[nlp]
 pip install -U open-metric-learning[audio]
+
+# in the case of conflicts install without dependencies and manage versions manually:
+pip install open-metric-learning --no-deps torchaudio
 ```
 
 <details><summary>DockerHub</summary>

@@ -115,6 +115,14 @@ IVisualizableDataset
 
     .. automethod:: visualize
 
+IHTMLVisualizableDataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: oml.interfaces.datasets.IHTMLVisualizableDataset
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: visualize_as_html
+
 IBasicMetric
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: oml.interfaces.metrics.IBasicMetric
