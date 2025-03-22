@@ -14,7 +14,7 @@ jobs:
     if: github.event_name == 'pull_request'
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     timeout-minutes: 30
     steps:
     - name: Checkout
@@ -56,7 +56,7 @@ jobs:
         python3 -m pip install -e .
     - name: Running all tests
       run: |
-        if [ "${{ matrix.python-version }}" == "3.12" ]; then
+        if [ "${{ matrix.python-version }}" == "3.10" ]; then
           make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }} DOWNLOAD_ZOO_IN_TESTS=yes TEST_CLOUD_LOGGERS=yes
         else
           make run_all_tests WANDB_API_KEY=${{ secrets.WANDB_API_KEY }} NEPTUNE_API_TOKEN=${{ secrets.NEPTUNE_API_TOKEN }}
