@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-from IPython.display import HTML, display
 from torch import FloatTensor, LongTensor
 
 from oml.const import (
@@ -379,6 +378,8 @@ class RetrievalResults:
         final_html = html_blocks_to_grid(blocks=blocks)
 
         if show:
+            from IPython.display import HTML, display
+
             display(HTML(final_html))
 
         return final_html
