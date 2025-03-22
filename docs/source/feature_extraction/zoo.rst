@@ -1,4 +1,20 @@
-Models Zoo
+Zoo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. mdinclude:: ../../../docs/readme/examples_source/zoo/models_usage.md
+Zoo: Images
+#################################
+
+
+.. mdinclude:: ../../../docs/readme/examples_source/zoo/zoo_images.md
+
+
+Zoo: Texts
+#################################
+
+.. mdinclude:: ../../../docs/readme/examples_source/zoo/zoo_texts.md
+
+
+Zoo: Audios
+#################################
+
+.. mdinclude:: ../../../docs/readme/examples_source/zoo/zoo_audios.md

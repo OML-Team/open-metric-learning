@@ -285,7 +285,7 @@ pip install -U open-metric-learning[nlp]
 pip install -U open-metric-learning[audio]
 
 # in the case of conflicts install without dependencies and manage versions manually:
-pip install open-metric-learning --no-deps torchaudio
+pip install --no-deps open-metric-learning
 ```
 
 <details><summary>DockerHub</summary>
@@ -357,7 +357,7 @@ sampler:
 
 </td>
 <td style="text-align: left;">
-<a href="https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
+<a href="https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#zoo"><b>Pre-trained models of different modalities</b></a>
 
 ```python
 model_hf = AutoModel.from_pretrained("roberta-base")
@@ -366,6 +366,8 @@ extractor_txt = HFWrapper(model_hf)
 
 extractor_img = ViTExtractor.from_pretrained("vits16_dino")
 transforms, _ = get_transforms_for_pretrained("vits16_dino")
+
+extractor_audio = ECAPATDNNExtractor.from_pretrained()
 ```
 
 </td>
@@ -872,48 +874,13 @@ See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipel
 * Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 * Retrieval re-ranking [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing)
 
-## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)
-
-### How to use text models?
-
-Here is a lightweight integration with [HuggingFace Transformers](https://github.com/huggingface/transformers) models.
-You can replace it with other arbitrary models inherited from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
-
-Note, we don't have our own text models zoo at the moment.
-
-<details style="padding-bottom: 15px">
-<summary><b>See example</b></summary>
-<p>
-
-```shell
-pip install open-metric-learning[nlp]
-```
-
-[comment]:zoo-text-start
-```python
-from transformers import AutoModel, AutoTokenizer
-
-from oml.models import HFWrapper
-
-model = AutoModel.from_pretrained('bert-base-uncased').eval()
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-extractor = HFWrapper(model=model, feat_dim=768)
-
-inp = tokenizer(text="Hello world", return_tensors="pt", add_special_tokens=True)
-embeddings = extractor(inp)
-```
-[comment]:zoo-text-end
-
-</p>
-</details>
-
-### How to use image models?
+## [Zoo: Images](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html#zoo-images)
 
 You can use an image model from our Zoo or
 use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
 
 <details style="padding-bottom: 15px">
-<summary><b>See example</b></summary>
+<summary><b>See how to use models</b></summary>
 <p>
 
 [comment]:zoo-image-start
@@ -986,15 +953,51 @@ The metrics below are for 224 x 224 images:
 *The metrics may be different from the ones reported by papers,
 because the version of train/val split and usage of bounding boxes may differ.*
 
-### How to use audio models?
+## [Zoo: Texts](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html#zoo-texts)
+
+Here is a lightweight integration with [HuggingFace Transformers](https://github.com/huggingface/transformers) models.
+You can replace it with other arbitrary models inherited from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
+
+```shell
+pip install open-metric-learning[nlp]
+```
+
+<details style="padding-bottom: 15px">
+<summary><b>See how to use models</b></summary>
+<p>
+
+[comment]:zoo-text-start
+```python
+from transformers import AutoModel, AutoTokenizer
+
+from oml.models import HFWrapper
+
+model = AutoModel.from_pretrained('bert-base-uncased').eval()
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+extractor = HFWrapper(model=model, feat_dim=768)
+
+inp = tokenizer(text="Hello world", return_tensors="pt", add_special_tokens=True)
+embeddings = extractor(inp)
+```
+[comment]:zoo-text-end
+
+</p>
+</details>
+
+Note, we don't have our own text models zoo at the moment.
+
+## [Zoo: Audios](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html#zoo-audios)
+
 
 You can use an audio model from our Zoo or
 use other arbitrary models after you inherited it from [IExtractor](https://open-metric-learning.readthedocs.io/en/latest/contents/interfaces.html#iextractor).
 
-Currently, our Zoo includes one audio model for speaker verification - [ECAPA-TDNN](https://github.com/TaoRuijie/ECAPA-TDNN/tree/main) model:
+```shell
+pip install open-metric-learning[audio]
+```
 
 <details style="padding-bottom: 15px">
-<summary><b>See example</b></summary>
+<summary><b>See how to use models</b></summary>
 <p>
 
 [comment]:zoo-audio-start
@@ -1025,11 +1028,9 @@ embeddings = model.extract(audio)
 
 ### Audio models zoo
 
-Models, integrated from external repositories:
-
-|                        model                         | Vox1_O | Vox1_E | Vox1_H |
-|:---------------------------------------------------:|:-------:|:-------:|:-------:|
-| `ECAPATDNNExtractor.from_pretrained("ecapa_tdnn_taoruijie")`  |  0.86  |  1.18  |  2.17  |
+|                            model                             | Vox1_O | Vox1_E | Vox1_H |
+|:------------------------------------------------------------:|:------:|:------:|:------:|
+| `ECAPATDNNExtractor.from_pretrained("ecapa_tdnn_taoruijie")` |  0.86  |  1.18  |  2.17  |
 
 *The metrics above represent Equal Error Rate (EER). Lower is better.*
 
