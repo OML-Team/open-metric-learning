@@ -176,7 +176,7 @@ for batch in DataLoader(train, batch_sampler=sampler):
 embeddings = inference(model, val, batch_size=4, num_workers=0)
 rr = RetrievalResults.from_embeddings(embeddings, val, n_items=3)
 rr = AdaptiveThresholding(n_std=2).process(rr)
-rr.visualize(query_ids=[2, 1], dataset=val, show=True)
+rr.visualize_as_html(query_ids=[2, 1], dataset=val, show=True)
 print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 
@@ -247,7 +247,7 @@ print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 ```
 
-<img src="https://i.ibb.co/nN5ZF0Bw/audio-output.png" height="200px">
+<img src="https://i.ibb.co/VWFNkJr0/audio.jpg" height="200px">
 
 </details>
 

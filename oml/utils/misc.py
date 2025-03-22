@@ -191,6 +191,17 @@ def visualize_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> 
     return image
 
 
+def html_blocks_to_grid(blocks: List[List[str]]) -> str:
+    html_rows = []
+    for row in blocks:
+        row_html = "<div style='display:flex; justify-content:left;'>" + "".join(row) + "</div>"
+        html_rows += [row_html]
+
+    final_html = "<div>" + "\n".join(html_rows) + "</div>"
+
+    return final_html
+
+
 @contextmanager
 def matplotlib_backend(backend: str) -> Generator[None, None, None]:
     current_backend = matplotlib.get_backend()
@@ -214,4 +225,5 @@ __all__ = [
     "pad_array_right",
     "visualize_text",
     "matplotlib_backend",
+    "html_blocks_to_grid",
 ]

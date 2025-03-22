@@ -143,6 +143,16 @@ class IVisualizableDataset(Dataset, ABC):
         raise NotImplementedError()
 
 
+class IHTMLVisualizableDataset(Dataset, ABC):
+    """
+    Base class for the datasets which know how to visualise their items as HTML.
+    """
+
+    @abstractmethod
+    def visualize_as_html(self, item: int, title: str, color: TColor) -> np.ndarray:
+        raise NotImplementedError()
+
+
 __all__ = [
     "IIndexedDataset",
     "IBaseDataset",
@@ -151,4 +161,5 @@ __all__ = [
     "IQueryGalleryDataset",
     "IPairDataset",
     "IVisualizableDataset",
+    "IHTMLVisualizableDataset",
 ]

@@ -65,6 +65,7 @@ class ECAPATDNNExtractor(IExtractor):
             )
 
         state_dict = torch.load(weights, map_location="cpu")
+        state_dict = state_dict["state_dict"] if "state_dict" in state_dict else state_dict
         state_dict = remove_criterion_in_state_dict(state_dict)
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="layer1.conv1.bias")
 

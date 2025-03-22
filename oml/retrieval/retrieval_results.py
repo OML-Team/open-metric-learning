@@ -22,11 +22,13 @@ from oml.const import (
 from oml.functional.knn import batched_knn, batched_knn_qg
 from oml.interfaces.datasets import (
     IBaseDataset,
+    IHTMLVisualizableDataset,
     ILabeledDataset,
     IQueryGalleryDataset,
     IQueryGalleryLabeledDataset,
     IVisualizableDataset,
 )
+from oml.utils.misc import html_blocks_to_grid
 from oml.utils.misc_torch import is_sorted_tensor
 
 
@@ -322,6 +324,65 @@ class RetrievalResults:
             n_gt_to_show=n_gt_to_show,
             show=show,
         )
+
+    def visualize_as_html(
+        self,
+        query_ids: List[int],
+        dataset: IQueryGalleryDataset,
+        n_galleries_to_show: int = 3,
+        n_gt_to_show: int = N_GT_SHOW_EMBEDDING_METRICS,
+        show: bool = False,
+    ) -> str:
+        assert isinstance(
+            dataset, IHTMLVisualizableDataset
+        ), f"Dataset must be an instance of {IHTMLVisualizableDataset.__name__}. Got {type(dataset)}."
+
+        def get_query_html(i: int, color: TColor, name: str) -> str:
+            return dataset.visualize_as_html(item=dataset.get_query_ids()[i].item(), color=color, title=name)
+
+        def get_gallery_html(j: int, color: TColor, name: str) -> str:
+            return dataset.visualize_as_html(item=dataset.get_gallery_ids()[j].item(), color=color, title=name)
+
+        def get_placeholder_html() -> str:
+            return """
+                <div style="margin: 10px; display: inline-block;">
+                    <div style="solid transparent; padding: 3px;">
+                        <div style="width:128px; height:0;"></div>
+                    </div>
+                </div>
+            """
+
+        blocks = []
+        for query_idx in query_ids:
+            html = get_query_html(query_idx, color=BLUE, name=f"Query #{query_idx}")
+            blocks_query = [html]
+
+            galleries_to_show = self.retrieved_ids[query_idx][:n_galleries_to_show]
+            for j, ret_idx in enumerate(galleries_to_show):
+                color_as_label = GREEN if ret_idx in self.gt_ids[query_idx] else RED
+                title = f"Gallery #{ret_idx} - {round(self.distances[query_idx][j].item(), 3)}"
+                html = get_gallery_html(ret_idx, color=color_as_label, name=title)
+                blocks_query += [html]
+
+            if len(galleries_to_show) < n_galleries_to_show:
+                # not enough galleries to show, so padding is needed
+                blocks_query += [get_placeholder_html()] * (n_galleries_to_show - len(galleries_to_show))
+
+            if self.gt_ids is not None:
+                for gt_idx in self.gt_ids[query_idx][:n_gt_to_show]:
+                    html = get_gallery_html(gt_idx, color=GRAY, name="GT")
+                    blocks_query.append(html)
+
+            blocks.append(blocks_query)
+
+        final_html = html_blocks_to_grid(blocks=blocks)
+
+        if show:
+            from IPython.display import HTML, display
+
+            display(HTML(final_html))
+
+        return final_html
 
     def visualize_with_functions(
         self,
