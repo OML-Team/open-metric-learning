@@ -29,6 +29,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("extractor/train_2loaders_val.md", "[comment]:lightning-2loaders-start\n", "[comment]:lightning-2loaders-end\n"),  # noqa
         ("extractor/train_val_all_modalities.md", "[comment]:train-val-img-start\n", "[comment]:train-val-img-end\n"),
         pytest.param("extractor/train_val_all_modalities.md", "[comment]:train-val-txt-start\n", "[comment]:train-val-txt-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
+        pytest.param("extractor/train_val_all_modalities.md", "[comment]:train-val-audio-start\n", "[comment]:train-val-audio-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
         ("extractor/train_val_pl.md", "[comment]:lightning-start\n", "[comment]:lightning-end\n"),
         pytest.param("extractor/train_val_pl_ddp.md", "[comment]:lightning-ddp-start\n", "[comment]:lightning-ddp-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
         ("extractor/handling_categories.md", "[comment]:categories-start\n", "[comment]:categories-end\n"),
@@ -38,6 +39,7 @@ def find_code_block(file: Path, start_indicator: str, end_indicator: str) -> str
         ("postprocessing/algo.md", "[comment]:algo-pp-start\n", "[comment]:algo-pp-end\n"),
         ("zoo/models_usage.md", "[comment]:zoo-image-start\n", "[comment]:zoo-image-end\n"),
         pytest.param("zoo/models_usage.md", "[comment]:zoo-text-start\n", "[comment]:zoo-text-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
+        pytest.param("zoo/models_usage.md", "[comment]:zoo-audio-start\n", "[comment]:zoo-audio-end\n", marks=pytest.mark.needs_optional_dependency),  # noqa
         ("retrieval_format.md", "[comment]:dataset-start\n", "[comment]:dataset-end\n")
     ],
 )  # fmt: skip

@@ -136,7 +136,7 @@ print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 <td>
 
-[comment]:train-val-aud-start
+[comment]:train-val-audio-start
 ```python
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -182,7 +182,7 @@ print(calc_retrieval_metrics_rr(rr, map_top_k=(3,), cmc_top_k=(1,)))
 
 
 ```
-[comment]:train-val-aud-end
+[comment]:train-val-audio-end
 </td>
 
 </tr>

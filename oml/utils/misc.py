@@ -165,18 +165,19 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
     return np.pad(arr, (0, required_len - len(arr)), mode="constant", constant_values=val)
 
 
-def visualise_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
-    fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
-    ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=20)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
+def visualize_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
+    with matplotlib_backend("Agg"):
+        fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
+        ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=20)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
 
-    fig.canvas.draw()
-    width, height = fig.canvas.get_width_height()
-    image = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
-    image = image.reshape(height, width, 4)[..., :3]
-    plt.close(fig)
+        fig.canvas.draw()
+        width, height = fig.canvas.get_width_height()
+        image = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
+        image = image.reshape(height, width, 4)[..., :3]
+        plt.close(fig)
 
     image = np.resize(image, (256, 256, 3))
 
@@ -211,6 +212,6 @@ __all__ = [
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
     "pad_array_right",
-    "visualise_text",
+    "visualize_text",
     "matplotlib_backend",
 ]

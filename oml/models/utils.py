@@ -9,6 +9,8 @@ TStateDict = OrderedDict[str, torch.Tensor]
 def remove_criterion_in_state_dict(state_dict: TStateDict) -> TStateDict:
     if "criterion.weight" in state_dict:
         del state_dict["criterion.weight"]
+    if "speaker_loss.weight" in state_dict:
+        del state_dict["speaker_loss.weight"]
     return state_dict
 
 
@@ -120,6 +122,7 @@ def patch_device_and_float(module: nn.Module, device: Union[str, torch.device] =
 __all__ = [
     "find_prefix_in_state_dict",
     "remove_prefix_from_state_dict",
+    "remove_criterion_in_state_dict",
     "filter_state_dict",
     "patch_float",
     "patch_device",
