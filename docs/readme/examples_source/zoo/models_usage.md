@@ -126,13 +126,18 @@ Currently, our Zoo includes one audio model for speaker verification - [ECAPA-TD
 import torchaudio
 
 from oml.models import ECAPATDNNExtractor
+from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_AUDIO_DATASET_PATH as DATA_DIR
 
-model = ECAPATDNNExtractor.from_pretrained("ecapa_tdnn_taoruijie").to("cpu").eval()
+# replace it by your actual paths
+ckpt_path = CKPT_DIR / "ecapa_tdnn_taoruijie.pth"
+file_path = DATA_DIR / "voices" / "voice0_0.wav"
 
-audio, sr = torchaudio.load("path/to/your/audio.wav")   # put path to your audio file here
-if audio.shape[0] > 1:                                  # expected shape: (1, time)
-    audio = audio.mean(dim=0, keepdim=True)
-if sr != 16000:                                         # expected sample rate: 16000
+model = ECAPATDNNExtractor(weights=ckpt_path, arch="ecapa_tdnn_taoruijie", normalise_features=False).to("cpu").eval()
+audio, sr = torchaudio.load(file_path)
+
+if audio.shape[0] > 1:
+    audio = audio.mean(dim=0, keepdim=True)  # mean by channels
+if sr != 16000:
     audio = torchaudio.functional.resample(audio, sr, 16000)
 
 embeddings = model.extract(audio)

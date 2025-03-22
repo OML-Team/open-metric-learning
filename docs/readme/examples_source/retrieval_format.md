@@ -18,7 +18,7 @@ check_retrieval_dataframe_format(df=df_train)
 check_retrieval_dataframe_format(df=df_val)
 
 # AUDIO
-df_train, df_val = get_mock_audios_dataset()
+df_train, df_val = get_mock_audios_dataset(global_paths=True)
 check_retrieval_dataframe_format(df=df_train)
 check_retrieval_dataframe_format(df=df_val)
 

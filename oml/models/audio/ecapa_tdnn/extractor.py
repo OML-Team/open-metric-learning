@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, Union
 
@@ -6,7 +5,10 @@ import torch
 
 from oml.interfaces.models import IExtractor
 from oml.models.audio.ecapa_tdnn.external.model import ECAPA_TDNN
-from oml.models.utils import TStateDict
+from oml.models.utils import (
+    remove_criterion_in_state_dict,
+    remove_prefix_from_state_dict,
+)
 from oml.utils.io import download_checkpoint
 from oml.utils.misc_torch import normalise
 
@@ -61,21 +63,12 @@ class ECAPATDNNExtractor(IExtractor):
                 pretrained["hash"],  # type: ignore
                 fname=pretrained["fname"],  # type: ignore
             )
-            state_dict = self.prepare_state_dict(weights, filter_prefix="speaker_encoder.")
-        else:
-            state_dict = self.prepare_state_dict(weights, filter_prefix="model.")
 
-        self.model.load_state_dict(state_dict, strict=True)
+        state_dict = torch.load(weights, map_location="cpu")
+        state_dict = remove_criterion_in_state_dict(state_dict)
+        ckpt = remove_prefix_from_state_dict(state_dict, trial_key="layer1.conv1.bias")
 
-    def prepare_state_dict(self, weights_path: Union[Path, str], filter_prefix: Optional[str] = None) -> TStateDict:
-        state_dict = torch.load(weights_path, map_location="cpu")
-        if "state_dict" in state_dict:
-            state_dict = state_dict["state_dict"]
-        if filter_prefix is not None:
-            state_dict = OrderedDict(
-                (k[len(filter_prefix) :], v) for k, v in state_dict.items() if k.startswith(filter_prefix)
-            )
-        return state_dict
+        self.model.load_state_dict(ckpt, strict=True)
 
     @property
     def feat_dim(self) -> int:
@@ -92,6 +85,7 @@ class ECAPATDNNExtractor(IExtractor):
         x = self.model.forward(x, aug=False)
         if self.normalise_features:
             x = normalise(x)
+
         return x
 
 

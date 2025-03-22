@@ -11,7 +11,7 @@ from oml.datasets.dataframe import (
     DFQueryGalleryLabeledDataset,
 )
 from oml.interfaces.datasets import IBaseDataset, IVisualizableDataset
-from oml.utils.misc import visualise_text
+from oml.utils.misc import visualize_text
 
 TTokenizer = Any
 
@@ -85,7 +85,7 @@ class TextBaseDataset(IBaseDataset, IVisualizableDataset):
         return data
 
     def visualize(self, item: int, color: TColor) -> np.ndarray:
-        img = visualise_text(text=self._texts[item], color=color)
+        img = visualize_text(text=self._texts[item], color=color)
         return img
 
 
