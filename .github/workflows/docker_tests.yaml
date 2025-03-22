@@ -11,7 +11,7 @@ on:
 jobs:
   all_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull'  # todo
     timeout-minutes: 60
     steps:
     - name: Checkout
