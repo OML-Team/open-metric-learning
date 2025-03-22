@@ -120,7 +120,7 @@ AudioBaseDataset
     .. automethod:: __init__
     .. automethod:: __getitem__
     .. automethod:: visualize
-    .. automethod:: visualize_with_player
+    .. automethod:: visualize_as_html
 
 AudioLabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -133,7 +133,7 @@ AudioLabeledDataset
     .. automethod:: get_labels
     .. automethod:: get_label2category
     .. automethod:: visualize
-    .. automethod:: visualize_with_player
+    .. automethod:: visualize_as_html
 
 AudioQueryGalleryDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,7 +146,7 @@ AudioQueryGalleryDataset
     .. automethod:: get_query_ids
     .. automethod:: get_gallery_ids
     .. automethod:: visualize
-    .. automethod:: visualize_with_player
+    .. automethod:: visualize_as_html
 
 AudioQueryGalleryLabeledDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -161,7 +161,7 @@ AudioQueryGalleryLabeledDataset
     .. automethod:: get_labels
     .. automethod:: get_label2category
     .. automethod:: visualize
-    .. automethod:: visualize_with_player
+    .. automethod:: visualize_as_html
 
 PairDataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

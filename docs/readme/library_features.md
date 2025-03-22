@@ -57,7 +57,7 @@ sampler:
 
 </td>
 <td style="text-align: left;">
-<a href="https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#zoo"><b>Pre-trained models</b></a>
+<a href="https://github.com/OML-Team/open-metric-learning?tab=readme-ov-file#zoo"><b>Pre-trained models of different modalities</b></a>
 
 ```python
 model_hf = AutoModel.from_pretrained("roberta-base")
@@ -66,6 +66,8 @@ extractor_txt = HFWrapper(model_hf)
 
 extractor_img = ViTExtractor.from_pretrained("vits16_dino")
 transforms, _ = get_transforms_for_pretrained("vits16_dino")
+
+extractor_audio = ECAPATDNNExtractor.from_pretrained()
 ```
 
 </td>

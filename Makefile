@@ -37,8 +37,12 @@ build_readme:
 	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
 	cat docs/readme/pipelines.md >> ${README_FILE}
 	# Zoo
-	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html)\n" >>${README_FILE}
-	cat docs/readme/examples_source/zoo/models_usage.md >> ${README_FILE}
+	echo "\n## [Zoo: Images](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html#zoo-images)\n" >>${README_FILE}
+	cat docs/readme/examples_source/zoo/zoo_images.md >> ${README_FILE}
+	echo "\n## [Zoo: Texts](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html#zoo-texts)\n" >>${README_FILE}
+	cat docs/readme/examples_source/zoo/zoo_texts.md >> ${README_FILE}
+	echo "\n## [Zoo: Audios](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/zoo.html#zoo-audios)\n" >>${README_FILE}
+	cat docs/readme/examples_source/zoo/zoo_audios.md >> ${README_FILE}
 	# Contributing
 	echo "\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n" >> ${README_FILE}
 	cat docs/readme/contributing.md >> ${README_FILE}

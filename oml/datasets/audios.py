@@ -64,7 +64,7 @@ class AudioBaseDataset(IBaseDataset, IVisualizableDataset, IHTMLVisualizableData
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         sample_rate: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = MAX_AUDIO_LEN,
+        max_num_seconds: Optional[float] = MAX_AUDIO_LEN,
         convert_to_mono: bool = DEFAULT_CONVERT_TO_MONO,
         start_times: Optional[List[float]] = None,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
@@ -254,7 +254,7 @@ class AudioLabeledDataset(DFLabeledDataset, IVisualizableDataset, IHTMLVisualiza
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
         sample_rate: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = MAX_AUDIO_LEN,
+        max_num_seconds: Optional[float] = MAX_AUDIO_LEN,
         convert_to_mono: bool = DEFAULT_CONVERT_TO_MONO,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
@@ -311,7 +311,7 @@ class AudioQueryGalleryDataset(DFQueryGalleryDataset, IVisualizableDataset, IHTM
         input_tensors_key: str = INPUT_TENSORS_KEY,
         index_key: str = INDEX_KEY,
         sample_rate: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = MAX_AUDIO_LEN,
+        max_num_seconds: Optional[float] = MAX_AUDIO_LEN,
         convert_to_mono: bool = DEFAULT_CONVERT_TO_MONO,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
@@ -368,7 +368,7 @@ class AudioQueryGalleryLabeledDataset(DFQueryGalleryLabeledDataset, IVisualizabl
         index_key: str = INDEX_KEY,
         labels_key: str = LABELS_KEY,
         sample_rate: int = DEFAULT_SAMPLE_RATE,
-        max_num_seconds: float = MAX_AUDIO_LEN,
+        max_num_seconds: Optional[float] = MAX_AUDIO_LEN,
         convert_to_mono: bool = DEFAULT_CONVERT_TO_MONO,
         spec_repr_func: Callable[[FloatTensor], FloatTensor] = default_spec_repr_func,
     ):
