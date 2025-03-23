@@ -57,7 +57,7 @@ wandb_login:
 	export WANDB_API_KEY=$(WANDB_API_KEY); wandb login
 
 .PHONY: run_all_tests
-run_all_tests:
+run_all_tests:  # wandb_login (todo: return before merge)
 	export PYTORCH_ENABLE_MPS_FALLBACK=1; export PYTHONPATH=.; pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 
@@ -76,6 +76,10 @@ test_converters:
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cars.py    --dataset_root  data/CARS196 --no_bboxes
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop --no_bboxes
+
+.PHONY: static_checks
+static_checks:
+	pyright oml
 
 .PHONY: run_precommit
 run_precommit:

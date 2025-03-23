@@ -1,0 +1,10 @@
+{
+  "include": [
+    "oml",
+    "tests",
+    "pipelines"
+  ],
+  "reportAttributeAccessIssue": "error",
+  "reportCallIssue": "error",
+  "typeCheckingMode": "off"
+}
