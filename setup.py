@@ -20,6 +20,8 @@ def load_version() -> str:
 
 NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
 AUDIO_REQUIRE = load_requirements("ci/requirements_audio.txt")
+TEST_REQUIRE = load_requirements("ci/requirements_tests.txt")
+OPTIONAL_REQUIRE = load_requirements("ci/requirements_optional.txt")
 
 
 setup(
@@ -31,7 +33,8 @@ setup(
     extras_require={
         "nlp": NLP_REQUIRE,
         "audio": AUDIO_REQUIRE,
-        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE],  # later will be cv and audio
+        "test": TEST_REQUIRE,
+        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE, *TEST_REQUIRE, *OPTIONAL_REQUIRE],  # later will be cv and audio
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),

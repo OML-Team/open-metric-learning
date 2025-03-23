@@ -57,7 +57,7 @@ wandb_login:
 	export WANDB_API_KEY=$(WANDB_API_KEY); wandb login
 
 .PHONY: run_all_tests
-run_all_tests: wandb_login
+run_all_tests:
 	export PYTORCH_ENABLE_MPS_FALLBACK=1; export PYTHONPATH=.; pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
 
