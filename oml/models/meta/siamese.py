@@ -105,7 +105,7 @@ class ConcatSiamese(IPairwiseModel, IFreezable):
                 url_or_fid, hash_md5, fname = self.pretrained_models[weights]  # type: ignore
                 weights = download_checkpoint(url_or_fid=url_or_fid, hash_md5=hash_md5, fname=fname)
 
-            loaded = torch.load(weights, map_location="cpu")
+            loaded = torch.load(weights, map_location="cpu", weights_only=False)
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
             self.load_state_dict(loaded, strict=True)

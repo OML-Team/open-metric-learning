@@ -153,7 +153,7 @@ class ViTCLIPExtractor(IExtractor):
             state_dict = visual.state_dict()
 
         else:
-            state_dict = torch.load(Path(weights), map_location="cpu")
+            state_dict = torch.load(Path(weights), map_location="cpu", weights_only=False)
             state_dict = state_dict.get("state_dict", state_dict)
             state_dict = remove_criterion_in_state_dict(state_dict)
             state_dict = take_visual_part_of_vit_clip(state_dict, needed_keys=self.visual.state_dict().keys())

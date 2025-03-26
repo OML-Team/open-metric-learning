@@ -122,7 +122,7 @@ class ResnetExtractor(IExtractor):
             state_dict = constructor(weights="IMAGENET1K_V1").state_dict()
 
         else:
-            state_dict = torch.load(weights, map_location="cpu")
+            state_dict = torch.load(weights, map_location="cpu", weights_only=False)
 
         state_dict = state_dict["state_dict"] if "state_dict" in state_dict.keys() else state_dict
         state_dict = remove_criterion_in_state_dict(state_dict)  # type: ignore
@@ -214,7 +214,7 @@ def load_moco_weights(path_to_model: Union[str, Path]) -> Dict[str, Any]:
         State dict without weights of student
 
     """
-    checkpoint = torch.load(path_to_model, map_location="cpu")
+    checkpoint = torch.load(path_to_model, map_location="cpu", weights_only=False)
 
     state_dict = checkpoint["state_dict"]
     for key in list(state_dict.keys()):

@@ -50,16 +50,16 @@ def test_epochs_are_equal() -> None:
         subprocess.run(cmd, check=True, shell=True)
 
         ckpt_path = DummyModule.save_path_ckpt_pattern.format(experiment=experiment)
-        models[experiment] = torch.load(ckpt_path, map_location="cpu").requires_grad_(False)
+        models[experiment] = torch.load(ckpt_path, map_location="cpu", weights_only=False).requires_grad_(False)
         Path(ckpt_path).unlink(missing_ok=True)
 
         for epoch in range(max_epochs):
             train_ids_path = DummyModule.save_path_train_ids_pattern.format(experiment=experiment, epoch=epoch)
-            train_ids[experiment].append(torch.load(train_ids_path))
+            train_ids[experiment].append(torch.load(train_ids_path, weights_only=False))
             Path(train_ids_path).unlink(missing_ok=True)
 
             val_ids_path = DummyModule.save_path_val_ids_pattern.format(experiment=experiment, epoch=epoch)
-            val_ids[experiment].append(torch.load(val_ids_path))
+            val_ids[experiment].append(torch.load(val_ids_path, weights_only=False))
             Path(val_ids_path).unlink(missing_ok=True)
 
     assert train_ids[0] == train_ids[1]

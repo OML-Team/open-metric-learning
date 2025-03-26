@@ -91,7 +91,7 @@ def load(name: str, device: str = "cpu", download_root: str = None, using_checkp
     else:
         raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
     with open(model_path, "rb") as opened_file:
-        state_dict = torch.load(opened_file, map_location="cpu")
+        state_dict = torch.load(opened_file, map_location="cpu", weights_only=False)
 
     model, transform = load_model_and_transform(name, using_checkpoint=using_checkpoint)
     state_dict_fp32 = {}

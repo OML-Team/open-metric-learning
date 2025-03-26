@@ -93,7 +93,7 @@ class ViTUnicomExtractor(IExtractor):
                 using_checkpoint=use_gradient_ckpt
             )
         else:
-            ckpt = torch.load(weights, map_location="cpu")
+            ckpt = torch.load(weights, map_location="cpu", weights_only=False)
             state_dict = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
             state_dict = remove_criterion_in_state_dict(state_dict)
             ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
