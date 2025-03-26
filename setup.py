@@ -20,6 +20,9 @@ def load_version() -> str:
 
 NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
 AUDIO_REQUIRE = load_requirements("ci/requirements_audio.txt")
+TEST_REQUIRE = load_requirements("ci/requirements_tests.txt")
+PIPELINES_REQUIRE = load_requirements("ci/requirements_pipelines.txt")
+OPTIONAL_REQUIRE = load_requirements("ci/requirements_optional.txt")
 
 
 setup(
@@ -31,7 +34,9 @@ setup(
     extras_require={
         "nlp": NLP_REQUIRE,
         "audio": AUDIO_REQUIRE,
-        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE],  # later will be cv and audio
+        "test": TEST_REQUIRE,
+        "pipelines": PIPELINES_REQUIRE,
+        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE, *OPTIONAL_REQUIRE, *PIPELINES_REQUIRE],
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
@@ -61,8 +66,6 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Image Recognition",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",

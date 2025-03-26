@@ -77,6 +77,10 @@ test_converters:
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
 	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop --no_bboxes
 
+.PHONY: static_checks
+static_checks:
+	pyright oml
+
 .PHONY: run_precommit
 run_precommit:
 	pre-commit install && pre-commit run -a

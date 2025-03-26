@@ -1,0 +1,19 @@
+{
+  "include": [
+    "oml",
+    "tests",
+    "pipelines"
+  ],
+  "reportMissingTypeArgument": "none",
+  "reportMissingTypeStubs": "none",
+  "reportOptionalCall": "information",
+  "reportOptionalIterable": "information",
+  "reportOptionalMemberAccess": "information",
+  "reportOptionalOperand": "information",
+  "reportOptionalSubscript": "information",
+  "reportPrivateImportUsage": "information",
+  "reportUnknownMemberType": "none",
+  "reportUnknownParameterType": "information",
+  "reportUnknownVariableType": "none",
+  "typeCheckingMode": "standard"
+}

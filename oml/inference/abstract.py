@@ -97,7 +97,7 @@ def inference_cached(
     cache_path: str = "inference_cache.pth",
 ) -> Tensor:
     if Path(cache_path).is_file():
-        outputs = torch.load(cache_path, map_location="cpu")
+        outputs = torch.load(cache_path, map_location="cpu", weights_only=False)
         print(f"Model outputs have been loaded from {cache_path}.")
     else:
         outputs = inference(

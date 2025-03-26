@@ -76,14 +76,14 @@ def is_ddp() -> bool:
     try:
         get_world_size()
         return True
-    except RuntimeError:
+    except (RuntimeError, ValueError):
         return False
 
 
 def get_world_size_safe() -> int:
     try:
         return get_world_size()
-    except RuntimeError:
+    except (RuntimeError, ValueError):
         return 0
 
 

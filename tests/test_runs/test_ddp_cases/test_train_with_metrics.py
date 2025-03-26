@@ -62,7 +62,7 @@ def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int
         metrics_path = MetricValCallbackWithSaving.save_path_pattern.format(
             devices=num_devices, batch_size=batch_size_eff, num_labels=num_labels
         )
-        metrics = torch.load(metrics_path)[OVERALL_CATEGORIES_KEY]
+        metrics = torch.load(metrics_path, weights_only=False)[OVERALL_CATEGORIES_KEY]
         Path(metrics_path).unlink(missing_ok=True)
         for metric_name, topk2value in metrics.items():
             for top_k, value in topk2value.items():

@@ -5,8 +5,6 @@
 [![Documentation Status](https://readthedocs.org/projects/open-metric-learning/badge/?version=latest)](https://open-metric-learning.readthedocs.io/en/latest/?badge=latest)
 [![PyPI Status](https://pepy.tech/badge/open-metric-learning)](https://pepy.tech/project/open-metric-learning)
 [![Pipi version](https://img.shields.io/pypi/v/open-metric-learning.svg)](https://pypi.org/project/open-metric-learning/)
-[![python](https://img.shields.io/badge/python_3.8-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests.yaml/badge.svg?)
-[![python](https://img.shields.io/badge/python_3.9-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.10-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.11-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests.yaml/badge.svg?)
 [![python](https://img.shields.io/badge/python_3.12-passing-success)](https://github.com/OML-Team/open-metric-learning/actions/workflows/tests.yaml/badge.svg?)
@@ -281,9 +279,10 @@ for our paper
 ## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
 ```shell
-pip install -U open-metric-learning; # minimum dependencies
+pip install -U open-metric-learning  # minimum dependencies
 pip install -U open-metric-learning[nlp]
 pip install -U open-metric-learning[audio]
+pip install -U open-metric-learning[pipelines]
 
 # in the case of conflicts install without dependencies and manage versions manually:
 pip install --no-deps open-metric-learning

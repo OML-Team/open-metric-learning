@@ -65,7 +65,7 @@ class ExtractorWithMLP(IExtractor, IFreezable):
                     fname=pretrained["fname"],  # type: ignore
                 )
 
-            loaded = torch.load(weights, map_location="cpu")
+            loaded = torch.load(weights, map_location="cpu", weights_only=False)
             loaded = loaded.get("state_dict", loaded)
             loaded = remove_criterion_in_state_dict(loaded)
             loaded = remove_prefix_from_state_dict(loaded, trial_key="extractor.")
