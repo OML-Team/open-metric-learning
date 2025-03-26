@@ -26,7 +26,7 @@ jobs:
     - name: Installation
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install -e ".[lightning,test]"
+        python3 -m pip install -e ".[pipelines,test]"
     - name: Running short tests
       run: |
         make run_short_tests

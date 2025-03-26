@@ -21,7 +21,7 @@ def load_version() -> str:
 NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
 AUDIO_REQUIRE = load_requirements("ci/requirements_audio.txt")
 TEST_REQUIRE = load_requirements("ci/requirements_tests.txt")
-LIGHTNING_REQUIRE = load_requirements("ci/requirements_lightning.txt")
+PIPELINES_REQUIRE = load_requirements("ci/requirements_pipelines.txt")
 OPTIONAL_REQUIRE = load_requirements("ci/requirements_optional.txt")
 
 
@@ -35,8 +35,8 @@ setup(
         "nlp": NLP_REQUIRE,
         "audio": AUDIO_REQUIRE,
         "test": TEST_REQUIRE,
-        "lightning": LIGHTNING_REQUIRE,
-        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE, *OPTIONAL_REQUIRE, *LIGHTNING_REQUIRE],
+        "pipelines": PIPELINES_REQUIRE,
+        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE, *OPTIONAL_REQUIRE, *PIPELINES_REQUIRE],
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
