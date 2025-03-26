@@ -21,6 +21,7 @@ def load_version() -> str:
 NLP_REQUIRE = load_requirements("ci/requirements_nlp.txt")
 AUDIO_REQUIRE = load_requirements("ci/requirements_audio.txt")
 TEST_REQUIRE = load_requirements("ci/requirements_tests.txt")
+LIGHTNING_REQUIRE = load_requirements("ci/requirements_lightning.txt")
 OPTIONAL_REQUIRE = load_requirements("ci/requirements_optional.txt")
 
 
@@ -28,13 +29,14 @@ setup(
     # technical things
     version=load_version(),
     packages=find_packages(exclude=["ci", "docs", "pipelines", "tests*"]),
-    python_requires=">=3.8,<4.0",
+    python_requires=">=3.10,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
     extras_require={
         "nlp": NLP_REQUIRE,
         "audio": AUDIO_REQUIRE,
         "test": TEST_REQUIRE,
-        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE, *TEST_REQUIRE, *OPTIONAL_REQUIRE],  # later will be cv and audio
+        "lightning": LIGHTNING_REQUIRE,
+        "all": [*NLP_REQUIRE, *AUDIO_REQUIRE, *OPTIONAL_REQUIRE, *LIGHTNING_REQUIRE],
     },
     include_package_data=True,
     long_description=Path("README.md").read_text(),
@@ -64,8 +66,6 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Image Recognition",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
