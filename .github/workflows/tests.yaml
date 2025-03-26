@@ -11,7 +11,7 @@ on:
 jobs:
   short_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'  # todo: return "pull_request"
+    if: github.event_name == 'pull_request'
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -33,7 +33,7 @@ jobs:
 
   all_tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'  # todo: return "push"
+    if: github.event_name == 'push'
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
