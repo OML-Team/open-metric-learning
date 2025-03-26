@@ -29,7 +29,7 @@ setup(
     # technical things
     version=load_version(),
     packages=find_packages(exclude=["ci", "docs", "pipelines", "tests*"]),
-    python_requires=">=3.10,<4.0",
+    python_requires=">=3.8,<4.0",
     install_requires=load_requirements("ci/requirements.txt"),
     extras_require={
         "nlp": NLP_REQUIRE,
