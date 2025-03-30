@@ -20,21 +20,21 @@ from oml.const import (
     Y2_COLUMN,
 )
 from oml.utils.dataframe_format import check_retrieval_dataframe_format
-from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.download_mock_dataset import download_images_mock_dataset
 
 TDFrames = Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
 
 
 @pytest.fixture()
 def mock_dfs() -> TDFrames:
-    df_train, df_val = download_mock_dataset(MOCK_DATASET_PATH)
+    df_train, df_val = download_images_mock_dataset(MOCK_DATASET_PATH)
     df = pd.concat([df_train, df_val], ignore_index=True).reset_index(drop=True)
     return df_train, df_val, df
 
 
 @pytest.fixture()
 def mock_with_bboxes() -> pd.DataFrame:
-    download_mock_dataset(MOCK_DATASET_PATH)
+    download_images_mock_dataset(MOCK_DATASET_PATH)
     return pd.read_csv(MOCK_DATASET_PATH / "df_with_bboxes.csv")
 
 

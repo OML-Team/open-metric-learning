@@ -6,23 +6,27 @@ accelerator: gpu
 devices: 1
 find_unused_parameters: False
 
-dataframe_name: df_with_bboxes.csv
-dataset_root: data/CUB_200_2011/
+datasets:
+  name: oml_image_dataset
+  args:
+    dataframe_name: df_with_bboxes.csv
+    dataset_root: data/CUB_200_2011/
+    cache_size: 0
+    transforms_train:
+      name: augs_albu
+      args:
+        im_size: 224
+
+    transforms_val:
+      name: norm_resize_albu
+      args:
+        im_size: 224
+
+
 logs_root: logs/CUB_200_2011/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
-
-transforms_train:
-  name: augs_albu
-  args:
-    im_size: 224
-
-transforms_val:
-  name: norm_resize_albu
-  args:
-    im_size: 224
 
 sampler:
   name: balance

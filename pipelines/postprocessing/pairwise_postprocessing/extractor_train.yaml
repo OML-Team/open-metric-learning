@@ -6,24 +6,28 @@ accelerator: gpu
 devices: 2
 find_unused_parameters: False
 
-dataset_root: /path/to/dataset/  # <---- specify path to your dataset
+
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: /path/to/dataset/  # <---- specify path to your dataset
+    dataframe_name: df.csv
+    cache_size: 0
+    transforms_train:
+      name: augs_hypvit_torch
+      args:
+        im_size: 224
+
+    transforms_val:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
+
 logs_root: /path/to/logs/ # <---- specify path to your logs
-dataframe_name: df.csv
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
-cache_size: 0
-
-transforms_train:
-  name: augs_hypvit_torch
-  args:
-    im_size: 224
-
-transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 sampler:
   name: balance

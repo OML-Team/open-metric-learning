@@ -2,16 +2,19 @@ precision: 32
 accelerator: gpu
 devices: 1
 
-data_dir: data/
+datasets:
+  name: oml_image_dataset
+  args:
+    data_dir: data/
+    transforms_predict:
+      name: norm_resize_albu
+      args:
+        im_size: 224
+
 save_dir: "."
 
 bs: 64
 num_workers: 10
-
-transforms_predict:
-  name: norm_resize_albu
-  args:
-    im_size: 224
 
 extractor:
   name: vit

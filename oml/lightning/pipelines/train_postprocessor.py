@@ -1,7 +1,6 @@
-import hashlib
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 import pytorch_lightning as pl
 import torch
@@ -10,9 +9,6 @@ from torch import device as tdevice
 from torch.utils.data import DataLoader
 
 from oml.const import EMBEDDINGS_KEY, TCfg
-from oml.datasets.base import ImageLabeledDataset, ImageQueryGalleryLabeledDataset
-from oml.datasets.images import get_retrieval_images_datasets
-from oml.inference import inference, inference_cached
 from oml.interfaces.datasets import ILabeledDataset, IQueryGalleryLabeledDataset
 from oml.interfaces.models import IPairwiseModel
 from oml.lightning.callbacks.metric import MetricValCallback
@@ -22,6 +18,7 @@ from oml.lightning.modules.pairwise_postprocessing import (
 )
 from oml.lightning.pipelines.parser import (
     check_is_config_for_ddp,
+    convert_to_new_format_if_needed,
     parse_ckpt_callback_from_config,
     parse_engine_params_from_config,
     parse_logger_from_config,
@@ -30,77 +27,20 @@ from oml.lightning.pipelines.parser import (
 )
 from oml.metrics.embeddings import EmbeddingMetrics
 from oml.miners.pairs import PairsMiner
-from oml.registry.models import get_extractor_by_cfg
+from oml.registry.datasets import get_image_datasets
 from oml.registry.optimizers import get_optimizer_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
-from oml.registry.transforms import get_transforms_by_cfg
 from oml.retrieval.postprocessors.pairwise import PairwiseReranker
-from oml.utils.misc import dictconfig_to_dict, flatten_dict, set_global_seed
-
-
-def get_hash_of_extraction_stage_cfg(cfg: TCfg) -> str:
-    def dict2str(dictionary: Dict[str, Any]) -> str:
-        flatten_items = flatten_dict(dictionary).items()
-        sorted(flatten_items, key=lambda x: x[0])
-        return str(flatten_items)
-
-    cfg_extraction_str = (
-        dict2str(cfg["extractor"])
-        + dict2str(cfg["transforms_extraction"])
-        + str(cfg["dataframe_name"])
-        + str(cfg.get("precision", 32))
-    )
-
-    md5sum = hashlib.md5(cfg_extraction_str.encode("utf-8")).hexdigest()
-    return md5sum
+from oml.utils.misc import dictconfig_to_dict, set_global_seed
 
 
 def get_loaders_with_embeddings(
     cfg: TCfg,
 ) -> Tuple[DataLoader, DataLoader, ILabeledDataset, IQueryGalleryLabeledDataset]:
     device = tdevice("cuda:0") if parse_engine_params_from_config(cfg)["accelerator"] == "gpu" else tdevice("cpu")
-    extractor = get_extractor_by_cfg(cfg["extractor"]).to(device)
 
-    transforms_extraction = get_transforms_by_cfg(cfg["transforms_extraction"])
-
-    train_extraction, val_extraction = get_retrieval_images_datasets(
-        dataset_root=Path(cfg["dataset_root"]),
-        dataframe_name=cfg["dataframe_name"],
-        transforms_train=transforms_extraction,
-        transforms_val=transforms_extraction,
-    )
-
-    args = {
-        "model": extractor,
-        "num_workers": cfg["num_workers"],
-        "batch_size": cfg["batch_size_inference"],
-        "use_fp16": int(cfg.get("precision", 32)) == 16,
-    }
-
-    if cfg["embeddings_cache_dir"] is not None:
-        hash_ = get_hash_of_extraction_stage_cfg(cfg)[:5]
-        dir_ = Path(cfg["embeddings_cache_dir"])
-        emb_train = inference_cached(dataset=train_extraction, cache_path=str(dir_ / f"emb_train_{hash_}.pkl"), **args)
-        emb_val = inference_cached(dataset=val_extraction, cache_path=str(dir_ / f"emb_val_{hash_}.pkl"), **args)
-    else:
-        emb_train = inference(dataset=train_extraction, **args)
-        emb_val = inference(dataset=val_extraction, **args)
-
-    train_dataset = ImageLabeledDataset(
-        dataset_root=cfg["dataset_root"],
-        cache_size=cfg.get("cache_size", 0),
-        df=train_extraction.df,
-        transform=get_transforms_by_cfg(cfg["transforms_train"]),
-        extra_data={EMBEDDINGS_KEY: emb_train},
-    )
-
-    valid_dataset = ImageQueryGalleryLabeledDataset(
-        dataset_root=cfg["dataset_root"],
-        cache_size=cfg.get("cache_size", 0),
-        df=val_extraction.df,
-        transform=transforms_extraction,
-        extra_data={EMBEDDINGS_KEY: emb_val},
-    )
+    cfg["datasets"]["args"]["device"] = device
+    train_dataset, valid_dataset = get_image_datasets(cfg["datasets"]["name"], **cfg["datasets"]["args"])
 
     sampler = parse_sampler_from_config(cfg, dataset=train_dataset)
     assert sampler is not None, "We will be training on pairs, so, having sampler is obligatory."
@@ -126,6 +66,7 @@ def postprocessor_training_pipeline(cfg: DictConfig) -> None:
     set_global_seed(cfg["seed"])
 
     cfg = dictconfig_to_dict(cfg)
+    cfg = convert_to_new_format_if_needed(cfg)
     pprint(cfg)
 
     logger = parse_logger_from_config(cfg)

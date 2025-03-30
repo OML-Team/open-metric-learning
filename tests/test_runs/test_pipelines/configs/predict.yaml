@@ -2,16 +2,19 @@ precision: 32
 accelerator: cpu
 devices: 2
 
-data_dir: path_to_replace
+datasets:
+  name: oml_image_dataset
+  args:
+    data_dir: path_to_replace
+    transforms_predict:
+      name: norm_resize_torch
+      args:
+        im_size: 64
+
 save_dir: "."
 
 bs: 4
 num_workers: 0
-
-transforms_predict:
-  name: norm_resize_torch
-  args:
-    im_size: 64
 
 extractor:
   name: vit

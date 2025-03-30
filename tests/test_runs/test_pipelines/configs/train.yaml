@@ -4,22 +4,25 @@ accelerator: cpu
 devices: 2
 find_unused_parameters: True
 
-dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
-dataframe_name: df.csv
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: path_to_df/train.csv
+    dataframe_name: df.csv
+    cache_size: 10
+    transforms_train:
+      name: augs_torch
+      args:
+        im_size: 224
+
+    transforms_val:
+      name: norm_resize_torch
+      args:
+        im_size: 224
+
 logs_root: logs
 
 num_workers: 0
-cache_size: 10
-
-transforms_train:
-  name: augs_torch
-  args:
-    im_size: 224
-
-transforms_val:
-  name: norm_resize_torch
-  args:
-    im_size: 224
 
 criterion:
   name: arcface

@@ -2,17 +2,19 @@ accelerator: gpu
 devices: 1
 precision: 32
 
-dataset_root: data/Stanford_Online_Products/
-dataframe_name: df.csv
+datasets:
+  name: oml_image_dataset
+  args:
+    dataset_root: data/Stanford_Online_Products/
+    dataframe_name: df.csv
+    transforms_val:
+      name: norm_resize_hypvit_torch
+      args:
+        im_size: 224
+        crop_size: 224
 
 bs_val: 512
 num_workers: 20
-
-transforms_val:
-  name: norm_resize_hypvit_torch
-  args:
-    im_size: 224
-    crop_size: 224
 
 extractor:
   name: vit

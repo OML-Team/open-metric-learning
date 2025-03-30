@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import pytest
 import torch
 from torch import FloatTensor, LongTensor, nn
 
-from oml.const import LABELS_COLUMN
+from oml.const import LABELS_COLUMN, MOCK_DATASET_PATH, PATHS_COLUMN
 from oml.datasets import (
     TextBaseDataset,
     TextQueryGalleryDataset,
@@ -19,7 +21,7 @@ from oml.interfaces.datasets import IVisualizableDataset
 from oml.models import ResnetExtractor
 from oml.retrieval.retrieval_results import RetrievalResults
 from oml.utils.download_mock_dataset import (
-    download_mock_dataset,
+    download_images_mock_dataset,
     get_mock_texts_dataset,
 )
 from oml.utils.misc import matplotlib_backend
@@ -35,7 +37,8 @@ def get_model_and_datasets_images(with_gt_labels):  # type: ignore
     datasets = []
 
     for df_name in ["df.csv", "df_with_bboxes.csv", "df_with_sequence.csv"]:
-        _, df_val = download_mock_dataset(global_paths=True, df_name=df_name)
+        _, df_val = download_images_mock_dataset(global_paths=True, df_name=df_name)
+        df_val[PATHS_COLUMN] = df_val[PATHS_COLUMN].apply(lambda x: Path(MOCK_DATASET_PATH) / x)
 
         if with_gt_labels:
             dataset = ImageQueryGalleryLabeledDataset(df_val)
@@ -199,7 +202,7 @@ def test_retrieval_results_separated_qg() -> None:
     from transformers import AutoTokenizer
 
     # GALLERIES ARE IMAGES
-    _, df_val = download_mock_dataset(global_paths=True, df_name="df.csv")
+    _, df_val = download_images_mock_dataset(global_paths=True, df_name="df.csv")
     model_g = ResnetExtractor(weights=None, arch="resnet18", gem_p=None, remove_fc=True, normalise_features=False)
     dataset_g = ImageBaseDataset(paths=df_val["path"].tolist())
     embeddings_g = inference(model_g, dataset_g, batch_size=2, num_workers=0).float()
