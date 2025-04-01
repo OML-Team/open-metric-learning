@@ -2,7 +2,17 @@ import inspect
 import os
 import random
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, Iterable, List, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -12,6 +22,22 @@ from omegaconf import DictConfig, OmegaConf
 from torch import Tensor
 
 from oml.const import BLACK, TCfg, TColor
+
+
+class CompatibilityError(Exception):
+    pass
+
+
+def adapt_argument_as_kwarg(obj: Callable, candidates: List[str], value: Any) -> Dict[str, Any]:  # type: ignore
+    parameters = list(inspect.signature(obj).parameters.keys())
+
+    for name in candidates:
+        if name in parameters:
+            return {name: value}
+
+    raise CompatibilityError(
+        f"Not compatible signature for {obj}. Candidates: {candidates}, available arguments: {parameters}"
+    )
 
 
 def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
@@ -213,6 +239,8 @@ def matplotlib_backend(backend: str) -> Generator[None, None, None]:
 
 
 __all__ = [
+    "CompatibilityError",
+    "adapt_argument_as_kwarg",
     "find_value_ids",
     "set_global_seed",
     "one_hot",
