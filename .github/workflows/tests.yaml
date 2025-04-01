@@ -26,7 +26,7 @@ jobs:
     - name: Installation
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install -e ".[pipelines,test]"
+        python3 -m pip install -e ".[pipelines,test]" --extra-index-url https://download.pytorch.org/whl/cpu
     - name: Running short tests
       run: |
         make run_short_tests
@@ -48,7 +48,7 @@ jobs:
     - name: Installation
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install -e ".[all,test]"
+        python3 -m pip install -e ".[all,test]" --extra-index-url https://download.pytorch.org/whl/cpu
     - name: Running all tests
       run: |
         if [ "${{ matrix.python-version }}" == "3.10" ]; then
