@@ -1,7 +1,7 @@
 torch>=2.0
 numpy>=1.24.4,<2.0
 torchvision
-albumentations>=1.0,<2.0
+albumentations>=1.0
 opencv-python-headless>=4.1.1
 pillow>=8.2
 pandas>=1.0
