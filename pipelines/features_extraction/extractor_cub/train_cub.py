@@ -5,15 +5,17 @@ from albumentations.pytorch import ToTensorV2
 from omegaconf import DictConfig
 from packaging.version import Version
 
-from oml.const import HYDRA_BEHAVIOUR
-from oml.const import MEAN, PAD_COLOR, STD, TNormParam
+from oml.const import HYDRA_BEHAVIOUR, MEAN, PAD_COLOR, STD, TNormParam
 from oml.lightning.pipelines.train import extractor_training_pipeline
 from oml.registry import TRANSFORMS_REGISTRY
 from oml.transforms.images.albumentations import TTransformsList
+from oml.utils.misc import CompatibilityError
 
 if Version(albu.__version__) > Version("1.3.1"):
-    raise RuntimeError(f"Augmentations are designed for `albumentations` version 1.3.1, your version "
-                       f"is {albu.__version__}. To run the training, downgrade the `albumentations` version to 1.3.1.")
+    raise CompatibilityError(
+        f"Augmentations are designed for `albumentations` version 1.3.1, your version "
+        f"is {albu.__version__}. To run the training, downgrade the `albumentations` version to 1.3.1."
+    )
 
 
 def get_spatials() -> TTransformsList:

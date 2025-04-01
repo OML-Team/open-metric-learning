@@ -5,7 +5,6 @@ import albumentations as albu
 
 import oml.models.vit_unicom.external.vision_transformer as unicom  # type: ignore
 from oml.transforms.images.albumentations import (
-    get_augs_albu,
     get_normalisation_albu,
     get_normalisation_resize_albu,
     get_normalisation_resize_albu_clip,
@@ -19,10 +18,9 @@ from oml.transforms.images.torchvision import (
 )
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
-from oml.utils.misc import TCfg, dictconfig_to_dict
+from oml.utils.misc import TCfg, adapt_argument_as_kwarg, dictconfig_to_dict
 
 TRANSFORMS_ALBU = {
-    "augs_albu": get_augs_albu,
     "norm_albu": get_normalisation_albu,
     "norm_resize_albu": get_normalisation_resize_albu,
     "norm_resize_albu_clip": get_normalisation_resize_albu_clip,
@@ -104,7 +102,12 @@ def save_transforms_as_files(cfg: TCfg) -> List[Tuple[str, str]]:
                 transforms = get_transforms_by_cfg(cfg[key])
                 if isinstance(transforms, albu.Compose):
                     transforms_file = str(Path(".hydra/") / f"{key}.yaml") if Path(".hydra").exists() else f"{key}.yaml"
-                    albu.save(filepath=transforms_file, transform=transforms, data_format="yaml")
+                    save_path_kwarg = adapt_argument_as_kwarg(
+                        albu.save,
+                        ["filepath", "filepath_or_buffer"],
+                        transforms_file,
+                    )
+                    albu.save(transform=transforms, data_format="yaml", **save_path_kwarg)
                     keys_files.append((key, transforms_file))
             except Exception:
                 print(f"We are not able to interpret {key} as albumentations transforms and log them as a file.")
