@@ -12,7 +12,7 @@ num_workers: 0
 cache_size: 10
 
 transforms_train:
-  name: get_normalisation_resize_albu_clip
+  name: norm_resize_albu_clip
   args:
     im_size: 64
 
