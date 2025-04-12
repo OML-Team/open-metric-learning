@@ -546,7 +546,7 @@ from oml import datasets as d
 from oml.inference import inference
 from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
-from oml.miners import AllTripletsMiner
+from oml.miners import HardTripletsMiner
 from oml.models import ViTExtractor
 from oml.registry import get_transforms_for_pretrained
 from oml.retrieval import RetrievalResults, AdaptiveThresholding
@@ -561,7 +561,7 @@ train = d.ImageLabeledDataset(df_train, transform=transform)
 val = d.ImageQueryGalleryLabeledDataset(df_val, transform=transform)
 
 optimizer = Adam(model.parameters(), lr=1e-4)
-criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+criterion = TripletLossWithMiner(0.1, HardTripletsMiner(), need_logs=True)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
@@ -601,7 +601,7 @@ from oml import datasets as d
 from oml.inference import inference
 from oml.losses import TripletLossWithMiner
 from oml.metrics import calc_retrieval_metrics_rr
-from oml.miners import AllTripletsMiner
+from oml.miners import NHardTripletsMiner
 from oml.models import HFWrapper
 from oml.retrieval import RetrievalResults, AdaptiveThresholding
 from oml.samplers import BalanceSampler
@@ -615,7 +615,9 @@ train = d.TextLabeledDataset(df_train, tokenizer=tokenizer)
 val = d.TextQueryGalleryLabeledDataset(df_val, tokenizer=tokenizer)
 
 optimizer = Adam(model.parameters(), lr=1e-4)
-criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+criterion = TripletLossWithMiner(
+    0.1, NHardTripletsMiner(n_positive=2, n_negative=2), need_logs=True
+)
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
@@ -651,9 +653,8 @@ from torch.utils.data import DataLoader
 
 from oml import datasets as d
 from oml.inference import inference
-from oml.losses import TripletLossWithMiner
+from oml.losses import ArcFaceLoss
 from oml.metrics import calc_retrieval_metrics_rr
-from oml.miners import AllTripletsMiner
 from oml.models import ECAPATDNNExtractor
 from oml.retrieval import AdaptiveThresholding, RetrievalResults
 from oml.samplers import BalanceSampler
@@ -666,7 +667,7 @@ train = d.AudioLabeledDataset(df_train)
 val = d.AudioQueryGalleryLabeledDataset(df_val)
 
 optimizer = Adam(model.parameters(), lr=1e-4)
-criterion = TripletLossWithMiner(0.1, AllTripletsMiner(), need_logs=True)
+criterion = ArcFaceLoss(m=0.2, s=30, in_features=192, num_classes=4)  # similar to paper
 sampler = BalanceSampler(train.get_labels(), n_labels=2, n_instances=2)
 
 
