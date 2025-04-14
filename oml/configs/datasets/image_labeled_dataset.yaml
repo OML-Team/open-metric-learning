@@ -1,0 +1,9 @@
+name: image_labeled_dataset
+args:
+  dataframe_name: df.csv
+  cache_size: 0
+  show_dataset_warnings: True
+  transform:
+    name: augs_hypvit_torch
+    args:
+      im_size: 224
