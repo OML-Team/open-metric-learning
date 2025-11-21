@@ -14,8 +14,6 @@ from typing import (
     Union,
 )
 
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -192,6 +190,7 @@ def pad_array_right(arr: np.ndarray, required_len: int, val: Union[float, int]) 
 
 
 def visualize_text(text: str, color: TColor = BLACK, draw_bbox: bool = True) -> np.ndarray:
+    import matplotlib.pyplot as plt
     with matplotlib_backend("Agg"):
         fig, ax = plt.subplots(figsize=(2.56, 2.56), dpi=100)
         ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=20)
@@ -230,6 +229,7 @@ def html_blocks_to_grid(blocks: List[List[str]]) -> str:
 
 @contextmanager
 def matplotlib_backend(backend: str) -> Generator[None, None, None]:
+    import matplotlib
     current_backend = matplotlib.get_backend()
     try:
         matplotlib.use(backend)
