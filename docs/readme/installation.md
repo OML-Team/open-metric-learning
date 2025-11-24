@@ -8,13 +8,4 @@ pip install -U open-metric-learning[pipelines]
 pip install --no-deps open-metric-learning
 ```
 
-<details><summary>DockerHub</summary>
-
-```shell
-docker pull omlteam/oml:gpu
-docker pull omlteam/oml:cpu
-```
-
-</details>
-
 

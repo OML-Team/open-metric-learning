@@ -85,20 +85,6 @@ static_checks:
 run_precommit:
 	pre-commit install && pre-commit run -a
 
-# ====================================== DOCKER =============================
-
-.PHONY: docker_build
-docker_build:
-	DOCKER_BUILDKIT=1 docker build --build-arg RUNTIME=$(RUNTIME) -t $(IMAGE_NAME) -f ci/Dockerfile .
-
-.PHONY: docker_all_tests
-docker_all_tests:
-	docker run --env WANDB_API_KEY=$(WANDB_API_KEY) --env NEPTUNE_API_TOKEN=$(NEPTUNE_API_TOKEN) -t $(IMAGE_NAME) make run_all_tests
-
-.PHONY: docker_short_tests
-docker_short_tests:
-	docker run --env WANDB_API_KEY=$(WANDB_API_KEY) --env NEPTUNE_API_TOKEN=$(NEPTUNE_API_TOKEN) -t $(IMAGE_NAME) make run_short_tests
-
 # ====================================== PIP =============================
 
 .PHONY: build_wheel
@@ -117,7 +103,7 @@ upload_to_pip: build_wheel
 pip_install_actual_oml:
 	pip install open-metric-learning==$(OML_VERSION)
 
-# ====================================== MISC =============================
+# ====================================== MISC ===============================
 .PHONY: clean
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
