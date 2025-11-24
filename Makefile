@@ -117,7 +117,7 @@ upload_to_pip: build_wheel
 pip_install_actual_oml:
 	pip install open-metric-learning==$(OML_VERSION)
 
-# ====================================== MISC =============================
+# ====================================== MISC ==============================
 .PHONY: clean
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
